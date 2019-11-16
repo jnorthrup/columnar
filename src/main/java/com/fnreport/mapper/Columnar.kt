@@ -96,20 +96,20 @@ interface Indexed<T> {
 //todo: map multiple segments for a very big file
 
 abstract class LineBuffer : Indexed<Flow<ByteBuffer>>
-class FixedRecordLengthFile(filename: String, origin: MappedFile = MappedFile(filename)) : Closeable by origin, FixedRecordLengthBuffer(buf = origin.mappedByteBuffer)
+class FixedRecordLengthFile(filename: String, origin: MappedFile = MappedFile(filename)) : Closeable by origin,
+        FixedRecordLengthBuffer(buf = origin.mappedByteBuffer)
 
-open class FixedRecordLengthBuffer(val buf: ByteBuffer,
-                                   override val recordLen: Int = buf.run {
-                                       var c = 0.toByte()
-                                       do c = get() while (c != '\n'.toByte())
-                                       position()
-                                   },
+open class FixedRecordLengthBuffer(val buf: ByteBuffer
 
-                                   override val size: Int = (recordLen / buf.limit())
 ) : LineBuffer(), RowStore<ByteBuffer>, FixedLength<Flow<ByteBuffer>> {
     override fun get(vararg rows: Int) = rows.map { buf.position(recordLen * it).slice().apply { limit(recordLen) } }.asFlow()
     override fun values(row: Int): ByteBuffer = buf.position(recordLen * row).slice().limit(recordLen)
-
+    override val recordLen: Int = buf.duplicate().clear().run {
+        var c = 0.toByte()
+        do c = get() while (c != '\n'.toByte())
+        position()
+    }
+    override val size: Int get()= (recordLen / buf.limit())
 }
 
 /**
@@ -136,47 +136,54 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
                 })
             }
 
-    suspend fun pivot(untouched: Array<Int>, lhs: Int, vararg rhs: Int): Columnar {
-        val lhsIndex = linkedMapOf<Any?, LinkedHashSet<Int>>()
-        (0 until size).map { rowIndex ->
-            val values = values(rowIndex)
-            values.collect { row ->
-                val key = row[lhs]
-                lhsIndex[key] = ((lhsIndex[key] ?: linkedSetOf()) + rowIndex) as LinkedHashSet<Int>
-            }
-        }
+    suspend fun pivot(untouched: IntArray, lhs: Int, vararg rhs: Int): Columnar =
+            linkedMapOf<Any?, LinkedHashSet<Int>>().let { lhsIndex ->
+                (0 until size).map { rowIndex ->
+                    val values = values(rowIndex)
+                    values.collect { row ->
+                        val key = row[lhs]
+                        lhsIndex[key] = ((lhsIndex[key] ?: linkedSetOf()) + rowIndex) as LinkedHashSet<Int>
+                    }
+                }
 
-        val pivotColumns = untouched.map { columns[it] }.toMutableList()
-        val (keyPrefix) = columns[lhs]
-        lhsIndex.entries.map { (k, v) ->
-            val keyname = "$keyPrefix:${(k as? ByteArray)?.let { it -> String(it) } ?: k}"
-            pivotColumns += rhs.map { rhsCol ->
-                columns[rhsCol].let { (rhsName, decode) ->
-                    val (extractor, mapper) = decode
-                    keyPrefix + rhsName to (extractor to { input: Any? ->
-                        (input as? Pair<Int, Any?>)?.let { (row, value) ->
-                            value.takeIf { row in v }?.let(mapper)
+                untouched.map { columns[it] }.toMutableList().let { pivotColumns ->
+
+
+                    columns[lhs].let { (keyPrefix) ->
+                        lhsIndex.entries.map { (k, v) ->
+                            val keyname = "$keyPrefix:${(k as? ByteArray)?.let { it -> String(it) } ?: k}"
+                            pivotColumns += rhs.map { rhsCol ->
+                                columns[rhsCol].let { (rhsName, decode) ->
+                                    val (coords, mapper) = decode
+                                    val function = { input: Any? ->
+                                        val block: (Pair<Int, Any?>) -> Any? = { (row, value) ->
+                                            value.takeIf { row in v }?.let(mapper)
+                                        }
+                                        (input as? Pair<Int, Any?>)?.let(block)
+                                    }
+                                    val pair = (keyPrefix + rhsName) to (coords to function)
+                                    pair
+                                }
+                            }
+
                         }
-                    })
+                        val rs2 = this.rs
+                        return object : Columnar(rs2, pivotColumns) {
+                            override suspend fun values(row: Int): Flow<List<Any?>> {
+                                return rs2.values(row).let { rs1 ->
+                                    flowOf(super.columns.map { (a, mapper) ->
+                                        val (coor, conv: (Any?) -> Any?) = mapper
+                                        val (begin, end) = coor
+                                        val len = end - begin
+                                        val fb = rs1.position(begin).slice().limit(len)
+                                        conv(row to ByteArray(len).also { fb.get(it) })
+                                    })
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            pivotColumns
-
-        }
-        return object : Columnar(rs, pivotColumns) {
-            override suspend fun values(row: Int): Flow<List<Any?>> {
-                return rs.values(row).let { rs1 ->
-                    flowOf(super.columns.map { (a, mapper) ->
-                        val (coor, conv: (Any?) -> Any?) = mapper
-                        val (begin, end) = coor
-                        val len = end - begin
-                        val fb = rs1.position(begin).slice().limit(len)
-                        conv(row to ByteArray(len).also { fb.get(it) })
-                    })
-                }
-            }
-        }
-    }
 
     suspend fun group(by: List<Int>): Columnar {
         val origin = this
