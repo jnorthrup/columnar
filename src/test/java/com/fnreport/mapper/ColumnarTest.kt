@@ -56,10 +56,13 @@ class ColumnarTest : StringSpec() {
         }
 
         "group" {
-            val p4 = c4.group(listOf(0))
+            val by = listOf(0)
+            c4.group(by).let { p4 ->
 
-            val x = s4(p4)
-            System.err.println(x)
+                val x = s4(p4)
+                System.err.println(x)
+
+            }
         }
     }
 
