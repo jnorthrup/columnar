@@ -1,10 +1,7 @@
 package com.fnreport.mapper
 
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.*
 import java.io.Closeable
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -13,10 +10,6 @@ import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-
-fun byteDecoder(): (Any?) -> Any? = { i ->
-    (i as? ByteBuffer)?.let { ByteArray(it.remaining()).also { i.get(it) } }
-}
 
 fun stringMapper(): (Any?) -> Any? = { i -> (i as? ByteArray)?.let { String(it).takeIf(String::isNotBlank)?.trim() } }
 fun btoa(i: Any?) = (i as? ByteArray)?.let { stringMapper()(it)?.toString() }
@@ -137,11 +130,11 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
                 })
             }
 
-    suspend fun pivot(untouched: IntArray, lhs: Int, vararg rhs: Int): Columnar =
+    suspend fun pivot(untouched: Collection<Int>, lhs: Int, vararg rhs: Int): Columnar =
             linkedMapOf<Any?, LinkedHashSet<Int>>().let { lhsIndex ->
                 (0 until size).map { rowIndex ->
-                    val values = values(rowIndex)
-                    values.collect { row ->
+                    val rowF = values(rowIndex).first()
+                    rowF.let { row ->
                         val key = row[lhs]
                         lhsIndex[key] = ((lhsIndex[key] ?: linkedSetOf()) + rowIndex) as LinkedHashSet<Int>
                     }
@@ -170,13 +163,13 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
                         return object : Columnar(rs2, revisedColumns) {
                             override suspend fun values(row: Int): Flow<List<Any?>> {
                                 return rs2.values(row).let { rs1 ->
-                                    flowOf(super.columns.mapIndexed  { ix,(a, mapper) ->
+                                    flowOf(super.columns.mapIndexed { ix, (_, mapper) ->
                                         val (coor, conv: (Any?) -> Any?) = mapper
                                         val (begin, end) = coor
                                         val len = end - begin
                                         val fb = rs1.position(begin).slice().limit(len)
-                                     if(    ix<untouched.size)
-                                        conv( ByteArray(len).also { fb.get(it) })
+                                        if (ix < untouched.size)
+                                            conv(ByteArray(len).also { fb.get(it) })
                                         else conv(row to ByteArray(len).also { fb.get(it) })
                                     })
                                 }
@@ -186,47 +179,52 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
                 }
             }
 
-    suspend fun group(by: List<Int>): Columnar {
-        val origin = this
-        val linearIndex = arrayListOf<List<Any?>>()
-        this[by].run {
-            (0 until size).map { rownum ->
-                val values = values(rownum)
-                values.collect { theList ->
-                    linearIndex += theList
+    suspend fun group(by: List<Int>): Columnar =
+            arrayListOf<List<Any?>>().let { linearIndex ->
+                this[by].run {
+                    (0 until size).map { rownum ->
+                        val values = values(rownum)
+                        values.collect { theList ->
+                            linearIndex += theList
+                        }
+                    }
+                }
+                mutableMapOf<Int, List<Int>>().let { collate ->
+                    linearIndex.forEachIndexed { index, list ->
+                        val hashCode = list.hashCode()
+                        collate[hashCode] = (collate[hashCode] ?: emptyList()) + index
+                    }
+                    val originClusters = collate.values.toTypedArray()
+                    val origin = this
+                    GroupColumnar(origin, collate, originClusters, by)
+
                 }
             }
-        }
-        val collate = mutableMapOf<Int, List<Int>>()
-        linearIndex.mapIndexed { index, list ->
-            val hashCode = list.hashCode()
-            collate[hashCode] = (collate[hashCode] ?: emptyList()) + index
-        }
-        val originClusters = collate.values.toTypedArray()
-        return object : Columnar(rs, columns) {
-            override val size: Int
-                get() = collate.size
+}
 
-            override suspend fun values(row: Int): Flow<List<Any?>> {
-                val flowStar = originClusters[row].let { originCLuster ->
-                    val listAny = originCLuster.first().let { clusterKey ->
-                        columns.indices.map { indice ->
-                            if (indice in by) {
-                                origin.values(row).collect { keyR -> keyR[indice] }
-                            } else {
-                                originCLuster.map { originRow ->
-                                    origin.values(originRow).collect { keyR -> keyR[indice] }
-                                }
-                            }
+@InternalCoroutinesApi
+class GroupColumnar(private val origin: Columnar, private val collate: MutableMap<Int, List<Int>>, private val originClusters: Array<List<Int>>, private val by: List<Int>) : Columnar(origin.rs, origin.columns) {
+    override val size: Int = collate.size
+    override suspend fun values(row: Int) = flowOf(listOf(
+            originClusters[row].let { cluster ->
+                cluster.first().let { keyRowNum ->
+
+                    (origin.values(keyRowNum).first() to (cluster.map { gRow ->
+                        origin.values(gRow)
+                    }).map { it.first() }).let { (keyRow, aggvals) ->
+                        columns.indices.map { colNum ->
+                            if (colNum in by)
+                                keyRow[colNum]
+                            else
+                                aggvals.map { it[colNum] }
                         }
 
+
                     }
-                    listAny.asFlow() as Flow<List<Any?>>
+
                 }
-                return flowStar
-            }
-        }
-    }
+            }))
+
 }
 
 
@@ -258,39 +256,3 @@ open class VariableRecordLengthBuffer(val buf: ByteBuffer, val header: Boolean =
         }
     }
 }
-
-
-/* tedious for now.   will revisit.
-
-@UseExperimental(InternalCoroutinesApi::class)
-class CsvFile(
-        fn: String,
-        delim: CharArray = charArrayOf('\n', ','),
-        val header: Boolean = true,
-        val fileBuf: VariableRecordLengthFile = VariableRecordLengthFile(fn)
-) : Indexed<Flow<VariableRecordLengthBuffer>>, RowStore<ByteBuffer> by fileBuf {
-
-    lateinit var columns: List<String>
-
-    init {
-        runBlocking {
-            val codexBuf = fileBuf(0)
-            val byteArray = ByteArray(codexBuf.limit())
-            codexBuf.duplicate().get(byteArray)
-            val string = String(byteArray)
-//            val headerRow = VariableRecordLengthBuffer(codexBuf, false, delim[1])
-//            val size1 = headerRow.size
-//            columns = headerRow[0 until size1].map { b ->
-//                String(ByteArray(b.remaining()).also { z -> b.get(z) })
-//            }.toList()
-            columns=string.split("\\W+")
-        }
-    }
-
-    override operator fun get(vararg rows: Int) = fileBuf.get(*rows).map { flowOf(VariableRecordLengthBuffer(it, eor = ',')) }
-}
-
-
-
-
-*/

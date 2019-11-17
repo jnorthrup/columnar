@@ -3,7 +3,9 @@ package com.fnreport.mapper
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import io.kotlintest.tables.row
 import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 
@@ -31,7 +33,7 @@ class ColumnarTest : StringSpec() {
     init {
 
         "dateCol"{
-             val values20 = decode(1, c20)
+            val values20 = decode(1, c20)
             val any = values20[0]
             any.toString().shouldBe("2017-10-22")
             System.err.println(any)
@@ -50,33 +52,40 @@ class ColumnarTest : StringSpec() {
         }
 
         "pivot" {
-            val values4 = decode(1, c4)
-            val p4 = spivot(/*c4.pivot(*/c4, intArrayOf(0), 1, 2, 3)/*)*/
+            val p4 = spivot(/*c4.pivot(*/c4, listOf(0), 1, 2, 3)/*)*/
             val x = s4(p4)
+            System.err.println("pivot:")
             System.err.println(p4.columns.map { val (n) = it;n }.zip(x.flatten()))
         }
 
         "group" {
-            val p4 = c4.group(listOf(0))
+            val group1 = c4.group(listOf(0))
+            val group2 = c4.group(listOf(1))
+            System.err.println("group1:")
+            (0 until group1.size).forEach { System.err.println(group1.values(it).first()) }
+            System.err.println("group2:")
+            (0 until group2.size).forEach { System.err.println(group2.values(it).first()) }
+        }
+        "group+pivot" {
+            val by = listOf(0)
 
-            val x = s4(p4)
-            System.err.println(x)
+            val group = c4.pivot(listOf(0), 1, 2, 3).group(listOf(0))
+            val res = group.run { (0 until size).map { values(it).first() as List<List<*>> } }
+
+            System.err.println("pivot+group:")
+            val cnames     = group.columns.map { (cname) -> cname }
+            res.forEach { row ->
+
+                val tuple = cnames.zip(row.first() )
+                System.err.println(tuple)
+
+            }
         }
     }
 
-    private suspend fun spivot(c4: Columnar, arrayOf: IntArray, i: Int, vararg rhs: Int): Columnar {
-        return c4.pivot(arrayOf, i, *rhs)
-    }
+    private suspend fun spivot(c4: Columnar, arrayOf: Collection<Int>, i: Int, vararg rhs: Int): Columnar = c4.pivot(arrayOf, i, *rhs)
 
-    private suspend fun s4(columnar: Columnar) =
-            columnar.values(0).toList().map { it }
+    private suspend fun s4(columnar: Columnar) = columnar.values(0).toList().map { it }
 
-
-    private suspend fun decode(row: Int, columnar: Columnar): List<Any?> {
-
-        return columnar.values(1).first()
-
-
-    }
-
+    private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row).first()
 }
