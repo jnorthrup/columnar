@@ -11,7 +11,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 
-
 fun stringMapper(): (Any?) -> Any? = { i -> (i as? ByteArray)?.let { String(it).takeIf(String::isNotBlank)?.trim() } }
 fun btoa(i: Any?) = (i as? ByteArray)?.let { stringMapper()(it)?.toString() }
 
@@ -180,51 +179,52 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
                 }
             }
 
-    suspend fun group(by: List<Int>) = this.let { origin ->
-        arrayListOf<List<Any?>>().let { linearIndex ->
-            this[by].run {
-                (0 until size).map { rownum ->
-                    val values = values(rownum)
-                    values.collect {
-                        theList ->
-                        linearIndex += theList
+    suspend fun group(by: List<Int>): Columnar =
+            arrayListOf<List<Any?>>().let { linearIndex ->
+                this[by].run {
+                    (0 until size).map { rownum ->
+                        val values = values(rownum)
+                        values.collect { theList ->
+                            linearIndex += theList
+                        }
                     }
                 }
-            }
-            mutableMapOf<Int, List<Int>>().let { collate ->
-                linearIndex.forEachIndexed { index, list ->
-                    val hashCode = list.hashCode()
-                    collate[hashCode] = (collate[hashCode] ?: emptyList()) + index
-                }
-                val originClusters = collate.values.toTypedArray()
-                object : Columnar(rs, columns) {
-                    override val size: Int = collate.size
-
-                    override suspend fun values(row: Int) = flowOf(listOf(
-                            originClusters[row].let { cluster ->
-                                cluster.first().let { keyRowNum ->
-
-                                    (origin.values(keyRowNum).first() to cluster.indices.map { gRow ->
-                                        origin.values(gRow)
-                                    }.map { it.first() }).let { (keyRow, aggvals) ->
-                                        columns.indices.map { colNum ->
-                                            if (colNum in by)
-                                                keyRow[colNum]
-                                            else
-                                                aggvals[colNum]
-                                        }
-
-
-                                    }
-
-                                }
-                            }))
+                mutableMapOf<Int, List<Int>>().let { collate ->
+                    linearIndex.forEachIndexed { index, list ->
+                        val hashCode = list.hashCode()
+                        collate[hashCode] = (collate[hashCode] ?: emptyList()) + index
+                    }
+                    val originClusters = collate.values.toTypedArray()
+                    val origin = this
+                    GroupColumnar(origin, collate, originClusters, by)
 
                 }
-
             }
-        }
-    }
+}
+
+@InternalCoroutinesApi
+class GroupColumnar(private val origin: Columnar, private val collate: MutableMap<Int, List<Int>>, private val originClusters: Array<List<Int>>, private val by: List<Int>) : Columnar(origin.rs, origin.columns) {
+    override val size: Int = collate.size
+    override suspend fun values(row: Int) = flowOf(listOf(
+            originClusters[row].let { cluster ->
+                cluster.first().let { keyRowNum ->
+
+                    (origin.values(keyRowNum).first() to (cluster.map { gRow ->
+                        origin.values(gRow)
+                    }).map { it.first() }).let { (keyRow, aggvals) ->
+                        columns.indices.map { colNum ->
+                            if (colNum in by)
+                                keyRow[colNum]
+                            else
+                                aggvals.map{it[colNum]}
+                        }
+
+
+                    }
+
+                }
+            }))
+
 }
 
 
