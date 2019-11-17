@@ -29,6 +29,10 @@ class ColumnarTest : StringSpec() {
 
 
     init {
+        "size" {
+            f4.size.shouldBe(4)
+           c4.size.shouldBe(4)
+        }
         "values" {
             val values20 = decode(1, c20)
             System.err.println(values20)

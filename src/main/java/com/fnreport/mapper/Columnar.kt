@@ -96,12 +96,13 @@ interface Indexed<T> {
 //todo: map multiple segments for a very big file
 
 abstract class LineBuffer : Indexed<Flow<ByteBuffer>>
-class FixedRecordLengthFile(filename: String, origin: MappedFile = MappedFile(filename)) : Closeable by origin,
-        FixedRecordLengthBuffer(buf = origin.mappedByteBuffer)
 
-open class FixedRecordLengthBuffer(val buf: ByteBuffer
+class FixedRecordLengthFile(filename: String, origin: MappedFile = MappedFile(filename)) : FixedRecordLengthBuffer(origin.mappedByteBuffer),
+        Closeable by origin
 
-) : LineBuffer(), RowStore<ByteBuffer>, FixedLength<Flow<ByteBuffer>> {
+open class FixedRecordLengthBuffer(val buf: ByteBuffer) : LineBuffer(),
+        RowStore<ByteBuffer>,
+        FixedLength<Flow<ByteBuffer>> {
     override fun get(vararg rows: Int) = rows.map { buf.position(recordLen * it).slice().apply { limit(recordLen) } }.asFlow()
     override fun values(row: Int): ByteBuffer = buf.position(recordLen * row).slice().limit(recordLen)
     override val recordLen: Int = buf.duplicate().clear().run {
@@ -109,7 +110,8 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer
         do c = get() while (c != '\n'.toByte())
         position()
     }
-    override val size: Int get()= (recordLen / buf.limit())
+    override val size: Int = ( buf.limit()/recordLen )//.also { assert(it != 0) { "bad size" } }
+
 }
 
 /**
@@ -118,8 +120,7 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer
 @InternalCoroutinesApi
 open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>>) : FlowStore<Flow<List<*>>> {
 
-    override val size: Int
-        get() = rs.size
+    override val size: Int = rs.size
 
     operator fun get(cols: List<Int>): Columnar {
         return Columnar(this.rs, cols.map { columns[it] })
