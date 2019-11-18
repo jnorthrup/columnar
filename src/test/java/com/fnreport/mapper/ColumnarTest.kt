@@ -70,13 +70,13 @@ class ColumnarTest : StringSpec() {
             val by = listOf(0)
 
             val group = c4.pivot(listOf(0), 1, 2, 3).group(listOf(0))
-            val res = group.run { (0 until size).map { values(it).first() as List<List<*>> } }
+            val res = group.run { (0 until size).map { values(it).first() } }
 
             System.err.println("pivot+group:")
             val cnames     = group.columns.map { (cname) -> cname }
             res.forEach { row ->
 
-                val tuple = cnames.zip(row.first() )
+                val tuple = cnames.zip(row  )
                 System.err.println(tuple)
 
             }

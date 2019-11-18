@@ -15,10 +15,10 @@ fun stringMapper(): (Any?) -> Any? = { i -> (i as? ByteArray)?.let { String(it).
 fun btoa(i: Any?) = (i as? ByteArray)?.let { stringMapper()(it)?.toString() }
 
 
-fun intMapper(): (Any?) -> Any? = { i -> btoa(i)?.toInt() }
-fun floatMapper(): (Any?) -> Any? = { i -> btoa(i)?.toFloat() }
-fun doubleMapper(): (Any?) -> Any? = { i -> btoa(i)?.toDouble() }
-fun longMapper(): (Any?) -> Any? = { i -> btoa(i)?.toLong() }
+fun intMapper(): (Any?) -> Any? = { i -> btoa(i)?.toInt()?:0 }
+fun floatMapper(): (Any?) -> Any? = { i -> btoa(i)?.toFloat()?:0f }
+fun doubleMapper(): (Any?) -> Any? = { i -> btoa(i)?.toDouble()?:0.0 }
+fun longMapper(): (Any?) -> Any? = { i -> btoa(i)?.toLong()?:0L }
 
 
 fun dateMapper(): (Any?) -> Any? = { i ->
@@ -35,6 +35,7 @@ fun dateMapper(): (Any?) -> Any? = { i ->
 }
 
 
+
 interface RowStore<T> {
     /**
      * seek to row
@@ -44,6 +45,9 @@ interface RowStore<T> {
     val size: Int
 }
 
+/**
+ * todo: merge with RowStore
+ */
 interface FlowStore<T> {
     /**
      * seek to row
@@ -197,7 +201,6 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
                     val originClusters = collate.values.toTypedArray()
                     val origin = this
                     GroupColumnar(origin, collate, originClusters, by)
-
                 }
             }
 }
@@ -205,25 +208,22 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
 @InternalCoroutinesApi
 class GroupColumnar(private val origin: Columnar, private val collate: MutableMap<Int, List<Int>>, private val originClusters: Array<List<Int>>, private val by: List<Int>) : Columnar(origin.rs, origin.columns) {
     override val size: Int = collate.size
-    override suspend fun values(row: Int) = flowOf(listOf(
-            originClusters[row].let { cluster ->
-                cluster.first().let { keyRowNum ->
-
-                    (origin.values(keyRowNum).first() to (cluster.map { gRow ->
-                        origin.values(gRow)
-                    }).map { it.first() }).let { (keyRow, aggvals) ->
-                        columns.indices.map { colNum ->
-                            if (colNum in by)
-                                keyRow[colNum]
-                            else
-                                aggvals.map { it[colNum] }
-                        }
-
-
-                    }
-
+    override suspend fun values(row: Int) = flowOf(originClusters[row].let { cluster ->
+        cluster.first().let { keyRowNum ->
+            (origin.values(keyRowNum).first() to (cluster.map { gRow ->
+                origin.values(gRow)
+            }).map { it.first() }).let { (keyRow, aggvals) ->
+                columns.indices.map { colNum ->
+                    if (colNum in by)
+                        keyRow[colNum]
+                    else
+                        aggvals.map { it[colNum] }
                 }
-            }))
+
+            }
+
+        }
+    })
 
 }
 
