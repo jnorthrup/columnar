@@ -65,12 +65,9 @@ class ColumnarTest : StringSpec() {
                 val values = p4.values(it)
                 System.err.println(values)
             }
-
-
         }
 
         "group" {
-
             val group1 = c4.group((0))
             val group2 = c4.group((1))
             System.err.println("group1:")
@@ -81,7 +78,6 @@ class ColumnarTest : StringSpec() {
             group2.values(2)[2].toString().shouldBe(
             "[4.0, 820.0]"
             )
-
         }
         "groupAggregate" {
             var group1 = c4.group((0))
@@ -95,7 +91,6 @@ class ColumnarTest : StringSpec() {
         }
         "group+pivot" {
             val by = listOf(0)
-
             val p4 = c4.pivot(listOf(0), 1, 2, 3)
             val g4 = p4.group((0))
             val res = g4.let { columnar ->
@@ -103,7 +98,6 @@ class ColumnarTest : StringSpec() {
                     columnar.values(it)
                 }
             }
-
             System.err.println("pivot+group:")
             val cnames = g4.columns.map { (cname) -> cname }
             res.forEach { row ->
