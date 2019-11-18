@@ -130,11 +130,11 @@ open class Columnar(var rs: RowStore<ByteBuffer>, val columns: List<Pair<String,
                 })
             }
 
-    suspend fun pivot(untouched: IntArray, lhs: Int, vararg rhs: Int): Columnar =
+    suspend fun pivot(untouched: Collection<Int>, lhs: Int, vararg rhs: Int): Columnar =
             linkedMapOf<Any?, LinkedHashSet<Int>>().let { lhsIndex ->
                 (0 until size).map { rowIndex ->
-                    val values = values(rowIndex)
-                    values.collect { row ->
+                    val rowF = values(rowIndex).first()
+                    rowF.let { row ->
                         val key = row[lhs]
                         lhsIndex[key] = ((lhsIndex[key] ?: linkedSetOf()) + rowIndex) as LinkedHashSet<Int>
                     }
@@ -216,7 +216,7 @@ class GroupColumnar(private val origin: Columnar, private val collate: MutableMa
                             if (colNum in by)
                                 keyRow[colNum]
                             else
-                                aggvals.map{it[colNum]}
+                                aggvals.map { it[colNum] }
                         }
 
 
