@@ -42,7 +42,7 @@ interface RowStore<T> {
     /**
      * seek to row
      */
-    suspend fun values(row: Int): T
+     var values:suspend ( Int)-> T
 
     val size: Int
 }
@@ -63,7 +63,7 @@ open class MappedFile(
         val mappedByteBuffer: MappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length),
         override val size: Int = mappedByteBuffer.limit()
 ) : FileAccess(filename), RowStore<Flow<ByteBuffer>>, Closeable by randomAccessFile {
-    override suspend fun values(row: Int) = flowOf(mappedByteBuffer.apply { position(row) }.slice())
+    override var values: suspend (Int) -> Flow<ByteBuffer>  = { row->flowOf(mappedByteBuffer.apply { position(row) }.slice())}
 }
 
 /**
@@ -89,7 +89,7 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) : LineBuffer(),
         RowStore<Flow<ByteBuffer>>,
         FixedLength<Flow<ByteBuffer>> {
     override fun get(vararg rows: Int) = rows.map { buf.position(recordLen * it).slice().apply { limit(recordLen) } }.asFlow()
-    override suspend fun values(row: Int) = flowOf(buf.position(recordLen * row).slice().limit(recordLen))
+    override   var values: suspend (Int) -> Flow<ByteBuffer> = { row->flowOf(buf.position(recordLen * row).slice().limit(recordLen))}
     override val recordLen: Int = buf.duplicate().clear().run {
         var c = 0.toByte()
         do c = get() while (c != '\n'.toByte())
@@ -107,11 +107,24 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: List<Pair<S
 
     override val size: Int = rs.size
 
-    operator fun get(cols: List<Int>): Columnar {
-        return Columnar(this.rs, cols.map { columns[it] })
-    }
+    //adds columns, discards the rows if any.  ex. this[0]{year(it)}*this[1]*this[2,3]{any->sum(any as Iterable<Float>)}
+    infix operator fun times(other: Columnar) = Columnar(this.rs, columns + other.columns)
 
-    override suspend fun values(row: Int) =
+    //todo: - we have to combine bytebuffer ranges into a new sequence
+    //    infix operator fun plus (other:Columnar) =Columnar (this.rs+other.rs ,columns)
+
+    //reducer against all columns, assumes concatanation of columns before/after for any real work.
+    infix operator fun invoke(reducer: (Any?) -> Any?) = Columnar(this.rs, this.columns.map { (a, b) ->
+        val (c, d) = b
+        a to (c to { any: Any? -> reducer(d(any)) })
+    })
+
+    operator fun get(vararg  cols:  Int ): Columnar  = this[cols.toList()]
+    operator fun get(cols: List<Int>)=   Columnar(this.rs, cols.map { columns[it] })
+
+
+    override var  values: suspend (Int) -> List<*> ={
+        row:Int ->
             rs.values(row).first().let { rs1 ->
                 (columns.map { (a, mapper) ->
                     val (coor, conv) = mapper
@@ -121,6 +134,7 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: List<Pair<S
                     conv(ByteArray(len).also { fb.get(it) })
                 })
             }
+    }
 
     suspend fun pivot(untouched: Collection<Int>, lhs: Int, vararg rhs: Int): Columnar =
             linkedMapOf<Any?, LinkedHashSet<Int>>().let { lhsIndex ->
@@ -131,7 +145,6 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: List<Pair<S
                         lhsIndex[key] = ((lhsIndex[key] ?: linkedSetOf()) + rowIndex) as LinkedHashSet<Int>
                     }
                 }
-
                 untouched.map { columns[it] }.toMutableList().let { revisedColumns ->
                     this.columns[lhs].let { (keyPrefix) ->
                         lhsIndex.entries.map { (k, v) ->
@@ -153,7 +166,7 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: List<Pair<S
                         }
                         val rs2 = this.rs
                         return object : Columnar(rs2, revisedColumns) {
-                            override suspend fun values(row: Int) = rs2.values(row).let { rs1 ->
+                            override   var values: suspend (Int) -> List<*> = { row->  rs2.values(row).let { rs1 ->
                                 (super.columns.mapIndexed { ix, (_, mapper) ->
                                     val (coor, conv: (Any?) -> Any?) = mapper
                                     val (begin, end) = coor
@@ -162,7 +175,7 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: List<Pair<S
                                     if (ix < untouched.size)
                                         conv(ByteArray(len).also { fb.get(it) })
                                     else conv(row to ByteArray(len).also { fb.get(it) })
-                                })
+                                })}
                             }
                         }
                     }
@@ -171,9 +184,9 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: List<Pair<S
 
 
     @InternalCoroutinesApi
-    suspend fun group(by: List<Int>): Columnar =
+    suspend fun group(vararg by: Int): Columnar =
 
-            this[by].let { columnar ->
+            this.get(*by).let { columnar ->
                 val size1 = columnar.size
                 val linearIndex = (0 until size1).map {
                     val values = columnar.values(it)
@@ -193,9 +206,9 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: List<Pair<S
 }
 
 @InternalCoroutinesApi
-class GroupColumnar(private val origin: Columnar, private val collate: MutableMap<Int, List<Int>>, private val originClusters: Array<List<Int>>, private val by: List<Int>) : Columnar(origin.rs, origin.columns) {
+class GroupColumnar(private val origin: Columnar, private val collate: MutableMap<Int, List<Int>>, private val originClusters: Array<List<Int>>, private val by: IntArray) : Columnar(origin.rs, origin.columns) {
     override val size: Int = collate.size
-    override suspend fun values(row: Int) = (originClusters[row].let { cluster ->
+    override   var  values: suspend (Int) -> List<*> = { row->(originClusters[row].let { cluster ->
         cluster.first().let { keyRowNum ->
             (origin.values(keyRowNum) to (cluster.map { gRow ->
                 origin.values(gRow)
@@ -210,10 +223,11 @@ class GroupColumnar(private val origin: Columnar, private val collate: MutableMa
             }
 
         }
-    })
+    })}
 
 }
 
 //todo: csv analogs.  for the same file we would have recordlen as Array<Int>, and our columns
-// would have to parse and escape tokens for each cell value.
+// would have to parse and escape tokens for each cell value.  the group/pivot logic would
+// be affected by column structure changes.
 
