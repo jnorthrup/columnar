@@ -19,11 +19,6 @@ class FixedRecordLengthBufferTest0 : StringSpec() {
 
             suspend1(flow)
         }
-        "VariableRecordLengthFile" {
-            val x = VariableRecordLengthFile("src/test/resources/caven20.csv")
-            val flow = x[0, 19, 10]
-            suspend2(flow)
-        }
     }
 
      private inline suspend fun suspend1(flow: Flow<ByteBuffer>) {
