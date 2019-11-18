@@ -77,6 +77,11 @@ class ColumnarTest : StringSpec() {
             (0 until group1.size).forEach { System.err.println(group1.values(it)) }
             System.err.println("group2:")
             (0 until group2.size).forEach { System.err.println(group2.values(it)) }
+            group1[2].values(0).shouldBe(listOf(88.0f))
+            group2.values(2)[2].toString().shouldBe(
+            "[4.0, 820.0]"
+            )
+
         }
         "groupAggregate" {
             var group1 = c4.group((0))
