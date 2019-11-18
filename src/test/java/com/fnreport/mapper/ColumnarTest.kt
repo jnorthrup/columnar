@@ -3,11 +3,7 @@ package com.fnreport.mapper
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
-import io.kotlintest.tables.row
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
 
 @UseExperimental(InternalCoroutinesApi::class)
 
@@ -52,31 +48,39 @@ class ColumnarTest : StringSpec() {
         }
 
         "pivot" {
-            val p4 = spivot(/*c4.pivot(*/c4, listOf(0), 1, 2, 3)/*)*/
-            val x = s4(p4)
-            System.err.println("pivot:")
-            System.err.println(p4.columns.map { val (n) = it;n }.zip(x.flatten()))
+            val p4 = c4.pivot(listOf(0), 1, 2, 3)
+            System.err.println(p4.columns.map { (s)->s })
+            (0 until p4.size).forEach {
+
+                val values = p4.values(it)
+                System.err.println(values)
+            }
         }
 
         "group" {
             val group1 = c4.group(listOf(0))
             val group2 = c4.group(listOf(1))
             System.err.println("group1:")
-            (0 until group1.size).forEach { System.err.println(group1.values(it).first()) }
+            (0 until group1.size).forEach { System.err.println(group1.values(it) ) }
             System.err.println("group2:")
-            (0 until group2.size).forEach { System.err.println(group2.values(it).first()) }
+            (0 until group2.size).forEach { System.err.println(group2.values(it) ) }
         }
         "group+pivot" {
             val by = listOf(0)
 
-            val group = c4.pivot(listOf(0), 1, 2, 3).group(listOf(0))
-            val res = group.run { (0 until size).map { values(it).first() } }
+            val p4 = c4.pivot(listOf(0), 1, 2, 3)
+            val g4 = p4.group(listOf(0))
+            val res = g4.let { columnar ->
+                (0 until columnar.size).map {
+                  columnar.values(it);
+                }
+            }
 
             System.err.println("pivot+group:")
-            val cnames     = group.columns.map { (cname) -> cname }
+            val cnames = g4.columns.map { (cname) -> cname }
             res.forEach { row ->
 
-                val tuple = cnames.zip(row  )
+                val tuple = cnames.zip(row)
                 System.err.println(tuple)
 
             }
@@ -87,5 +91,5 @@ class ColumnarTest : StringSpec() {
 
     private suspend fun s4(columnar: Columnar) = columnar.values(0).toList().map { it }
 
-    private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row).first()
+    private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row)
 }
