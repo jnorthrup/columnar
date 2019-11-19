@@ -18,8 +18,8 @@ class ColumnarTest : StringSpec() {
                             ))))
     val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
-    val c20 = Columnar(f20, columns)
-    val c4 = Columnar(f4, columns)
+    val c20 = Columnar(f20, columns.toTypedArray())
+    val c4 = Columnar(f4, columns.toTypedArray())
 
     override fun beforeTest(testCase: TestCase) {
 
@@ -58,9 +58,9 @@ class ColumnarTest : StringSpec() {
         }
         "pivotAggregate" {
             val p4 = c4.pivot(/*listOf(0)*/emptyList(), 1, 2, 3)
-            p4[0, 1]{ any -> (any as? Iterable<Float>)?.sum() }
-            System.err.println("agg:")
-            System.err.println(p4.columns.map { (s) -> s })
+            p4[(0 until p4.columns.size) to { any -> any ?: 0 }]
+
+            System.err.println("pivot agg:")
             (0 until p4.size).forEach {
                 val values = p4.values(it)
                 System.err.println(values)
@@ -76,20 +76,26 @@ class ColumnarTest : StringSpec() {
             (0 until group2.size).forEach { System.err.println(group2.values(it)) }
             group1[2].values(0).shouldBe(listOf(88.0f))
             group2.values(2)[2].toString().shouldBe(
-            "[4.0, 820.0]"
+                    "[4.0, 820.0]"
             )
         }
         "groupAggregate" {
+            val sums = listOf(2, 3)
             var group1 = c4.group((0))
+            group1[sums to { any -> any ?: 0f }]
             var group2 = c4.group((1))
+            group2[sums to { any -> any ?: 0f }]
             System.err.println("group1Agg:")
-            group1=group1[0,1]*group1[2,3]{ any -> (any as? Iterable<Float>)?.sum()?:any }
-            (0 until group1.size).forEach { System.err.println(group1.values(it)) }
-            group2=group2[0,1]*group1[2,3]{ any -> (any as? Iterable<Float>)?.sum()?:any }
-            System.err.println("group2Agg:")
-            (0 until group2.size).forEach { System.err.println(group2.values(it)) }
+
+            (0 until group1.size).map { ind ->
+                group1.values(ind).map { subject ->
+                    if (subject is List<*> && subject.first() is Float) {
+                        (subject as  Collection<Float>).toFloatArray  ().sum()
+                    } else "$subject"
+                }
+            }.forEach { System.err.println("$it") }
         }
-        "group+pivot" {
+        "group+pivot"{
             val by = listOf(0)
             val p4 = c4.pivot(listOf(0), 1, 2, 3)
             val g4 = p4.group((0))
@@ -114,4 +120,10 @@ class ColumnarTest : StringSpec() {
     private suspend fun s4(columnar: Columnar) = columnar.values(0).toList().map { it }
 
     private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row)
+}
+
+val sumFunc: (Any?) -> Any? = { any ->
+    (any as? Iterable<Float?>)?.map {
+        it ?: 0.0f
+    }?.let(Iterable<Float>::sum) ?: any
 }

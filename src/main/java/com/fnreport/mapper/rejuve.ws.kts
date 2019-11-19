@@ -8,7 +8,7 @@ val d1names = listOf("SalesNo", "SalesAreaID", "date", "PluNo", "ItemName", "Qua
 val colspecs = listOf((0 to 11), (11 to 15), (15 to 25), (25 to 40), (40 to 60), (60 to 82), (82 to 103), (103 to 108))
 
 @InternalCoroutinesApi
-val d1 = Columnar(rs = FixedRecordLengthFile("/vol/aux/rejuve/rejuvesinceapril2019.fwf"), columns = d1names.zip(colspecs.zip(listOf(stringMapper(), stringMapper(), dateMapper(), stringMapper(), stringMapper(), floatMapper(), floatMapper(), stringMapper()))))
+val d1 = Columnar(rs = FixedRecordLengthFile("/vol/aux/rejuve/rejuvesinceapril2019.fwf"), columns = d1names.zip(colspecs.zip(listOf(stringMapper(), stringMapper(), dateMapper(), stringMapper(), stringMapper(), floatMapper(), floatMapper(), stringMapper()))).toTypedArray())
 
 @InternalCoroutinesApi
 val ds = d1.size
