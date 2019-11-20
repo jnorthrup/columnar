@@ -134,53 +134,54 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: Array<Pair<
         }
     }
 
-    suspend fun pivot(untouched: Collection<Int>, lhs: Int, vararg rhs: Int): Columnar =
-            linkedMapOf<Any?, LinkedHashSet<Int>>().let { lhsIndex ->
+    suspend fun pivot(untouched: Collection<Int>, lhs: Int, vararg rhs: Int): Columnar {
+        linkedMapOf<Any?, LinkedHashSet<Int>>().let { lhsIndex ->
+            this[lhs].run {
                 (0 until size).map { rowIndex ->
-                    val rowF = values(rowIndex)
-                    rowF.let { row ->
-                        val key = row[lhs]
+                    values(rowIndex).let { row ->
+                        val key = row.first()
                         lhsIndex[key] = ((lhsIndex[key] ?: linkedSetOf()) + rowIndex) as LinkedHashSet<Int>
                     }
                 }
-                untouched.map { columns[it] }.toMutableList().let { revisedColumns ->
-                    this.columns[lhs].let { (keyPrefix) ->
-                        lhsIndex.entries.map { (k, v) ->
-                            "$keyPrefix:${(k as? ByteArray)?.let { it -> String(it) } ?: k}".let { keyName ->
-                                revisedColumns += rhs.map { rhsCol ->
-                                    this.columns[rhsCol].let { (rhsName, decode) ->
-                                        val (coords, mapper) = decode
-                                        val function = { input: Any? ->
-                                            val block: (Pair<Int, Any?>) -> Any? = { (row, value) ->
-                                                value.takeIf { row in v }?.let(mapper)
-                                            }
-                                            (input as? Pair<Int, Any?>)?.let(block)
+            }
+            untouched.map { columns[it] }.toMutableList().let { revisedColumns ->
+                this.columns[lhs].let { (keyPrefix) ->
+                    lhsIndex.entries.map { (k, v) ->
+                        "$keyPrefix:${(k as? ByteArray)?.let { it -> String(it) } ?: k}".let { keyName ->
+                            revisedColumns += rhs.map { rhsCol ->
+                                this.columns[rhsCol].let { (rhsName, decode) ->
+                                    val (coords, mapper) = decode
+                                    val function = { input: Any? ->
+                                        val block: (Pair<Int, Any?>) -> Any? = { (row, value) ->
+                                            value.takeIf { row in v }?.let(mapper)
                                         }
-                                        val pair = ("$keyName,$rhsName") to (coords to function)
-                                        pair
+                                        (input as? Pair<Int, Any?>)?.let(block)
                                     }
+                                    val pair = ("$keyName,$rhsName") to (coords to function)
+                                    pair
                                 }
                             }
                         }
-                        val rs2 = this.rs
-                        return object : Columnar(rs2, revisedColumns.toTypedArray()) {
-                            override var values: suspend (Int) -> List<*> = { row ->
-                                rs2.values(row).let { rs1 ->
-                                    (super.columns.mapIndexed { ix, (_, mapper) ->
-                                        val (coor, conv: (Any?) -> Any?) = mapper
-                                        val (begin, end) = coor
-                                        val len = end - begin
-                                        val fb = rs1.first().position(begin).slice().limit(len)
-                                        if (ix < untouched.size)
-                                            conv(ByteArray(len).also { fb.get(it) })
-                                        else conv(row to ByteArray(len).also { fb.get(it) })
-                                    })
+                    }
+                    val rs2 = this.rs
+                    return object : Columnar(rs2, revisedColumns.toTypedArray()) {
+                        override var values: suspend (Int) -> List<*> = { row ->
+                            rs2.values(row).let { rs1 ->
+                                super.columns.mapIndexed { ix, (_, mapper) ->
+                                    val (coor, conv: (Any?) -> Any?) = mapper
+                                    val (begin, end) = coor
+                                    val len = end - begin
+                                    val fb = rs1.first().position(begin).slice().limit(len)
+                                    if (ix < untouched.size) conv(ByteArray(len).also { fb.get(it) })
+                                    else conv(row to ByteArray(len).also { fb.get(it) })
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
 
 
     @InternalCoroutinesApi
@@ -188,10 +189,8 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: Array<Pair<
 
             this.get(*by).let { columnar ->
                 val size1 = columnar.size
-                val linearIndex = (0 until size1).map {
-                    val values = columnar.values(it)
-                    values
-                }
+                val linearIndex = (0 until size1).map { (columnar.values)(it) }
+
 
 
                 mutableMapOf<Int, List<Int>>().let { collate ->

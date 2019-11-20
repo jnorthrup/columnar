@@ -113,10 +113,5 @@ class ColumnarTest : StringSpec() {
             }
         }
     }
-
-    private suspend fun spivot(c4: Columnar, arrayOf: Collection<Int>, i: Int, vararg rhs: Int): Columnar = c4.pivot(arrayOf, i, *rhs)
-
-    private suspend fun s4(columnar: Columnar) = columnar.values(0).toList().map { it }
-
     private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row)
 }

@@ -48,9 +48,6 @@ class FixedRecordLengthBufferTest0 : StringSpec() {
                   }
 
          val trim = reified[1].trim()
-         System.err.println( trim )//.shouldBe("2017-07-060100865/0101010106/13-14/01                                               4.000000000000                          0E-12" )
-
-//         trim.shouldBe("2017-07-060100865/0101010106/13-14/01                                               4.000000000000                          0E-12" )
-
+         System.err.println( trim )
      }
 }
