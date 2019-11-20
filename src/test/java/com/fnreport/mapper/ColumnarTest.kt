@@ -90,7 +90,7 @@ class ColumnarTest : StringSpec() {
             (0 until group1.size).map { ind: Int ->
                 group1.values(ind).map<Any?, Any> { subject: Any? ->
                     if (subject is List<*> && subject.first() is Float) {
-                        (subject as  Collection<Float>).toFloatArray  ().sum()
+                        (subject as  Collection<Float>).sum()
                     } else "$subject"
                 }
             }.forEach { System.err.println("$it") }
@@ -107,7 +107,6 @@ class ColumnarTest : StringSpec() {
             System.err.println("pivot+group:")
             val cnames = g4.columns.map { (cname) -> cname }
             res.forEach { row ->
-
                 val tuple = cnames.zip(row)
                 System.err.println(tuple)
 
@@ -120,10 +119,4 @@ class ColumnarTest : StringSpec() {
     private suspend fun s4(columnar: Columnar) = columnar.values(0).toList().map { it }
 
     private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row)
-}
-
-val sumFunc: (Any?) -> Any? = { any ->
-    (any as? Iterable<Float?>)?.map {
-        it ?: 0.0f
-    }?.let(Iterable<Float>::sum) ?: any
 }
