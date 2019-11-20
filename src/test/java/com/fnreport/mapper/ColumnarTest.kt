@@ -80,15 +80,15 @@ class ColumnarTest : StringSpec() {
             )
         }
         "groupAggregate" {
-            val sums = listOf(2, 3)
-            var group1 = c4.group((0))
+            val sums: List<Int> = listOf(2, 3)
+            var group1: Columnar = c4.group((0))
             group1[sums to { any -> any ?: 0f }]
-            var group2 = c4.group((1))
-            group2[sums to { any -> any ?: 0f }]
+            var group2: Columnar = c4.group((1))
+            group2[sums to { any: Any? -> any ?: 0f }]
             System.err.println("group1Agg:")
 
-            (0 until group1.size).map { ind ->
-                group1.values(ind).map { subject ->
+            (0 until group1.size).map { ind: Int ->
+                group1.values(ind).map<Any?, Any> { subject: Any? ->
                     if (subject is List<*> && subject.first() is Float) {
                         (subject as  Collection<Float>).toFloatArray  ().sum()
                     } else "$subject"
