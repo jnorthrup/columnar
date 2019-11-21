@@ -48,7 +48,23 @@ class ColumnarTest : StringSpec() {
         }
 
         "pivot" {
-            val p4 = c4.pivot(listOf(0), 1, 2, 3)
+
+
+            System.err.println("pivot")
+            val p4 = c4.pivot(intArrayOf(0), 1, 2, 3)
+            System.err.println(p4.columns.map { (s) -> s })
+            (0 until p4.size).forEach {
+
+                val values = p4.values(it)
+                System.err.println(values)
+            }
+        }
+        "pivotpivot" {
+
+
+            System.err.println("pivot2")
+            val p4 = c4.pivot(intArrayOf(0), 1, 2, 3)
+                    .pivot(intArrayOf(), 0,1 , 2, 3)
             System.err.println(p4.columns.map { (s) -> s })
             (0 until p4.size).forEach {
 
@@ -57,7 +73,7 @@ class ColumnarTest : StringSpec() {
             }
         }
         "pivotAggregate" {
-            val p4 = c4.pivot(/*listOf(0)*/emptyList(), 1, 2, 3)
+            val p4 = c4.pivot(/*listOf(0)*/intArrayOf(), 1, 2, 3)
             p4[(0 until p4.columns.size) to { any -> any ?: 0 }]
 
             System.err.println("pivot agg:")
@@ -97,7 +113,7 @@ class ColumnarTest : StringSpec() {
         }
         "group+pivot"{
             val by = listOf(0)
-            val p4 = c4.pivot(listOf(0), 1, 2, 3)
+            val p4 = c4.pivot(intArrayOf(0), 1, 2, 3)
             val g4 = p4.group((0))
             val res = g4.let { columnar ->
                 (0 until columnar.size).map {

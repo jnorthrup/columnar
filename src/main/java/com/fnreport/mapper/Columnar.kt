@@ -48,11 +48,11 @@ interface RowStore<T> : Flow<T> {
     override suspend fun collect(collector: FlowCollector<T>) {
         val availableProcessors = Runtime.getRuntime().availableProcessors()
         val chunksize = max(size, availableProcessors) / min(size, availableProcessors)
-        coroutineScope   {
+        coroutineScope {
             (0 until size).chunked(chunksize).forEach { range ->
                 launch {
                     coroutineScope {
-                        range.forEach {launch {collector.emit(values(it))} }
+                        range.forEach { launch { collector.emit(values(it)) } }
                     }
                 }
             }
@@ -155,49 +155,83 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: Array<Pair<
         }
     }
 
-    suspend fun pivot(untouched: Collection<Int>, lhs: Int, vararg rhs: Int): Columnar {
-        linkedMapOf<Any?, SortedSet<Int>>().let { lhsIndex ->
+
+    suspend fun pivot(untouched: IntArray, lhs: Int, vararg rhs: Int): Columnar {
+        val sets1 = linkedMapOf<Any?, SortedSet<Int>>()
+
+        run {
             this[lhs].run {
                 this.collectIndexed { index, row ->
-                    val key = row
-                    val v = lhsIndex[key]
-                    when (v) {
-                        null -> lhsIndex[key] = sortedSetOf(index)
-                        else -> v.add(index)
+                    val key = row.first()
+                    val cluster = sets1[key]
+                    when (cluster) {
+                        null -> sets1[key] = (sortedSetOf(index))
+                        else -> cluster.add(index)
                     }
                 }
             }
-            untouched.map { columns[it] }.toMutableList().let { revisedColumns ->
-                this.columns[lhs].let { (keyPrefix) ->
-                    lhsIndex.entries.map { (k, v) ->
-                        "$keyPrefix:${(k as? ByteArray)?.let { it -> String(it) } ?: k}".let { keyName ->
-                            revisedColumns += rhs.map { rhsCol ->
-                                this.columns[rhsCol].let { (rhsName, decode) ->
-                                    val (coords, mapper) = decode
-                                    val function = { input: Any? ->
-                                        val block: (Pair<Int, Any?>) -> Any? = { (row, value) ->
-                                            value.takeIf { row in v }/*?*/.let(mapper)//we pass along null... some mappers pad to 0
-                                        }
-                                        (input as? Pair<Int, Any?>)?.let(block)
-                                    }
-                                    val pair = ("$keyName,$rhsName") to (coords to function)
-                                    pair
-                                }
+        }
+
+        val sets = sets1.map { (k, v) -> k to (v to IntArray(1)) }.toMap()
+        var c = 0
+        untouched.map { columns[it] }.toMutableList().let { revisedColumns ->
+            this.columns[lhs].let { (keyPrefix) ->
+                sets.entries.map { (k, v) ->
+                    v.second[0] = c
+                    c++
+                    "$keyPrefix:${(k as? ByteArray)?.let { it -> String(it) } ?: k}".let { keyName ->
+                        revisedColumns += rhs.map { rhsCol ->
+
+                            this.columns[rhsCol].let { (rhsName, decode) ->
+                                val (coords, mapper) = decode
+
+
+                                ("$keyName,$rhsName") to (coords to mapper)
                             }
                         }
                     }
-                    return object : Columnar(rs, revisedColumns.toTypedArray()) {
-                        override var values: suspend (Int) -> List<*> = { row ->
-                            rs.values(row).let { rs1 ->
-                                super.columns.mapIndexed { ix, (_, mapper) ->
-                                    val (coor, conv: (Any?) -> Any?) = mapper
-                                    val (begin, end) = coor
-                                    val len = end - begin
-                                    val fb = rs1.first().position(begin).slice().limit(len)
-                                    if (ix < untouched.size) conv(ByteArray(len).also { fb.get(it) })
-                                    else conv(row to ByteArray(len).also { fb.get(it) })
+                }
+                val origin = this
+                val clusters = sets.map { (k, v) -> k.hashCode() to v.let { (a, b) -> a.toIntArray() to b.first() } }.toMap()
+                return object : Columnar(rs, revisedColumns.toTypedArray()) {
+                    override var values: suspend (Int) -> List<*> = { row ->
+                        //  rs.values(row).let { rs1 ->
+                        //      super.columns.mapIndexed { ix, (_, mapper) ->
+                        //          val (coor, conv: (Any?) -> Any?) = mapper
+                        //          val (begin, end) = coor
+                        //          val len = end - begin
+                        //          val fb = rs1.first().position(begin).slice().limit(len)
+                        //          if (ix < untouched.size) conv(ByteArray(len).also { fb.get(it) })
+                        //          else conv(row to ByteArray(len).also { fb.get(it) })
+                        //      }
+                        //  }
+                        val values1 = origin.values(row)
+
+                        val front = untouched.size
+                        lateinit var cluster: Pair<IntArray, Int>
+                        coroutineScope {
+                            sequence {
+                                columns.indices.forEach { colNum ->
+
+                                    when {
+                                        colNum < front -> yield(values1[untouched[colNum]])
+                                        colNum == front -> {
+                                            val any = values1[lhs]
+                                            val hashCode = any.hashCode()
+                                            val pair = clusters[hashCode]
+                                            cluster = pair!!
+                                        }
+                                        colNum > front -> {
+                                            val lower = cluster.second * rhs.size
+                                            val intRange = lower until (lower + rhs.size)
+                                            val adjusted = colNum - front
+                                            yield(if (adjusted in intRange) {
+                                                values1[rhs[(adjusted - intRange.first)]]
+                                            } else null)
+                                        }
+                                    }
                                 }
-                            }
+                            }.toList()
                         }
                     }
                 }

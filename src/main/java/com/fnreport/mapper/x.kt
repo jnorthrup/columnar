@@ -21,7 +21,7 @@ fun main() {
             val d1: Columnar = Columnar(rs = FixedRecordLengthFile("/vol/aux/rejuve/rejuvesinceapril2019.fwf"), columns = d1names.zip(colspecs.zip(mappings)).toTypedArray())
             println(" #d1")
             println("" + d1.values(0))
-            println("number of rows: "+    d1.size)
+            println("number of rows: " + d1.size)
             println(" #d2")
             val d2 = d1[2, 1, 3, 5]
             println("" + d2.values(0))
@@ -32,15 +32,15 @@ fun main() {
             val d3 = d2
             println(d3.columns.map { (a, b) -> a })
             println("" + d3.values(0))
-            val d4 = d2.pivot(listOf(0, 2), 1, 3)
-            println(" #d4  @ columncount: "+d4.columns.size)
-            println(d4.columns.map { (a, b) -> a })
+            val d4 = d2.pivot( intArrayOf(0, 2), 1, 3)
+            println(" #d4  @ columncount: " + d4.columns.size)
+//            println(d4.columns.map { (a, b) -> a })
             println("" + d4.values(0))
-            val d5 = d4.pivot(listOf(0), 1, *(2 until d4.columns.size).toList().toIntArray())
-            println(" #d5 @ columncount: "+d5.columns.size)
-d5[(1 until d5. columns.size )to { any -> any ?: 0f }]
-            println(d5.columns.map { (a, b) -> a })
-            println("" + d5.values(0))
+            val d5 = d4.pivot(intArrayOf(0), 1, *(2 until d4.columns.size).toList().toIntArray())
+            println(" #d5 @ columncount: " + d5.columns.size)
+            d5[(1 until d5.columns.size) to { any -> any ?: 0f }]
+//            println(d5.columns.map { (a, b) -> a })
+//            println("" + d5.values(0))
             println(" #d6")
 
             val d6 = d5.group(0)
@@ -48,7 +48,7 @@ d5[(1 until d5. columns.size )to { any -> any ?: 0f }]
 
             val values0 = d6.values(0).map<Any?, Any> { subject: Any? ->
                 if (subject is List<*> && subject.first() is Float) {
-                    (subject as  Collection<Float>).sum()
+                    (subject as Collection<Float>).sum()
                 } else "$subject"
             }
             println("" + values0)
