@@ -10,6 +10,8 @@ import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 
 fun stringMapper(): (Any?) -> Any? = { i -> (i as? ByteArray)?.let { String(it).takeIf(String::isNotBlank)?.trim() } }
@@ -44,13 +46,18 @@ interface RowStore<T> : Flow<T> {
     val size: Int
     @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
-//        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-//    }
-///*    override   suspend fun <T> collect(collector: FlowCollector<T>) :Unit{
-        coroutineScope {
-            (0 until size).forEach { launch { collector.emit(values(it)) } }
+        val availableProcessors = Runtime.getRuntime().availableProcessors()
+        val chunksize = max(size, availableProcessors) / min(size, availableProcessors)
+        coroutineScope   {
+            (0 until size).chunked(chunksize).forEach { range ->
+                launch {
+                    coroutineScope {
+                        range.forEach {launch {collector.emit(values(it))} }
+                    }
+                }
+            }
         }
-    }//*/
+    }
 }
 
 interface FixedLength<T> : Indexed<T> {
@@ -199,7 +206,8 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: Array<Pair<
     }
 
     @InternalCoroutinesApi
-    class GroupColumnar(private val origin: Columnar, override val size: Int, private val originClusters: Array<IntArray>, private val by: IntArray) : Columnar(origin.rs, origin.columns) {
+    class GroupColumnar(private val origin: Columnar, override val size: Int, private val originClusters: Array<IntArray>,
+                        private val gby: IntArray) : Columnar(origin.rs, origin.columns) {
         override var values: suspend (Int) -> List<*> = { row ->
             originClusters[row].let { cluster ->
                 cluster.first().let { keyRowNum ->
@@ -207,7 +215,7 @@ open class Columnar(var rs: RowStore<Flow<ByteBuffer>>, val columns: Array<Pair<
                         origin.values(gRow)
                     }).map { it }).let { (keyRow, aggvals) ->
                         columns.indices.map { colNum ->
-                            if (colNum in by)
+                            if (colNum in gby)
                                 keyRow[colNum]
                             else
                                 aggvals.map { it[colNum] }
