@@ -6,34 +6,33 @@ import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import java.nio.ByteBuffer
-import kotlin.math.max
-import kotlin.math.min
 
-  val   Pair<Int,Int>.size: Int get() = let { (a, b) ->b-a}
-
-
+val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
 typealias RowDecoder = List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>>
+typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
 
-infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): suspend (Int) -> Array<Any?> = { row: Int ->
+operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
+    val arrayOfFlows = this(row)
+    reorder.map { i ->
+        flowOf(arrayOfFlows[i].first())
+    }.toTypedArray()
+}
+
+
+infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): suspend (Int) -> Array<Flow<Any?>> = { row: Int ->
     val cols = this
-    val ret = arrayOfNulls<Any?>(cols.size)
     val values = rs.values(row)
-    val first = values.first()
+    val first = lazyOf(values.first())
     first.let { buf ->
-
-        this.forEachIndexed { index,
-                              (_, convertor) ->
-            convertor.let {
-                (coords, mapper) ->
-                val byteArray = ByteArray(coords.size)
-                val let1 = byteArray.also { buf.get(it) }
-                val let = let1.let(mapper)
-                ret[index] = let
-            }
-        }
-        ret
+        this.mapIndexed { index,
+                          (_, convertor) ->
+            flowOf(convertor.let { (coords, mapper) ->
+                ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
+            })
+        }.toTypedArray()
     }
 }
 
@@ -53,6 +52,7 @@ class ColumnarTest : StringSpec() {
 
     val c20 = columns from f20
     val c4 = columns from f4
+    val c4remap = c4[0, 0, 0, 1, 3, 2, 1, 1, 1]
 
     /*
     val c20 = Columnar(f20, columns.toTypedArray())
@@ -66,8 +66,7 @@ class ColumnarTest : StringSpec() {
     init {
 
         "dateCol"{
-            val values20 = c20(1)
-            val any = values20 [0]
+            val any = c20(1)[0].first()
             any.toString().shouldBe("2017-10-22")
             System.err.println(any)
 
@@ -75,6 +74,12 @@ class ColumnarTest : StringSpec() {
         "size" {
             f4.size.shouldBe(4)
 //            c4.size.shouldBe(4)
+        }
+        "remap"{
+            val c41 = c4(1).map { it.first() }
+            System.err.println(c41)
+            val map = c4remap(1).map { it.first() }
+            System.err.println(map)
         }
 /*        "values" {
             val values20 = decode(1, c20)
