@@ -1,3 +1,4 @@
+/*
 package com.fnreport.mapper
 
 
@@ -59,4 +60,4 @@ fun main() {
 //        val values3 = d6.values(3)
     }
 
-}
+}*/

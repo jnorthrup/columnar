@@ -4,23 +4,60 @@ import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import java.nio.ByteBuffer
+import kotlin.math.max
+import kotlin.math.min
+
+  val   Pair<Int,Int>.size: Int get() = let { (a, b) ->b-a}
+
+
+
+typealias RowDecoder = List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>>
+
+infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): suspend (Int) -> Array<Any?> = { row: Int ->
+    val cols = this
+    val ret = arrayOfNulls<Any?>(cols.size)
+    val values = rs.values(row)
+    val first = values.first()
+    first.let { buf ->
+
+        this.forEachIndexed { index,
+                              (_, convertor) ->
+            convertor.let {
+                (coords, mapper) ->
+                val byteArray = ByteArray(coords.size)
+                val let1 = byteArray.also { buf.get(it) }
+                val let = let1.let(mapper)
+                ret[index] = let
+            }
+        }
+        ret
+    }
+}
 
 @UseExperimental(InternalCoroutinesApi::class)
 
+
 class ColumnarTest : StringSpec() {
 
-    val columns = listOf("date", "channel", "delivered", "ret").zip(
-            arrayListOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).zip(
-                    listOf(dateMapper(),
-                            stringMapper(),
-                            floatMapper(),
-                            floatMapper(
-                            ))))
+    val columns: List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>> = listOf("date", "channel", "delivered", "ret").zip(
+            listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).zip(
+                    listOf(dateMapper,
+                            stringMapper,
+                            floatMapper,
+                            floatMapper)))
     val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
+
+    val c20 = columns from f20
+    val c4 = columns from f4
+
+    /*
     val c20 = Columnar(f20, columns.toTypedArray())
     val c4 = Columnar(f4, columns.toTypedArray())
-
+*/
     override fun beforeTest(testCase: TestCase) {
 
     }
@@ -29,17 +66,17 @@ class ColumnarTest : StringSpec() {
     init {
 
         "dateCol"{
-            val values20 = decode(1, c20)
-            val any = values20[0]
+            val values20 = c20(1)
+            val any = values20 [0]
             any.toString().shouldBe("2017-10-22")
             System.err.println(any)
 
         }
         "size" {
             f4.size.shouldBe(4)
-            c4.size.shouldBe(4)
+//            c4.size.shouldBe(4)
         }
-        "values" {
+/*        "values" {
             val values20 = decode(1, c20)
             System.err.println(values20)
             val values4 = decode(1, c4)
@@ -73,7 +110,7 @@ class ColumnarTest : StringSpec() {
             }
         }
         "pivotAggregate" {
-            val p4 = c4.pivot(/*listOf(0)*/intArrayOf(), 1, 2, 3)
+            val p4 = c4.pivot(*//*listOf(0)*//*intArrayOf(), 1, 2, 3)
             p4[(0 until p4.columns.size) to { any -> any ?: 0 }]
 
             System.err.println("pivot agg:")
@@ -127,7 +164,7 @@ class ColumnarTest : StringSpec() {
                 System.err.println(tuple)
 
             }
-        }
+        }*/
     }
-    private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row)
+//    private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row)
 }
