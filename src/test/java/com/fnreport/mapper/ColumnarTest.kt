@@ -3,44 +3,17 @@ package com.fnreport.mapper
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
-import java.nio.ByteBuffer
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.yield
+import java.util.*
 
-val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
-
-typealias RowDecoder = List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>>
-typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
-
-operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
-    val arrayOfFlows = this(row)
-    reorder.map { i ->
-        flowOf(arrayOfFlows[i].first())
-    }.toTypedArray()
-}
-
-
-infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): suspend (Int) -> Array<Flow<Any?>> = { row: Int ->
-    val cols = this
-    val values = rs.values(row)
-    val first = lazyOf(values.first())
-    first.let { buf ->
-        this.mapIndexed { index,
-                          (_, convertor) ->
-            flowOf(convertor.let { (coords, mapper) ->
-                ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
-            })
-        }.toTypedArray()
-    }
-}
+fun Array<*>.equalsArray(other: Array<*>) = Arrays.equals(this, other)
+fun Array<*>.deepEqualsArray(other: Array<*>) = Arrays.deepEquals(this, other)
 
 @UseExperimental(InternalCoroutinesApi::class)
-
-
 class ColumnarTest : StringSpec() {
-
     val columns: List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>> = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).zip(
                     listOf(dateMapper,
@@ -54,12 +27,8 @@ class ColumnarTest : StringSpec() {
     val c4 = columns from f4
     val c4remap = c4[0, 0, 0, 1, 3, 2, 1, 1, 1]
 
-    /*
-    val c20 = Columnar(f20, columns.toTypedArray())
-    val c4 = Columnar(f4, columns.toTypedArray())
-*/
-    override fun beforeTest(testCase: TestCase) {
 
+    override fun beforeTest(testCase: TestCase) {
     }
 
 
@@ -73,7 +42,7 @@ class ColumnarTest : StringSpec() {
         }
         "size" {
             f4.size.shouldBe(4)
-//            c4.size.shouldBe(4)
+
         }
         "remap"{
             val c41 = c4(1).map { it.first() }
@@ -81,6 +50,113 @@ class ColumnarTest : StringSpec() {
             val map = c4remap(1).map { it.first() }
             System.err.println(map)
         }
+        "reify"{
+            val suspendFunction1 = columns from f4
+            val stage = f4.take(f4.size)
+            val r4 = columns reify f4
+        }
+
+        "pivot" {
+
+
+            System.err.println("pivot")
+            piv1()
+//            (0 until p4.size).forEach {
+//
+//                val values = p4.values(it)
+//                System.err.println(values)
+//            }*/
+        }
+    }
+
+    private suspend fun piv1() {
+        val reify = columns.reify(f4)
+        val p4 = reify.pivot(intArrayOf(0), intArrayOf(1), 2, 3)
+        //            System.err.println(p4)/*
+
+
+        p4.let { (col, data) ->
+            System.err.println(col.map { it })
+            data.let { (rows, size) ->
+                rows.collect { arr ->
+                    System.err.println(arr.toList())
+                }
+            }
+        }
+    }
+}
+typealias Table2 = Pair<Array<String>, Pair<Flow<Array<Any?>>, Int>>
+
+/**
+ * reassign columns
+ */
+@ExperimentalCoroutinesApi
+operator fun Table2.get(vararg axis: Int): Table2 =
+        this.let { (cols, data) ->
+            axis.map { ix -> cols[ix] }.toTypedArray() to
+                    data.let { (rows, sz) ->
+                        rows.take(sz).map { r -> axis.map { c -> r[c] }.toTypedArray() } to sz
+                    }
+        }
+
+
+infix fun RowDecoder.reify(r: FixedRecordLengthFile): Table2 =
+        this.map { (a) -> a }.toTypedArray() to (r.run {
+            take(size)
+        }.map { fb ->
+            lazyOf(fb.first()).let { lb ->
+                map { (_, b) ->
+                    b.decodeLazy(lb)
+                }
+            }.toTypedArray()
+        } to r.size)
+
+suspend fun Table2.cluster(vararg keys: Int) = this.get(*keys).let { (_, remapped) ->
+    linkedMapOf<Any?, SortedSet<Int>>().apply {
+        val mappings = this
+        remapped.let { (values, _) ->
+            values.collectIndexed { ix, ar1 ->
+               val  ar=ar1.toList()
+                val x = mappings[ar]
+                x?.add(ix) ?: mappings.run { set(ar, sortedSetOf(ix)) }
+            }
+        }
+    }.map { (k, v) -> k to v.toTypedArray() }.toMap()
+}
+
+@ExperimentalCoroutinesApi
+suspend fun Table2.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Table2 = this.let { (nama, data) ->
+    val cluster: Map<Any?, Array<Int>> = this.cluster(  *axis)
+    val xcoord = cluster.keys.mapIndexed { index, any -> any to index }.toMap()
+    val xsize = fanOut.size
+
+    axis.mapIndexed { index: Int, i: Int ->
+        nama[i]
+    }.let { axNam ->
+        cluster.keys.map { key ->
+            axNam.zip((key  as List<*>)).let { keyPrefix ->
+                fanOut.map { i ->
+                    "$keyPrefix:${nama[i]}"
+                }
+            }
+        }.flatten().toTypedArray() to data.let { (c, d) ->
+            c.map { value ->
+                arrayOfNulls<Any?>(+lhs.size + (xcoord.size * xsize)).also { grid ->
+                    val key = axis.map { i -> value[i] }
+                    val x = xcoord[key] !!
+                    lhs.mapIndexed { index, i ->
+                        grid[index] = value[i]
+                    }
+                    fanOut.mapIndexed { index, xcol ->
+                        grid[lhs.size + (xsize * x + index)] = value[xcol]
+                    }
+
+                }
+            } to d
+        }
+    }
+}
+
 /*        "values" {
             val values20 = decode(1, c20)
             System.err.println(values20)
@@ -170,6 +246,6 @@ class ColumnarTest : StringSpec() {
 
             }
         }*/
-    }
+//}
 //    private suspend fun decode(row: Int, columnar: Columnar): List<Any?> = columnar.values(row)
-}
+

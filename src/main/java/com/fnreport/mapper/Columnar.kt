@@ -9,19 +9,58 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
+val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
+typealias ByteBufferNormalizer<T> = Pair<Pair<Int, Int>, (Any?) -> T>
+typealias RowDecoder = List<Pair<String, ByteBufferNormalizer<*>>>
+typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
 
-val stringMapper: (Any?) -> Any? = { i -> (i as? ByteArray)?.let {
-    val string = String(it)
-    string.takeIf(
-            String::isNotBlank
-    )?.trim() } }
+operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
+    val arrayOfFlows = this(row)
+    reorder.map { i ->
+        flowOf(arrayOfFlows[i].first())
+    }.toTypedArray()
+}
+
+fun <T> ByteBufferNormalizer<T>.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
+    ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
+} as T
+
+
+fun <T> ByteBufferNormalizer<T>.decode(buf: ByteBuffer): T =
+        let { (coords, mapper) ->
+            ByteArray(coords.size).also { buf.get(it) }.let(mapper)
+        }
+
+infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): suspend (Int) -> Array<Flow<Any?>> = { row: Int ->
+    val cols = this
+    val values = rs.values(row)
+    val first = lazyOf(values.first())
+    first.let { buf ->
+        this.mapIndexed { index,
+                          (_, convertor) ->
+            flowOf(convertor.decodeLazy(buf))
+        }.toTypedArray()
+    }
+}
+
+
+val stringMapper: (Any?) -> Any? = { i ->
+    (i as? ByteArray)?.let {
+        val string = String(it)
+        string.takeIf(
+                String::isNotBlank
+        )?.trim()
+    }
+}
+
 fun btoa(i: Any?) = (i as? ByteArray)?.let {
     val stringMapper1 = stringMapper(it)
-    stringMapper1?.toString() }
+    stringMapper1?.toString()
+}
+
 val intMapper: (Any?) -> Any? = { i -> btoa(i)?.toInt() ?: 0 }
 val floatMapper: (Any?) -> Any? = { i -> btoa(i)?.toFloat() ?: 0f }
 val doubleMapper: (Any?) -> Any? = { i -> btoa(i)?.toDouble() ?: 0.0 }
