@@ -27,7 +27,7 @@ operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
 
 fun <T> ByteBufferNormalizer<T>.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
     ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
-} as T
+}
 
 
 fun <T> ByteBufferNormalizer<T>.decode(buf: ByteBuffer): T =
@@ -126,7 +126,6 @@ open class MappedFile(
             flowOf(mappedByteBuffer.apply { position(row) }.slice().also {
                 while (it.hasRemaining() && it.get() != '\n'.toByte());
                 (it as ByteBuffer).flip()
-
             })
         }
 ) : FileAccess(filename), RowStore<Flow<ByteBuffer>>, Closeable by randomAccessFile
@@ -159,7 +158,6 @@ operator fun Table2.get(vararg axis: Int): Table2 =
                         rows.take(sz).map { r -> axis.map { c -> r[c] }.toTypedArray() } to sz
                     }
         }
-
 
 infix fun RowDecoder.reify(r: FixedRecordLengthFile): Table2 =
         this.map { (a) -> a }.toTypedArray() to (r.run {

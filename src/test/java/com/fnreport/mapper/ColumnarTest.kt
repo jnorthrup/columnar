@@ -3,7 +3,6 @@ package com.fnreport.mapper
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.util.*
@@ -30,14 +29,11 @@ class ColumnarTest : StringSpec() {
     override fun beforeTest(testCase: TestCase) {
     }
 
-
     init {
-
         "dateCol"{
             val any = c20(1)[0].first()
             any.toString().shouldBe("2017-10-22")
             System.err.println(any)
-
         }
         "size" {
             f4.size.shouldBe(4)
@@ -56,33 +52,125 @@ class ColumnarTest : StringSpec() {
         }
 
         "pivot" {
-
-
             System.err.println("pivot")
-            piv1()
-//            (0 until p4.size).forEach {
-//
-//                val values = p4.values(it)
-//                System.err.println(values)
-//            }*/
+            val x = suspend {
+
+                val reify = columns reify f4
+                val p4 = reify.pivot(intArrayOf(0), intArrayOf(1), 2, 3)
+                p4.let { (col, data) ->
+                    System.err.println(col.map { it })
+                    data.let { (rows, size) ->
+                        rows.collect { arr ->
+                            System.err.println(arr.toList())
+                        }
+                    }
+                }
+            }
+            x()
+        }
+
+        "group" {
+            System.err.println("group")
+            val x = suspend {
+
+                val r4 = columns reify f4
+
+                r4.group(0)
+                r4.group(1)
+            }
+            x()
         }
     }
+}
+typealias Table3=Pair<Array<String>, Pair<Array<Array<Any?>>, Int>>
 
-    private suspend fun piv1() {
-        val reify = columns.reify(f4)
-        val p4 = reify.pivot(intArrayOf(0), intArrayOf(1), 2, 3)
-        //            System.err.println(p4)/*
+suspend fun Table2.groupA(vararg by: Int):Table3 = let {
+    val collapse = collapse(*by)
+    val maxY = collapse.size
+    val yIndex = collapse.keys.mapIndexed { index, i -> i to index }.toMap()
 
+    val (colnames, b) = this
+    val (sourceRows, d) = b
 
-        p4.let { (col, data) ->
-            System.err.println(col.map { it })
-            data.let { (rows, size) ->
-                rows.collect { arr ->
-                    System.err.println(arr.toList())
-                }
+    //forward pass of all rows is cheaper than random pass for each key row
+    val protoData = mutableListOf<Int>()
+    val protoRow: List<*> = colnames.mapIndexed { index, s ->
+        when (index in by) {
+            true -> {
+                null
+            }
+            false -> {
+                protoData += index
+                mutableListOf<Any>()
             }
         }
     }
+
+    val landingZone = Array(maxY) { protoRow.toTypedArray() }
+//    val flowRes = mutableListOf<Flow<Array<Any>>>()
+    sourceRows.collectIndexed { index, value ->
+        val key = value.get(*by)
+        val keyHash = key.hashCode()
+        val first1 = collapse[keyHash]!!.first()
+        val lz: Array<Any?> = landingZone[yIndex[keyHash]!!]
+        if (first1 == index) by.forEachIndexed { index, it -> lz[it] = key[index] }
+        protoData.map {
+            lz[it] as MutableList<Any?> += value[it]
+        }
+    }
+    colnames to (
+            landingZone to maxY)
+}
+
+suspend fun Table2.group(vararg by: Int):Table2 = let {
+    val collapse = collapse(*by)
+    val maxY = collapse.size
+    val yIndex = collapse.keys.mapIndexed { index, i -> i to index }.toMap()
+
+    val (colnames, b) = this
+    val (sourceRows, d) = b
+
+    //forward pass of all rows is cheaper than random pass for each key row
+    val protoData = mutableListOf<Int>()
+    val protoRow: List<*> = colnames.mapIndexed { index, s ->
+        when (index in by) {
+            true -> {
+                null
+            }
+            false -> {
+                protoData += index
+                mutableListOf<Any>()
+            }
+        }
+    }
+
+    val landingZone = Array(maxY) { protoRow.toTypedArray() }
+//    val flowRes = mutableListOf<Flow<Array<Any>>>()
+    sourceRows.collectIndexed { index, value ->
+        val key = value.get(*by)
+        val keyHash = key.hashCode()
+        val first1 = collapse[keyHash]!!.first()
+        val lz: Array<Any?> = landingZone[yIndex[keyHash]!!]
+        if (first1 == index) by.forEachIndexed { index, it -> lz[it] = key[index] }
+        protoData.map {
+            lz[it] as MutableList<Any?> += value[it]
+        }
+    }
+    colnames to (
+            landingZone.asFlow() to maxY)
+}
+
+inline operator fun <reified T> Array<T>.get(vararg x: Int): Array<T> = x.map { this[it] }.toTypedArray()
+suspend fun Table2.collapse(vararg by: Int) = sortedMapOf<Int, MutableSet<Int>>().also { collate ->
+    val (_, b) = this.get(*by)
+    val (keyData) = b
+
+    keyData.collectIndexed { index, list ->
+        val hashCode = list.hashCode()
+        val v = collate[hashCode]
+        if (v != null) v.add(index) else collate[hashCode] = sortedSetOf(index)
+    }
+
 }
 
 
