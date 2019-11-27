@@ -91,8 +91,13 @@ interface RowStore<T> : Flow<T> {
     val size: Int
     @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
+          (0 until size).forEach{  collector.emit(values(it)) }
+
+/*
         val availableProcessors = Runtime.getRuntime().availableProcessors()
         val chunksize = max(size, availableProcessors) / min(size, availableProcessors)
+*/
+        /*
         coroutineScope {
             (0 until size).chunked(chunksize).forEach { range ->
                 launch {
@@ -101,7 +106,7 @@ interface RowStore<T> : Flow<T> {
                     }
                 }
             }
-        }
+        }*/
     }
 }
 
