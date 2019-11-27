@@ -6,7 +6,6 @@ import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.yield
 import java.util.*
 
 fun Array<*>.equalsArray(other: Array<*>) = Arrays.equals(this, other)
@@ -85,77 +84,7 @@ class ColumnarTest : StringSpec() {
         }
     }
 }
-typealias Table2 = Pair<Array<String>, Pair<Flow<Array<Any?>>, Int>>
 
-/**
- * reassign columns
- */
-@ExperimentalCoroutinesApi
-operator fun Table2.get(vararg axis: Int): Table2 =
-        this.let { (cols, data) ->
-            axis.map { ix -> cols[ix] }.toTypedArray() to
-                    data.let { (rows, sz) ->
-                        rows.take(sz).map { r -> axis.map { c -> r[c] }.toTypedArray() } to sz
-                    }
-        }
-
-
-infix fun RowDecoder.reify(r: FixedRecordLengthFile): Table2 =
-        this.map { (a) -> a }.toTypedArray() to (r.run {
-            take(size)
-        }.map { fb ->
-            lazyOf(fb.first()).let { lb ->
-                map { (_, b) ->
-                    b.decodeLazy(lb)
-                }
-            }.toTypedArray()
-        } to r.size)
-
-suspend fun Table2.cluster(vararg keys: Int) = this.get(*keys).let { (_, remapped) ->
-    linkedMapOf<Any?, SortedSet<Int>>().apply {
-        val mappings = this
-        remapped.let { (values, _) ->
-            values.collectIndexed { ix, ar1 ->
-               val  ar=ar1.toList()
-                val x = mappings[ar]
-                x?.add(ix) ?: mappings.run { set(ar, sortedSetOf(ix)) }
-            }
-        }
-    }.map { (k, v) -> k to v.toTypedArray() }.toMap()
-}
-
-@ExperimentalCoroutinesApi
-suspend fun Table2.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Table2 = this.let { (nama, data) ->
-    val cluster: Map<Any?, Array<Int>> = this.cluster(  *axis)
-    val xcoord = cluster.keys.mapIndexed { index, any -> any to index }.toMap()
-    val xsize = fanOut.size
-
-    axis.mapIndexed { index: Int, i: Int ->
-        nama[i]
-    }.let { axNam ->
-        cluster.keys.map { key ->
-            axNam.zip((key  as List<*>)).let { keyPrefix ->
-                fanOut.map { i ->
-                    "$keyPrefix:${nama[i]}"
-                }
-            }
-        }.flatten().toTypedArray() to data.let { (c, d) ->
-            c.map { value ->
-                arrayOfNulls<Any?>(+lhs.size + (xcoord.size * xsize)).also { grid ->
-                    val key = axis.map { i -> value[i] }
-                    val x = xcoord[key] !!
-                    lhs.mapIndexed { index, i ->
-                        grid[index] = value[i]
-                    }
-                    fanOut.mapIndexed { index, xcol ->
-                        grid[lhs.size + (xsize * x + index)] = value[xcol]
-                    }
-
-                }
-            } to d
-        }
-    }
-}
 
 /*        "values" {
             val values20 = decode(1, c20)

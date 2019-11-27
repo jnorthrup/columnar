@@ -9,6 +9,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -145,6 +146,88 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
     override val size: Int = (buf.limit() / recordLen)//.also { assert(it != 0) { "bad size" } }
 }
 
+typealias Table2 = Pair<Array<String>, Pair<Flow<Array<Any?>>, Int>>
+
+/**
+ * reassign columns
+ */
+@ExperimentalCoroutinesApi
+operator fun Table2.get(vararg axis: Int): Table2 =
+        this.let { (cols, data) ->
+            axis.map { ix -> cols[ix] }.toTypedArray() to
+                    data.let { (rows, sz) ->
+                        rows.take(sz).map { r -> axis.map { c -> r[c] }.toTypedArray() } to sz
+                    }
+        }
+
+
+infix fun RowDecoder.reify(r: FixedRecordLengthFile): Table2 =
+        this.map { (a) -> a }.toTypedArray() to (r.run {
+            take(size)
+        }.map { fb ->
+            lazyOf(fb.first()).let { lb ->
+                map { (_, b) ->
+                    b.decodeLazy(lb)
+                }
+            }.toTypedArray()
+        } to r.size)
+
+suspend fun Table2.cluster(vararg keys: Int) = this.get(*keys).let { (_, remapped) ->
+    linkedMapOf<Any?, SortedSet<Int>>().apply {
+        val mappings = this
+        remapped.let { (values, _) ->
+            values.collectIndexed { ix, ar1 ->
+                val ar = ar1.toList()
+                val x = mappings[ar]
+                x?.add(ix) ?: mappings.run { set(ar, sortedSetOf(ix)) }
+            }
+        }
+    }.map { (k, v) -> k to v.toTypedArray() }.toMap()
+}
+
+@ExperimentalCoroutinesApi
+suspend fun Table2.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Table2 = this.let { (nama, data) ->
+    val cluster: Map<Any?, Array<Int>> = this.cluster(*axis)
+    val keys = cluster.keys
+    val xcoord = keys.mapIndexed { index, any -> any to index }.toMap()
+    val xsize = fanOut.size
+    this.run {
+        pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray() to data.let { (data, sz) ->
+            pivotData(data, lhs, xcoord, xsize, axis, fanOut) to sz
+        }
+    }
+}
+
+fun pivotColumns(legend: Array<String>, lhs: IntArray, rhs: IntArray, keys: Set<Any?>) =
+        lhs.mapIndexed { index: Int, i: Int ->
+            legend[i]
+        }.let { axNam ->
+            keys.map { key ->
+                axNam.zip((key as List<*>)).let { keyPrefix ->
+                    rhs.map { i ->
+                        "${keyPrefix.map { (a, b) ->
+                            a + "=" + b
+                        }.joinToString(":")}:${legend[i]}"
+                    }
+                }
+            }
+        }
+
+
+private fun pivotData(data: Flow<Array<Any?>>, lhs: IntArray, xcoord: Map<Any?, Int>, xsize: Int, axis: IntArray, fanOut: IntArray): Flow<Array<Any?>> {
+    return data.map { value ->
+        arrayOfNulls<Any?>(+lhs.size + (xcoord.size * xsize)).also { grid ->
+            val key = axis.map { i -> value[i] }
+            val x = xcoord[key]!!
+            lhs.mapIndexed { index, i ->
+                grid[index] = value[i]
+            }
+            fanOut.mapIndexed { index, xcol ->
+                grid[lhs.size + (xsize * x + index)] = value[xcol]
+            }
+        }
+    }
+}
 /*
 
 */
