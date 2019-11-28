@@ -33,7 +33,7 @@ fun <T> ByteBufferNormalizer<T>.decode(buf: ByteBuffer): T =
             ByteArray(coords.size).also { buf.get(it) }.let(mapper)
         }
 
-infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): suspend (Int) -> Array<Flow<Any?>> = { row: Int ->
+infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>):Table1 = { row: Int ->
     val cols = this
     val values = rs.values(row)
     val first = lazyOf(values.first())
@@ -60,10 +60,10 @@ fun btoa(i: Any?) = (i as? ByteArray)?.let {
     stringMapper1?.toString()
 }
 
-val intMapper: (Any?) -> Any? = { i -> btoa(i)?.toInt() ?: 0 }
-val floatMapper: (Any?) -> Any? = { i -> btoa(i)?.toFloat() ?: 0f }
-val doubleMapper: (Any?) -> Any? = { i -> btoa(i)?.toDouble() ?: 0.0 }
-val longMapper: (Any?) -> Any? = { i -> btoa(i)?.toLong() ?: 0L }
+public val intMapper: (Any?) -> Any? = { i -> btoa(i)?.toInt() ?: 0 }
+public val floatMapper: (Any?) -> Any? = { i -> btoa(i)?.toFloat() ?: 0f }
+public val doubleMapper: (Any?) -> Any? = { i -> btoa(i)?.toDouble() ?: 0.0 }
+public val longMapper: (Any?) -> Any? = { i -> btoa(i)?.toLong() ?: 0L }
 
 
 val dateMapper: (Any?) -> Any? = { i ->
@@ -178,16 +178,14 @@ suspend fun Table2.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Tab
     val xcoord = keys.mapIndexed { index, any -> any to index }.toMap()
     val xsize = fanOut.size
     this.run {
-        pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray() to data.let { (data, sz) ->
+     nama.get(*lhs)+       pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray() to data.let { (data, sz) ->
             pivotData(data, lhs, xcoord, xsize, axis, fanOut) to sz
         }
     }
 }
 
-fun pivotColumns(legend: Array<String>, lhs: IntArray, rhs: IntArray, keys: Set<Any?>) =
-        lhs.mapIndexed { index: Int, i: Int ->
-            legend[i]
-        }.let { axNam ->
+fun pivotColumns(legend: Array<String>, axis: IntArray, rhs: IntArray, keys: Set<Any?>) =
+       legend.get(*axis).let { axNam ->
             keys.map { key ->
                 axNam.zip((key as List<*>)).let { keyPrefix ->
                     rhs.map { i ->
@@ -239,7 +237,7 @@ suspend fun Table2.group(vararg by: Int): Table2 = let {
        assert(key.size == by.size)
         arrayOfNulls<Any?>(columns.size).also { finale ->
 
-            by.mapIndexed { index, i ->
+            by.forEachIndexed  { index, i ->
                 finale[i] = key[index]
             }
             val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
@@ -256,7 +254,7 @@ suspend fun Table2.group(vararg by: Int): Table2 = let {
                     it.toTypedArray()
                 }
             }
-            protoValues.mapIndexed { index, i ->
+            protoValues.forEachIndexed  { index, i ->
                 finale[i] = groupedRow[index]
             }
 
