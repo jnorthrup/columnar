@@ -24,7 +24,6 @@ class ColumnarTest : StringSpec() {
 
     val c20 = columns from f20
     val c4 = columns from f4
-    val c4remap = c4[0, 0, 0, 1, 3, 2, 1, 1, 1]
 
 
     override fun beforeTest(testCase: TestCase) {
@@ -43,8 +42,13 @@ class ColumnarTest : StringSpec() {
         "remap"{
             val c41 = c4(1).map { it.first() }
             System.err.println(c41)
+            c41.last().shouldBe(0.0)
+
+            val c4remap = c4[0, 0, 0, 1, 3, 2, 1, 1, 1]
+
             val map = c4remap(1).map { it.first() }
             System.err.println(map)
+            map.last().shouldBe(map[3] )
         }
         "reify"{
             val suspendFunction1 = columns from f4
@@ -57,9 +61,7 @@ class ColumnarTest : StringSpec() {
                 c.collect {
                     System.err.println(it.asList())
                 }
-                c.collect {
-                    System.err.println(it.asList())
-                }
+                c.count().shouldBe(4)
             }
             x()
         }
@@ -74,6 +76,9 @@ class ColumnarTest : StringSpec() {
                         rows.collect { arr ->
                             System.err.println(arr.toList())
                         }
+                        rows.first().last().shouldBe(null)
+                        val last = rows. toList().last().dropLast(1).last().shouldBe(820.0)
+
                     }
                 }
             }
@@ -81,39 +86,46 @@ class ColumnarTest : StringSpec() {
         }
 
         "group" {
-//            val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
-//            val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
-//            val c20 = columns from f20
-//            val c4 = columns from f4
+
             System.err.println("group")
-            val x=suspend{
+            val x = suspend {
                 val r4 = columns reify f4
                 var clusters = r4.group(1)
-
-                clusters.let{(a,b)->val(c, d) = b
+                clusters.let { (a, b) ->
+                    val (c, d) = b
+                    System.err.println("by col 1")
                     System.err.println("${a.asList()} ")
                     c.collect {
                         System.err.println(it.contentDeepToString())
                     }
+                    c.count().shouldBe(3)
                 }
-                  clusters = r4.group(0)
-
-                clusters.let{(a,b)->val(c, d) = b
+                clusters = r4.group(0)
+                clusters.let { (a, b) ->
+                    val (c, d) = b
+                    System.err.println("by col 0")
                     System.err.println("${a.asList()} ")
                     c.collect {
                         System.err.println(it.contentDeepToString())
                     }
+                    c.count().shouldBe(3)
                 }
-                clusters = clusters.group( 3)
-                clusters.let{(a,b)->val(c, d) = b
+                clusters = clusters.group(3)
+                clusters.let { (a, b) ->
+                    val (c, d) = b
+                    System.err.println("composability by previous group to column 3  ")
                     System.err.println("${a.asList()} ")
                     c.collect {
                         System.err.println(it.contentDeepToString())
-                    }
-                }
 
+                    }
+                    c.count().shouldBe(2)
+                }
             }
             x()
+        }
+        "composability" {
+
         }
     }
 }
