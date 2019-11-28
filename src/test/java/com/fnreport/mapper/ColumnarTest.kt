@@ -97,9 +97,18 @@ class ColumnarTest : StringSpec() {
                 val r4 = columns reify f4
                 val clusters = r4.clusters(0)
 
-                System.err.println("$clusters")
+                clusters.let { (a, b) ->
+                    val (c, d) = b
+                    System.err.println("${a.asList()} ")
+                    c.collect {
+
+                        System.err.println(it.contentDeepToString())
+                    }
+                }
+/*
                 val index = r4.index(0)
                 System.err.println("${index.asList()}")
+*/
 //
 //                val clusters1 = r4.clusters(1)
 //                System.err.println("$clusters1")
@@ -163,17 +172,17 @@ suspend fun Table2.clusters(vararg by: Int): Table2 = let {
             val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
 
                 cluster.forEach { group ->
-                    val toLisclist = group.toList()
-                    assert(toLisclist.size == cluster.size)
-                    toLisclist.forEachIndexed { index: Int, row: Array<Any?> ->
+                    val cList = group.toList()
+//                    assert(cList.size == cluster.size)
+                    cList.forEachIndexed { index: Int, row: Array<Any?> ->
                         assert(row.size == protoValues.size)
                         row.forEachIndexed { index, any -> cols[index] += any }
                     }
                 }
                 assert(cols.size == protoValues.size)
                 cols.map {
-                    it.toTypedArray()
                     assert(it.size == cluster.size)
+                    it.toTypedArray()
                 }
             }
             protoValues.mapIndexed { index, i ->
