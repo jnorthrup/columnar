@@ -10,8 +10,6 @@ import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.math.max
-import kotlin.math.min
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 typealias ByteBufferNormalizer<T> = Pair<Pair<Int, Int>, (Any?) -> T>
@@ -92,21 +90,6 @@ interface RowStore<T> : Flow<T> {
     @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
           (0 until size).forEach{  collector.emit(values(it)) }
-
-/*
-        val availableProcessors = Runtime.getRuntime().availableProcessors()
-        val chunksize = max(size, availableProcessors) / min(size, availableProcessors)
-*/
-        /*
-        coroutineScope {
-            (0 until size).chunked(chunksize).forEach { range ->
-                launch {
-                    coroutineScope {
-                        range.forEach { launch { collector.emit(values(it)) } }
-                    }
-                }
-            }
-        }*/
     }
 }
 
@@ -231,7 +214,57 @@ private fun pivotData(data: Flow<Array<Any?>>, lhs: IntArray, xcoord: Map<Any?, 
         }
     }
 }
-/*
+
+inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::get).toTypedArray()
+
+
+/**
+ * cost of one full tablscan
+ */
+suspend fun Table2.group(vararg by: Int): Table2 = let {
+    val (columns, data) = this
+    val (rows, d) = data
+    val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
+    val clusters = mutableMapOf<Int,Pair<  Array<*>,MutableList<Flow<Array<Any?>>>>>()
+    rows.collect { row ->
+        val key = row.get(*by)
+        val keyHash = key.contentDeepHashCode()
+        flowOf(row.get(*protoValues)).let { f ->
+            if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second  += (  f)
+            else clusters[keyHash] = key to mutableListOf( f)
+        }
+    }
+    columns to (clusters.map { (k, cluster1) ->
+        val (key,cluster)=cluster1
+       assert(key.size == by.size)
+        arrayOfNulls<Any?>(columns.size).also { finale ->
+
+            by.mapIndexed { index, i ->
+                finale[i] = key[index]
+            }
+            val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
+
+                cluster.forEach { group ->
+                    val cList = group.toList()
+//                    assert(cList.size == cluster.size)
+                    cList.forEachIndexed { index: Int, row: Array<Any?> ->
+                        assert(row.size == protoValues.size)
+                        row.forEachIndexed { index, any -> cols[index] += any }
+                    }
+                }
+                assert(cols.size == protoValues.size)
+                cols.map {
+                    assert(it.size == cluster.size)
+                    it.toTypedArray()
+                }
+            }
+            protoValues.mapIndexed { index, i ->
+                finale[i] = groupedRow[index]
+            }
+
+        }
+    }.asFlow() to clusters.size)
+}/*
 
 */
 /**
