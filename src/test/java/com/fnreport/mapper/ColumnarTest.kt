@@ -13,11 +13,12 @@ fun Array<*>.deepEqualsArray(other: Array<*>) = Arrays.deepEquals(this, other)
 @UseExperimental(InternalCoroutinesApi::class)
 class ColumnarTest : StringSpec() {
     val columns: List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>> = listOf("date", "channel", "delivered", "ret").zip(
-            listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).zip(
-                    listOf(dateMapper,
-                            stringMapper,
-                            floatMapper,
-                            floatMapper)))
+            listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
+                    .zip(
+                            listOf(dateMapper,
+                                    stringMapper,
+                                    floatMapper,
+                                    floatMapper)))
     val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
 
@@ -110,14 +111,17 @@ class ColumnarTest : StringSpec() {
 
     }
 }
+/*
 
 suspend fun Table2.index(vararg by: Int) = clusters(*by).let { clust ->
     this.let { (colnames, data) ->
         data.let { (rows, size) ->
 
-            /**
-             * use elevator to stuff flows into lists.
-             */
+            */
+/**
+ * use elevator to stuff flows into lists.
+ *//*
+
             val elevator = IntArray(size)
 
             clust.values.mapIndexed { index, list ->
@@ -130,26 +134,52 @@ suspend fun Table2.index(vararg by: Int) = clusters(*by).let { clust ->
         }
     }
 }
+*/
+
+inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::get).toTypedArray()
 
 
 /**
  * cost of one full tablscan
  */
-suspend fun Table2.clusters(vararg by: Int): Map<Int, List<Int>> =
-        this.get(*by).let { (keynames, keyData) ->
-            keyData.let { (keyRows, keyMaxY) ->
-                mutableMapOf<Int, MutableList<Int>>().also { clusters ->
-                    keyRows.collectIndexed { index, value ->
-                        val hashCode = value.contentDeepHashCode()
-                        when {
-                            clusters.containsKey(hashCode) -> clusters[hashCode]!! += (index)
-                            else -> clusters[hashCode] = mutableListOf(index)
-                        }
+suspend fun Table2.clusters(vararg by: Int): Table2 = let {
+    val (columns, data) = this
+    val (rows, d) = data
+    val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
+    val clusters = mutableMapOf<List<Any?>, MutableList<Flow<Array<Any?>>>>()
+    rows.collect { row ->
+        val key = by.map { row[it] }
+        flowOf(row.get(*protoValues)).let { f ->
+            if (clusters.containsKey(key)) clusters[key]!! += (f)
+            else clusters[key] = mutableListOf(f)
+        }
+    }
+    columns to (clusters.map { (k, cluster) ->
+        assert(k.size == by.size)
+        arrayOfNulls<Any?>(columns.size).also { finale ->
+            by.mapIndexed { index, i ->
+                finale[i] = k[index]
+            }
+            val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
+
+                cluster.forEach { group ->
+                    val toLisclist = group.toList()
+                    assert(toLisclist.size == cluster.size)
+                    toLisclist.forEachIndexed { index: Int, row: Array<Any?> ->
+                        assert(row.size == protoValues.size)
+                        row.forEachIndexed { index, any -> cols[index] += any }
                     }
                 }
+                assert(cols.size == protoValues.size)
+                cols.map {
+                    it.toTypedArray()
+                    assert(it.size == cluster.size)
+                }
             }
+            protoValues.mapIndexed { index, i ->
+                finale[i] = groupedRow[index]
+            }
+
         }
-
-                
-
-                
+    }.asFlow() to clusters.size)
+}
