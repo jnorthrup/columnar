@@ -14,17 +14,17 @@ fun Array<*>.deepEqualsArray(other: Array<*>) = Arrays.deepEquals(this, other)
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
 class ColumnarTest : StringSpec() {
-    val columns: List<Pair<String, Pair<Pair<Int, Int>, (Any?) -> Any?>>> = listOf("date", "channel", "delivered", "ret").zip(
+    val columns: RowDecoder = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
                     .zip(
                             listOf(dateMapper,
                                     stringMapper,
                                     floatMapper,
-                                    floatMapper)))
+                                    floatMapper))).toTypedArray()
     val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
 
-    val c20: Table1 = columns from f20
+    val c20: Table1 = columns.from(f20)
     val c4: Table1 = columns from f4
 
 
@@ -58,7 +58,7 @@ class ColumnarTest : StringSpec() {
         }
         "reify"{
 
-            val r4: Table2 = columns reify f4
+            val r4: DecodedRows = columns reify f4
             val x = suspend {
                 println("reify")
                 val (_: Array<String>, data: Pair<Flow<Array<Any?>>, Int>) = r4
@@ -73,11 +73,11 @@ class ColumnarTest : StringSpec() {
         "pivot" {
             println("pivot")
             val x = suspend {
-                val r4: Table2 = columns reify f4
-                val p4: Table2 = (r4).pivot(/*lhs=*/intArrayOf(0), /*axis =*/ intArrayOf(1), /*...fanout=*/2, 3)
+                val r4: DecodedRows = columns reify f4
+                val p4: DecodedRows = (r4).pivot(/*lhs=*/intArrayOf(0), /*axis =*/ intArrayOf(1), /*...fanout=*/2, 3)
                 p4.let { (col: Array<String>, data: Pair<Flow<Array<Any?>>, Int>) ->
                     println(col.map { it })
-                    data.let { (rows: Flow<Array<Any?>> ) ->
+                    data.let { (rows: Flow<Array<Any?>>) ->
                         rows.collect { arr: Array<Any?> ->
                             println(arr.toList())
                         }
@@ -94,10 +94,10 @@ class ColumnarTest : StringSpec() {
 
             println("group")
             val x = suspend {
-                val r4: Table2 = columns reify f4
-                var clusters: Table2 = r4.group(1)
+                val r4: DecodedRows = columns reify f4
+                var clusters: DecodedRows = r4.group(1)
                 clusters.let { (colnames: Array<String>, data: Pair<Flow<Array<Any?>>, Int>) ->
-                    val (rows ) = data
+                    val (rows) = data
                     println("by col 1")
                     println("${colnames.asList()} ")
                     rows.collect { arrayOfAnys: Array<Any?> ->

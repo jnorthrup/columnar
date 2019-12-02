@@ -126,10 +126,12 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration><incrementalCachesRoot>
-                    target/caches
-                </incrementalCachesRoot>
+                <configuration><incrementalCachesRoot>target/caches</incrementalCachesRoot>
                     <jvmTarget>11</jvmTarget>
+                    <experimentalCoroutines>enable</experimentalCoroutines>
+                    <myIncremental>true</myIncremental>
+                    <javaParameters>-Xuse-experimental=kotlin.Experimental</javaParameters>
+                    <args>-Xuse-experimental=kotlin.Experimental</args>
                 </configuration>
             </plugin>
             <plugin>
