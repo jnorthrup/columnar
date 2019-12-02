@@ -13,8 +13,9 @@ import java.util.*
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 typealias ByteBufferNormalizer<T> = Pair<Pair<Int, Int>, (Any?) -> T>
-typealias RowDecoder = List<Pair<String, ByteBufferNormalizer<*>>>
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
+typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer<*>>>
+typealias DecodedRows = Pair<Array<String>, Pair<Flow<Array<Any?>>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
     val arrayOfFlows = this(row)
@@ -33,7 +34,7 @@ fun <T> ByteBufferNormalizer<T>.decode(buf: ByteBuffer): T =
             ByteArray(coords.size).also { buf.get(it) }.let(mapper)
         }
 
-infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>):Table1 = { row: Int ->
+infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row: Int ->
     val cols = this
     val values = rs.values(row)
     val first = lazyOf(values.first())
@@ -60,10 +61,10 @@ fun btoa(i: Any?) = (i as? ByteArray)?.let {
     stringMapper1?.toString()
 }
 
-public val intMapper: (Any?) -> Any? = { i -> btoa(i)?.toInt() ?: 0 }
-public val floatMapper: (Any?) -> Any? = { i -> btoa(i)?.toFloat() ?: 0f }
-public val doubleMapper: (Any?) -> Any? = { i -> btoa(i)?.toDouble() ?: 0.0 }
-public val longMapper: (Any?) -> Any? = { i -> btoa(i)?.toLong() ?: 0L }
+val intMapper: (Any?) -> Any? = { i -> btoa(i)?.toInt() ?: 0 }
+val floatMapper: (Any?) -> Any? = { i -> btoa(i)?.toFloat() ?: 0f }
+val doubleMapper: (Any?) -> Any? = { i -> btoa(i)?.toDouble() ?: 0.0 }
+val longMapper: (Any?) -> Any? = { i -> btoa(i)?.toLong() ?: 0L }
 
 
 val dateMapper: (Any?) -> Any? = { i ->
@@ -89,7 +90,7 @@ interface RowStore<T> : Flow<T> {
     val size: Int
     @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
-          (0 until size).forEach{  collector.emit(values(it)) }
+        (0 until size).forEach { collector.emit(values(it)) }
     }
 }
 
@@ -133,13 +134,12 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
     override val size: Int = (buf.limit() / recordLen)//.also { assert(it != 0) { "bad size" } }
 }
 
-typealias Table2 = Pair<Array<String>, Pair<Flow<Array<Any?>>, Int>>
 
 /**
  * reassign columns
  */
 @ExperimentalCoroutinesApi
-operator fun Table2.get(vararg axis: Int): Table2 =
+operator fun DecodedRows.get(vararg axis: Int): DecodedRows =
         this.let { (cols, data) ->
             axis.map { ix -> cols[ix] }.toTypedArray() to
                     data.let { (rows, sz) ->
@@ -147,7 +147,7 @@ operator fun Table2.get(vararg axis: Int): Table2 =
                     }
         }
 
-infix fun RowDecoder.reify(r: FixedRecordLengthFile): Table2 =
+infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows =
         this.map { (a) -> a }.toTypedArray() to (r.run {
             take(size)
         }.map { fb ->
@@ -158,7 +158,7 @@ infix fun RowDecoder.reify(r: FixedRecordLengthFile): Table2 =
             }.toTypedArray()
         } to r.size)
 
-suspend fun Table2.cluster(vararg keys: Int) = this.get(*keys).let { (_, remapped) ->
+suspend fun DecodedRows.cluster(vararg keys: Int) = this.get(*keys).let { (_, remapped) ->
     linkedMapOf<Any?, SortedSet<Int>>().apply {
         val mappings = this
         remapped.let { (values, _) ->
@@ -172,20 +172,20 @@ suspend fun Table2.cluster(vararg keys: Int) = this.get(*keys).let { (_, remappe
 }
 
 @ExperimentalCoroutinesApi
-suspend fun Table2.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Table2 = this.let { (nama, data) ->
+suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows = this.let { (nama, data) ->
     val cluster: Map<Any?, Array<Int>> = this.cluster(*axis)
     val keys = cluster.keys
     val xcoord = keys.mapIndexed { index, any -> any to index }.toMap()
     val xsize = fanOut.size
     this.run {
-     nama.get(*lhs)+       pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray() to data.let { (data, sz) ->
+        nama.get(*lhs) + pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray() to data.let { (data, sz) ->
             pivotData(data, lhs, xcoord, xsize, axis, fanOut) to sz
         }
     }
 }
 
 fun pivotColumns(legend: Array<String>, axis: IntArray, rhs: IntArray, keys: Set<Any?>) =
-       legend.get(*axis).let { axNam ->
+        legend.get(*axis).let { axNam ->
             keys.map { key ->
                 axNam.zip((key as List<*>)).let { keyPrefix ->
                     rhs.map { i ->
@@ -219,33 +219,33 @@ inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::ge
 /**
  * cost of one full tablscan
  */
-suspend fun Table2.group(vararg by: Int): Table2 = let {
+suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
     val (columns, data) = this
     val (rows, d) = data
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
-    val clusters = mutableMapOf<Int,Pair<  Array<*>,MutableList<Flow<Array<Any?>>>>>()
+    val clusters = mutableMapOf<Int, Pair<Array<*>, MutableList<Flow<Array<Any?>>>>>()
     rows.collect { row ->
         val key = row.get(*by)
         val keyHash = key.contentDeepHashCode()
         flowOf(row.get(*protoValues)).let { f ->
-            if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second  += (  f)
-            else clusters[keyHash] = key to mutableListOf( f)
+            if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second += (f)
+            else clusters[keyHash] = key to mutableListOf(f)
         }
     }
     columns to (clusters.map { (k, cluster1) ->
-        val (key,cluster)=cluster1
-       assert(key.size == by.size)
+        val (key, cluster) = cluster1
+        assert(key.size == by.size)
         arrayOfNulls<Any?>(columns.size).also { finale ->
 
-            by.forEachIndexed  { index, i ->
+            by.forEachIndexed { index, i ->
                 finale[i] = key[index]
             }
             val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
 
                 cluster.forEach { group ->
-                    group.toList().forEachIndexed { index: Int, row: Array<Any?> ->
+                    group.toList().forEach { row: Array<Any?> ->
                         assert(row.size == protoValues.size)
-                        row.forEachIndexed { index, any -> cols[index] += any }
+                        row.forEachIndexed { index, any -> cols[index].add(any) }
                     }
                 }
                 assert(cols.size == protoValues.size)
@@ -254,7 +254,7 @@ suspend fun Table2.group(vararg by: Int): Table2 = let {
                     it.toTypedArray()
                 }
             }
-            protoValues.forEachIndexed  { index, i ->
+            protoValues.forEachIndexed { index, i ->
                 finale[i] = groupedRow[index]
             }
 
