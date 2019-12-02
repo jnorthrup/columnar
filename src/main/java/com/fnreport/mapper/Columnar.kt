@@ -11,9 +11,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::get).toTypedArray()
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
-typealias ByteBufferNormalizer<T> = Pair<Pair<Int, Int>, (Any?) -> T>
+
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
+
+typealias ByteBufferNormalizer<T> = Pair<Pair<Int, Int>, (Any?) -> T>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer<*>>>
 typealias DecodedRows = Pair<Array<String>, Pair<Flow<Array<Any?>>, Int>>
 
@@ -212,8 +215,6 @@ private fun pivotData(data: Flow<Array<Any?>>, lhs: IntArray, xcoord: Map<Any?, 
         }
     }
 }
-
-inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::get).toTypedArray()
 
 
 /**

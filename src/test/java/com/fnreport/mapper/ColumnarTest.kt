@@ -8,9 +8,6 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.util.*
 
-fun Array<*>.equalsArray(other: Array<*>) = Arrays.equals(this, other)
-fun Array<*>.deepEqualsArray(other: Array<*>) = Arrays.deepEquals(this, other)
-
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
 class ColumnarTest : StringSpec() {
