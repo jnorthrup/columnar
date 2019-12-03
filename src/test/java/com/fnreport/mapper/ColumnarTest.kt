@@ -2,14 +2,32 @@
 
 package com.fnreport.mapper
 
-import arrow.core.Option
-import arrow.core.Some
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import java.time.LocalDate
+import java.time.Period
+import java.time.chrono.HijrahDate
+import java.time.temporal.ChronoField
+import java.time.temporal.TemporalAdjusters
+
+
+object TestDate {
+    @JvmStatic
+    fun main(args: Array<String>) { //first day of Ramadan, 9th month
+        val ramadan = HijrahDate.now()
+                .with(ChronoField.DAY_OF_MONTH, 1).with(ChronoField.MONTH_OF_YEAR, 9)
+        println("HijrahDate : $ramadan")
+        //HijrahDate -> LocalDate
+        println("\n--- Ramandan 2016 ---")
+        println("Start : " + LocalDate.from(ramadan))
+        //until the end of the month
+        println("End : " + LocalDate.from(ramadan.with(TemporalAdjusters.lastDayOfMonth())))
+    }
+}
 
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
@@ -167,7 +185,7 @@ class ColumnarTest : StringSpec() {
 
             x()
         }
-        "group pivot fillna"{
+        "group pivot fillna sum "{
             println("pivotgroupfillna")
 
             val x = suspend {
@@ -197,28 +215,68 @@ class ColumnarTest : StringSpec() {
 
                 val pair2 = pair with pair1
                 val ind = pair2.first.indices.drop(1).toIntArray()
-                val group = (pair2)
-                        .group(0)
-                p4 = (group[0] with group.get(*ind).invoke  { it: Any? ->
-                            when {
-                                it is Array <*>-> it.map{(it as? Float? )?:0f}.sum()
-                                it is List <*>-> it.map{(it as? Float? )?:0f}.sum()
-                                else -> it
-                            }
-                        })
-                        .let {
-                            var (a, b) = it
-                            var (c, _) = b
-                            System.err.println(a.contentDeepToString())
-                            c.collect { ar ->
-                                val message = ar.mapIndexed { index, any ->
-                                    a[index].second.fold({any},{it(any)})
-                                }
-                                println(message)
-                            }
+                val group = (pair2).group(0)
+                (group[0] with group.get(*ind).invoke { it: Any? ->
+                    when {
+                        it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+                        it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+                        else -> it
+                    }
+                }).let {
+                    var (a, b) = it
+                    var (c, _) = b
+                    System.err.println(a.contentDeepToString())
+                    c.collect { ar ->
+                        val message = ar.mapIndexed { index, any ->
+                            a[index].second.fold({ any }, { it(any) })
                         }
+                        println(message)
+                    }
+                }
             }
             x()
+        }
+        "resample"{
+
+            System.err.println("time")
+            val p4 = columns reify f4
+
+
+            val x = suspend {
+                p4[0].let { (a, b) ->
+                    val (c, d) = b
+
+                    val filterNotNull = c.toList().map {
+                        (it.first() as? LocalDate?)
+                    }.filterNotNull()
+
+
+                    val min = filterNotNull.min()!!
+                    val max = filterNotNull.max()!!
+                    val period = Period.between(min, max)
+                    val days = period.days
+                    val cr: ClosedRange<LocalDate> = min..max
+                    val sequence = daySeq(min, max)
+
+                    sequence.forEach {
+                        println(it)
+                    }
+                }
+            }
+            x()
+        }
+
+    }
+
+
+}
+
+fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
+    var cursor = min;
+    return sequence {
+        while (max > cursor ) {
+            yield(cursor)
+            cursor = cursor.plusDays(1)
         }
     }
 }
