@@ -9,7 +9,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
-import java.time.Period
 import java.time.chrono.HijrahDate
 import java.time.temporal.ChronoField
 import java.time.temporal.TemporalAdjusters
@@ -214,24 +213,12 @@ class ColumnarTest : StringSpec() {
                 }
 
                 val pair2 = pair with pair1
-                val ind = pair2.first.indices.drop(1).toIntArray()
-                val group = (pair2).group(0)
-                (group[0] with group.get(*ind).invoke { it: Any? ->
-                    when {
-                        it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
-                        it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
-                        else -> it
-                    }
-                }).let {
-                    var (a, b) = it
-                    var (c, _) = b
-                    System.err.println(a.contentDeepToString())
-                    c.collect { ar ->
-                        val message = ar.mapIndexed { index, any ->
-                            a[index].second.fold({ any }, { it(any) })
-                        }
-                        println(message)
-                    }
+                var nonSummationColumns = intArrayOf(0);
+
+                val res = pair2.group(*nonSummationColumns)
+                val pair3: DecodedRows = groupSumFloat(res, *nonSummationColumns)
+                pair3.also {
+                    show(it)
                 }
             }
             x()
@@ -241,29 +228,29 @@ class ColumnarTest : StringSpec() {
             System.err.println("time")
             val p4 = columns reify f4
 
+            val indexcol = 0
 
-            val x = suspend {
-                p4[0].let { (a, b) ->
-                    val (c, d) = b
+            val expanded = resample(p4, indexcol)
+            println("reaw resample")
+            expanded.second.first.collect {
+                println(it.contentDeepToString())
 
-                    val filterNotNull = c.toList().map {
-                        (it.first() as? LocalDate?)
-                    }.filterNotNull()
-
-
-                    val min = filterNotNull.min()!!
-                    val max = filterNotNull.max()!!
-                    val period = Period.between(min, max)
-                    val days = period.days
-                    val cr: ClosedRange<LocalDate> = min..max
-                    val sequence = daySeq(min, max)
-
-                    sequence.forEach {
-                        println(it)
-                    }
-                }
             }
-            x()
+
+            println("resampled groupby").also {
+                var group = expanded.group(0)
+                show(groupSumFloat(group[0] with group[1]{ any ->
+                    (any as? Array<*>?)?.filterNotNull() ?: (any as? Collection<*>?)?.filterNotNull()
+                } with group[2, 3], 0, 1))
+
+            }
+
+            println("resampled groupby pivot ").also {
+                var group = expanded.group(0)
+                show(groupSumFloat(group[0] with group[1]{ any ->
+                    (any as? Array<*>?)?.filterNotNull() ?: (any as? Collection<*>?)?.filterNotNull()
+                } with group[2, 3], 0, 1).pivot(intArrayOf(0), intArrayOf(1), 2, 3))
+            }
         }
 
     }
@@ -271,10 +258,65 @@ class ColumnarTest : StringSpec() {
 
 }
 
+private suspend fun show(it: DecodedRows) {
+    var (a, b) = it
+    var (c, _) = b
+    System.err.println(a.contentDeepToString())
+    c.collect { ar ->
+        val message = ar.mapIndexed { index, any ->
+            a[index].second.fold({ any }, { it(any) })
+        }
+        println(message.toTypedArray().contentDeepToString())
+    }
+}
+
+suspend fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
+    val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
+    val pair3: DecodedRows = res.get(*exclusion) with res.get(*summationColumns).invoke { it: Any? ->
+        when {
+            it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+            it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+            else -> it
+        }
+    }
+    return pair3
+}
+
+suspend fun resample(p4: DecodedRows, indexcol: Int): DecodedRows {
+    return p4[indexcol].let { (a, b) ->
+        val (c, d) = b
+
+        val filterNotNull = c.toList().map {
+            (it.first() as? LocalDate?)
+        }.filterNotNull()
+        val min = filterNotNull.min()!!
+        val max = filterNotNull.max()!!
+
+
+        var size: Int = 0
+
+
+        val empties = daySeq(min, max).toList().mapIndexed { index, localDate ->
+            size = index
+            arrayOfNulls<Any?>(p4.first.size).also { row ->
+                row[indexcol] = localDate
+            }
+        }.asFlow()
+
+        p4.let {
+            val (a, b) = p4;
+            val (c, d) = b
+            a to ((c.toList() + empties.toList()).asFlow() to d + size)
+        }
+
+    }
+}
+
+
 fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
     var cursor = min;
     return sequence {
-        while (max > cursor ) {
+        while (max > cursor) {
             yield(cursor)
             cursor = cursor.plusDays(1)
         }
