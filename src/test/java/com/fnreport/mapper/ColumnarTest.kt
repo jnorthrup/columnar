@@ -2,22 +2,38 @@
 
 package com.fnreport.mapper
 
-import arrow.core.Option
-import arrow.core.Some
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import java.time.LocalDate
+import java.time.chrono.HijrahDate
+import java.time.temporal.ChronoField
+import java.time.temporal.TemporalAdjusters
+
+
+object TestDate {
+    @JvmStatic
+    fun main(args: Array<String>) { //first day of Ramadan, 9th month
+        val ramadan = HijrahDate.now()
+                .with(ChronoField.DAY_OF_MONTH, 1).with(ChronoField.MONTH_OF_YEAR, 9)
+        println("HijrahDate : $ramadan")
+        //HijrahDate -> LocalDate
+        println("\n--- Ramandan 2016 ---")
+        println("Start : " + LocalDate.from(ramadan))
+        //until the end of the month
+        println("End : " + LocalDate.from(ramadan.with(TemporalAdjusters.lastDayOfMonth())))
+    }
+}
 
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
 class ColumnarTest : StringSpec() {
     val columns: RowDecoder = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
-                    .zip(
-                            listOf(dateMapper,
+                    .zip(    listOf(dateMapper,
                                     stringMapper,
                                     floatMapper,
                                     floatMapper))).toTypedArray()
@@ -131,7 +147,7 @@ class ColumnarTest : StringSpec() {
         }
         "composability" {
             println("pivotpivot")
-            var x = suspend {
+            val x = suspend {
                 var p4 = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3)
                 also {
                     val (a, b) = p4
@@ -148,7 +164,6 @@ class ColumnarTest : StringSpec() {
                     println(a.map { it.first })
                     val (c, d) = b
                     c.collect { println(it.contentDeepToString()) }
-
                 }
             }
             x()
@@ -167,9 +182,8 @@ class ColumnarTest : StringSpec() {
 
             x()
         }
-        "group pivot fillna"{
+        "group pivot fillna sum "{
             println("pivotgroupfillna")
-
             val x = suspend {
 
                 var c4 = columns[0, 1] + columns[2, 3]{ any: Any? -> any ?: 0f }
@@ -191,32 +205,16 @@ class ColumnarTest : StringSpec() {
                         println(message
                         )
                     }
-
-
                 }
 
                 val pair2 = pair with pair1
-                val ind = pair2.first.indices.drop(1).toIntArray()
-                val group = (pair2)
-                        .group(0)
-                p4 = (group[0] with group.get(*ind).invoke  { it: Any? ->
-                            when {
-                                it is Array <*>-> it.map{(it as? Float? )?:0f}.sum()
-                                it is List <*>-> it.map{(it as? Float? )?:0f}.sum()
-                                else -> it
-                            }
-                        })
-                        .let {
-                            var (a, b) = it
-                            var (c, _) = b
-                            System.err.println(a.contentDeepToString())
-                            c.collect { ar ->
-                                val message = ar.mapIndexed { index, any ->
-                                    a[index].second.fold({any},{it(any)})
-                                }
-                                println(message)
-                            }
-                        }
+                var nonSummationColumns = intArrayOf(0);
+
+                val res = pair2.group(*nonSummationColumns)
+                val pair3: DecodedRows = groupSumFloat(res, *nonSummationColumns)
+                pair3.also {
+                    show(it)
+                }
             }
             x()
         }
