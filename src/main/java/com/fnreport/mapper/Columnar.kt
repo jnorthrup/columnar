@@ -1,6 +1,7 @@
 package com.fnreport.mapper
 
 import arrow.core.Option
+import arrow.core.Some
 import arrow.core.none
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -237,20 +238,7 @@ fun pivotColumns(legend: Array<Column>, axis: IntArray, rhs: IntArray, keys: Set
         }
 
 
-private fun pivotData(data: Flow<Array<Any?>>, lhs: IntArray, xcoord: Map<Any?, Int>, xsize: Int, axis: IntArray, fanOut: IntArray): Flow<Array<Any?>> {
-    return data.map { value ->
-        arrayOfNulls<Any?>(+lhs.size + (xcoord.size * xsize)).also { grid ->
-            val key = axis.map { i -> value[i] }
-            val x = xcoord[key]!!
-            lhs.mapIndexed { index, i ->
-                grid[index] = value[i]
-            }
-            fanOut.mapIndexed { index, xcol ->
-                grid[lhs.size + (xsize * x + index)] = value[xcol]
-            }
-        }
-    }
-}
+
 
 
 /**
@@ -297,3 +285,35 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
         }
     }.asFlow() to clusters.size)
 }
+
+
+operator fun RowDecoder.invoke(t: xform): RowDecoder = map { (a, b) ->
+    val (c, d) = b
+    a to (c to { any: Any? -> t(d(any)) })
+}.toTypedArray()
+
+
+operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
+    a.map { (c, d) ->
+        c to Some(d.fold({ t }, { dprime: xform ->
+            { rowval: Any? ->
+                t(dprime(rowval))
+            }
+        })) as Option<xform>
+    }.toTypedArray() to b
+}
+
+infix suspend fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b) ->
+    b.let { (c, d) ->
+        val second1 = that.second.second
+        assert(second1 == d) { "rows must be same -- ${d} !== $second1" }
+        val toList = c.toList()
+        val toList1 = that.second.first.toList()
+        val x = toList.mapIndexed { index: Int, v: Array<Any?> ->
+            val r = v.toList() + toList1[index].toList()
+            r.toTypedArray()
+        }.asFlow()
+        (a + that.first) to (x to d)
+    }
+}
+
