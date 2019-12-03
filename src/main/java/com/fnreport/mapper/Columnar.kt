@@ -1,5 +1,7 @@
 package com.fnreport.mapper
 
+import arrow.core.Option
+import arrow.core.none
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.Closeable
@@ -16,9 +18,11 @@ val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
 
-typealias ByteBufferNormalizer<T> = Pair<Pair<Int, Int>, (Any?) -> T>
-typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer<*>>>
-typealias DecodedRows = Pair<Array<String>, Pair<Flow<Array<Any?>>, Int>>
+typealias xform = (Any?) -> Any?
+typealias ByteBufferNormalizer  = Pair<Pair<Int, Int>, xform>
+typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer >>
+typealias Column = Pair<String, Option<xform>>
+typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
     val arrayOfFlows = this(row)
@@ -27,12 +31,12 @@ operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
     }.toTypedArray()
 }
 
-fun <T> ByteBufferNormalizer<T>.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
+fun   ByteBufferNormalizer .decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
     ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
 }
 
 
-fun <T> ByteBufferNormalizer<T>.decode(buf: ByteBuffer): T =
+fun   ByteBufferNormalizer .decode(buf: ByteBuffer)  =
         let { (coords, mapper) ->
             ByteArray(coords.size).also { buf.get(it) }.let(mapper)
         }
@@ -150,16 +154,22 @@ operator fun DecodedRows.get(vararg axis: Int): DecodedRows =
                     }
         }
 
-infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows =
-        this.map { (a) -> a }.toTypedArray() to (r.run {
-            take(size)
-        }.map { fb ->
-            lazyOf(fb.first()).let { lb ->
-                map { (_, b) ->
-                    b.decodeLazy(lb)
-                }
-            }.toTypedArray()
-        } to r.size)
+infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
+    val map = map { (a, b) ->
+        val x: Option<xform> = none<xform>()
+        a to x
+    }
+    val map1 = r.run {
+        take(size)
+    }.map { fb ->
+        lazyOf(fb.first()).let { lb ->
+            map { (a, b) ->
+                b.decodeLazy(lb)
+            }
+        }.toTypedArray()
+    }
+    return (map.toTypedArray()) to (map1 to r.size)
+}
 
 suspend fun DecodedRows.cluster(vararg keys: Int) = this.get(*keys).let { (_, remapped) ->
     linkedMapOf<Any?, SortedSet<Int>>().apply {
@@ -181,20 +191,46 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
     val xcoord = keys.mapIndexed { index, any -> any to index }.toMap()
     val xsize = fanOut.size
     this.run {
-        nama.get(*lhs) + pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray() to data.let { (data, sz) ->
-            pivotData(data, lhs, xcoord, xsize, axis, fanOut) to sz
+        val arrayOfPairs = nama.get(*lhs)
+        val pcol = pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray()
+        val finalColumns = arrayOfPairs + pcol
+        finalColumns to data.let { (data, sz) ->
+            data.map { value ->
+                arrayOfNulls<Any?>(+lhs.size + (xcoord.size * xsize)).also { grid ->
+                    val key = axis.map { i -> value[i] }
+                    val x = xcoord[key]!!
+                    lhs.mapIndexed { index, i ->
+                        grid[index] = value[i]
+                    }
+                    fanOut.mapIndexed { index, xcol ->
+
+                        val x = lhs.size + (xsize * x + index)
+
+                        grid[x] = value[xcol]
+                    }
+                    grid.mapIndexed {index, any ->
+                        finalColumns[index].second.fold(  { any },{function -> function(any) })
+                    }
+                }
+            } to sz
         }
     }
 }
 
-fun pivotColumns(legend: Array<String>, axis: IntArray, rhs: IntArray, keys: Set<Any?>) =
+fun pivotColumns(legend: Array<Column>, axis: IntArray, rhs: IntArray, keys: Set<Any?>) =
         legend.get(*axis).let { axNam ->
+
             keys.map { key ->
-                axNam.zip((key as List<*>)).let { keyPrefix ->
+                axNam.zip(key as List<*>).let { keyPrefix ->
+
                     rhs.map { i ->
+                        val (f, g) = legend[i]
+
                         "${keyPrefix.map { (a, b) ->
-                            a + "=" + b
-                        }.joinToString(":")}:${legend[i]}"
+                            val (c, t) = a
+
+                            arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
+                        }.joinToString(":")}:${f}" to g
                     }
                 }
             }
@@ -237,16 +273,15 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
         val (key, cluster) = cluster1
         assert(key.size == by.size)
         arrayOfNulls<Any?>(columns.size).also { finale ->
-
             by.forEachIndexed { index, i ->
                 finale[i] = key[index]
             }
             val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
 
                 cluster.forEach { group ->
-                    group.toList().forEach { row: Array<Any?> ->
+                    group.collect  { row: Array<Any?> ->
                         assert(row.size == protoValues.size)
-                        row.forEachIndexed { index, any -> cols[index].add(any) }
+                        row.forEachIndexed { index, any -> cols[index].add(columns[index].second.fold({any},{it(any)})) }
                     }
                 }
                 assert(cols.size == protoValues.size)

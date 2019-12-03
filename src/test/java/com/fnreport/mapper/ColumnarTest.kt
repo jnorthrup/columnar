@@ -1,12 +1,15 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.fnreport.mapper
 
+import arrow.core.Option
+import arrow.core.Some
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.util.*
 
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
@@ -58,7 +61,7 @@ class ColumnarTest : StringSpec() {
             val r4: DecodedRows = columns reify f4
             val x = suspend {
                 println("reify")
-                val (_: Array<String>, data: Pair<Flow<Array<Any?>>, Int>) = r4
+                val (_, data: Pair<Flow<Array<Any?>>, Int>) = r4
                 val (rows, _) = data
                 rows.collect<Array<Any?>> {
                     println(it.asList())
@@ -72,7 +75,7 @@ class ColumnarTest : StringSpec() {
             val x = suspend {
                 val r4: DecodedRows = columns reify f4
                 val p4: DecodedRows = (r4).pivot(/*lhs=*/intArrayOf(0), /*axis =*/ intArrayOf(1), /*...fanout=*/2, 3)
-                p4.let { (col: Array<String>, data: Pair<Flow<Array<Any?>>, Int>) ->
+                p4.let { (col, data: Pair<Flow<Array<Any?>>, Int>) ->
                     println(col.map { it })
                     data.let { (rows: Flow<Array<Any?>>) ->
                         rows.collect { arr: Array<Any?> ->
@@ -93,7 +96,7 @@ class ColumnarTest : StringSpec() {
             val x = suspend {
                 val r4: DecodedRows = columns reify f4
                 var clusters: DecodedRows = r4.group(1)
-                clusters.let { (colnames: Array<String>, data: Pair<Flow<Array<Any?>>, Int>) ->
+                clusters.let { (colnames, data: Pair<Flow<Array<Any?>>, Int>) ->
                     val (rows) = data
                     println("by col 1")
                     println("${colnames.asList()} ")
@@ -103,10 +106,10 @@ class ColumnarTest : StringSpec() {
                     rows.count() shouldBe 3
                 }
                 clusters = r4.group( /*...by=*/0)
-                clusters.let { (cnames: Array<String>, data: Pair<Flow<Array<Any?>>, Int>) ->
+                clusters.let { (cnames, data: Pair<Flow<Array<Any?>>, Int>) ->
                     val (rows, _) = data
                     println("by col 0")
-                    println("${cnames.asList()} ")
+                    println("${cnames.map { it.first }}")
                     rows.collect { arrayOfAnys: Array<Any?> ->
                         println(arrayOfAnys.contentDeepToString())
                     }
@@ -116,7 +119,7 @@ class ColumnarTest : StringSpec() {
                 clusters.let { (names, data) ->
                     val (rows: Flow<Array<Any?>>, _: Int) = data
                     println("composability by previous group to column 3  ")
-                    println("${names.asList()} ")
+                    println("${names.map { it.first }} ")
                     rows.collect { arrayOfAnys: Array<Any?> ->
                         println(arrayOfAnys.contentDeepToString())
 
@@ -128,18 +131,125 @@ class ColumnarTest : StringSpec() {
         }
         "composability" {
             println("pivotpivot")
-            val x = suspend {
+            var x = suspend {
                 var p4 = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3)
-                println(p4.first.contentDeepToString())
-                p4.second.first.collect { println(it.contentDeepToString()) }
+                also {
+                    val (a, b) = p4
+                    println(a.map { it.first })
+                    val (c, d) = b
+                    c.collect { println(it.contentDeepToString()) }
+                }
+                also {
+                    val (compoundColumns, _) = p4
+                    println("--- pivot squared ")
+                    p4 = p4.pivot(lhs = intArrayOf(), axis = intArrayOf(0), fanOut = *compoundColumns.indices.drop(1).toIntArray())
 
-                val (compoundColumns: Array<String>, _) = p4
-                println("--- pivot squared ")
-                p4 = p4.pivot(lhs = intArrayOf(), axis = intArrayOf(0), fanOut = *compoundColumns.indices.drop(1).toIntArray())
-                println(p4.first.contentDeepToString())
-                p4.second.first.collect { println(it.contentDeepToString()) }
+                    val (a, b) = p4
+                    println(a.map { it.first })
+                    val (c, d) = b
+                    c.collect { println(it.contentDeepToString()) }
+
+                }
+            }
+            x()
+        }
+        "group pivot"{
+            println("pivotgroup")
+
+            val x = suspend {
+                val p4 = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3)
+                        .group(0)
+                val (a, b) = p4
+                val (c, _) = b
+                System.err.println(a.contentDeepToString())
+                c.collect { println(it.contentDeepToString()) }
+            }
+
+            x()
+        }
+        "group pivot fillna"{
+            println("pivotgroupfillna")
+
+            val x = suspend {
+
+                var c4 = columns[0, 1] + columns[2, 3]{ any: Any? -> any ?: 0f }
+                val pivot = (c4 reify f4)
+                        .pivot(intArrayOf(0), intArrayOf(1), 2, 3)
+
+                val col = pivot.first.indices.drop(1).toIntArray()
+                val pair = pivot[0]
+                val pair1 = pivot.get(*col).invoke({ any: Any? -> any ?: 0f })
+
+                var p4 = (pair with pair1).let {
+                    var (a, b) = it
+                    var (c, _) = b
+                    System.err.println(a.contentDeepToString())
+                    c.collect { ar ->
+                        val message = ar.mapIndexed { ind, v ->
+                            (a[ind].second.fold({ v }, { it(v) }))
+                        }
+                        println(message
+                        )
+                    }
+
+
+                }
+
+                val pair2 = pair with pair1
+                val ind = pair2.first.indices.drop(1).toIntArray()
+                val group = (pair2)
+                        .group(0)
+                p4 = (group[0] with group.get(*ind).invoke  { it: Any? ->
+                            when {
+                                it is Array <*>-> it.map{(it as? Float? )?:0f}.sum()
+                                it is List <*>-> it.map{(it as? Float? )?:0f}.sum()
+                                else -> it
+                            }
+                        })
+                        .let {
+                            var (a, b) = it
+                            var (c, _) = b
+                            System.err.println(a.contentDeepToString())
+                            c.collect { ar ->
+                                val message = ar.mapIndexed { index, any ->
+                                    a[index].second.fold({any},{it(any)})
+                                }
+                                println(message)
+                            }
+                        }
             }
             x()
         }
     }
 }
+
+private operator fun RowDecoder.invoke(t: xform): RowDecoder = map { (a, b) ->
+    val (c, d) = b
+    a to (c to { any: Any? -> t(d(any)) })
+}.toTypedArray()
+
+
+operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
+    a.map { (c, d) ->
+        c to Some(d.fold({ t }, { dprime: xform ->
+            { rowval: Any? ->
+                t(dprime(rowval))
+            }
+        })) as Option<xform>
+    }.toTypedArray() to b
+}
+
+infix suspend fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b) ->
+    b.let { (c, d) ->
+        val second1 = that.second.second
+        assert(second1 == d) { "rows must be same -- ${d} !== $second1" }
+        val toList = c.toList()
+        val toList1 = that.second.first.toList()
+        val x = toList.mapIndexed { index: Int, v: Array<Any?> ->
+            val r = v.toList() + toList1[index].toList()
+            r.toTypedArray()
+        }.asFlow()
+        (a + that.first) to (x to d)
+    }
+}
+
