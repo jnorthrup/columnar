@@ -33,8 +33,7 @@ object TestDate {
 class ColumnarTest : StringSpec() {
     val columns: RowDecoder = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
-                    .zip(
-                            listOf(dateMapper,
+                    .zip(    listOf(dateMapper,
                                     stringMapper,
                                     floatMapper,
                                     floatMapper))).toTypedArray()
@@ -208,8 +207,6 @@ class ColumnarTest : StringSpec() {
                         println(message
                         )
                     }
-
-
                 }
 
                 val pair2 = pair with pair1
@@ -223,102 +220,8 @@ class ColumnarTest : StringSpec() {
             }
             x()
         }
-        "resample"{
-
-            System.err.println("time")
-            val p4 = columns reify f4
-
-            val indexcol = 0
-
-            val expanded = resample(p4, indexcol)
-            println("reaw resample")
-            expanded.second.first.collect {
-                println(it.contentDeepToString())
-
-            }
-
-            println("resampled groupby").also {
-                var group = expanded.group(0)
-                show(groupSumFloat(group[0] with group[1]{ any ->
-                    (any as? Array<*>?)?.filterNotNull() ?: (any as? Collection<*>?)?.filterNotNull()
-                } with group[2, 3], 0, 1))
-
-            }
-
-            println("resampled groupby pivot ").also {
-                var group = expanded.group(0)
-                show(groupSumFloat(group[0] with group[1]{ any ->
-                    (any as? Array<*>?)?.filterNotNull() ?: (any as? Collection<*>?)?.filterNotNull()
-                } with group[2, 3], 0, 1).pivot(intArrayOf(0), intArrayOf(1), 2, 3))
-            }
-        }
 
     }
 
 
-}
-
-private suspend fun show(it: DecodedRows) {
-    var (a, b) = it
-    var (c, _) = b
-    System.err.println(a.contentDeepToString())
-    c.collect { ar ->
-        val message = ar.mapIndexed { index, any ->
-            a[index].second.fold({ any }, { it(any) })
-        }
-        println(message.toTypedArray().contentDeepToString())
-    }
-}
-
-suspend fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
-    val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
-    val pair3: DecodedRows = res.get(*exclusion) with res.get(*summationColumns).invoke { it: Any? ->
-        when {
-            it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
-            it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
-            else -> it
-        }
-    }
-    return pair3
-}
-
-suspend fun resample(p4: DecodedRows, indexcol: Int): DecodedRows {
-    return p4[indexcol].let { (a, b) ->
-        val (c, d) = b
-
-        val filterNotNull = c.toList().map {
-            (it.first() as? LocalDate?)
-        }.filterNotNull()
-        val min = filterNotNull.min()!!
-        val max = filterNotNull.max()!!
-
-
-        var size: Int = 0
-
-
-        val empties = daySeq(min, max).toList().mapIndexed { index, localDate ->
-            size = index
-            arrayOfNulls<Any?>(p4.first.size).also { row ->
-                row[indexcol] = localDate
-            }
-        }.asFlow()
-
-        p4.let {
-            val (a, b) = p4;
-            val (c, d) = b
-            a to ((c.toList() + empties.toList()).asFlow() to d + size)
-        }
-
-    }
-}
-
-
-fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
-    var cursor = min;
-    return sequence {
-        while (max > cursor) {
-            yield(cursor)
-            cursor = cursor.plusDays(1)
-        }
-    }
 }

@@ -3,7 +3,8 @@ package com.fnreport.mapper
 import arrow.core.Option
 import arrow.core.Some
 import arrow.core.none
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.io.Closeable
 import java.io.RandomAccessFile
@@ -12,7 +13,6 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::get).toTypedArray()
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
@@ -20,8 +20,8 @@ val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
 
 typealias xform = (Any?) -> Any?
-typealias ByteBufferNormalizer  = Pair<Pair<Int, Int>, xform>
-typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer >>
+typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
+typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 typealias Column = Pair<String, Option<xform>>
 typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
 
@@ -32,12 +32,12 @@ operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
     }.toTypedArray()
 }
 
-fun   ByteBufferNormalizer .decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
+fun ByteBufferNormalizer.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
     ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
 }
 
 
-fun   ByteBufferNormalizer .decode(buf: ByteBuffer)  =
+fun ByteBufferNormalizer.decode(buf: ByteBuffer) =
         let { (coords, mapper) ->
             ByteArray(coords.size).also { buf.get(it) }.let(mapper)
         }
@@ -172,73 +172,69 @@ infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
     return (map.toTypedArray()) to (map1 to r.size)
 }
 
-suspend fun DecodedRows.cluster(vararg keys: Int) = this.get(*keys).let { (_, remapped) ->
-    linkedMapOf<Any?, SortedSet<Int>>().apply {
-        val mappings = this
-        remapped.let { (values, _) ->
-            values.collectIndexed { ix, ar1 ->
-                val ar = ar1.toList()
-                val x = mappings[ar]
-                x?.add(ix) ?: mappings.run { set(ar, sortedSetOf(ix)) }
-            }
-        }
-    }.map { (k, v) -> k to v.toTypedArray() }.toMap()
-}
+tailrec fun deepArray(it: Any?): Any? =
+        if (it is Array<*>) it.map { deepArray(it) }.filterNotNull().filter {
+            (it as? Array<*>)?.isNotEmpty() ?:true
+        }.toTypedArray()
+        else if (it is Iterable<*>) deepArray(it.map { it } .toTypedArray())
+        else it
 
 @ExperimentalCoroutinesApi
 suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows = this.let { (nama, data) ->
-    val cluster: Map<Any?, Array<Int>> = this.cluster(*axis)
-    val keys = cluster.keys
+    val cluster = this.get(*axis).let { (a, b) ->
+        b.let { (c, d) ->
+            c.toList().distinctBy { (deepArray(it) as Array<*>).contentDeepHashCode() }.filter { !it.isNullOrEmpty() }
+        }
+    }
+    val keys = cluster
     val xcoord = keys.mapIndexed { index, any -> any to index }.toMap()
     val xsize = fanOut.size
     this.run {
-        val arrayOfPairs = nama.get(*lhs)
-        val pcol = pivotColumns(nama, axis, fanOut, keys).flatten().toTypedArray()
-        val finalColumns = arrayOfPairs + pcol
-        finalColumns to data.let { (data, sz) ->
+        nama.get(*lhs) + nama.get(*axis).let { axNam ->
+            keys.map { key ->
+                axNam.zip(key).let { keyPrefix ->
+                    fanOut.map { i ->
+                        val (f, g) = nama[i]
+                        "${keyPrefix.map { (a, b) ->
+                            val (c, t) = a
+                            arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
+                        }.joinToString(":")}:${f}" to g
+                    }
+                }
+            }
+        }.flatten().toTypedArray() to data.let { (data, sz) ->
             data.map { value ->
                 arrayOfNulls<Any?>(+lhs.size + (xcoord.size * xsize)).also { grid ->
-                    val key = axis.map { i -> value[i] }
+                    val key = value.get(*axis)
                     val x = xcoord[key]!!
                     lhs.mapIndexed { index, i ->
                         grid[index] = value[i]
                     }
                     fanOut.mapIndexed { index, xcol ->
-
                         val x = lhs.size + (xsize * x + index)
-
                         grid[x] = value[xcol]
                     }
-                    grid.mapIndexed {index, any ->
-                        finalColumns[index].second.fold(  { any },{function -> function(any) })
+                    grid.mapIndexed { index, any ->
+                        (nama.get(*lhs) + nama.get(*axis).let { axNam ->
+
+                            keys.map { key ->
+                                axNam.zip(key as List<*>).let { keyPrefix ->
+                                    fanOut.map { i ->
+                                        val (f, g) = nama[i]
+                                        "${keyPrefix.map { (a, b) ->
+                                            val (c, t) = a
+                                            arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
+                                        }.joinToString(":")}:${f}" to g
+                                    }
+                                }
+                            }
+                        }.flatten().toTypedArray())[index].second.fold({ any }, { function -> function(any) })
                     }
                 }
             } to sz
         }
     }
 }
-
-fun pivotColumns(legend: Array<Column>, axis: IntArray, rhs: IntArray, keys: Set<Any?>) =
-        legend.get(*axis).let { axNam ->
-
-            keys.map { key ->
-                axNam.zip(key as List<*>).let { keyPrefix ->
-
-                    rhs.map { i ->
-                        val (f, g) = legend[i]
-
-                        "${keyPrefix.map { (a, b) ->
-                            val (c, t) = a
-
-                            arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
-                        }.joinToString(":")}:${f}" to g
-                    }
-                }
-            }
-        }
-
-
-
 
 
 /**
@@ -267,9 +263,9 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
             val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
 
                 cluster.forEach { group ->
-                    group.collect  { row: Array<Any?> ->
+                    group.collect { row: Array<Any?> ->
                         assert(row.size == protoValues.size)
-                        row.forEachIndexed { index, any -> cols[index].add(columns[index].second.fold({any},{it(any)})) }
+                        row.forEachIndexed { index, any -> cols[index].add(columns[index].second.fold({ any }, { it(any) })) }
                     }
                 }
                 assert(cols.size == protoValues.size)
@@ -306,7 +302,7 @@ operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
 infix suspend fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b) ->
     b.let { (c, d) ->
         val second1 = that.second.second
-        assert(second1 == d) { "rows must be same -- ${d} !== $second1" }
+        assert(second1 == d) { "rows must be same -- ${d}!=$second1" }
         val toList = c.toList()
         val toList1 = that.second.first.toList()
         val x = toList.mapIndexed { index: Int, v: Array<Any?> ->
@@ -317,3 +313,65 @@ infix suspend fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b
     }
 }
 
+
+suspend fun show(it: DecodedRows) {
+    var (a, b) = it
+    var (c, _) = b
+    System.err.println(a.contentDeepToString())
+    c.collect { ar ->
+        val message = ar.mapIndexed { index, any ->
+            a[index].second.fold({ any }, { it(any) })
+        }
+        println(message.toTypedArray().contentDeepToString())
+    }
+}
+
+suspend fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
+    val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
+    val pair3: DecodedRows = res.get(*exclusion) with res.get(*summationColumns).invoke { it: Any? ->
+        when {
+            it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+            it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+            else -> it
+        }
+    }
+    return pair3
+}
+
+suspend fun resample(p4: DecodedRows, indexcol: Int): DecodedRows {
+    return p4[indexcol].let { (a, b) ->
+        val (c, d) = b
+
+        val filterNotNull = c.toList().map {
+            (it.first() as? LocalDate?)
+        }.filterNotNull()
+        val min = filterNotNull.min()!!
+        val max = filterNotNull.max()!!
+
+        var size: Int = 0
+
+        val empties = daySeq(min, max).toList().mapIndexed { index, localDate ->
+            size = index
+            arrayOfNulls<Any?>(p4.first.size).also { row ->
+                row[indexcol] = localDate
+            }
+        }.asFlow()
+
+        p4.let {
+            val (a, b) = p4
+            val (c, d) = b
+            a to ((c.toList() + empties.toList()).asFlow() to d + size)
+        }
+    }
+}
+
+
+fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
+    var cursor = min;
+    return sequence {
+        while (max > cursor) {
+            yield(cursor)
+            cursor = cursor.plusDays(1)
+        }
+    }
+}
