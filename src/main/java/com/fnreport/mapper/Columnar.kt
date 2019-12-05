@@ -174,13 +174,20 @@ fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(it: Any?): Any? =
         if (it is Array<*>) it.map(::deepArray).toTypedArray()
-        else if (it is Iterable<*>) deepArray(it.map { it }.toTypedArray())
+        else if (it is Iterable<*>) deepArray(it.map { it } )
         else it
 
-tailrec fun deepTrim(it: Any?): Any? =
-        if (it is Array<*>) it.map(::deepTrim).filterNotNull().toTypedArray()
-        else if (it is Iterable<*>) it.map { it }.toTypedArray().let(::deepTrim)
-        else it
+tailrec fun deepTrim(inbound: Any?): Any? =
+        if (inbound is Array<*>) {
+            if (inbound.all { it != null }) inbound.also {
+                it.forEachIndexed{ ix, any->
+                    @Suppress("UNCHECKED_CAST")
+                    (inbound as  Array<Any?>)[ix]=  deepTrim(any)
+                }
+            } else inbound.filterNotNull().map(::deepTrim).toTypedArray()
+        }
+        else if (inbound is Iterable<*>) deepTrim(inbound.filterNotNull() .toTypedArray())
+        else inbound
 
 
 @ExperimentalCoroutinesApi
