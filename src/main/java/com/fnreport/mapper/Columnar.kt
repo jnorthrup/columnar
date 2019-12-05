@@ -139,7 +139,7 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
         while (hasRemaining() && get() != '\n'.toByte());
         position()
     }
-    override val size: Int = (buf.limit() / recordLen)//.also { assert(it != 0) { "bad size" } }
+    override val size: Int = (buf.limit() / recordLen)
 }
 
 
@@ -147,13 +147,12 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
  * reassign columns
  */
 @ExperimentalCoroutinesApi
-operator fun DecodedRows.get(vararg axis: Int): DecodedRows =
-        this.let { (cols, data) ->
-            axis.map { ix -> cols[ix] }.toTypedArray() to
-                    data.let { (rows, sz) ->
-                        rows.take(sz).map { r -> axis.map { c -> r[c] }.toTypedArray() } to sz
-                    }
-        }
+operator fun DecodedRows.get(vararg axis: Int): DecodedRows = this.let { (cols, data) ->
+    axis.map { ix -> cols[ix] }.toTypedArray() to
+            data.let { (rows, sz) ->
+                rows.take(sz).map { r -> axis.map { c -> r[c] }.toTypedArray() } to sz
+            }
+}
 
 infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
     val map = map { (a, b) ->
@@ -172,66 +171,88 @@ infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
     return (map.toTypedArray()) to (map1 to r.size)
 }
 
+fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
+
 tailrec fun deepArray(it: Any?): Any? =
-        if (it is Array<*>) it.map { deepArray(it) }.filterNotNull().filter {
-            (it as? Array<*>)?.isNotEmpty() ?:true
-        }.toTypedArray()
-        else if (it is Iterable<*>) deepArray(it.map { it } .toTypedArray())
+        if (it is Array<*>) it.map(::deepArray).toTypedArray()
+        else if (it is Iterable<*>) deepArray( it.map { it }.toTypedArray())
         else it
+
+tailrec fun deepTrim(it: Any?): Any? =
+        if (it is Array<*>) it.map(::deepTrim).filterNotNull() .toTypedArray()
+        else if (it is Iterable<*>) it.map { it }.toTypedArray().let(::deepTrim)
+        else it
+
+
+/*@ExperimentalCoroutinesApi
+suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int) = this.let { (nama, data) ->
+
+    val keys = get(*axis).let { (arrayOfPairs, pair) ->
+        pair.let { (flow1, sz) ->
+            flow1.toList().map(::arrayOfAnys).filter { !it.isNullOrEmpty() }.distinct()
+        }
+    }
+
+    nama.get(*axis).let{
+
+    }
+
+}*/
 
 @ExperimentalCoroutinesApi
 suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows = this.let { (nama, data) ->
-    val cluster = this.get(*axis).let { (a, b) ->
-        b.let { (c, d) ->
-            c.toList().distinctBy { (deepArray(it) as Array<*>).contentDeepHashCode() }.filter { !it.isNullOrEmpty() }
+    get(*axis).let { (arrayOfPairs, pair) ->
+        pair.let { (flow1, sz) ->
+            flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
         }
-    }
-    val keys = cluster
-    val xcoord = keys.mapIndexed { index, any -> any to index }.toMap()
-    val xsize = fanOut.size
-    this.run {
-        nama.get(*lhs) + nama.get(*axis).let { axNam ->
-            keys.map { key ->
-                axNam.zip(key).let { keyPrefix ->
-                    fanOut.map { i ->
-                        val (f, g) = nama[i]
-                        "${keyPrefix.map { (a, b) ->
-                            val (c, t) = a
-                            arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
-                        }.joinToString(":")}:${f}" to g
+    }.let { keys ->
+        //        val xCoord = keys.mapIndexed { xIndex, any -> any to xIndex }.toMap()
+        val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
+        this.run {
+            val xSize = fanOut.size
+            nama.get(*lhs) + nama.get(*axis).let { axNam ->
+                keys.map { key ->
+                    axNam.zip(key).let { keyPrefix ->
+                        fanOut.map { pos ->
+                            val (aggregatedName, xForm) = nama[pos]
+                            "${keyPrefix.map { (col, imprintValue) ->
+                                val (str, optXform) = col
+                                arrayOf(str, optXform.fold({ imprintValue }, { it(imprintValue) })).joinToString("=")
+                            }.joinToString(":")}:${aggregatedName}" to xForm
+                        }
                     }
                 }
-            }
-        }.flatten().toTypedArray() to data.let { (data, sz) ->
-            data.map { value ->
-                arrayOfNulls<Any?>(+lhs.size + (xcoord.size * xsize)).also { grid ->
-                    val key = value.get(*axis)
-                    val x = xcoord[key]!!
-                    lhs.mapIndexed { index, i ->
-                        grid[index] = value[i]
-                    }
-                    fanOut.mapIndexed { index, xcol ->
-                        val x = lhs.size + (xsize * x + index)
-                        grid[x] = value[xcol]
-                    }
-                    grid.mapIndexed { index, any ->
-                        (nama.get(*lhs) + nama.get(*axis).let { axNam ->
+            }.flatten().toTypedArray() to data.let { (data, sz) ->
+                data.map { value ->
+                    arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
+                        val key = value.get(*axis).let(::arrayOfAnys)
+                        val x = xHash[key.contentDeepHashCode()]!!
+                        lhs.mapIndexed { index, i ->
+                            grid[index] = value[i]
+                        }
+                        fanOut.mapIndexed { index, xcol ->
+                            val x = lhs.size + (xSize * x + index)
+                            grid[x] = value[xcol]
+                        }
+                        grid.mapIndexed { index, any ->
+                            (nama.get(*lhs) + nama.get(*axis).let { axNam ->
 
-                            keys.map { key ->
-                                axNam.zip(key as List<*>).let { keyPrefix ->
-                                    fanOut.map { i ->
-                                        val (f, g) = nama[i]
-                                        "${keyPrefix.map { (a, b) ->
-                                            val (c, t) = a
-                                            arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
-                                        }.joinToString(":")}:${f}" to g
+                                keys.map { key ->
+                                    axNam.zip(key).let { keyPrefix ->
+                                        fanOut.map { i ->
+                                            val (f, g) = nama[i]
+                                            "${keyPrefix.map { (a, b) ->
+                                                val (c, t) = a
+                                                arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
+                                            }.joinToString(":")}:${f}" to g
+                                        }
                                     }
                                 }
-                            }
-                        }.flatten().toTypedArray())[index].second.fold({ any }, { function -> function(any) })
+                            }.flatten().toTypedArray())[index].second.fold({ any }, { function -> function(any) })
+                        }
                     }
-                }
-            } to sz
+                } to sz
+            }
         }
     }
 }
@@ -314,15 +335,22 @@ infix suspend fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b
 }
 
 
-suspend fun show(it: DecodedRows) {
-    var (a, b) = it
-    var (c, _) = b
-    System.err.println(a.contentDeepToString())
-    c.collect { ar ->
-        val message = ar.mapIndexed { index, any ->
-            a[index].second.fold({ any }, { it(any) })
+suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
+    b.let { (rows, sz) ->
+
+        System.err.println(cols.contentDeepToString())
+        rows.collect { ar ->
+            ar.mapIndexed { index, any ->
+                assert(cols.size == ar.size)
+
+                val (f, g) = cols[index]
+
+                val fold = g.fold({ any }, { it(any) })
+                fold
+            }.let {
+                println(deepArray(it.toTypedArray().contentDeepToString()))
+            }
         }
-        println(message.toTypedArray().contentDeepToString())
     }
 }
 

@@ -147,7 +147,7 @@ class ColumnarTest : StringSpec() {
         }
         "composability" {
             println("pivotpivot")
-            var x = suspend {
+            val x = suspend {
                 var p4 = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3)
                 also {
                     val (a, b) = p4
@@ -164,7 +164,6 @@ class ColumnarTest : StringSpec() {
                     println(a.map { it.first })
                     val (c, d) = b
                     c.collect { println(it.contentDeepToString()) }
-
                 }
             }
             x()
@@ -185,7 +184,6 @@ class ColumnarTest : StringSpec() {
         }
         "group pivot fillna sum "{
             println("pivotgroupfillna")
-
             val x = suspend {
 
                 var c4 = columns[0, 1] + columns[2, 3]{ any: Any? -> any ?: 0f }
@@ -220,8 +218,5 @@ class ColumnarTest : StringSpec() {
             }
             x()
         }
-
     }
-
-
 }
