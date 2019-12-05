@@ -175,11 +175,11 @@ fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(it: Any?): Any? =
         if (it is Array<*>) it.map(::deepArray).toTypedArray()
-        else if (it is Iterable<*>) deepArray( it.map { it }.toTypedArray())
+        else if (it is Iterable<*>) deepArray(it.map { it }.toTypedArray())
         else it
 
 tailrec fun deepTrim(it: Any?): Any? =
-        if (it is Array<*>) it.map(::deepTrim).filterNotNull() .toTypedArray()
+        if (it is Array<*>) it.map(::deepTrim).filterNotNull().toTypedArray()
         else if (it is Iterable<*>) it.map { it }.toTypedArray().let(::deepTrim)
         else it
 
@@ -320,7 +320,7 @@ operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
     }.toTypedArray() to b
 }
 
-infix suspend fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b) ->
+suspend infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b) ->
     b.let { (c, d) ->
         val second1 = that.second.second
         assert(second1 == d) { "rows must be same -- ${d}!=$second1" }
@@ -395,7 +395,7 @@ suspend fun resample(p4: DecodedRows, indexcol: Int): DecodedRows {
 
 
 fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
-    var cursor = min;
+    var cursor = min
     return sequence {
         while (max > cursor) {
             yield(cursor)
