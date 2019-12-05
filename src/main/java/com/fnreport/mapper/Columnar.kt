@@ -174,13 +174,20 @@ fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(it: Any?): Any? =
         if (it is Array<*>) it.map(::deepArray).toTypedArray()
-        else if (it is Iterable<*>) deepArray(it.map { it }.toTypedArray())
+        else if (it is Iterable<*>) deepArray(it.map { it } )
         else it
 
-tailrec fun deepTrim(it: Any?): Any? =
-        if (it is Array<*>) it.map(::deepTrim).filterNotNull().toTypedArray()
-        else if (it is Iterable<*>) it.map { it }.toTypedArray().let(::deepTrim)
-        else it
+tailrec fun deepTrim(inbound: Any?): Any? =
+        if (inbound is Array<*>) {
+            if (inbound.all { it != null }) inbound.also {
+                it.forEachIndexed{ ix, any->
+                    @Suppress("UNCHECKED_CAST")
+                    (inbound as  Array<Any?>)[ix]=  deepTrim(any)
+                }
+            } else inbound.filterNotNull().map(::deepTrim).toTypedArray()
+        }
+        else if (inbound is Iterable<*>) deepTrim(inbound.filterNotNull() .toTypedArray())
+        else inbound
 
 
 @ExperimentalCoroutinesApi
@@ -223,7 +230,6 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
                             grid[x] = value[xcol]
                         }
                         grid.mapIndexed { index, any ->
-
                             synthMaster[index].second.fold({ any }, { function -> function(any) })
                         }
                     }
@@ -265,19 +271,15 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
             by.forEachIndexed { index, i ->
                 finale[i] = key[index]
             }
-            val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
-
-                cluster.forEach { group ->
-                    group.collect { row: Array<Any?> ->
+            val groupedRow = protoValues.mapIndexed { index, i ->  arrayOfNulls<Any?>(cluster.size) }.let { cols ->
+                cluster.forEachIndexed  { ix,group ->
+                    group.collectIndexed { index,  row: Array<Any?> ->
                         assert(row.size == protoValues.size)
-                        row.forEachIndexed { index, any -> cols[index].add(columns[index].second.fold({ any }, { it(any) })) }
+                        row.forEachIndexed { index, any -> cols[index][ix]=(columns[index].second.fold({ any }, { it(any) })) }
                     }
                 }
                 assert(cols.size == protoValues.size)
-                cols.map {
-                    assert(it.size == cluster.size)
-                    it.toTypedArray()
-                }
+                cols
             }
             protoValues.forEachIndexed { index, i ->
                 finale[i] = groupedRow[index]
