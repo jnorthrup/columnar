@@ -23,7 +23,6 @@ typealias xform = (Any?) -> Any?
 typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 typealias Column = Pair<String, Option<xform>>
-typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
     val arrayOfFlows = this(row)
@@ -184,28 +183,10 @@ tailrec fun deepTrim(it: Any?): Any? =
         else it
 
 
-/*@ExperimentalCoroutinesApi
-suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int) = this.let { (nama, data) ->
-
-    val keys = get(*axis).let { (arrayOfPairs, pair) ->
-        pair.let { (flow1, sz) ->
-            flow1.toList().map(::arrayOfAnys).filter { !it.isNullOrEmpty() }.distinct()
-        }
-    }
-
-    nama.get(*axis).let{
-
-    }
-
-}*/
 
 @ExperimentalCoroutinesApi
 suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows = this.let { (nama, data) ->
-    get(*axis).let { (arrayOfPairs, pair) ->
-        pair.let { (flow1, sz) ->
-            flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
-        }
-    }.let { keys ->
+    distinct(*axis).let { keys ->
         //        val xCoord = keys.mapIndexed { xIndex, any -> any to xIndex }.toMap()
         val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
         this.run {
@@ -217,7 +198,7 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
                             val (aggregatedName, xForm) = nama[pos]
                             "${keyPrefix.map { (col, imprintValue) ->
                                 val (str, optXform) = col
-                                arrayOf(str, optXform.fold({ imprintValue }, { it(imprintValue) })).joinToString("=")
+                                "$str=${optXform.fold({ imprintValue }, { it(imprintValue) })}"  
                             }.joinToString(":")}:${aggregatedName}" to xForm
                         }
                     }
@@ -256,6 +237,14 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
         }
     }
 }
+
+suspend fun DecodedRows.distinct(vararg axis: Int )  =
+    get(*axis).let { (arrayOfPairs, pair) ->
+        pair.let { (flow1, sz) ->
+            flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
+        }
+    }
+
 
 
 /**
@@ -320,31 +309,33 @@ operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
     }.toTypedArray() to b
 }
 
-suspend infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (a, b) ->
-    b.let { (c, d) ->
-        val second1 = that.second.second
-        assert(second1 == d) { "rows must be same -- ${d}!=$second1" }
-        val toList = c.toList()
-        val toList1 = that.second.first.toList()
-        val x = toList.mapIndexed { index: Int, v: Array<Any?> ->
-            val r = v.toList() + toList1[index].toList()
-            r.toTypedArray()
-        }.asFlow()
-        (a + that.first) to (x to d)
+
+typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
+
+
+infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (theseCols, theseData) ->
+    theseData.let { (theseRows, theseSize) ->
+        that.let { (thatCols, thatData) ->
+            thatData.let { (thatRows, thatSize) ->
+                assert(thatSize == theseSize) { "rows must be same -- ${theseSize}!=$thatSize" }
+                val unionRows =
+                        theseRows.zip(thatRows) { a, b -> arrayOf(*a, *b) }
+                val unoinCol = arrayOf(*theseCols, *thatCols)
+                val unionData = unionRows to theseSize
+                unoinCol to unionData
+            }
+        }
     }
 }
 
 
 suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
     b.let { (rows, sz) ->
-
         System.err.println(cols.contentDeepToString())
         rows.collect { ar ->
             ar.mapIndexed { index, any ->
                 assert(cols.size == ar.size)
-
                 val (f, g) = cols[index]
-
                 val fold = g.fold({ any }, { it(any) })
                 fold
             }.let {
@@ -366,30 +357,26 @@ suspend fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows 
     return pair3
 }
 
-suspend fun resample(p4: DecodedRows, indexcol: Int): DecodedRows {
-    return p4[indexcol].let { (a, b) ->
+suspend infix fun DecodedRows.resample(indexcol: Int) = this[indexcol].let { (a, b) ->
+    val (c, d) = b
+    val indexValues = c.toList().map {
+        (it.first() as? LocalDate?)
+    }.filterNotNull()
+    val min = indexValues.min()!!
+    val max = indexValues.max()!!
+    var size: Int = 0
+    val empties = (daySeq(min, max) -indexValues).mapIndexed { index, localDate ->
+        size = index
+        arrayOfNulls<Any?>(first.size).also { row ->
+            row[indexcol] = localDate
+        }
+    }.asFlow()
+
+    let {
+        val (a, b) = this
         val (c, d) = b
 
-        val filterNotNull = c.toList().map {
-            (it.first() as? LocalDate?)
-        }.filterNotNull()
-        val min = filterNotNull.min()!!
-        val max = filterNotNull.max()!!
-
-        var size: Int = 0
-
-        val empties = daySeq(min, max).toList().mapIndexed { index, localDate ->
-            size = index
-            arrayOfNulls<Any?>(p4.first.size).also { row ->
-                row[indexcol] = localDate
-            }
-        }.asFlow()
-
-        p4.let {
-            val (a, b) = p4
-            val (c, d) = b
-            a to ((c.toList() + empties.toList()).asFlow() to d + size)
-        }
+        a to ( flowOf( c,  empties ).flattenConcat()    to d + size)
     }
 }
 
