@@ -223,7 +223,6 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
                             grid[x] = value[xcol]
                         }
                         grid.mapIndexed { index, any ->
-
                             synthMaster[index].second.fold({ any }, { function -> function(any) })
                         }
                     }
@@ -265,19 +264,15 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
             by.forEachIndexed { index, i ->
                 finale[i] = key[index]
             }
-            val groupedRow = protoValues.map { arrayListOf<Any?>() }.let { cols ->
-
-                cluster.forEach { group ->
-                    group.collect { row: Array<Any?> ->
+            val groupedRow = protoValues.mapIndexed { index, i ->  arrayOfNulls<Any?>(cluster.size) }.let { cols ->
+                cluster.forEachIndexed  { ix,group ->
+                    group.collectIndexed { index,  row: Array<Any?> ->
                         assert(row.size == protoValues.size)
-                        row.forEachIndexed { index, any -> cols[index].add(columns[index].second.fold({ any }, { it(any) })) }
+                        row.forEachIndexed { index, any -> cols[index][ix]=(columns[index].second.fold({ any }, { it(any) })) }
                     }
                 }
                 assert(cols.size == protoValues.size)
-                cols.map {
-                    assert(it.size == cluster.size)
-                    it.toTypedArray()
-                }
+                cols
             }
             protoValues.forEachIndexed { index, i ->
                 finale[i] = groupedRow[index]
