@@ -183,27 +183,34 @@ tailrec fun deepTrim(it: Any?): Any? =
         else it
 
 
-
 @ExperimentalCoroutinesApi
 suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows = this.let { (nama, data) ->
-    distinct(*axis).let { keys ->
+    get(*axis).let { (arrayOfPairs, pair) ->
+        pair.let { (flow1, sz) ->
+            flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
+        }
+    }.let { keys ->
         //        val xCoord = keys.mapIndexed { xIndex, any -> any to xIndex }.toMap()
         val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
         this.run {
             val xSize = fanOut.size
-            nama.get(*lhs) + nama.get(*axis).let { axNam ->
+            val synthNames = nama.get(*axis).let { axNam ->
                 keys.map { key ->
                     axNam.zip(key).let { keyPrefix ->
                         fanOut.map { pos ->
                             val (aggregatedName, xForm) = nama[pos]
                             "${keyPrefix.map { (col, imprintValue) ->
                                 val (str, optXform) = col
-                                "$str=${optXform.fold({ imprintValue }, { it(imprintValue) })}"  
+                                "$str=${optXform.fold({ imprintValue }, { it(imprintValue) })}"
                             }.joinToString(":")}:${aggregatedName}" to xForm
                         }
                     }
                 }
-            }.flatten().toTypedArray() to data.let { (data, sz) ->
+            }.flatten().toTypedArray()
+            val synthMaster = arrayOf(*nama.get(*lhs), * synthNames)
+
+            val rerow = data.let { (data, sz) ->
+
                 data.map { value ->
                     arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
                         val key = value.get(*axis).let(::arrayOfAnys)
@@ -216,35 +223,23 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
                             grid[x] = value[xcol]
                         }
                         grid.mapIndexed { index, any ->
-                            (nama.get(*lhs) + nama.get(*axis).let { axNam ->
 
-                                keys.map { key ->
-                                    axNam.zip(key).let { keyPrefix ->
-                                        fanOut.map { i ->
-                                            val (f, g) = nama[i]
-                                            "${keyPrefix.map { (a, b) ->
-                                                val (c, t) = a
-                                                arrayOf(c, t.fold({ b }, { it(b) })).joinToString("=")
-                                            }.joinToString(":")}:${f}" to g
-                                        }
-                                    }
-                                }
-                            }.flatten().toTypedArray())[index].second.fold({ any }, { function -> function(any) })
+                            synthMaster[index].second.fold({ any }, { function -> function(any) })
                         }
                     }
                 } to sz
             }
+            synthMaster to rerow
         }
     }
 }
 
-suspend fun DecodedRows.distinct(vararg axis: Int )  =
-    get(*axis).let { (arrayOfPairs, pair) ->
-        pair.let { (flow1, sz) ->
-            flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
+suspend fun DecodedRows.distinct(vararg axis: Int) =
+        get(*axis).let { (arrayOfPairs, pair) ->
+            pair.let { (flow1, sz) ->
+                flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
+            }
         }
-    }
-
 
 
 /**
@@ -365,7 +360,7 @@ suspend infix fun DecodedRows.resample(indexcol: Int) = this[indexcol].let { (a,
     val min = indexValues.min()!!
     val max = indexValues.max()!!
     var size: Int = 0
-    val empties = (daySeq(min, max) -indexValues).mapIndexed { index, localDate ->
+    val empties = (daySeq(min, max) - indexValues).mapIndexed { index, localDate ->
         size = index
         arrayOfNulls<Any?>(first.size).also { row ->
             row[indexcol] = localDate
@@ -376,7 +371,7 @@ suspend infix fun DecodedRows.resample(indexcol: Int) = this[indexcol].let { (a,
         val (a, b) = this
         val (c, d) = b
 
-        a to ( flowOf( c,  empties ).flattenConcat()    to d + size)
+        a to (flowOf(c, empties).flattenConcat() to d + size)
     }
 }
 
