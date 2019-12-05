@@ -1,6 +1,5 @@
 package com.fnreport.mapper
 
-import io.kotlintest.TestCase
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -15,23 +14,23 @@ class ColumnarTest2 : StringSpec() {
                             stringMapper,
                             floatMapper,
                             floatMapper))).toTypedArray()
-    val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")//4 rows of data
+    val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
     val p4 = columns reify f4
-    init {"resampled pivot groupby date sum"{
 
-        val resampled = resample(p4, 0)
-        val pivot = resampled.pivot(intArrayOf(0), intArrayOf(1), 2, 3).group(0)
-        val (pivotColumns) = pivot
+    init {
+        "resampled pivot groupby date sum"{
+            val resampled = resample(p4, 0)
+            val pivot = resampled.pivot(intArrayOf(0), intArrayOf(1), 2, 3).group(0)
+            val (pivotColumns) = pivot
+            val left = pivot[0]
+            val right = pivot.get(*(1 until pivotColumns.size).toList().toIntArray()).invoke {
+                (it.let { deepTrim(it) as Array<Any?> }.map { (it as? Float) ?: 0f }.sum())
+            }
+            show(left with right)
 
-        val left = pivot[0]
-        val right = pivot.get(*(1 until pivotColumns.size).toList().toIntArray()).invoke {
-            (it.let { deepTrim(it) as Array<Any?>}.map{(it as? Float )?:0f} .sum() )
         }
-        show(left with right)
 
-    }
-
-   "resample"{
+        "resample"{
 
             System.err.println("time")
 
@@ -45,21 +44,17 @@ class ColumnarTest2 : StringSpec() {
 
         }
         "resample group"{
-
             val indexcol = 0
             val expanded = resample(p4, indexcol)
             var group = expanded.group(0)
             show(groupSumFloat(group[0] with group[1]{ any ->
                 (any as? Array<*>?)?.filterNotNull() ?: (any as? Collection<*>?)?.filterNotNull()
             } with group[2, 3], 0, 1))
-
         }
         "resampled pivot"{
 
             val indexcol = 0
-
             val expanded = resample(p4, indexcol)
-
             val pivot = expanded.pivot(intArrayOf(0), intArrayOf(1), 2, 3)
             val (a, b) = pivot
             val (c, d) = b
@@ -68,13 +63,28 @@ class ColumnarTest2 : StringSpec() {
         "resampled pivot groupby date"{
 
             val indexcol = 0
-
             val expanded = resample(p4, indexcol)
-
             val pivot = expanded.pivot(intArrayOf(0), intArrayOf(1), 2, 3).group(0)
             val (a, b) = pivot
             val (c, d) = b
             show(pivot)
+        }
+
+        "20"{
+
+            val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
+            val p20 = columns reify f20
+
+
+            val resampled = resample(p20, 0)
+            val pivot = resampled.pivot(intArrayOf(0), intArrayOf(1), 2, 3).group(0)
+            val (pivotColumns) = pivot
+
+            val left = pivot[0]
+            val right = pivot.get(*(1 until pivotColumns.size).toList().toIntArray()).invoke {
+                (it.let { deepTrim(it) as Array<Any?> }.map { (it as? Float) ?: 0f }.sum())
+            }
+            show(left with right)
         }
 
 

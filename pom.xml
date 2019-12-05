@@ -3,6 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jmysql2json</groupId>
     <artifactId>columnar</artifactId>
+    <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
     <repositories>
         <repository>
@@ -130,7 +131,7 @@
                     <jvmTarget>11</jvmTarget>
                     <experimentalCoroutines>enable</experimentalCoroutines>
                     <myIncremental>true</myIncremental>
-                    <javaParameters>-Xuse-experimental=kotlin.Experimental</javaParameters>
+                    <!--<javaParameters>-Xuse-experimental=kotlin.Experimental</javaParameters>-->
                     <args>-Xuse-experimental=kotlin.Experimental</args>
                 </configuration>
             </plugin>
