@@ -13,8 +13,9 @@ import kotlin.system.measureTimeMillis
 suspend fun main() {
     val d1names = listOf("SalesNo", "SalesAreaID", "date", "PluNo", "ItemName", "Quantity", "Amount", "TransMode")
     val cw = listOf((0 to 11), (11 to 15), (15 to 25), (25 to 40), (40 to 60), (60 to 82), (82 to 103), (103 to 108))
-    val s = "/vol/aux/rejuve/rejuvesinceapril2019_180000.fwf"
-    val fixedRecordLengthFile = com.fnreport.mapper.FixedRecordLengthFile(s)
+    val s = "/vol/aux/rejuve/rejuvesinceapril2019_RD" +
+            ".fwf"
+    val fixedRecordLengthFile = FixedRecordLengthFile(s)
     val other: List<ByteBufferNormalizer> = cw.zip(listOf(stringMapper, stringMapper, dateMapper, stringMapper, stringMapper, floatMapper, floatMapper, stringMapper))
     val thing = d1names.zip(other)
     val decoder = (thing).toTypedArray()

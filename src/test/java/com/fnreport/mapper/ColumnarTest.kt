@@ -74,12 +74,11 @@ class ColumnarTest : StringSpec() {
         }
         "reify"{
 
-            val r4: DecodedRows = columns reify f4
+            val (_, data) = columns reify f4
             val x = suspend {
                 println("reify")
-                val (_, data: Pair<Flow<Array<Any?>>, Int>) = r4
                 val (rows, _) = data
-                rows.collect<Array<Any?>> {
+                rows.collect {
                     println(it.asList())
                 }
                 rows.count() shouldBe 4
@@ -172,9 +171,8 @@ class ColumnarTest : StringSpec() {
             println("pivotgroup")
 
             val x = suspend {
-                val p4 = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3)
+                val (a, b) = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3)
                         .group(0)
-                val (a, b) = p4
                 val (c, _) = b
                 System.err.println(a.contentDeepToString())
                 c.collect { println(it.contentDeepToString()) }
@@ -186,17 +184,17 @@ class ColumnarTest : StringSpec() {
             println("pivotgroupfillna")
             val x = suspend {
 
-                var c4 = columns[0, 1] + columns[2, 3]{ any: Any? -> any ?: 0f }
+                val c4 = columns[0, 1] + columns[2, 3]{ any: Any? -> any ?: 0f }
                 val pivot = (c4 reify f4)
                         .pivot(intArrayOf(0), intArrayOf(1), 2, 3)
 
                 val col = pivot.first.indices.drop(1).toIntArray()
                 val pair = pivot[0]
-                val pair1 = pivot.get(*col).invoke({ any: Any? -> any ?: 0f })
+                val pair1 = pivot.get(*col).invoke { any: Any? -> any ?: 0f }
 
                 var p4 = (pair with pair1).let {
-                    var (a, b) = it
-                    var (c, _) = b
+                    val (a, b) = it
+                    val (c, _) = b
                     System.err.println(a.contentDeepToString())
                     c.collect { ar ->
                         val message = ar.mapIndexed { ind, v ->
@@ -208,7 +206,7 @@ class ColumnarTest : StringSpec() {
                 }
 
                 val pair2 = pair with pair1
-                var nonSummationColumns = intArrayOf(0);
+                val nonSummationColumns = intArrayOf(0)
 
                 val res = pair2.group(*nonSummationColumns)
                 val pair3: DecodedRows = groupSumFloat(res, *nonSummationColumns)

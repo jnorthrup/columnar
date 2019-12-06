@@ -161,10 +161,8 @@ infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
     val map1 = r.run {
         take(size)
     }.map { fb ->
-        lazyOf(fb.first()).let { lb ->
-            map { (a, b) ->
-                b.decodeLazy(lb)
-            }
+        map { (a, b) ->
+            b.decodeLazy(lazyOf(fb.first()))
         }.toTypedArray()
     }
     return (map.toTypedArray()) to (map1 to r.size)
@@ -342,26 +340,25 @@ suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
     }
 }
 
-suspend fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
+fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
     val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
-    val pair3: DecodedRows = res.get(*exclusion) with res.get(*summationColumns).invoke { it: Any? ->
+    return res.get(*exclusion) with res.get(*summationColumns).invoke { it: Any? ->
         when {
             it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
             it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
             else -> it
         }
     }
-    return pair3
 }
 
 suspend infix fun DecodedRows.resample(indexcol: Int) = this[indexcol].let { (a, b) ->
     val (c, d) = b
-    val indexValues = c.toList().map {
+    val indexValues = c.toList().mapNotNull {
         (it.first() as? LocalDate?)
-    }.filterNotNull()
+    }
     val min = indexValues.min()!!
     val max = indexValues.max()!!
-    var size: Int = 0
+    var size = 0
     val empties = (daySeq(min, max) - indexValues).mapIndexed { index, localDate ->
         size = index
         arrayOfNulls<Any?>(first.size).also { row ->

@@ -46,7 +46,7 @@ class ColumnarTest2 : StringSpec() {
         "resample group"{
             val indexcol = 0
             val expanded = p4.resample(indexcol)
-            var group = expanded.group(0)
+            val group = expanded.group(0)
             show(groupSumFloat(group[0] with group[1]{ any ->
                 (any as? Array<*>?)?.filterNotNull() ?: (any as? Collection<*>?)?.filterNotNull()
             } with group[2, 3], 0, 1))
