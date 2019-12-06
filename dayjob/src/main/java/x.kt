@@ -44,12 +44,12 @@ suspend fun main() {
 
 
     val pivot = forecast.pivot(intArrayOf(0), keyAxis, 3).group(0)
- t = measureTimeMillis {
+    t = measureTimeMillis {
         val left = pivot[0]
         val right = pivot.get(*(1 until pivot.first.size).toList().toIntArray()).invoke {
             (it.let { deepTrim(it) as Array<Any?> }.map { (it as? Float) ?: 0f }.sum())
         }
         show(left with right)
     }
-    System.err.println("$t ms for  rows with distinct: ${dist.size}")
+    System.err.println("$t ms for rows with distinct: ${dist.size}")
 }

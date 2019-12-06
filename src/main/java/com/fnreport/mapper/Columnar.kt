@@ -172,30 +172,24 @@ fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(it: Any?): Any? =
         if (it is Array<*>) it.map(::deepArray).toTypedArray()
-        else if (it is Iterable<*>) deepArray(it.map { it } )
+        else if (it is Iterable<*>) deepArray(it.map { it })
         else it
 
 tailrec fun deepTrim(inbound: Any?): Any? =
         if (inbound is Array<*>) {
             if (inbound.all { it != null }) inbound.also {
-                it.forEachIndexed{ ix, any->
+                it.forEachIndexed { ix, any ->
                     @Suppress("UNCHECKED_CAST")
-                    (inbound as  Array<Any?>)[ix]=  deepTrim(any)
+                    (inbound as Array<Any?>)[ix] = deepTrim(any)
                 }
             } else inbound.filterNotNull().map(::deepTrim).toTypedArray()
-        }
-        else if (inbound is Iterable<*>) deepTrim(inbound.filterNotNull() .toTypedArray())
+        } else if (inbound is Iterable<*>) deepTrim(inbound.filterNotNull().toTypedArray())
         else inbound
 
 
 @ExperimentalCoroutinesApi
 suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows = this.let { (nama, data) ->
-    get(*axis).let { (arrayOfPairs, pair) ->
-        pair.let { (flow1, sz) ->
-            flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
-        }
-    }.let { keys ->
-        //        val xCoord = keys.mapIndexed { xIndex, any -> any to xIndex }.toMap()
+    distinct(*axis).let { keys ->
         val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
         this.run {
             val xSize = fanOut.size
@@ -212,31 +206,28 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
                     }
                 }
             }.flatten().toTypedArray()
-            val synthMaster = arrayOf(*nama.get(*lhs), * synthNames)
+            val synthMasterCopy = arrayOf(*nama.get(*lhs), * synthNames)
+            synthMasterCopy to data.let { (rows, sz) ->
 
-            val rerow = data.let { (data, sz) ->
-
-                data.map { value ->
+                rows.map { row ->
                     arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
-                        val key = value.get(*axis).let(::arrayOfAnys)
+                        val key = row.get(*axis).let(::arrayOfAnys)
+                        lhs.forEachIndexed { index, i ->
+                            grid[index] = row[i]
+                        }
                         val x = xHash[key.contentDeepHashCode()]!!
-                        lhs.mapIndexed { index, i ->
-                            grid[index] = value[i]
+                        fanOut.forEachIndexed { index, xcol ->
+                            val x1 = lhs.size + (xSize * x + index)
+                            grid[x1] = row[xcol]
                         }
-                        fanOut.mapIndexed { index, xcol ->
-                            val x = lhs.size + (xSize * x + index)
-                            grid[x] = value[xcol]
-                        }
-                        grid.mapIndexed { index, any ->
-                            synthMaster[index].second.fold({ any }, { function -> function(any) })
-                        }
+                        grid( synthMasterCopy)
                     }
                 } to sz
             }
-            synthMaster to rerow
         }
     }
 }
+
 
 suspend fun DecodedRows.distinct(vararg axis: Int) =
         get(*axis).let { (arrayOfPairs, pair) ->
@@ -245,7 +236,7 @@ suspend fun DecodedRows.distinct(vararg axis: Int) =
             }
         }
 
-
+operator fun Array<Any?>.invoke(c:Array<Column>)=this.also{c.forEachIndexed{ i, (a,b)->b.fold( {}) { function: xform -> this[i]=function(this[i ]) } }}
 /**
  * cost of one full tablscan
  */
@@ -255,23 +246,23 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
     val clusters = mutableMapOf<Int, Pair<Array<*>, MutableList<Flow<Array<Any?>>>>>()
     rows.collect { row ->
-        val key = row.get(*by)
+        val key = arrayOfAnys( row.get(*by))
         val keyHash = key.contentDeepHashCode()
         flowOf(row.get(*protoValues)).let { f ->
             if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second += (f)
             else clusters[keyHash] = key to mutableListOf(f)
         }
     }
-    columns to (clusters.map { (k, cluster1) ->
+    columns to (clusters.map { (_, cluster1) ->
         val (key, cluster) = cluster1
         assert(key.size == by.size)
         arrayOfNulls<Any?>(columns.size).also { finale ->
             by.forEachIndexed { index, i ->
                 finale[i] = key[index]
             }
-            val groupedRow = protoValues.mapIndexed { index, i ->  arrayOfNulls<Any?>(cluster.size) }.let { cols ->
-                cluster.forEachIndexed  { ix,group ->
-                    group.collectIndexed { index,  row: Array<Any?> ->
+            val groupedRow = protoValues.map  {   arrayOfNulls<Any?>(cluster.size) }.let { cols ->
+                cluster.forEachIndexed { ix, group ->
+                    group.collectIndexed { index, row  ->
                         assert(row.size == protoValues.size)
                         row.forEachIndexed { index, any -> cols[index][ix]=(columns[index].second.fold({ any }, { it(any) })) }
                     }
@@ -328,13 +319,8 @@ suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
     b.let { (rows, sz) ->
         System.err.println(cols.contentDeepToString())
         rows.collect { ar ->
-            ar.mapIndexed { index, any ->
-                assert(cols.size == ar.size)
-                val (f, g) = cols[index]
-                val fold = g.fold({ any }, { it(any) })
-                fold
-            }.let {
-                println(deepArray(it.toTypedArray().contentDeepToString()))
+            ar (cols).let {
+                println(deepArray(it .contentDeepToString()))
             }
         }
     }
