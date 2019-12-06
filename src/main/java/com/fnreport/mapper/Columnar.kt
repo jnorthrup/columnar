@@ -134,7 +134,7 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
         RowStore<Flow<ByteBuffer>>,
         FixedLength<Flow<ByteBuffer>> {
     override var values: suspend (Int) -> Flow<ByteBuffer> = { row -> flowOf(buf.position(recordLen * row).slice().limit(recordLen)) }
-    override val recordLen: Int = buf.duplicate().clear().run {
+    override val recordLen = buf.duplicate().clear().run {
         while (hasRemaining() && get() != '\n'.toByte());
         position()
     }
@@ -170,10 +170,14 @@ infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
 
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
-tailrec fun deepArray(it: Any?): Any? =
-        if (it is Array<*>) it.map(::deepArray).toTypedArray()
-        else if (it is Iterable<*>) deepArray(it.map { it })
-        else it
+tailrec fun deepArray(inbound: Any?): Any? =
+        if (inbound is Array<*>) inbound.also<Any?> { ar ->
+            inbound.indices.forEach { i ->
+                (inbound as Array<Any?>)[i] = deepArray(inbound[i])
+            }
+        }
+        else if (inbound is Iterable<*>) deepArray(inbound.map { it })
+        else inbound
 
 tailrec fun deepTrim(inbound: Any?): Any? =
         if (inbound is Array<*>) {
@@ -220,7 +224,7 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
                             val x1 = lhs.size + (xSize * x + index)
                             grid[x1] = row[xcol]
                         }
-                        grid( synthMasterCopy)
+                        grid(synthMasterCopy)
                     }
                 } to sz
             }
@@ -236,7 +240,7 @@ suspend fun DecodedRows.distinct(vararg axis: Int) =
             }
         }
 
-operator fun Array<Any?>.invoke(c:Array<Column>)=this.also{c.forEachIndexed{ i, (a,b)->b.fold( {}) { function: xform -> this[i]=function(this[i ]) } }}
+operator fun Array<Any?>.invoke(c: Array<Column>) = this.also { c.forEachIndexed { i, (a, b) -> b.fold({}) { function: xform -> this[i] = function(this[i]) } } }
 /**
  * cost of one full tablscan
  */
@@ -246,7 +250,7 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
     val clusters = mutableMapOf<Int, Pair<Array<*>, MutableList<Flow<Array<Any?>>>>>()
     rows.collect { row ->
-        val key = arrayOfAnys( row.get(*by))
+        val key = arrayOfAnys(row.get(*by))
         val keyHash = key.contentDeepHashCode()
         flowOf(row.get(*protoValues)).let { f ->
             if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second += (f)
@@ -260,13 +264,15 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
             by.forEachIndexed { index, i ->
                 finale[i] = key[index]
             }
-            val groupedRow = protoValues.map  {   arrayOfNulls<Any?>(cluster.size) }.let { cols ->
+            val groupedRow = protoValues.map { arrayOfNulls<Any?>(cluster.size) }.let { cols ->
+
                 cluster.forEachIndexed { ix, group ->
-                    group.collectIndexed { index, row  ->
+                    group.collectIndexed { index, row ->
                         assert(row.size == protoValues.size)
-                        row.forEachIndexed { index, any -> cols[index][ix]=(columns[index].second.fold({ any }, { it(any) })) }
+                        row.forEachIndexed { index, any -> cols[index][ix] = (columns[index].second.fold({ any }, { it(any) })) }
                     }
                 }
+
                 assert(cols.size == protoValues.size)
                 cols
             }
@@ -319,8 +325,8 @@ suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
     b.let { (rows, sz) ->
         System.err.println(cols.contentDeepToString())
         rows.collect { ar ->
-            ar (cols).let {
-                println(deepArray(it .contentDeepToString()))
+            ar(cols).let {
+                println(deepArray(it.contentDeepToString()))
             }
         }
     }
