@@ -41,7 +41,7 @@ suspend fun main() {
 
     System.err.println("$t ms for  rows with distinct: ${dist.size}")
     val slice = dist.slice(0..20).forEach { println(it.contentDeepToString()) }
-
+    System.err.println()
 
     val pivot = forecast.pivot(intArrayOf(0), keyAxis, 3).group(0)
     t = measureTimeMillis {
