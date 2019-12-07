@@ -3,9 +3,8 @@ package com.fnreport.mapper
 import arrow.core.Option
 import arrow.core.Some
 import arrow.core.none
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.*
+ import kotlinx.coroutines.flow.*
 import java.io.Closeable
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -13,8 +12,13 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.coroutines.CoroutineContext
 
 inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::get).toTypedArray()
+
+
+  val DecodedRows.f:  Flow<Array<Any?>> get()=second.first
+
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
@@ -172,7 +176,7 @@ fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(inbound: Any?): Any? =
         if (inbound is Array<*>) inbound.also<Any?> { ar ->
-            inbound.indices.forEach { i ->
+            inbound. forEachIndexed { i,v ->
                 (inbound as Array<Any?>)[i] = deepArray(inbound[i])
             }
         }
@@ -241,6 +245,10 @@ suspend fun DecodedRows.distinct(vararg axis: Int) =
         }
 
 operator fun Array<Any?>.invoke(c: Array<Column>) = this.also { c.forEachIndexed { i, (a, b) -> b.fold({}) { function: xform -> this[i] = function(this[i]) } } }
+
+
+
+
 /**
  * cost of one full tablscan
  */
@@ -303,6 +311,7 @@ operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
 
 
 typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
+
 
 
 infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (theseCols, theseData) ->
