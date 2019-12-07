@@ -180,22 +180,15 @@ operator fun DecodedRows.get(axis: IntArray): DecodedRows = this.let { (cols, da
             }
 }
 
-infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
-    val map = map { (a, b) ->
-        val x: Option<xform> = none<xform>()
-        a to x
-    }
-    val map1 = r.map { fb ->
-        val buf = lazyOf(fb.first())
-        Array(this.size) {
-            this[it].let { (a, b) ->
-                b.decodeLazy(buf)
+infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows =
+        Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (r.map { fb ->
+              lazyOf(fb.first()).let { buf->
+            Array(size) {
+                this[it].let { (a, b) ->
+                    b.decodeLazy(buf)
+                }
             }
-        }
-    }
-    return Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (map1 to r.size)
-
-}
+        }} to r.size)
 
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
@@ -215,7 +208,7 @@ tailrec fun deepTrim(inbound: Any?): Any? =
                     @Suppress("UNCHECKED_CAST")
                     (inbound as Array<Any?>)[ix] = deepTrim(any)
                 }
-            } else inbound.filterNotNull().map(::deepTrim).toTypedArray()
+            } else deepTrim(  inbound.filterNotNull ())
         } else if (inbound is Iterable<*>) deepTrim(inbound.filterNotNull().toTypedArray())
         else inbound
 
