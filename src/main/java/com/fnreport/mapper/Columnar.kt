@@ -3,8 +3,9 @@ package com.fnreport.mapper
 import arrow.core.Option
 import arrow.core.Some
 import arrow.core.none
-import kotlinx.coroutines.*
- import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import java.io.Closeable
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -12,12 +13,11 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.coroutines.CoroutineContext
 
-inline operator fun <reified T> Array<T>.get(vararg index: Int) = index.map(::get).toTypedArray()
+inline operator fun <reified T> Array<T>.get(vararg index: Int) = Array<T>(index.size){i: Int -> this[index[i]] }
 
 
-  val DecodedRows.f:  Flow<Array<Any?>> get()=second.first
+val DecodedRows.f: Flow<Array<Any?>> get() = second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
@@ -176,7 +176,7 @@ fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(inbound: Any?): Any? =
         if (inbound is Array<*>) inbound.also<Any?> { ar ->
-            inbound. forEachIndexed { i,v ->
+            inbound.forEachIndexed { i, v ->
                 (inbound as Array<Any?>)[i] = deepArray(inbound[i])
             }
         }
@@ -220,11 +220,13 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
                 rows.map { row ->
                     arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
                         val key = row.get(*axis).let(::arrayOfAnys)
-                        lhs.forEachIndexed { index, i ->
+                        for ((index, i) in lhs.withIndex()) {
+
                             grid[index] = row[i]
                         }
                         val x = xHash[key.contentDeepHashCode()]!!
-                        fanOut.forEachIndexed { index, xcol ->
+
+                        for ((index, xcol) in fanOut.withIndex()) {
                             val x1 = lhs.size + (xSize * x + index)
                             grid[x1] = row[xcol]
                         }
@@ -247,8 +249,6 @@ suspend fun DecodedRows.distinct(vararg axis: Int) =
 operator fun Array<Any?>.invoke(c: Array<Column>) = this.also { c.forEachIndexed { i, (a, b) -> b.fold({}) { function: xform -> this[i] = function(this[i]) } } }
 
 
-
-
 /**
  * cost of one full tablscan
  */
@@ -269,24 +269,22 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
         val (key, cluster) = cluster1
         assert(key.size == by.size)
         arrayOfNulls<Any?>(columns.size).also { finale ->
+
             by.forEachIndexed { index, i ->
                 finale[i] = key[index]
             }
             val groupedRow = protoValues.map { arrayOfNulls<Any?>(cluster.size) }.let { cols ->
-
-                cluster.forEachIndexed { ix, group ->
+                for ((ix, group) in cluster.withIndex())
                     group.collectIndexed { index, row ->
                         assert(row.size == protoValues.size)
-                        row.forEachIndexed { index, any -> cols[index][ix] = (columns[index].second.fold({ any }, { it(any) })) }
+                        for ((index, any) in row.withIndex()) {
+                            cols[index][ix] = (columns[index].second.fold({ any }, { it(any) }))
+                        }
                     }
-                }
-
                 assert(cols.size == protoValues.size)
                 cols
             }
-            protoValues.forEachIndexed { index, i ->
-                finale[i] = groupedRow[index]
-            }
+            for ((index, i) in protoValues.withIndex()) finale[i] = groupedRow[index]
 
         }
     }.asFlow() to clusters.size)
@@ -311,7 +309,6 @@ operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
 
 
 typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
-
 
 
 infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (theseCols, theseData) ->
