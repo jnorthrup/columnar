@@ -23,7 +23,7 @@ class ColumnarTest2 : StringSpec() {
             val pivot = resampled.pivot(intArrayOf(0), intArrayOf(1), 2, 3).group(0)
             val (pivotColumns) = pivot
             val left = pivot[0]
-            val right = pivot.get(*(1 until pivotColumns.size).toList().toIntArray()).invoke {
+            val right = pivot.get( (1 until pivotColumns.size).toList().toIntArray()).invoke {
                 (it.let { deepTrim(it) as Array<Any?> }.map { (it as? Float) ?: 0f }.sum())
             }
             show(left with right)
@@ -81,7 +81,7 @@ class ColumnarTest2 : StringSpec() {
             val (pivotColumns) = pivot
 
             val left = pivot[0]
-            val right = pivot.get(*(1 until pivotColumns.size).toList().toIntArray()).invoke {
+            val right = pivot.get( (1 until pivotColumns.size).toList().toIntArray()).invoke {
                 (it.let { deepTrim(it) as Array<Any?> }.map { (it as? Float) ?: 0f }.sum())
             }
             show(left with right)

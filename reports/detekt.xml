@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<checkstyle version="4.3">
+<file name="/home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt">
+	<error line="215" column="32" severity="warning" message="The function pivotRemappedValues has too many parameters. The current threshold is set to 6." source="detekt.LongParameterList" />
+	<error line="266" column="1" severity="warning" message="The function group appears to be too complex." source="detekt.ComplexMethod" />
+	<error line="201" column="1" severity="warning" message="Function pivot is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="328" column="1" severity="warning" message="Function with is nested too deeply." source="detekt.NestedBlockDepth" />
+	<error line="1" column="1" severity="warning" message="File &apos;Columnar.kt&apos; with &apos;24&apos; functions detected. Defined threshold inside files is set to &apos;11&apos;" source="detekt.TooManyFunctions" />
+	<error line="239" column="37" severity="info" message="This empty block of code can be removed." source="detekt.EmptyForBlock" />
+	<error line="89" column="18" severity="error" message="Caught exception is too generic. Prefer catching specific exceptions to the case that is currently handled." source="detekt.TooGenericExceptionCaught" />
+	<error line="203" column="13" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="207" column="52" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="207" column="42" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="218" column="22" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="235" column="30" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="257" column="12" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="275" column="38" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="277" column="23" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="334" column="66" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="335" column="39" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="357" column="19" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="357" column="44" severity="warning" message="In most cases using a spread operator causes a full copy of the array to be created before calling a method which has a very high performance penalty." source="detekt.SpreadOperator" />
+	<error line="8" column="1" severity="warning" message="kotlinx.coroutines.flow.* is a wildcard import. Replace it with fully qualified imports." source="detekt.WildcardImport" />
+	<error line="137" column="1" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="143" column="5" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="201" column="1" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="215" column="1" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="233" column="1" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="263" column="1" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="119" column="1" severity="warning" message="This comment contains text that has been defined as forbidden in detekt." source="detekt.ForbiddenComment" />
+</file>
+<file name="/home/jim/work/columnar/src/test/java/com/fnreport/mapper/FileAccessTest.kt">
+	<error line="5" column="1" severity="info" message="The class or object FileAccessTest is empty." source="detekt.EmptyClassBlock" />
+	<error line="7" column="1" severity="warning" message="The file FileAccessTest.kt is not ending with a new line." source="detekt.NewLineAtEndOfFile" />
+</file>
+<file name="/home/jim/work/columnar/src/test/java/com/fnreport/mapper/ColumnarTest.kt">
+	<error line="47" column="49" severity="info" message="This empty block of code can be removed." source="detekt.EmptyFunctionBlock" />
+	<error line="160" column="21" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="174" column="17" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+</file>
+<file name="/home/jim/work/columnar/src/test/java/com/fnreport/mapper/FixedRecordLengthBufferTest0.kt">
+	<error line="1" column="1" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+	<error line="1" column="1" severity="warning" message="Line detected that is longer than the defined maximum line length in the code style." source="detekt.MaxLineLength" />
+</file>
+</checkstyle>
