@@ -14,7 +14,7 @@ import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-inline operator fun <reified T> Array<T>.get(vararg index: Int) = Array<T>(index.size){i: Int -> this[index[i]] }
+inline operator fun <reified T> Array<T>.get(vararg index: Int) = Array(index.size){ i: Int -> this[index[i]] }
 
 
 val DecodedRows.f: Flow<Array<Any?>> get() = second.first
@@ -28,12 +28,13 @@ typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 typealias Column = Pair<String, Option<xform>>
 
-operator fun Table1.get(vararg reorder: Int): Table1 = { row ->
-    val arrayOfFlows = this(row)
-    reorder.map { i ->
-        flowOf(arrayOfFlows[i].first())
-    }.toTypedArray()
-}
+operator fun Table1.get(vararg reorder: Int): Table1 = {
+        this(it).let{ arrayOfFlows->
+            Array(reorder.size){ i ->
+                flowOf(arrayOfFlows[reorder[i]].first())
+            }
+        }
+    }
 
 fun ByteBufferNormalizer.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
     ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
@@ -50,10 +51,11 @@ infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row: Int -
     val values = rs.values(row)
     val first = lazyOf(values.first())
     first.let { buf ->
-        this.mapIndexed { index,
-                          (_, convertor) ->
+        Array(this.size)
+      /*  this.mapIndexed*/ { index->
+                       val    (_, convertor)=this [index]
             flowOf(convertor.decodeLazy(buf))
-        }.toTypedArray()
+        }
     }
 }
 
