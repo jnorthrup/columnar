@@ -15,9 +15,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @JvmName("getVA")
-inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
 
+@JvmName("getVA")
+inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
+
 inline fun <reified T> union(a: Array<T>, b: Array<T>): Array<T> = Array(a.size + b.size) { i ->
     when (i < a.size) {
         true -> a[i];else -> b[i - a.size]
