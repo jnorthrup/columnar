@@ -41,8 +41,8 @@ typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 
 typealias Column = Pair<String, Option<xform>>
-
-typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
+typealias RowHandle=Array<Any?>
+typealias DecodedRows = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
