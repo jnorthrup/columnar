@@ -190,7 +190,7 @@ class ColumnarTest : StringSpec() {
 
                 val col = pivot.first.indices.drop(1).toIntArray()
                 val pair = pivot[0]
-                val pair1 = pivot.get(*col).invoke { any: Any? -> any ?: 0f }
+                val pair1 = pivot.get( col).invoke { any: Any? -> any ?: 0f }
 
                 var p4 = (pair with pair1).let {
                     val (a, b) = it

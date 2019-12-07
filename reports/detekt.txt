@@ -1,0 +1,34 @@
+LongParameterList - 7/6 - [pivotRemappedValues] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:215:32 - Signature=Columnar.kt$(rows: Flow<Array<Any?>>, lhs: IntArray, xHash: Map<Int, Int>, xSize: Int, axis: IntArray, fanOut: IntArray, synthMasterCopy: Array<Column>)
+ComplexMethod - 10/10 - [group] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:266:1 - Signature=Columnar.kt$ suspend fun DecodedRows.group(vararg by: Int): DecodedRows
+NestedBlockDepth - 4/4 - [pivot] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:201:1 - Signature=Columnar.kt$@ExperimentalCoroutinesApi suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows
+NestedBlockDepth - 4/4 - [with] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:328:1 - Signature=Columnar.kt$infix fun DecodedRows.with(that: DecodedRows): DecodedRows
+TooManyFunctions - 24/11 - [Columnar.kt] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:1:1 - Signature=Columnar.kt$com.fnreport.mapper.Columnar.kt
+EmptyForBlock - [<anonymous>] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:239:37 - Signature=Columnar.kt${ }
+EmptyClassBlock - [FileAccessTest] at /home/jim/work/columnar/src/test/java/com/fnreport/mapper/FileAccessTest.kt:5:1 - Signature=FileAccessTest.kt$FileAccessTest : StringSpec
+EmptyFunctionBlock - [beforeTest] at /home/jim/work/columnar/src/test/java/com/fnreport/mapper/ColumnarTest.kt:47:49 - Signature=ColumnarTest.kt$ColumnarTest${ }
+TooGenericExceptionCaught - [e] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:89:18 - Signature=Columnar.kt$e: Exception
+SpreadOperator - [<anonymous>] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:203:13 - Signature=Columnar.kt$(*axis)
+SpreadOperator - [synthMasterCopy] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:207:52 - Signature=Columnar.kt$(*lhs)
+SpreadOperator - [synthMasterCopy] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:207:42 - Signature=Columnar.kt$(*nama.get(*lhs), * synthNames)
+SpreadOperator - [key] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:218:22 - Signature=Columnar.kt$(*axis)
+SpreadOperator - [synthNames] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:235:30 - Signature=Columnar.kt$(*axis)
+SpreadOperator - [distinct] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:257:12 - Signature=Columnar.kt$(*axis)
+SpreadOperator - [key] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:275:38 - Signature=Columnar.kt$(*by)
+SpreadOperator - [<anonymous>] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:277:23 - Signature=Columnar.kt$(*protoValues)
+SpreadOperator - [<anonymous>] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:334:66 - Signature=Columnar.kt$(*a, *b)
+SpreadOperator - [unoinCol] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:335:39 - Signature=Columnar.kt$(*theseCols, *thatCols)
+SpreadOperator - [groupSumFloat] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:357:19 - Signature=Columnar.kt$(*exclusion)
+SpreadOperator - [groupSumFloat] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:357:44 - Signature=Columnar.kt$(*summationColumns)
+WildcardImport - [Columnar.kt] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:8:1 - Signature=Columnar.kt$import kotlinx.coroutines.flow.*
+MaxLineLength - [FixedRecordLengthFile] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:137:1 - Signature=Columnar.kt$FixedRecordLengthFile : FixedRecordLengthBufferCloseable
+MaxLineLength - [values] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:143:5 - Signature=Columnar.kt$FixedRecordLengthBuffer$override var values: suspend (Int) -> Flow<ByteBuffer> = { row -> flowOf(buf.position(recordLen * row).slice().limit(recordLen)) }
+MaxLineLength - [pivot] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:201:1 - Signature=Columnar.kt$@ExperimentalCoroutinesApi suspend
+MaxLineLength - [pivotRemappedValues] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:215:1 - Signature=Columnar.kt$private
+MaxLineLength - [pivotOutputColumns] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:233:1 - Signature=Columnar.kt$private
+MaxLineLength - [invoke] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:263:1 - Signature=Columnar.kt$operator fun Array<Any?>.invoke(c: Array<Column>)
+ForbiddenComment - [MappedFile] at /home/jim/work/columnar/src/main/java/com/fnreport/mapper/Columnar.kt:119:1 - Signature=Columnar.kt$MappedFile$//todo: map multiple segments for a very big file
+MaxLineLength - [FixedRecordLengthBufferTest0.kt] at /home/jim/work/columnar/src/test/java/com/fnreport/mapper/FixedRecordLengthBufferTest0.kt:1:1 - Signature=FixedRecordLengthBufferTest0.kt$com.fnreport.mapper.FixedRecordLengthBufferTest0.kt
+MaxLineLength - [FixedRecordLengthBufferTest0.kt] at /home/jim/work/columnar/src/test/java/com/fnreport/mapper/FixedRecordLengthBufferTest0.kt:1:1 - Signature=FixedRecordLengthBufferTest0.kt$com.fnreport.mapper.FixedRecordLengthBufferTest0.kt
+NewLineAtEndOfFile - [FileAccessTest.kt] at /home/jim/work/columnar/src/test/java/com/fnreport/mapper/FileAccessTest.kt:7:1 - Signature=FileAccessTest.kt$com.fnreport.mapper.FileAccessTest.kt
+MaxLineLength - [<anonymous>] at /home/jim/work/columnar/src/test/java/com/fnreport/mapper/ColumnarTest.kt:160:21 - Signature=ColumnarTest.kt$ColumnarTest$p4 = p4.pivot(lhs = intArrayOf(), axis = intArrayOf(0), fanOut = *compoundColumns.indices.drop(1).toIntArray())
+MaxLineLength - [<anonymous>] at /home/jim/work/columnar/src/test/java/com/fnreport/mapper/ColumnarTest.kt:174:17 - Signature=ColumnarTest.kt$ColumnarTest$val (a, b) = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3) .group(0)
