@@ -16,16 +16,19 @@ import java.time.format.DateTimeFormatter
 
 @JvmName("getVA")
 inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
-inline operator fun <reified T> Array<T>.get(  index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
 
+inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
+inline fun <reified T> union(a: Array<T>, b: Array<T>): Array<T> = Array(a.size + b.size) { i ->
+    when (i < a.size) {
+        true -> a[i];else -> b[i - a.size]
+    }
+}
 
 inline val DecodedRows.f
-    get() =  let {
-        (_,
-                b) ->
-        b.let {
-            (c,
-                    _) ->
+    get() = let { (_,
+                          b) ->
+        b.let { (c,
+                        _) ->
             c
         }
     }
@@ -33,11 +36,13 @@ inline val DecodedRows.f
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
-
 typealias xform = (Any?) -> Any?
 typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
+
 typealias Column = Pair<String, Option<xform>>
+
+typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
@@ -50,7 +55,6 @@ operator fun Table1.get(vararg reorder: Int): Table1 = {
 fun ByteBufferNormalizer.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
     ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
 }
-
 
 fun ByteBufferNormalizer.decode(buf: ByteBuffer) =
         let { (coords, mapper) ->
@@ -114,13 +118,14 @@ interface RowStore<T> : Flow<T> {
     val size: Int
     @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
-
-        (0 until size).forEach { collector.emit(values(it)) }
+        for (it in 0 until size) {
+            collector.emit(values(it))
+        }
     }
 }
 
 
-interface FixedLength<T> {
+interface FixedLength {
     val recordLen: Int
 }
 
@@ -150,7 +155,7 @@ class FixedRecordLengthFile(filename: String, origin: MappedFile = MappedFile(fi
 
 open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
         RowStore<Flow<ByteBuffer>>,
-        FixedLength<Flow<ByteBuffer>> {
+        FixedLength {
     override var values: suspend (Int) -> Flow<ByteBuffer> = { row -> flowOf(buf.position(recordLen * row).slice().limit(recordLen)) }
     override val recordLen = buf.duplicate().clear().run {
         while (hasRemaining() && get() != '\n'.toByte());
@@ -163,13 +168,15 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
 /**
  * reassign columns
  */
-@ExperimentalCoroutinesApi @JvmName("getVA")
-operator fun DecodedRows.get(vararg axis: Int): DecodedRows =  get( axis )
 @ExperimentalCoroutinesApi
-operator fun DecodedRows.get(  axis: IntArray): DecodedRows = this.let { (cols, data) ->
-    axis.map { ix -> cols[ix] }.toTypedArray() to
+@JvmName("getVA")
+operator fun DecodedRows.get(vararg axis: Int): DecodedRows = get(axis)
+
+@ExperimentalCoroutinesApi
+operator fun DecodedRows.get(axis: IntArray): DecodedRows = this.let { (cols, data) ->
+    cols[axis] to
             data.let { (rows, sz) ->
-                rows.take(sz).map { r -> axis.map { c -> r[c] }.toTypedArray() } to sz
+                rows.map { r -> r[axis] } to sz
             }
 }
 
@@ -178,14 +185,16 @@ infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows {
         val x: Option<xform> = none<xform>()
         a to x
     }
-    val map1 = r.run {
-        take(size)
-    }.map { fb ->
-        map { (a, b) ->
-            b.decodeLazy(lazyOf(fb.first()))
-        }.toTypedArray()
+    val map1 = r.map { fb ->
+        val buf = lazyOf(fb.first())
+        Array(this.size) {
+            this[it].let { (a, b) ->
+                b.decodeLazy(buf)
+            }
+        }
     }
-    return (map.toTypedArray()) to (map1 to r.size)
+    return Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (map1 to r.size)
+
 }
 
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
@@ -217,7 +226,7 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
         val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
         this.run {
             val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
-            val synthMasterCopy = union(nama[lhs],  synthNames)
+            val synthMasterCopy = union(nama.get(lhs), synthNames)
             synthMasterCopy to data.let { (rows, sz) ->
                 pivotRemappedValues(rows, lhs, xHash, xSize, axis, fanOut, synthMasterCopy) to sz
             }
@@ -228,7 +237,7 @@ suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int)
 private fun pivotRemappedValues(rows: Flow<Array<Any?>>, lhs: IntArray, xHash: Map<Int, Int>, xSize: Int, axis: IntArray, fanOut: IntArray, synthMasterCopy: Array<Column>) =
         rows.map { row ->
             arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
-                val key = row[axis].let(::arrayOfAnys)
+                val key = row.get(axis).let(::arrayOfAnys)
                 for ((index, i) in lhs.withIndex()) {
 
                     grid[index] = row[i]
@@ -245,7 +254,7 @@ private fun pivotRemappedValues(rows: Flow<Array<Any?>>, lhs: IntArray, xHash: M
 
 private fun pivotOutputColumns(fanOut: IntArray, nama: Array<Column>, axis: IntArray, keys: List<Array<Any?>>): Pair<Int, Array<Pair<String, Option<xform>>>> {
     val xSize = fanOut.size
-    val synthNames = nama[axis].let { axNam ->
+    val synthNames = nama.get(axis).let { axNam ->
         keys.map { key ->
             axNam.zip(key).let { keyPrefix ->
 
@@ -267,7 +276,7 @@ private fun pivotOutputColumns(fanOut: IntArray, nama: Array<Column>, axis: IntA
 
 
 suspend fun DecodedRows.distinct(vararg axis: Int) =
-        get( axis).let { (arrayOfPairs, pair) ->
+        get(axis).let { (arrayOfPairs, pair) ->
             pair.let { (flow1, sz) ->
                 flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
             }
@@ -285,9 +294,9 @@ suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
     val clusters = mutableMapOf<Int, Pair<Array<Any?>, MutableList<Flow<Array<Any?>>>>>()
     rows.collect { row ->
-        val key = arrayOfAnys(row[by])
+        val key = arrayOfAnys(row.get(by))
         val keyHash = key.contentDeepHashCode()
-        flowOf(row[protoValues]).let { f ->
+        flowOf(row.get(protoValues)).let { f ->
             if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second += (f)
             else clusters[keyHash] = key to mutableListOf(f)
         }
@@ -335,16 +344,13 @@ operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
 }
 
 
-typealias DecodedRows = Pair<Array<Column>, Pair<Flow<Array<Any?>>, Int>>
-inline fun <  reified T>union(a:Array<T>, b:Array<T>):Array<T> = Array (a.size+b.size){ i->when(i<a.size){true->a[i];else->b[i-a.size]}}
-
 infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (theseCols, theseData) ->
     theseData.let { (theseRows, theseSize) ->
         that.let { (thatCols, thatData) ->
             thatData.let { (thatRows, thatSize) ->
                 assert(thatSize == theseSize) { "rows must be same -- ${theseSize}!=$thatSize" }
-                val unionRows =   theseRows.zip(thatRows) { a, b -> union( a,  b) }
-                val unionCol = union( theseCols,  thatCols)
+                val unionRows = theseRows.zip(thatRows) { a, b -> union(a, b) }
+                val unionCol = union(theseCols, thatCols)
                 val unionData = unionRows to theseSize
                 unionCol to unionData
             }
@@ -366,10 +372,10 @@ suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
 
 fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
     val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
-    return res[exclusion] with res[summationColumns].invoke { it: Any? ->
+    return res.get(exclusion) with res.get(summationColumns).invoke { it: Any? ->
         when {
             it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
-            it is List <*> -> it.map { (it as? Float?) ?: 0f }.sum()
+            it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
             else -> it
         }
     }
@@ -384,7 +390,7 @@ suspend infix fun DecodedRows.resample(indexcol: Int) = this[indexcol].let { (a,
     val min = indexValues.min()!!
     val max = indexValues.max()!!
     var size = 0
-    val empties=(daySeq(min, max) - indexValues).mapIndexed { index, localDate ->
+    val empties = (daySeq(min, max) - indexValues).mapIndexed { index, localDate ->
         size = index
         arrayOfNulls<Any?>(first.size).also { row ->
             row[indexcol] = localDate
