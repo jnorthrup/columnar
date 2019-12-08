@@ -1,29 +1,5 @@
-target
-.classpath
-.project
-.settings
-.idea
-war
-*.iml
-*.ipr
-*.ids
-*.iws
-*~
-*.json
-*.bak
-*.jar
-*.war
-*.class
-dependency-reduced-pom.xml.DS_Store
-maven-wrapper.jar
-dependency-reduced-pom.xml
-gradle
-gradlew
-gradlew.bat
+# Ignore Gradle project-specific cache directory
 .gradle
-.mvn
-gradle
-gradlew
-gradlew.bat
-.gradle
-.idea/
+
+# Ignore Gradle build output directory
+build
