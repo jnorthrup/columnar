@@ -2,7 +2,6 @@
 
 package com.fnreport.mapper
 
-import columnar.*
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
@@ -34,12 +33,10 @@ object TestDate {
 class ColumnarTest : StringSpec() {
     val columns: RowDecoder = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
-                    .zip(    listOf(
-                        dateMapper,
-                        stringMapper,
-                        floatMapper,
-                        floatMapper
-                    ))).toTypedArray()
+                    .zip(    listOf(dateMapper,
+                                    stringMapper,
+                                    floatMapper,
+                                    floatMapper))).toTypedArray()
     val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
 
@@ -212,8 +209,7 @@ class ColumnarTest : StringSpec() {
                 val nonSummationColumns = intArrayOf(0)
 
                 val res = pair2.group(*nonSummationColumns)
-                val pair3: DecodedRows =
-                    groupSumFloat(res, *nonSummationColumns)
+                val pair3: DecodedRows = groupSumFloat(res, *nonSummationColumns)
                 pair3.also {
                     show(it)
                 }

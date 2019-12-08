@@ -1,6 +1,5 @@
 package com.fnreport.mapper
 
-import columnar.*
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -11,12 +10,10 @@ import kotlinx.coroutines.flow.collect
 class ColumnarTest2 : StringSpec() {
     val columns: RowDecoder = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
-                    .zip(listOf(
-                        dateMapper,
-                        stringMapper,
-                        floatMapper,
-                        floatMapper
-                    ))).toTypedArray()
+                    .zip(listOf(dateMapper,
+                            stringMapper,
+                            floatMapper,
+                            floatMapper))).toTypedArray()
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
     val p4 = columns reify f4
 
