@@ -13,6 +13,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import javax.lang.model.type.UnionType
 
 @JvmName("getVA")
 inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
@@ -45,7 +46,8 @@ typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 
 typealias Column = Pair<String, Option<xform>>
-typealias RowHandle=Array<Any?>
+typealias RowHandle=UnionType
+
 typealias DecodedRows = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
