@@ -43,9 +43,10 @@ typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 
 typealias Column = Pair<String, Option<xform>>
 typealias RowHandle=Array<Any?>
-typealias TableHandle =Flow<RowHandle>
+typealias RouteHandle = Sequence<Any?>
 
-typealias KeyRow = Pair<Array<Column>, Pair<TableHandle, Int>>
+typealias KeyRow = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
+typealias RoutedRows = Pair<Array<Column>, Pair<Flow<RouteHandle>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
@@ -241,6 +242,31 @@ suspend fun KeyRow.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Key
     }
 }
 
+@ExperimentalCoroutinesApi
+suspend fun KeyRow.pivot2(lhs: IntArray, axis: IntArray, vararg fanOut: Int): RoutedRows =
+    this.let { (nama, data) ->
+        distinct(*axis).let { keys ->
+            val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
+            this.run {
+                val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
+                val synthMasterCopy = anion(nama.get(lhs), synthNames)
+                synthMasterCopy to data.let { (rows, sz) ->
+                    pivotRemappedValues(
+                        rows,
+                        lhs,
+                        xHash,
+                        xSize,
+                        axis,
+                        fanOut,
+                        synthMasterCopy
+                    ).map {
+                        it.asSequence()
+                    } to sz
+                }
+            }
+        }
+    }
+
 private fun pivotRemappedValues(rows: Flow<Array<Any?>>, lhs: IntArray, xHash: Map<Int, Int>, xSize: Int, axis: IntArray, fanOut: IntArray, synthMasterCopy: Array<Column>) =
         rows.map { row ->
             arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
@@ -299,13 +325,15 @@ suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
     val (columns, data) = this
     val (rows, d) = data
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
-    val clusters = mutableMapOf<Int, Pair<Array<Any?>, MutableList<Flow<Array<Any?>>>>>()
-    rows.collect { row ->
-        val key = arrayOfAnys(row.get(by))
-        val keyHash = key.contentDeepHashCode()
-        flowOf(row.get(protoValues)).let { f ->
-            if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second += (f)
-            else clusters[keyHash] = key to mutableListOf(f)
+    val clusters=mutableMapOf<Int, Pair<Array<Any?>, MutableList<Flow<Array<Any?>>>>>()
+    rows.collect{row->
+        val key=arrayOfAnys(row.get(by))
+        val keyHash=key.contentDeepHashCode()
+        flowOf(row.get(protoValues)).let{f->
+            when {
+                clusters.containsKey(keyHash) -> clusters[keyHash]!!.second += (f)
+                else -> clusters[keyHash] = key to mutableListOf(f)
+            }
         }
     }
     columns to (clusters.map { (_, cluster1) ->
@@ -333,6 +361,38 @@ suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
     }.asFlow() to clusters.size)
 }
 
+/**
+ * cost of one full tablscan
+ */
+suspend fun RoutedRows.group2(vararg by: Int) = let {
+    val (columns, data) = this
+    val (rows, d) = data
+    val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
+    val clusters = mutableMapOf<Int, Pair<Array<Any?>, MutableList<Sequence<RouteHandle>>>>()
+    rows.collect { row1 ->
+
+        val row = row1.toList().toTypedArray()
+        val key = arrayOfAnys(row[by])
+        val keyHash = key.contentDeepHashCode()
+        sequenceOf(row[protoValues].asSequence()).let { f ->
+            if (clusters.containsKey(keyHash)) clusters[keyHash]!!.second += (f)
+            else clusters[keyHash] = key to mutableListOf(f)
+        }
+    }
+      columns to (clusters.map { (_, cluster1) ->
+        val (key, cluster) = cluster1
+        val chunky = cluster.map { it.iterator() }
+        sequence {
+            for ((index, column) in columns.withIndex()) {
+                if (index in by)
+                    yield(key[by.indexOf(index)])
+                else
+                    yield(chunky.map { it.next() })
+            }
+        }
+
+    } to clusters.size)
+}
 
 operator fun RowDecoder.invoke(t: xform): RowDecoder = map { (a, b) ->
     val (c, d) = b
