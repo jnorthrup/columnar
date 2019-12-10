@@ -68,8 +68,9 @@ class ColumnarTest2 : StringSpec() {
             val indexcol = 0
             val expanded = p4.resample(indexcol)
             val pivot = expanded.pivot(intArrayOf(0), intArrayOf(1), 2, 3).group(0)
-            val (a, b) = pivot
-            val (c, d) = b
+            val (_, b) = pivot
+            val (_, _) = b
+
             show(pivot)
         }
 
