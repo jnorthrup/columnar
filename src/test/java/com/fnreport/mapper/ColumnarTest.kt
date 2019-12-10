@@ -91,8 +91,8 @@ class ColumnarTest : StringSpec() {
         "pivot" {
             println("pivot")
             val x = suspend {
-                val r4: DecodedRows = columns reify f4
-                val p4: DecodedRows = (r4).pivot(/*lhs=*/intArrayOf(0), /*axis =*/ intArrayOf(1), /*...fanout=*/2, 3)
+                val r4: KeyRow = columns reify f4
+                val p4: KeyRow = (r4).pivot(/*lhs=*/intArrayOf(0), /*axis =*/ intArrayOf(1), /*...fanout=*/2, 3)
                 p4.let { (col, data: Pair<Flow<Array<Any?>>, Int>) ->
                     println(col.map { it })
                     data.let { (rows: Flow<Array<Any?>>) ->
@@ -112,8 +112,8 @@ class ColumnarTest : StringSpec() {
 
             println("group")
             val x = suspend {
-                val r4: DecodedRows = columns reify f4
-                var clusters: DecodedRows = r4.group(1)
+                val r4: KeyRow = columns reify f4
+                var clusters: KeyRow = r4.group(1)
                 clusters.let { (colnames, data: Pair<Flow<Array<Any?>>, Int>) ->
                     val (rows) = data
                     println("by col 1")
@@ -212,7 +212,7 @@ class ColumnarTest : StringSpec() {
                 val nonSummationColumns = intArrayOf(0)
 
                 val res = pair2.group(*nonSummationColumns)
-                val pair3: DecodedRows =
+                val pair3: KeyRow =
                     groupSumFloat(res, *nonSummationColumns)
                 pair3.also {
                     show(it)
