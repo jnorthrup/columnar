@@ -19,23 +19,20 @@ inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
 inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
 
 @JvmName("getVA")
+inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> Sequence<T>.get(index: IntArray) =this.toList()[index].asSequence()
+
+@JvmName("getVA")
 inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
 
-inline fun <reified T> union(a: Array<T>, b: Array<T>): Array<T> = Array(a.size + b.size) { i ->
+inline fun <reified T> anion(a: Array<T>, b: Array<T>): Array<T> = Array(a.size + b.size) { i ->
     when (i < a.size) {
         true -> a[i];else -> b[i - a.size]
     }
 }
 
-inline val DecodedRows.f
-    get() = let { (_,
-                          b) ->
-        b.let { (c,
-                        _) ->
-            c
-        }
-    }
+inline val KeyRow.f get() =second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
@@ -46,8 +43,9 @@ typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 
 typealias Column = Pair<String, Option<xform>>
 typealias RowHandle=Array<Any?>
+typealias TableHandle =Flow<RowHandle>
 
-typealias DecodedRows = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
+typealias KeyRow = Pair<Array<Column>, Pair<TableHandle, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
@@ -178,17 +176,17 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
  */
 @ExperimentalCoroutinesApi
 @JvmName("getVA")
-operator fun DecodedRows.get(vararg axis: Int): DecodedRows = get(axis)
+operator fun KeyRow.get(vararg axis: Int): KeyRow = get(axis)
 
 @ExperimentalCoroutinesApi
-operator fun DecodedRows.get(axis: IntArray): DecodedRows = this.let { (cols, data) ->
+operator fun KeyRow.get(axis: IntArray): KeyRow = this.let { (cols, data) ->
     cols[axis] to
             data.let { (rows, sz) ->
                 rows.map { r -> r[axis] } to sz
             }
 }
 
-infix fun RowDecoder.reify(r: FixedRecordLengthFile): DecodedRows =
+infix fun RowDecoder.reify(r: FixedRecordLengthFile): KeyRow =
         Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (r.map { fb ->
               lazyOf(fb.first()).let { buf->
             Array(size) {
@@ -222,12 +220,12 @@ tailrec fun deepTrim(inbound: Any?): Any? =
 
 
 @ExperimentalCoroutinesApi
-suspend fun DecodedRows.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): DecodedRows = this.let { (nama, data) ->
+suspend fun KeyRow.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): KeyRow = this.let { (nama, data) ->
     distinct(*axis).let { keys ->
         val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
         this.run {
             val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
-            val synthMasterCopy = union(nama.get(lhs), synthNames)
+            val synthMasterCopy = anion(nama.get(lhs), synthNames)
             synthMasterCopy to data.let { (rows, sz) ->
                 pivotRemappedValues(
                     rows,
@@ -284,7 +282,7 @@ private fun pivotOutputColumns(fanOut: IntArray, nama: Array<Column>, axis: IntA
 }
 
 
-suspend fun DecodedRows.distinct(vararg axis: Int) =
+suspend fun KeyRow.distinct(vararg axis: Int) =
         get(axis).let { (arrayOfPairs, pair) ->
             pair.let { (flow1, sz) ->
                 flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
@@ -297,7 +295,7 @@ operator fun Array<Any?>.invoke(c: Array<Column>) = this.also { c.forEachIndexed
 /**
  * cost of one full tablscan
  */
-suspend fun DecodedRows.group(vararg by: Int): DecodedRows = let {
+suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
     val (columns, data) = this
     val (rows, d) = data
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
@@ -342,7 +340,7 @@ operator fun RowDecoder.invoke(t: xform): RowDecoder = map { (a, b) ->
 }.toTypedArray()
 
 
-operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
+operator fun KeyRow.invoke(t: xform): KeyRow = this.let { (a, b) ->
     a.map { (c, d) ->
         c to Some(d.fold({ t }, { dprime: xform ->
             { rowval: Any? ->
@@ -353,13 +351,13 @@ operator fun DecodedRows.invoke(t: xform): DecodedRows = this.let { (a, b) ->
 }
 
 
-infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (theseCols, theseData) ->
+infix fun KeyRow.with(that: KeyRow): KeyRow = let { (theseCols, theseData) ->
     theseData.let { (theseRows, theseSize) ->
         that.let { (thatCols, thatData) ->
             thatData.let { (thatRows, thatSize) ->
                 assert(thatSize == theseSize) { "rows must be same -- ${theseSize}!=$thatSize" }
-                val unionRows = theseRows.zip(thatRows) { a, b -> union(a, b) }
-                val unionCol = union(theseCols, thatCols)
+                val unionRows = theseRows.zip(thatRows) { a, b -> anion(a, b) }
+                val unionCol = anion(theseCols, thatCols)
                 val unionData = unionRows to theseSize
                 unionCol to unionData
             }
@@ -368,7 +366,7 @@ infix fun DecodedRows.with(that: DecodedRows): DecodedRows = let { (theseCols, t
 }
 
 
-suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
+suspend fun show(it: KeyRow) = it.let { (cols, b) ->
     b.let { (rows, sz) ->
         System.err.println(cols.contentDeepToString())
         rows.collect { ar ->
@@ -379,7 +377,7 @@ suspend fun show(it: DecodedRows) = it.let { (cols, b) ->
     }
 }
 
-fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
+fun groupSumFloat(res: KeyRow, vararg exclusion: Int): KeyRow {
     val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
     return res.get(exclusion) with res.get(summationColumns).invoke { it: Any? ->
         when {
@@ -391,7 +389,7 @@ fun groupSumFloat(res: DecodedRows, vararg exclusion: Int): DecodedRows {
 }
 
 @UseExperimental(ExperimentalCoroutinesApi::class)
-suspend infix fun DecodedRows.resample(indexcol: Int) = this[indexcol].let { (a, b) ->
+suspend infix fun KeyRow.resample(indexcol: Int) = this[indexcol].let { (a, b) ->
     val (c, d) = b
     val indexValues = c.toList().mapNotNull {
         (it.first() as? LocalDate?)
