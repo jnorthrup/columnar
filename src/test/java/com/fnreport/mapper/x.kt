@@ -1,5 +1,6 @@
 package id.rejuve.dayjob
 
+import columnar.*
 import com.fnreport.mapper.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -16,7 +17,7 @@ suspend fun main() {
     val s = "/vol/aux/rejuve/rejuvesinceapril2019_250000" +
             ".fwf"
     val fixedRecordLengthFile = FixedRecordLengthFile(s)
-    val other: List<ByteBufferNormalizer> = cw.zip(listOf(stringMapper, stringMapper, dateMapper, stringMapper, stringMapper, floatMapper, floatMapper, stringMapper))
+    val other = cw.zip(listOf(stringMapper, stringMapper, dateMapper, stringMapper, stringMapper, floatMapper, floatMapper, stringMapper))
     val thing = d1names.zip(other)
     val decoder = (thing).toTypedArray()
     val rejuve = decoder reify fixedRecordLengthFile
