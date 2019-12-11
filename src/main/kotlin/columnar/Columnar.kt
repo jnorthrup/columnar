@@ -14,6 +14,7 @@ import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.text.Charsets.UTF_8
 
 @JvmName("getVA")
 inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
@@ -36,51 +37,64 @@ inline fun <reified T> anion(a: Array<T>, b: Array<T>): Array<T> = Array(a.size 
     }
 }
 
-inline val KeyRow.f get() = second.first
+val KeyRow.f get() = second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
-
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
 typealias xform = (Any?) -> Any?
+typealias xinsert = (ByteBuffer, Any?) -> ByteBuffer
 typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
-typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
-typealias RowEncoder = RowDecoder
+typealias ByteBufferEncoder = Pair<Pair<Int, Int>, xinsert>
+typealias RowTxtDecoder = Array<Pair<String, ByteBufferNormalizer>>
+typealias RowBinEncoder = Array<Pair<String, ByteBufferEncoder>>
 
-operator fun RowDecoder.not():RowEncoder {
+fun RowTxtDecoder.inverse(): RowBinEncoder {
     var start = 0
-return     Array(size)    { index ->
+    return Array(size) { index ->
         val (name, bbnorm) = this[index]
         bbnorm.let { (a, b) ->
-            name to (start to a.size to !b)
+            val binxform = b.inverse()
+            val cursize = binxformSize(b) ?: a.size
+            name to (start to start + cursize.also { start = start.plus(it) } to binxform)
         }
-
     }
 }
 
-operator fun ByteBuffer.rem(prim: Any) =
-    when (prim) {
-        is Int -> this.putInt(prim)
-        is Long -> this.putLong(prim)
-        is Float -> this.putFloat(prim)
-        is Double -> this.putDouble(prim)
-        is LocalDate -> this.putLong(prim.toEpochDay())
-        is Instant -> this.putLong(prim.toEpochMilli())
-        else -> TODO()
+val xInsertInt = { a:ByteBuffer, b: Int? -> a.putInt(b ?: 0) }
+val xInsertLong = { a:ByteBuffer, b: Long? -> a.putLong(b ?: 0) }
+val xInsertFloat = { a:ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) }
+val xInsertDouble = { a:ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) }
+val xInsertByteBuffer = { a: ByteBuffer, b: ByteBuffer? -> a.put(b) }
+val xInsertByteArray = { a: ByteBuffer, b: ByteArray? -> a.put(b) }
+val xInsertLocalDate = { a: ByteBuffer, b: LocalDate? ->
+
+    val localDate = b ?: LocalDate.EPOCH
+    val toEpochDay = localDate.toEpochDay()
+    a.putLong(toEpochDay) }
+val xInsertInstant = { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) }
+val xInsertAny:xinsert = { b, a: Any? -> xInsertString(b, a.toString()) }
+val xInsertString = { a: ByteBuffer, b: String? -> a.put(b?.toByteArray(UTF_8)); when {a.hasRemaining() -> a.put(ByteArray(a.remaining()) { ' '.toByte() })else -> a
     }
+}
 
-val defaultBinaryWriter: (ByteBuffer, Any?) -> ByteBuffer = { b, a -> b % a!! }
-
-
-
+inline operator fun <reified T > ByteBuffer.rem(prim: T): xinsert = when {
+    prim is Int -> xInsertInt as xinsert
+    prim is Long -> xInsertLong as xinsert
+    prim is Float -> xInsertFloat as xinsert
+    prim is Double -> xInsertDouble as xinsert
+    prim is LocalDate -> xInsertLocalDate as xinsert
+    prim is Instant -> xInsertInstant as xinsert
+    prim is ByteArray -> xInsertByteArray as xinsert
+    prim is ByteBuffer -> xInsertByteBuffer as xinsert
+    prim is String -> xInsertString as xinsert
+    else -> xInsertAny
+}
 
 typealias Column = Pair<String, Option<xform>>
 typealias RowHandle = Array<Any?>
 typealias RouteHandle = Sequence<Any?>
-
 typealias KeyRow = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
 typealias RoutedRows = Pair<Array<Column>, Pair<Flow<RouteHandle>, Int>>
-
-
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
         Array(reorder.size) { i ->
@@ -89,7 +103,7 @@ operator fun Table1.get(vararg reorder: Int): Table1 = {
     }
 }
 
-fun ByteBufferNormalizer.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper) ->
+fun ByteBufferNormalizer.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper: xform) ->
     ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
 }
 
@@ -98,7 +112,7 @@ fun ByteBufferNormalizer.decode(buf: ByteBuffer) =
         ByteArray(coords.size).also { buf.get(it) }.let(mapper)
     }
 
-infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row: Int ->
+infix fun RowTxtDecoder.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row: Int ->
 
     val values = rs.values(row)
     val first = lazyOf(values.first())
@@ -145,27 +159,30 @@ val dateMapper: (Any?) -> Any? = { i ->
 }
 
 
-val cheapMap = mapOf(
-    intMapper to 4,
-    floatMapper to 4,
-    doubleMapper to 8,
-    longMapper to 8,
-    dateMapper to 8
-)
-
-fun cheapContravariantWriterMappingOfByteCounts(xf: xform) = cheapMap[xf]!!
-
-
-operator fun xform.not(): xform = {
-    when (this) {
-        intMapper -> (it as? Int)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
-        floatMapper -> (it as? Float)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
-        doubleMapper -> (it as? Double)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
-        longMapper -> (it as? Long)?.let { ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem }
-        dateMapper -> (it as? LocalDate)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
-        else -> it.let { ByteBuffer.wrap(it.toString().toByteArray()) }
-    }
+val cheapMap by lazy {
+    mapOf<xform, Int>(
+        intMapper to 4,
+        floatMapper to 4,
+        doubleMapper to 8,
+        longMapper to 8,
+        dateMapper to 8
+    )
 }
+
+fun binxformSize(xf: xform) = cheapMap[xf]
+
+
+fun xform.inverse(): xinsert =
+    when (this) {
+        intMapper -> xInsertInt  as xinsert
+        floatMapper -> xInsertFloat  as xinsert
+        doubleMapper -> xInsertDouble  as xinsert
+        longMapper -> xInsertLong  as xinsert
+        dateMapper -> xInsertLocalDate  as xinsert
+        stringMapper -> xInsertString  as xinsert
+        else -> xInsertAny
+    }
+
 
 interface RowStore<T> : Flow<T> {
     /**
@@ -176,9 +193,8 @@ interface RowStore<T> : Flow<T> {
     val size: Int
     @InternalCoroutinesApi
     override suspend fun collect(collector: FlowCollector<T>) {
-        for (it in 0 until size) {
+        for (it in 0 until size)
             collector.emit(values(it))
-        }
     }
 }
 
@@ -189,14 +205,21 @@ interface FixedLength {
 
 abstract class FileAccess(open val filename: String) : Closeable
 
-
-//todo: map multiple segments for a very big file
+/**
+ * mapmodes  READ_ONLY, READ_WRITE, or PRIVATE
+"r"	Open for reading only. Invoking any of the write methods of the resulting object will cause an IOException to be thrown.
+"rw"	Open for reading and writing. If the file does not already exist then an attempt will be made to create it.
+"rws"	Open for reading and writing, as with "rw", and also require that every update to the file's content or metadata be written synchronously to the underlying storage device.
+"rwd"  	Open for reading and writing, as with "rw", and also require that every update to the file's content be written synchronously to the underlying storage device.
+ */
 open class MappedFile(
     filename: String,
-    randomAccessFile: RandomAccessFile = RandomAccessFile(filename, "r"),
+    mode: String = "r",
+    mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
+    val randomAccessFile: RandomAccessFile = RandomAccessFile(filename, mode),
     channel: FileChannel = randomAccessFile.channel,
     length: Long = randomAccessFile.length(),
-    val mappedByteBuffer: MappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length),
+    val mappedByteBuffer: MappedByteBuffer = channel.map(mapMode, 0, length),
     override val size: Int = mappedByteBuffer.limit(),
     /**default returns a line seeked EOL buffer.*/
     override var values: suspend (Int) -> Flow<ByteBuffer> = { row ->
@@ -243,7 +266,7 @@ operator fun KeyRow.get(axis: IntArray): KeyRow = this.let { (cols, data) ->
             }
 }
 
-infix fun RowDecoder.reify(r: FixedRecordLengthFile): KeyRow =
+infix fun RowTxtDecoder.reify(r: FixedRecordLengthFile): KeyRow =
     Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (r.map { fb ->
         lazyOf(fb.first()).let { buf ->
             Array(size) {
@@ -278,26 +301,27 @@ tailrec fun deepTrim(inbound: Any?): Any? =
 
 
 @ExperimentalCoroutinesApi
-suspend fun KeyRow.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): KeyRow = this.let { (nama, data) ->
-    distinct(*axis).let { keys ->
-        val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
-        this.run {
-            val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
-            val synthMasterCopy = anion(nama.get(lhs), synthNames)
-            synthMasterCopy to data.let { (rows, sz) ->
-                pivotRemappedValues(
-                    rows,
-                    lhs,
-                    xHash,
-                    xSize,
-                    axis,
-                    fanOut,
-                    synthMasterCopy
-                ) to sz
+suspend fun KeyRow.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): KeyRow =
+    this.let { (nama, data) ->
+        distinct(*axis).let { keys ->
+            val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
+            this.run {
+                val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
+                val synthMasterCopy = anion(nama.get(lhs), synthNames)
+                synthMasterCopy to data.let { (rows, sz) ->
+                    pivotRemappedValues(
+                        rows,
+                        lhs,
+                        xHash,
+                        xSize,
+                        axis,
+                        fanOut,
+                        synthMasterCopy
+                    ) to sz
+                }
             }
         }
     }
-}
 
 @ExperimentalCoroutinesApi
 suspend fun KeyRow.pivot2(lhs: IntArray, axis: IntArray, vararg fanOut: Int): RoutedRows =
@@ -386,7 +410,13 @@ suspend fun KeyRow.distinct(vararg axis: Int) =
     }
 
 operator fun Array<Any?>.invoke(c: Array<Column>) =
-    this.also { c.forEachIndexed { i, (a, b) -> b.fold({}) { function: xform -> this[i] = function(this[i]) } } }
+    this.also {
+        c.forEachIndexed { i, (a, b) ->
+            b.fold({}) { function: xform ->
+                this[i] = function(this[i])
+            }
+        }
+    }
 
 
 /**
@@ -465,7 +495,7 @@ suspend fun RoutedRows.group2(vararg by: Int) = let {
     } to clusters.size)
 }
 
-operator fun RowDecoder.invoke(t: xform): RowDecoder = map { (a, b) ->
+operator fun RowTxtDecoder.invoke(t: xform): RowTxtDecoder = map { (a, b) ->
     val (c, d) = b
     a to (c to { any: Any? -> t(d(any)) })
 }.toTypedArray()

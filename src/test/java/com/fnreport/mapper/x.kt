@@ -1,7 +1,6 @@
 package id.rejuve.dayjob
 
 import columnar.*
-import com.fnreport.mapper.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.collect
@@ -17,7 +16,18 @@ suspend fun main() {
     val s = "/vol/aux/rejuve/rejuvesinceapril2019_RD" +
             ".fwf"
     val fixedRecordLengthFile = FixedRecordLengthFile(s)
-    val other = cw.zip(listOf(stringMapper, stringMapper, dateMapper, stringMapper, stringMapper, floatMapper, floatMapper, stringMapper))
+    val other = cw.zip(
+        listOf(
+            stringMapper,
+            stringMapper,
+            dateMapper,
+            stringMapper,
+            stringMapper,
+            floatMapper,
+            floatMapper,
+            stringMapper
+        )
+    )
     val thing = d1names.zip(other)
     val decoder = (thing).toTypedArray()
     val rejuve = decoder reify fixedRecordLengthFile
@@ -36,7 +46,6 @@ suspend fun main() {
     suspend {
         lateinit var dist: List<Array<Any?>>
         var t = measureTimeMillis {
-
             dist = forecast.distinct(*keyAxis)
         }
 
