@@ -39,21 +39,19 @@ inline fun <reified T> anion(a: Array<T>, b: Array<T>): Array<T> = Array(a.size 
 inline val KeyRow.f get() = second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
-
 typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
 typealias xform = (Any?) -> Any?
 typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
 typealias RowEncoder = RowDecoder
 
-operator fun RowDecoder.not():RowEncoder {
+operator fun RowDecoder.not(): RowEncoder {
     var start = 0
-return     Array(size)    { index ->
+    return Array(size) { index ->
         val (name, bbnorm) = this[index]
         bbnorm.let { (a, b) ->
-            name to (start to a.size to !b)
+            name to (start to start+a.size.also{start+=a.size} to !b)
         }
-
     }
 }
 
