@@ -11,19 +11,23 @@ import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @JvmName("getVA")
 inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
+
 inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
 
 @JvmName("getVA")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
-inline operator fun <reified T> Sequence<T>.get(index: IntArray) =this.toList()[index].asSequence()
+
+inline operator fun <reified T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
 
 @JvmName("getVA")
 inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
+
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
 
 inline fun <reified T> anion(a: Array<T>, b: Array<T>): Array<T> = Array(a.size + b.size) { i ->
@@ -32,7 +36,7 @@ inline fun <reified T> anion(a: Array<T>, b: Array<T>): Array<T> = Array(a.size 
     }
 }
 
-inline val KeyRow.f get() =second.first
+inline val KeyRow.f get() = second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
@@ -40,13 +44,42 @@ typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
 typealias xform = (Any?) -> Any?
 typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
 typealias RowDecoder = Array<Pair<String, ByteBufferNormalizer>>
+typealias RowEncoder = RowDecoder
+
+operator fun RowDecoder.not():RowEncoder {
+    var start = 0
+return     Array(size)    { index ->
+        val (name, bbnorm) = this[index]
+        bbnorm.let { (a, b) ->
+            name to (start to a.size to !b)
+        }
+
+    }
+}
+
+operator fun ByteBuffer.rem(prim: Any) =
+    when (prim) {
+        is Int -> this.putInt(prim)
+        is Long -> this.putLong(prim)
+        is Float -> this.putFloat(prim)
+        is Double -> this.putDouble(prim)
+        is LocalDate -> this.putLong(prim.toEpochDay())
+        is Instant -> this.putLong(prim.toEpochMilli())
+        else -> TODO()
+    }
+
+val defaultBinaryWriter: (ByteBuffer, Any?) -> ByteBuffer = { b, a -> b % a!! }
+
+
+
 
 typealias Column = Pair<String, Option<xform>>
-typealias RowHandle=Array<Any?>
+typealias RowHandle = Array<Any?>
 typealias RouteHandle = Sequence<Any?>
 
 typealias KeyRow = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
 typealias RoutedRows = Pair<Array<Column>, Pair<Flow<RouteHandle>, Int>>
+
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
@@ -61,12 +94,12 @@ fun ByteBufferNormalizer.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapp
 }
 
 fun ByteBufferNormalizer.decode(buf: ByteBuffer) =
-        let { (coords, mapper) ->
-            ByteArray(coords.size).also { buf.get(it) }.let(mapper)
-        }
+    let { (coords, mapper) ->
+        ByteArray(coords.size).also { buf.get(it) }.let(mapper)
+    }
 
 infix fun RowDecoder.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row: Int ->
-    val cols = this
+
     val values = rs.values(row)
     val first = lazyOf(values.first())
     first.let { buf ->
@@ -83,7 +116,7 @@ val stringMapper: (Any?) -> Any? = { i ->
     (i as? ByteArray)?.let {
         val string = String(it)
         string.takeIf(
-                String::isNotBlank
+            String::isNotBlank
         )?.trim()
     }
 }
@@ -97,8 +130,6 @@ val intMapper: (Any?) -> Any? = { i -> btoa(i)?.toInt() ?: 0 }
 val floatMapper: (Any?) -> Any? = { i -> btoa(i)?.toFloat() ?: 0f }
 val doubleMapper: (Any?) -> Any? = { i -> btoa(i)?.toDouble() ?: 0.0 }
 val longMapper: (Any?) -> Any? = { i -> btoa(i)?.toLong() ?: 0L }
-
-
 val dateMapper: (Any?) -> Any? = { i ->
     val btoa = btoa(i)
     btoa?.let {
@@ -110,6 +141,29 @@ val dateMapper: (Any?) -> Any? = { i ->
             res = LocalDate.from(parseBest)
         }
         res
+    }
+}
+
+
+val cheapMap = mapOf(
+    intMapper to 4,
+    floatMapper to 4,
+    doubleMapper to 8,
+    longMapper to 8,
+    dateMapper to 8
+)
+
+fun cheapContravariantWriterMappingOfByteCounts(xf: xform) = cheapMap[xf]!!
+
+
+operator fun xform.not(): xform = {
+    when (this) {
+        intMapper -> (it as? Int)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
+        floatMapper -> (it as? Float)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
+        doubleMapper -> (it as? Double)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
+        longMapper -> (it as? Long)?.let { ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem }
+        dateMapper -> (it as? LocalDate)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
+        else -> it.let { ByteBuffer.wrap(it.toString().toByteArray()) }
     }
 }
 
@@ -138,32 +192,34 @@ abstract class FileAccess(open val filename: String) : Closeable
 
 //todo: map multiple segments for a very big file
 open class MappedFile(
-        filename: String,
-        randomAccessFile: RandomAccessFile = RandomAccessFile(filename, "r"),
-        channel: FileChannel = randomAccessFile.channel,
-        length: Long = randomAccessFile.length(),
-        val mappedByteBuffer: MappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length),
-        override val size: Int = mappedByteBuffer.limit(),
-        /**default returns a line seeked EOL buffer.*/
-        override var values: suspend (Int) -> Flow<ByteBuffer> = { row ->
-            flowOf(mappedByteBuffer.apply { position(row) }.slice().also {
-                while (it.hasRemaining() && it.get() != '\n'.toByte());
-                (it as ByteBuffer).flip()
-            })
-        }
+    filename: String,
+    randomAccessFile: RandomAccessFile = RandomAccessFile(filename, "r"),
+    channel: FileChannel = randomAccessFile.channel,
+    length: Long = randomAccessFile.length(),
+    val mappedByteBuffer: MappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length),
+    override val size: Int = mappedByteBuffer.limit(),
+    /**default returns a line seeked EOL buffer.*/
+    override var values: suspend (Int) -> Flow<ByteBuffer> = { row ->
+        flowOf(mappedByteBuffer.apply { position(row) }.slice().also {
+            while (it.hasRemaining() && it.get() != '\n'.toByte());
+            (it as ByteBuffer).flip()
+        })
+    }
 ) : FileAccess(filename), RowStore<Flow<ByteBuffer>>, Closeable by randomAccessFile
 
 
-class FixedRecordLengthFile(filename: String, origin: MappedFile = MappedFile(
-    filename
-)
+class FixedRecordLengthFile(
+    filename: String, origin: MappedFile = MappedFile(
+        filename
+    )
 ) : FixedRecordLengthBuffer(origin.mappedByteBuffer),
-        Closeable by origin
+    Closeable by origin
 
 open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
-        RowStore<Flow<ByteBuffer>>,
+    RowStore<Flow<ByteBuffer>>,
     FixedLength {
-    override var values: suspend (Int) -> Flow<ByteBuffer> = { row -> flowOf(buf.position(recordLen * row).slice().limit(recordLen)) }
+    override var values: suspend (Int) -> Flow<ByteBuffer> =
+        { row -> flowOf(buf.position(recordLen * row).slice().limit(recordLen)) }
     override val recordLen = buf.duplicate().clear().run {
         while (hasRemaining() && get() != '\n'.toByte());
         position()
@@ -188,36 +244,37 @@ operator fun KeyRow.get(axis: IntArray): KeyRow = this.let { (cols, data) ->
 }
 
 infix fun RowDecoder.reify(r: FixedRecordLengthFile): KeyRow =
-        Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (r.map { fb ->
-              lazyOf(fb.first()).let { buf->
+    Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (r.map { fb ->
+        lazyOf(fb.first()).let { buf ->
             Array(size) {
                 this[it].let { (a, b) ->
                     b.decodeLazy(buf)
                 }
             }
-        }} to r.size)
+        }
+    } to r.size)
 
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(inbound: Any?): Any? =
-        if (inbound is Array<*>) inbound.also<Any?> { ar ->
-            inbound.forEachIndexed { i, v ->
-                (inbound as Array<Any?>)[i] = deepArray(inbound[i])
-            }
+    if (inbound is Array<*>) inbound.also<Any?> { ar ->
+        inbound.forEachIndexed { i, v ->
+            (inbound as Array<Any?>)[i] = deepArray(inbound[i])
         }
-        else if (inbound is Iterable<*>) deepArray(inbound.map { it })
-        else inbound
+    }
+    else if (inbound is Iterable<*>) deepArray(inbound.map { it })
+    else inbound
 
 tailrec fun deepTrim(inbound: Any?): Any? =
-        if (inbound is Array<*>) {
-            if (inbound.all { it != null }) inbound.also {
-                it.forEachIndexed { ix, any ->
-                    @Suppress("UNCHECKED_CAST")
-                    (inbound as Array<Any?>)[ix] = deepTrim(any)
-                }
-            } else deepTrim(inbound.filterNotNull())
-        } else if (inbound is Iterable<*>) deepTrim(inbound.filterNotNull().toTypedArray())
-        else inbound
+    if (inbound is Array<*>) {
+        if (inbound.all { it != null }) inbound.also {
+            it.forEachIndexed { ix, any ->
+                @Suppress("UNCHECKED_CAST")
+                (inbound as Array<Any?>)[ix] = deepTrim(any)
+            }
+        } else deepTrim(inbound.filterNotNull())
+    } else if (inbound is Iterable<*>) deepTrim(inbound.filterNotNull().toTypedArray())
+    else inbound
 
 
 @ExperimentalCoroutinesApi
@@ -267,25 +324,38 @@ suspend fun KeyRow.pivot2(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Ro
         }
     }
 
-private fun pivotRemappedValues(rows: Flow<Array<Any?>>, lhs: IntArray, xHash: Map<Int, Int>, xSize: Int, axis: IntArray, fanOut: IntArray, synthMasterCopy: Array<Column>) =
-        rows.map { row ->
-            arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
-                val key = row.get(axis).let(::arrayOfAnys)
-                for ((index, i) in lhs.withIndex()) {
+private fun pivotRemappedValues(
+    rows: Flow<Array<Any?>>,
+    lhs: IntArray,
+    xHash: Map<Int, Int>,
+    xSize: Int,
+    axis: IntArray,
+    fanOut: IntArray,
+    synthMasterCopy: Array<Column>
+) =
+    rows.map { row ->
+        arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
+            val key = row.get(axis).let(::arrayOfAnys)
+            for ((index, i) in lhs.withIndex()) {
 
-                    grid[index] = row[i]
-                }
-                val x = xHash[key.contentDeepHashCode()]!!
-
-                for ((index, xcol) in fanOut.withIndex()) {
-                    val x1 = lhs.size + (xSize * x + index)
-                    grid[x1] = row[xcol]
-                }
-                grid(synthMasterCopy)
+                grid[index] = row[i]
             }
-        }
+            val x = xHash[key.contentDeepHashCode()]!!
 
-private fun pivotOutputColumns(fanOut: IntArray, nama: Array<Column>, axis: IntArray, keys: List<Array<Any?>>): Pair<Int, Array<Pair<String, Option<xform>>>> {
+            for ((index, xcol) in fanOut.withIndex()) {
+                val x1 = lhs.size + (xSize * x + index)
+                grid[x1] = row[xcol]
+            }
+            grid(synthMasterCopy)
+        }
+    }
+
+private fun pivotOutputColumns(
+    fanOut: IntArray,
+    nama: Array<Column>,
+    axis: IntArray,
+    keys: List<Array<Any?>>
+): Pair<Int, Array<Pair<String, Option<xform>>>> {
     val xSize = fanOut.size
     val synthNames = nama.get(axis).let { axNam ->
         keys.map { key ->
@@ -309,13 +379,14 @@ private fun pivotOutputColumns(fanOut: IntArray, nama: Array<Column>, axis: IntA
 
 
 suspend fun KeyRow.distinct(vararg axis: Int) =
-        get(axis).let { (arrayOfPairs, pair) ->
-            pair.let { (flow1, sz) ->
-                flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
-            }
+    get(axis).let { (arrayOfPairs, pair) ->
+        pair.let { (flow1, sz) ->
+            flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
         }
+    }
 
-operator fun Array<Any?>.invoke(c: Array<Column>) = this.also { c.forEachIndexed { i, (a, b) -> b.fold({}) { function: xform -> this[i] = function(this[i]) } } }
+operator fun Array<Any?>.invoke(c: Array<Column>) =
+    this.also { c.forEachIndexed { i, (a, b) -> b.fold({}) { function: xform -> this[i] = function(this[i]) } } }
 
 
 /**
@@ -325,11 +396,11 @@ suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
     val (columns, data) = this
     val (rows, d) = data
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
-    val clusters=mutableMapOf<Int, Pair<Array<Any?>, MutableList<Flow<Array<Any?>>>>>()
-    rows.collect{row->
-        val key=arrayOfAnys(row.get(by))
-        val keyHash=key.contentDeepHashCode()
-        flowOf(row.get(protoValues)).let{f->
+    val clusters = mutableMapOf<Int, Pair<Array<Any?>, MutableList<Flow<Array<Any?>>>>>()
+    rows.collect { row ->
+        val key = arrayOfAnys(row.get(by))
+        val keyHash = key.contentDeepHashCode()
+        flowOf(row.get(protoValues)).let { f ->
             when {
                 clusters.containsKey(keyHash) -> clusters[keyHash]!!.second += (f)
                 else -> clusters[keyHash] = key to mutableListOf(f)
@@ -379,7 +450,7 @@ suspend fun RoutedRows.group2(vararg by: Int) = let {
             else clusters[keyHash] = key to mutableListOf(f)
         }
     }
-      columns to (clusters.map { (_, cluster1) ->
+    columns to (clusters.map { (_, cluster1) ->
         val (key, cluster) = cluster1
         val chunky = cluster.map { it.iterator() }
         sequence {
