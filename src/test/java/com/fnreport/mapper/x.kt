@@ -46,7 +46,8 @@ suspend fun main() {
     }()
     System.err.println()
 
-    val pivot = forecast.pivot2(intArrayOf(0), keyAxis, 3).group2(0)
+    val pivot2 = forecast.pivot2(intArrayOf(0), keyAxis, 3)
+    val g = pivot2.group2(0)
 /*    var t = measureTimeMillis {
         val left = pivot[0]
         val right = pivot[ (1 until pivot.first.size).toList().toIntArray() ].invoke {
