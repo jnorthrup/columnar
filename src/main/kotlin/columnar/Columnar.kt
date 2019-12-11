@@ -50,7 +50,9 @@ operator fun RowDecoder.not(): RowEncoder {
     return Array(size) { index ->
         val (name, bbnorm) = this[index]
         bbnorm.let { (a, b) ->
-            name to (start to start+a.size.also{start+=a.size} to !b)
+            val binxform = !b
+            val cursize = binxformSize(b)?:a.size
+            name to (start to start+cursize.also{ start = start.plus(it) } to binxform)
         }
     }
 }
@@ -143,24 +145,26 @@ val dateMapper: (Any?) -> Any? = { i ->
 }
 
 
-val cheapMap = mapOf(
-    intMapper to 4,
-    floatMapper to 4,
-    doubleMapper to 8,
-    longMapper to 8,
-    dateMapper to 8
-)
+val cheapMap by lazy {
+    mapOf<xform,Int>(
+        intMapper to 4,
+        floatMapper to 4,
+        doubleMapper to 8,
+        longMapper to 8,
+        dateMapper to 8
+    )
+}
 
-fun cheapContravariantWriterMappingOfByteCounts(xf: xform) = cheapMap[xf]!!
+fun binxformSize(xf: xform) = cheapMap[xf]
 
 
 operator fun xform.not(): xform = {
     when (this) {
-        intMapper -> (it as? Int)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
-        floatMapper -> (it as? Float)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
-        doubleMapper -> (it as? Double)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
-        longMapper -> (it as? Long)?.let { ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem }
-        dateMapper -> (it as? LocalDate)?.let(ByteBuffer.allocate(cheapContravariantWriterMappingOfByteCounts(this))::rem)
+        intMapper -> (it as? Int)?.let(ByteBuffer.allocate(binxformSize(this)!!)::rem)
+        floatMapper -> (it as? Float)?.let(ByteBuffer.allocate(binxformSize(this)!!)::rem)
+        doubleMapper -> (it as? Double)?.let(ByteBuffer.allocate(binxformSize(this)!!)::rem)
+        longMapper -> (it as? Long)?.let ( ByteBuffer.allocate(binxformSize(this)!!)::rem )
+        dateMapper -> (it as? LocalDate)?.let(ByteBuffer.allocate(binxformSize(this)!!)::rem)
         else -> it.let { ByteBuffer.wrap(it.toString().toByteArray()) }
     }
 }
@@ -187,14 +191,21 @@ interface FixedLength {
 
 abstract class FileAccess(open val filename: String) : Closeable
 
-
-//todo: map multiple segments for a very big file
+/**
+ * mapmodes  READ_ONLY, READ_WRITE, or PRIVATE
+ "r"	Open for reading only. Invoking any of the write methods of the resulting object will cause an IOException to be thrown.
+"rw"	Open for reading and writing. If the file does not already exist then an attempt will be made to create it.
+"rws"	Open for reading and writing, as with "rw", and also require that every update to the file's content or metadata be written synchronously to the underlying storage device.
+"rwd"  	Open for reading and writing, as with "rw", and also require that every update to the file's content be written synchronously to the underlying storage device.
+*/
 open class MappedFile(
     filename: String,
-    randomAccessFile: RandomAccessFile = RandomAccessFile(filename, "r"),
+    mode:String="r",
+    mapMode: FileChannel.MapMode=FileChannel.MapMode.READ_ONLY,
+    randomAccessFile: RandomAccessFile = RandomAccessFile(filename, mode),
     channel: FileChannel = randomAccessFile.channel,
     length: Long = randomAccessFile.length(),
-    val mappedByteBuffer: MappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, length),
+    val mappedByteBuffer: MappedByteBuffer = channel.map(mapMode, 0, length),
     override val size: Int = mappedByteBuffer.limit(),
     /**default returns a line seeked EOL buffer.*/
     override var values: suspend (Int) -> Flow<ByteBuffer> = { row ->
