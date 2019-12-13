@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.collect
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
 class ColumnarTest2 : StringSpec() {
-    val columns: RowDecoder = listOf("date", "channel", "delivered", "ret").zip(
+    val columns: RowTxtDecoder = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
                     .zip(listOf(
                         dateMapper,
