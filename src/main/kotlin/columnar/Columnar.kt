@@ -6,6 +6,7 @@ import arrow.core.none
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.yield
 import java.io.Closeable
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -17,25 +18,80 @@ import java.time.format.DateTimeFormatter
 import kotlin.text.Charsets.UTF_8
 
 @JvmName("getVA")
-inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
 
-inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
+@JvmName("getVA")
+inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("getVA")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
 
+@JvmName("ip")
+inline operator fun <reified T> Array<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+
+@JvmName("ip")
+inline operator fun <reified T> List<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+
+@JvmName("ip")
+inline operator fun <reified T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+
+@JvmName("reorder")
+
+inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
+
+@JvmName("reorder")
 inline operator fun <reified T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
 
-@JvmName("getVA")
-inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
-
+@JvmName("reorder")
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
-
-inline fun <reified T> anion(a: Array<T>, b: Array<T>): Array<T> = Array(a.size + b.size) { i ->
-    when (i < a.size) {
-        true -> a[i];else -> b[i - a.size]
+@JvmName("combine")
+inline fun <reified T> combine(vararg s: Flow<T>) = flow<T> {
+    for (f  in s) {
+        f.collect {
+            emit(it)
+         }
     }
 }
+
+@JvmName("combine")
+inline fun <reified T> combine(vararg s: Sequence<T>) = sequence {
+    for (sequence in s) {
+        for (t in sequence) {
+            yield(t)
+        }
+    }
+}
+
+@JvmName("combine")
+inline fun <reified T> combine(vararg a: List<T>)=
+     a.sumBy { it.size }.let{size->
+         var x = 0
+         var y = 0
+           List(size) { i ->
+             if (y >= a[x].size) {
+                 ++x
+                 y = 0
+             }
+             a[x][y++]
+         }}
+
+
+
+@JvmName("combine")
+inline fun <reified T> combine(vararg a: Array<T>)=
+    a.sumBy { it.size }.let{size->
+        var x = 0
+        var y = 0
+          Array(size) { i ->
+            if (y >= a[x].size) {
+                ++x
+                y = 0
+            }
+            a[x][y++]
+        }
+    }
+
+  
 
 val KeyRow.f get() = second.first
 
@@ -307,7 +363,7 @@ suspend fun KeyRow.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Key
             val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
             this.run {
                 val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
-                val synthMasterCopy = anion(nama.get(lhs), synthNames)
+                val synthMasterCopy = combine(nama.get(lhs), synthNames)
                 synthMasterCopy to data.let { (rows, sz) ->
                     pivotRemappedValues(
                         rows,
@@ -330,7 +386,7 @@ suspend fun KeyRow.pivot2(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Ro
             val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
             this.run {
                 val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
-                val synthMasterCopy = anion(nama.get(lhs), synthNames)
+                val synthMasterCopy = combine(nama.get(lhs), synthNames)
                 synthMasterCopy to data.let { (rows, sz) ->
                     pivotRemappedValues(
                         rows,
@@ -517,8 +573,8 @@ infix fun KeyRow.with(that: KeyRow): KeyRow = let { (theseCols, theseData) ->
         that.let { (thatCols, thatData) ->
             thatData.let { (thatRows, thatSize) ->
                 assert(thatSize == theseSize) { "rows must be same -- ${theseSize}!=$thatSize" }
-                val unionRows = theseRows.zip(thatRows) { a, b -> anion(a, b) }
-                val unionCol = anion(theseCols, thatCols)
+                val unionRows = theseRows.zip(thatRows) { a, b -> combine(a, b) }
+                val unionCol = combine(theseCols, thatCols)
                 val unionData = unionRows to theseSize
                 unionCol to unionData
             }
