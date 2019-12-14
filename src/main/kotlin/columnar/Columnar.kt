@@ -1,5 +1,6 @@
 package columnar
 
+
 import arrow.core.Option
 import arrow.core.Some
 import arrow.core.none
@@ -15,83 +16,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.text.Charsets.UTF_8
-
-@JvmName("getVA")
-inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
-
-@JvmName("getVA")
-inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
-
-@JvmName("getVA")
-inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
-
-@JvmName("ip")
-inline operator fun <reified T> Array<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
-
-@JvmName("ip")
-inline operator fun <reified T> List<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
-
-@JvmName("ip")
-inline operator fun <reified T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
-
-@JvmName("reorder")
-
-inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
-
-@JvmName("reorder")
-inline operator fun <reified T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
-
-@JvmName("reorder")
-inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
-
-@JvmName("combine")
-inline fun <reified T> combine(vararg s: Flow<T>) = flow<T> {
-    for (f  in s) {
-        f.collect {
-            emit(it)
-         }
-    }
-}
-
-@JvmName("combine")
-inline fun <reified T> combine(vararg s: Sequence<T>) = sequence {
-    for (sequence in s) {
-        for (t in sequence) {
-            yield(t)
-        }
-    }
-}
-
-@JvmName("combine")
-inline fun <reified T> combine(vararg a: List<T>)=
-     a.sumBy { it.size }.let{size->
-         var x = 0
-         var y = 0
-           List(size) { i ->
-             if (y >= a[x].size) {
-                 ++x
-                 y = 0
-             }
-             a[x][y++]
-         }}
-
-
-
-@JvmName("combine")
-inline fun <reified T> combine(vararg a: Array<T>)=
-    a.sumBy { it.size }.let{size->
-        var x = 0
-        var y = 0
-          Array(size) { i ->
-            if (y >= a[x].size) {
-                ++x
-                y = 0
-            }
-            a[x][y++]
-        }
-    }
-
-  
 
 val KeyRow.f get() = second.first
 
@@ -116,24 +40,28 @@ fun RowTxtDecoder.inverse(): RowBinEncoder {
     }
 }
 
-val xInsertInt = { a:ByteBuffer, b: Int? -> a.putInt(b ?: 0) }
-val xInsertLong = { a:ByteBuffer, b: Long? -> a.putLong(b ?: 0) }
-val xInsertFloat = { a:ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) }
-val xInsertDouble = { a:ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) }
+val xInsertInt = { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }
+val xInsertLong = { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) }
+val xInsertFloat = { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) }
+val xInsertDouble = { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) }
 val xInsertByteBuffer = { a: ByteBuffer, b: ByteBuffer? -> a.put(b) }
 val xInsertByteArray = { a: ByteBuffer, b: ByteArray? -> a.put(b) }
 val xInsertLocalDate = { a: ByteBuffer, b: LocalDate? ->
 
     val localDate = b ?: LocalDate.EPOCH
     val toEpochDay = localDate.toEpochDay()
-    a.putLong(toEpochDay) }
+    a.putLong(toEpochDay)
+}
 val xInsertInstant = { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) }
-val xInsertAny:xinsert = { b, a: Any? -> xInsertString(b, a.toString()) }
-val xInsertString = { a: ByteBuffer, b: String? -> a.put(b?.toByteArray(UTF_8)); when {a.hasRemaining() -> a.put(ByteArray(a.remaining()) { ' '.toByte() })else -> a
-    }
+val xInsertAny: xinsert = { b, a: Any? -> xInsertString(b, a.toString()) }
+val xInsertString = { a: ByteBuffer, b: String? ->
+    a.put(b?.toByteArray(UTF_8)); when {
+    a.hasRemaining() -> a.put(ByteArray(a.remaining()) { ' '.toByte() })
+    else -> a
+}
 }
 
-inline operator fun <reified T > ByteBuffer.rem(prim: T): xinsert = when {
+inline operator fun <reified T> ByteBuffer.rem(prim: T): xinsert = when {
     prim is Int -> xInsertInt as xinsert
     prim is Long -> xInsertLong as xinsert
     prim is Float -> xInsertFloat as xinsert
@@ -151,6 +79,7 @@ typealias RowHandle = Array<Any?>
 typealias RouteHandle = Sequence<Any?>
 typealias KeyRow = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
 typealias RoutedRows = Pair<Array<Column>, Pair<Flow<RouteHandle>, Int>>
+
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
         Array(reorder.size) { i ->
@@ -182,13 +111,12 @@ infix fun RowTxtDecoder.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row: In
 }
 
 
-val stringMapper: (Any?) -> Any? = { i ->
-    (i as? ByteArray)?.let {
+val stringMapper: (Any?) -> String = { i-> (i as? ByteArray)?.let {
         val string = String(it)
         string.takeIf(
             String::isNotBlank
         )?.trim()
-    }
+    }?:""
 }
 
 fun btoa(i: Any?) = (i as? ByteArray)?.let {
@@ -196,11 +124,11 @@ fun btoa(i: Any?) = (i as? ByteArray)?.let {
     stringMapper1?.toString()
 }
 
-val intMapper: (Any?) -> Any? = { i -> btoa(i)?.toInt() ?: 0 }
-val floatMapper: (Any?) -> Any? = { i -> btoa(i)?.toFloat() ?: 0f }
-val doubleMapper: (Any?) -> Any? = { i -> btoa(i)?.toDouble() ?: 0.0 }
-val longMapper: (Any?) -> Any? = { i -> btoa(i)?.toLong() ?: 0L }
-val dateMapper: (Any?) -> Any? = { i ->
+val intMapper = { i :Any?-> btoa(i)?.toInt() ?: 0 }
+val floatMapper = { i:Any? -> btoa(i)?.toFloat() ?: 0f }
+val doubleMapper = { i :Any?-> btoa(i)?.toDouble() ?: 0.0 }
+val longMapper = { i :Any?-> btoa(i)?.toLong() ?: 0L }
+val dateMapper = { i :Any?->
     val btoa = btoa(i)
     btoa?.let {
         var res: LocalDate?
@@ -211,31 +139,29 @@ val dateMapper: (Any?) -> Any? = { i ->
             res = LocalDate.from(parseBest)
         }
         res
-    }
+    }?: LocalDate.EPOCH
 }
 
 
-val cheapMap by lazy {
-    mapOf<xform, Int>(
+  val cheapMap =    mapOf<xform, Int>(
         intMapper to 4,
         floatMapper to 4,
         doubleMapper to 8,
         longMapper to 8,
         dateMapper to 8
     )
-}
 
 fun binxformSize(xf: xform) = cheapMap[xf]
 
 
 fun xform.inverse(): xinsert =
     when (this) {
-        intMapper -> xInsertInt  as xinsert
-        floatMapper -> xInsertFloat  as xinsert
-        doubleMapper -> xInsertDouble  as xinsert
-        longMapper -> xInsertLong  as xinsert
-        dateMapper -> xInsertLocalDate  as xinsert
-        stringMapper -> xInsertString  as xinsert
+        intMapper -> xInsertInt as xinsert
+        floatMapper -> xInsertFloat as xinsert
+        doubleMapper -> xInsertDouble as xinsert
+        longMapper -> xInsertLong as xinsert
+        dateMapper -> xInsertLocalDate as xinsert
+        stringMapper -> xInsertString as xinsert
         else -> xInsertAny
     }
 
@@ -311,7 +237,7 @@ open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
  * reassign columns
  */
 @ExperimentalCoroutinesApi
-@JvmName("getVA")
+@JvmName("getKRVA")
 operator fun KeyRow.get(vararg axis: Int): KeyRow = get(axis)
 
 @ExperimentalCoroutinesApi
