@@ -6,7 +6,6 @@ import arrow.core.none
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.yield
 import java.io.Closeable
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -44,6 +43,7 @@ inline operator fun <reified T> Sequence<T>.get(index: IntArray) = this.toList()
 
 @JvmName("reorder")
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
+
 @JvmName("combine")
 inline fun <reified T> combine(vararg s: Flow<T>) = flow<T> {
     for (f  in s) {
