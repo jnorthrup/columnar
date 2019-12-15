@@ -5,13 +5,8 @@ import arrow.core.Option
 import arrow.core.Some
 import arrow.core.none
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.io.Closeable
-import java.io.RandomAccessFile
 import java.nio.ByteBuffer
-import java.nio.MappedByteBuffer
-import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -20,13 +15,6 @@ import kotlin.text.Charsets.UTF_8
 val KeyRow.f get() = second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
-typealias Table1 = suspend (Int) -> Array<Flow<Any?>>
-typealias xform = (Any?) -> Any?
-typealias xinsert = (ByteBuffer, Any?) -> ByteBuffer
-typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
-typealias ByteBufferEncoder = Pair<Pair<Int, Int>, xinsert>
-typealias RowTxtDecoder = Array<Pair<String, ByteBufferNormalizer>>
-typealias RowBinEncoder = Array<Pair<String, ByteBufferEncoder>>
 
 fun RowTxtDecoder.inverse(): RowBinEncoder {
     var start = 0
@@ -73,12 +61,6 @@ inline operator fun <reified T> ByteBuffer.rem(prim: T): xinsert = when {
     prim is String -> xInsertString as xinsert
     else -> xInsertAny
 }
-
-typealias Column = Pair<String, Option<xform>>
-typealias RowHandle = Array<Any?>
-typealias RouteHandle = Sequence<Any?>
-typealias KeyRow = Pair<Array<Column>, Pair<Flow<RowHandle>, Int>>
-typealias RoutedRows = Pair<Array<Column>, Pair<Flow<RouteHandle>, Int>>
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
@@ -164,73 +146,6 @@ fun xform.inverse(): xinsert =
         stringMapper -> xInsertString as xinsert
         else -> xInsertAny
     }
-
-
-interface RowStore<T> : Flow<T> {
-    /**
-     * seek to row
-     */
-    var values: suspend (Int) -> T
-
-    val size: Int
-    @InternalCoroutinesApi
-    override suspend fun collect(collector: FlowCollector<T>) {
-        for (it in 0 until size)
-            collector.emit(values(it))
-    }
-}
-
-
-interface FixedLength {
-    val recordLen: Int
-}
-
-abstract class FileAccess(open val filename: String) : Closeable
-
-/**
- * mapmodes  READ_ONLY, READ_WRITE, or PRIVATE
-"r"	Open for reading only. Invoking any of the write methods of the resulting object will cause an IOException to be thrown.
-"rw"	Open for reading and writing. If the file does not already exist then an attempt will be made to create it.
-"rws"	Open for reading and writing, as with "rw", and also require that every update to the file's content or metadata be written synchronously to the underlying storage device.
-"rwd"  	Open for reading and writing, as with "rw", and also require that every update to the file's content be written synchronously to the underlying storage device.
- */
-open class MappedFile(
-    filename: String,
-    mode: String = "r",
-    mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
-    val randomAccessFile: RandomAccessFile = RandomAccessFile(filename, mode),
-    channel: FileChannel = randomAccessFile.channel,
-    length: Long = randomAccessFile.length(),
-    val mappedByteBuffer: MappedByteBuffer = channel.map(mapMode, 0, length),
-    override val size: Int = mappedByteBuffer.limit(),
-    /**default returns a line seeked EOL buffer.*/
-    override var values: suspend (Int) -> Flow<ByteBuffer> = { row ->
-        flowOf(mappedByteBuffer.apply { position(row) }.slice().also {
-            while (it.hasRemaining() && it.get() != '\n'.toByte());
-            (it as ByteBuffer).flip()
-        })
-    }
-) : FileAccess(filename), RowStore<Flow<ByteBuffer>>, Closeable by randomAccessFile
-
-
-class FixedRecordLengthFile(
-    filename: String, origin: MappedFile = MappedFile(
-        filename
-    )
-) : FixedRecordLengthBuffer(origin.mappedByteBuffer),
-    Closeable by origin
-
-open class FixedRecordLengthBuffer(val buf: ByteBuffer) :
-    RowStore<Flow<ByteBuffer>>,
-    FixedLength {
-    override var values: suspend (Int) -> Flow<ByteBuffer> =
-        { row -> flowOf(buf.position(recordLen * row).slice().limit(recordLen)) }
-    override val recordLen = buf.duplicate().clear().run {
-        while (hasRemaining() && get() != '\n'.toByte());
-        position()
-    }
-    override val size: Int = (buf.limit() / recordLen)
-}
 
 
 /**
