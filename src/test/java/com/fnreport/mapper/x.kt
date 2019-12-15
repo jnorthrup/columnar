@@ -1,43 +1,43 @@
 package id.rejuve.dayjob
 
+import arrow.core.none
 import columnar.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.take
+import java.time.LocalDate
+import kotlin.reflect.KClass
 import kotlin.system.measureTimeMillis
 
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
 
 suspend fun main() {
-    val d1names = listOf("SalesNo", "SalesAreaID", "date", "PluNo", "ItemName", "Quantity", "Amount", "TransMode")
-    val cw = listOf((0 to 11), (11 to 15), (15 to 25), (25 to 40), (40 to 60), (60 to 82), (82 to 103), (103 to 108))
     val s = "/vol/aux/rejuve/rejuvesinceapril2019_RD" +
             ".fwf"
     val fixedRecordLengthFile = FixedRecordLengthFile(s)
-    val other = cw.zip(
-        listOf(
-            stringMapper,
-            stringMapper,
-            dateMapper,
-            stringMapper,
-            stringMapper,
-            floatMapper,
-            floatMapper,
-            stringMapper
+    val decoder:RowNormalizer = listOf("SalesNo", "SalesAreaID", "date", "PluNo", "ItemName", "Quantity", "Amount", "TransMode").zip(
+        listOf((0 to 11), (11 to 15), (15 to 25), (25 to 40), (40 to 60), (60 to 82), (82 to 103), (103 to 108)).zip(
+            listOf<KClass<*>>(
+                String::class,
+                String::class,
+                LocalDate::class,
+                String::class,
+                String::class,
+                Float::class,
+                Float::class,
+                String::class
+            )
         )
-    )
-    val thing = d1names.zip(other)
-    val decoder = (thing).toTypedArray()
+    ).map { it by none<xform>() } .toTypedArray()
     val rejuve = decoder reify fixedRecordLengthFile
 
     val forecast = rejuve[2, 1, 3, 5]
 
-    forecast.let { (a, b) ->
+    forecast.let { (a, b ) ->
         b.let { (c, d) ->
-            val take = c.take(10)
-            take.collect {
+            c.take(10).collect {it->
                 System.err.println(it.contentDeepToString())
             }
         }

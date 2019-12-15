@@ -3,14 +3,9 @@ package columnar
 import kotlinx.coroutines.flow.*
 
 
-typealias Vect0r<Value> = Pair<
-        /**Size*/
-            () -> Int, (
-    /**Key*/
-    Int
-) -> Value>
+typealias Vect0r<Value> = Pair< /*Size*/ () -> Int, ( /*Key*/ Int) -> Value>
 
-val Vect0r<*>.size: Int get() = first()
+val<T> Vect0r<T>.size: Int get() = first.invoke()
 
 @JvmName("vlike_Sequence_1")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
@@ -81,11 +76,21 @@ fun <T> Vect0r<T>.toFlow() = this.let { (_, vf) ->
     }
 }
 
-suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
-fun <T> List<T>.toVect0r() = size to { ix: Int -> this[ix] }
-fun <T> Array<T>.toVect0r() = size to { ix: Int -> this[ix] }
-fun <T> Iterable<T>.toVect0r() = this.toList().toVect0r()
-fun <T> Sequence<T>.toVect0r() = this.toList().toVect0r()
+inline fun <reified T, R> Vect0r<T>.map(fn: (T) -> R) = List<R>(size) { ix -> fn(this[ix]) }
+inline fun <reified T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R) = List<R>(size) { ix -> fn(ix, this[ix]) }
+inline fun <reified T, R> Vect0r<T>.forEach(fn: (T) -> Unit) {
+    for (ix in (0 until size)) fn(this[ix])
+}
+
+inline fun <reified T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
+    for (ix in (0 until size)) fn(ix, this[ix])
+}
+
+fun <T> Array<T>.toVect0r(): Vect0r<T> = { size } to { ix: Int -> this[ix] }
+fun <T> List<T>.toVect0r(): Vect0r<T> = { size } to { ix: Int -> this[ix] }
+suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
 inline fun <reified T> combine(vararg s: Flow<T>) = flow {
@@ -153,3 +158,6 @@ inline fun <reified T> combine(vararg a: Array<T>) =
         }
     }
 
+//array-like mapped map
+inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>) = this.get(*ks.toList().toTypedArray())
+inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size){ ix->ks[ix].let(this::get)!!}

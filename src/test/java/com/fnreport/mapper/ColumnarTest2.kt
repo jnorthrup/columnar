@@ -1,22 +1,24 @@
 package com.fnreport.mapper
 
+import arrow.core.none
 import columnar.*
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.collect
+import java.time.LocalDate
 
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
 class ColumnarTest2 : StringSpec() {
-    val columns: RowTxtDecoder = listOf("date", "channel", "delivered", "ret").zip(
+    val columns: RowNormalizer = listOf("date", "channel", "delivered", "ret").zip(
             listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
                     .zip(listOf(
-                        dateMapper,
-                        stringMapper,
-                        floatMapper,
-                        floatMapper
-                    ))).toTypedArray()
+                        LocalDate::class ,
+                        String::class ,
+                        Float::class ,
+                        Float::class
+                    ))).map{it by none<xform>()}.toTypedArray()
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
     val p4 = columns reify f4
 

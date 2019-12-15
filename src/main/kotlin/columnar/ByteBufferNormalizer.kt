@@ -1,3 +1,5 @@
 package columnar
 
-typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, xform>
+import kotlin.reflect.KClass
+
+typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, KClass<*>>
