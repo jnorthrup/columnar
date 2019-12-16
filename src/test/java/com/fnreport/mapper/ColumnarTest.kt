@@ -2,6 +2,10 @@
 
 package com.fnreport.mapper
 
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.none
+import arrow.optics.none
 import columnar.*
 import io.kotlintest.TestCase
 import io.kotlintest.shouldBe
@@ -19,7 +23,7 @@ object TestDate {
     @JvmStatic
     fun main(args: Array<String>) { //first day of Ramadan, 9th month
         val ramadan = HijrahDate.now()
-                .with(ChronoField.DAY_OF_MONTH, 1).with(ChronoField.MONTH_OF_YEAR, 9)
+            .with(ChronoField.DAY_OF_MONTH, 1).with(ChronoField.MONTH_OF_YEAR, 9)
         println("HijrahDate : $ramadan")
         //HijrahDate -> LocalDate
         println("\n--- Ramandan 2016 ---")
@@ -32,14 +36,19 @@ object TestDate {
 @ExperimentalCoroutinesApi
 @UseExperimental(InternalCoroutinesApi::class)
 class ColumnarTest : StringSpec() {
-    val columns: RowTxtDecoder = listOf("date", "channel", "delivered", "ret").zip(
-            listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
-                    .zip(    listOf(
-                        dateMapper,
-                        stringMapper,
-                        floatMapper,
-                        floatMapper
-                    ))).toTypedArray()
+    val columns:RowNormalizer   = listOf("date", "channel", "delivered", "ret").zip(
+        listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
+            .zip(
+                listOf(
+                    LocalDate::class ,
+                    String::class ,
+                    Float::class ,
+                    Float::class
+                )
+            )
+    ).map{ it by none<xform>()
+    }.toTypedArray()
+
     val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
 
@@ -72,7 +81,6 @@ class ColumnarTest : StringSpec() {
             }
             println(reorderedRow)
             reorderedRow.last() shouldBe reorderedRow[3]
-
 
         }
         "reify"{
@@ -160,7 +168,11 @@ class ColumnarTest : StringSpec() {
                 also {
                     val (compoundColumns, _) = p4
                     println("--- pivot squared ")
-                    p4 = p4.pivot(lhs = intArrayOf(), axis = intArrayOf(0), fanOut = *compoundColumns.indices.drop(1).toIntArray())
+                    p4 = p4.pivot(
+                        lhs = intArrayOf(),
+                        axis = intArrayOf(0),
+                        fanOut = *compoundColumns.indices.drop(1).toIntArray()
+                    )
 
                     val (a, b) = p4
                     println(a.map { it.first })
@@ -174,8 +186,12 @@ class ColumnarTest : StringSpec() {
             println("pivotgroup")
 
             val x = suspend {
-                val (a, b) = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */intArrayOf(1),/*fanout...*/ 2, 3)
-                        .group(0)
+                val (a, b) = (columns reify f4).pivot(/*lhs = */intArrayOf(0),/* axis = */
+                    intArrayOf(1),/*fanout...*/
+                    2,
+                    3
+                )
+                    .group(0)
                 val (c, _) = b
                 System.err.println(a.contentDeepToString())
                 c.collect { println(it.contentDeepToString()) }
@@ -189,11 +205,11 @@ class ColumnarTest : StringSpec() {
 
                 val c4 = columns[0, 1] + columns[2, 3]{ any: Any? -> any ?: 0f }
                 val pivot = (c4 reify f4)
-                        .pivot(intArrayOf(0), intArrayOf(1), 2, 3)
+                    .pivot(intArrayOf(0), intArrayOf(1), 2, 3)
 
                 val col = pivot.first.indices.drop(1).toIntArray()
                 val pair = pivot[0]
-                val pair1 = pivot.get( col).invoke { any: Any? -> any ?: 0f }
+                val pair1 = pivot.get(col).invoke { any: Any? -> any ?: 0f }
 
                 var p4 = (pair with pair1).let {
                     val (a, b) = it
@@ -201,9 +217,10 @@ class ColumnarTest : StringSpec() {
                     System.err.println(a.contentDeepToString())
                     c.collect { ar ->
                         val message = ar.mapIndexed { ind, v ->
-                            (a[ind].second.fold({ v }, { it(v) }))
+                            (a[ind].third.fold({ v }, { it(v) }))
                         }
-                        println(message
+                        println(
+                            message
                         )
                     }
                 }

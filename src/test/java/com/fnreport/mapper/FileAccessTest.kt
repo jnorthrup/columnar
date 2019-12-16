@@ -1,6 +1,7 @@
 package com.fnreport.mapper
 
 
+import arrow.core.none
 import columnar.*
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -8,24 +9,39 @@ import kotlinx.coroutines.flow.collect
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
+import java.time.LocalDate
 
-val RowBinEncoder.xinsert: Iterable<xinsert>
-    get() = map { it.second.second }
+/*val RowBinEncoder.xinsert: Iterable<xinsert>
+    get() = map { it.second.second }*/
 
-val RowBinEncoder.recordLen get() = this.map { it.second.first.second }.max() ?: 0 + 1
- @UseExperimental(InternalCoroutinesApi::class)
+typealias RowBinEncoder = Pair<RowNormalizer, Array<Pair<Int?, Function2<ByteBuffer, *, ByteBuffer>>>>
+
+val RowBinEncoder.recordLen
+    get() = coords.last().second
+
+val RowBinEncoder.coords
+    get() = this.let { (rowNormTriple, binWriter) ->
+        var acc = 0
+        binWriter.mapIndexed { ix, (hint) ->
+
+            val size = hint ?: rowNormTriple[ix].let { (_, b) -> b.let { (a) -> a.size } }
+            acc to acc + size.also { acc = it }
+        }
+    }
+
+@UseExperimental(InternalCoroutinesApi::class)
 class FileAccessTest : StringSpec() {
-    val columns: RowTxtDecoder = listOf("date", "channel", "delivered", "ret").zip(
+    val columns: RowNormalizer = listOf("date", "channel", "delivered", "ret").zip(
         listOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
             .zip(
                 listOf(
-                    dateMapper,
-                    stringMapper,
-                    floatMapper,
-                    floatMapper
+                    LocalDate::class,
+                    String::class,
+                    Float::class,
+                    Float::class
                 )
             )
-    ).toTypedArray()
+    ).map { it by none<xform>() }.toTypedArray()
     val f20 = FixedRecordLengthFile("src/test/resources/caven20.fwf")
     val f4 = FixedRecordLengthFile("src/test/resources/caven4.fwf")
 
@@ -38,28 +54,33 @@ class FileAccessTest : StringSpec() {
                 System.err.println("using " + tmpName)
 
                 val mm4 = RandomAccessFile(tmpName, "rw")
-                val nc: RowBinEncoder = columns.inverse()
-                assert(listOf(xInsertLocalDate, xInsertString, xInsertFloat, xInsertFloat) == nc.xinsert)
-                assert(nc.size == c4.first.size) { "row element count must be same as column count" }
+                val rowBinEncoder: RowBinEncoder =
+                    columns to binInsertionMapper[columns.map { (_, b, _) -> b.let { (_, f) -> f } }]
+//                assert(listOf(xInsertLocalDate, xInsertString, xInsertFloat, xInsertFloat) == nc.xinsert)
+                assert(rowBinEncoder.first.size == c4.first.size) { "row element count must be same as column count" }
 
-                val randomAccessFile = mm4/*.randomAccessFile*/
-                randomAccessFile.seek(0)
-                randomAccessFile.setLength(0)
-                val rafchannel = randomAccessFile.channel
+                mm4.seek(0)
+                mm4.setLength(0)
+                val rafchannel = mm4.channel
 
-                System.err.println("row mappings: " + nc.map { (a, b) -> a to b.let { (c, d) -> c } })
-                val rowBuf = ByteBuffer.allocateDirect(nc.recordLen )
+                System.err.println("row mappings: " + c4.first)
+                val rowBuf = ByteBuffer.allocateDirect(rowBinEncoder.recordLen)
                 val endl = ByteBuffer.allocateDirect(1).put('\n'.toByte())
                 val writeAr = arrayOf(rowBuf, endl)
                 c4.f.collect {
                     rowBuf.clear().also {
-                        it.duplicate().put(ByteArray(nc.recordLen) { ' '.toByte() })
+                        it.duplicate().put(ByteArray(rowBinEncoder.recordLen) { ' '.toByte() })
                     }
+                    val coords = rowBinEncoder.coords
                     for ((index, cellValue) in it.withIndex()) {
-                        nc[index].let { (_, b) ->
-                            b.let { (c, d) ->
+//                  coords[index]
+
+                        rowBinEncoder.let { (_, b) ->
+                            b[index].let { (_, d ) ->
+                                val c = coords[index]
                                 c.let { (start, end) ->
-                                    val d1 = d(rowBuf.position(start).slice().apply { limit(c.size) }, cellValue)
+                                    val aligned = rowBuf.position(start).slice().apply { limit(c.size) }
+                                    val d1 = (d as (ByteBuffer, Any?)->ByteBuffer)(aligned, cellValue  )
                                 }
                             }
                         }
@@ -67,13 +88,14 @@ class FileAccessTest : StringSpec() {
                     rafchannel.write(writeAr.apply {
                         for (bb in this) {
                             bb.rewind()
-                        }} )
-                        //byteArrayOf('\n'.toByte()))
+                        }
+                    })
+                    //byteArrayOf('\n'.toByte()))
                 }
             }
 
-            x ()
-            println ()
+            x()
+            println()
         }
     }
- }
+}

@@ -1,3 +1,8 @@
 package columnar
 
-typealias RowTxtDecoder = Array<Pair<String, ByteBufferNormalizer>>
+import arrow.core.Option
+
+
+typealias Decorator=Option<xform>
+
+typealias RowNormalizer = Array<Triple<String, ByteBufferNormalizer,Decorator>>

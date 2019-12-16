@@ -1,47 +1,20 @@
 package columnar
 
 
-import arrow.core.Option
-import arrow.core.Some
-import arrow.core.none
+import arrow.core.some
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.reflect.KClass
 import kotlin.text.Charsets.UTF_8
 
 val KeyRow.f get() = second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
-fun RowTxtDecoder.inverse(): RowBinEncoder {
-    var start = 0
-    return Array(size) { index ->
-        val (name, bbnorm) = this[index]
-        bbnorm.let { (a, b) ->
-            val binxform = b.inverse()
-            val cursize = binxformSize(b) ?: a.size
-            name to (start to start + cursize.also { start = start.plus(it) } to binxform)
-        }
-    }
-}
-
-val xInsertInt = { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }
-val xInsertLong = { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) }
-val xInsertFloat = { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) }
-val xInsertDouble = { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) }
-val xInsertByteBuffer = { a: ByteBuffer, b: ByteBuffer? -> a.put(b) }
-val xInsertByteArray = { a: ByteBuffer, b: ByteArray? -> a.put(b) }
-val xInsertLocalDate = { a: ByteBuffer, b: LocalDate? ->
-
-    val localDate = b ?: LocalDate.EPOCH
-    val toEpochDay = localDate.toEpochDay()
-    a.putLong(toEpochDay)
-}
-val xInsertInstant = { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) }
-val xInsertAny: xinsert = { b, a: Any? -> xInsertString(b, a.toString()) }
 val xInsertString = { a: ByteBuffer, b: String? ->
     a.put(b?.toByteArray(UTF_8)); when {
     a.hasRemaining() -> a.put(ByteArray(a.remaining()) { ' '.toByte() })
@@ -49,18 +22,19 @@ val xInsertString = { a: ByteBuffer, b: String? ->
 }
 }
 
-inline operator fun <reified T> ByteBuffer.rem(prim: T): xinsert = when {
-    prim is Int -> xInsertInt as xinsert
-    prim is Long -> xInsertLong as xinsert
-    prim is Float -> xInsertFloat as xinsert
-    prim is Double -> xInsertDouble as xinsert
-    prim is LocalDate -> xInsertLocalDate as xinsert
-    prim is Instant -> xInsertInstant as xinsert
-    prim is ByteArray -> xInsertByteArray as xinsert
-    prim is ByteBuffer -> xInsertByteBuffer as xinsert
-    prim is String -> xInsertString as xinsert
-    else -> xInsertAny
-}
+val binInsertionMapper = mapOf(
+
+    Any::class to (null to { b, a: Any? -> xInsertString(b, a.toString()) }),
+    Int::class to (4 to { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
+    Long::class to (8 to { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) }),
+    Float::class to (4 to { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) }),
+    Double::class to (8 to { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) }),
+    String::class to (null to xInsertString),
+    Instant::class to (8 to { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) }),
+    LocalDate::class to (8 to { a: ByteBuffer, b: LocalDate? -> a.putLong((b ?: LocalDate.EPOCH).toEpochDay()) }),
+    ByteArray::class to (null to { a: ByteBuffer, b: ByteArray? -> a.put(b) }),
+    ByteBuffer::class to (null to { a: ByteBuffer, b: ByteBuffer? -> a.put(b) })
+)
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
     this(it).let { arrayOfFlows ->
@@ -70,47 +44,62 @@ operator fun Table1.get(vararg reorder: Int): Table1 = {
     }
 }
 
-fun ByteBufferNormalizer.decodeLazy(buf: Lazy<ByteBuffer>) = let { (coords, mapper: xform) ->
-    ByteArray(coords.size).also { buf.value.get(it) }.let(mapper)
+inline class BinInt  (val default:Int=0)
+inline class BinLong  (val default:Long=0L)
+inline class BinFloat  (val default:Float=0F)
+inline class BinDouble  (val default:Double=0.0)
+inline class BinLocalDate   (val default:LocalDate= LocalDate.EPOCH)
+
+fun ByteBufferNormalizer.decode(buf: ByteBuffer) = let { (coords, mapper) ->
+    ByteArray(coords.size).also { buf.get(it) }.let(
+        mapOf<KClass<out Any>, Function1<*, Any>>(
+            BinInt::class to { buf: ByteBuffer -> buf.getInt() },
+            BinLong::class to { buf: ByteBuffer -> buf.getLong() },
+            BinFloat::class to { buf: ByteBuffer -> buf.getFloat() },
+            BinDouble::class to { buf: ByteBuffer -> buf.getDouble() },
+            BinLocalDate::class to { buf: ByteBuffer -> buf.getLong().let(LocalDate::ofEpochDay) },
+            Int::class to intMapper,
+            Long::class to longMapper,
+            Float::class to floatMapper,
+            Double::class to doubleMapper,
+            String::class to stringMapper,
+            LocalDate::class to dateMapper
+        )[mapper]!! as (ByteArray) -> Any?
+    )
 }
 
-fun ByteBufferNormalizer.decode(buf: ByteBuffer) =
-    let { (coords, mapper) ->
-        ByteArray(coords.size).also { buf.get(it) }.let(mapper)
-    }
-
-infix fun RowTxtDecoder.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row: Int ->
-
-    val values = rs.values(row)
-    val first = lazyOf(values.first())
-    first.let { buf ->
-        Array(this.size)
-        /*  this.mapIndexed*/ { index ->
-            val (_, convertor) = this[index]
-            flowOf(convertor.decodeLazy(buf))
+infix fun RowNormalizer.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row ->
+    rs.values(row).let { values ->
+        val first = values.first()
+        first.let { buf ->
+            Array(this.size) { index ->
+                val (_, convertor) = this[index]
+                flowOf(convertor.decode(buf))
+            }
         }
     }
 }
 
 
-val stringMapper: (Any?) -> String = { i-> (i as? ByteArray)?.let {
+val stringMapper: (Any?) -> String = { i ->
+    (i as? ByteArray)?.let {
         val string = String(it)
         string.takeIf(
             String::isNotBlank
         )?.trim()
-    }?:""
+    } ?: ""
 }
 
 fun btoa(i: Any?) = (i as? ByteArray)?.let {
     val stringMapper1 = stringMapper(it)
-    stringMapper1?.toString()
+    stringMapper1.toString()
 }
 
-val intMapper = { i :Any?-> btoa(i)?.toInt() ?: 0 }
-val floatMapper = { i:Any? -> btoa(i)?.toFloat() ?: 0f }
-val doubleMapper = { i :Any?-> btoa(i)?.toDouble() ?: 0.0 }
-val longMapper = { i :Any?-> btoa(i)?.toLong() ?: 0L }
-val dateMapper = { i :Any?->
+val intMapper = { i: ByteArray -> btoa(i)?.toInt() ?: 0 }
+val floatMapper = { i: ByteArray -> btoa(i)?.toFloat() ?: 0f }
+val doubleMapper = { i: ByteArray -> btoa(i)?.toDouble() ?: 0.0 }
+val longMapper = { i: ByteArray -> btoa(i)?.toLong() ?: 0L }
+val dateMapper = { i: ByteArray ->
     val btoa = btoa(i)
     btoa?.let {
         var res: LocalDate?
@@ -121,31 +110,8 @@ val dateMapper = { i :Any?->
             res = LocalDate.from(parseBest)
         }
         res
-    }?: LocalDate.EPOCH
+    } ?: LocalDate.EPOCH
 }
-
-
-  val cheapMap =    mapOf<xform, Int>(
-        intMapper to 4,
-        floatMapper to 4,
-        doubleMapper to 8,
-        longMapper to 8,
-        dateMapper to 8
-    )
-
-fun binxformSize(xf: xform) = cheapMap[xf]
-
-
-fun xform.inverse(): xinsert =
-    when (this) {
-        intMapper -> xInsertInt as xinsert
-        floatMapper -> xInsertFloat as xinsert
-        doubleMapper -> xInsertDouble as xinsert
-        longMapper -> xInsertLong as xinsert
-        dateMapper -> xInsertLocalDate as xinsert
-        stringMapper -> xInsertString as xinsert
-        else -> xInsertAny
-    }
 
 
 /**
@@ -163,16 +129,16 @@ operator fun KeyRow.get(axis: IntArray): KeyRow = this.let { (cols, data) ->
             }
 }
 
-infix fun RowTxtDecoder.reify(r: FixedRecordLengthFile): KeyRow =
-    Array(this.size) { this[it].let { (name) -> name to none<xform>() } } to (r.map { fb ->
-        lazyOf(fb.first()).let { buf ->
-            Array(size) {
-                this[it].let { (a, b) ->
-                    b.decodeLazy(buf)
-                }
+infix fun RowNormalizer.reify(r: FixedRecordLengthFile): KeyRow = this to (r.map { fb ->
+    (fb.first()).let { buf ->
+        Array(size) {
+            this[it].let { (a, b) ->
+                b.decode(buf)
             }
         }
-    } to r.size)
+    }
+} to r.size)
+
 
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
@@ -203,8 +169,11 @@ suspend fun KeyRow.pivot(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Key
         distinct(*axis).let { keys ->
             val xHash = keys.mapIndexed { xIndex, any -> any.contentDeepHashCode() to xIndex }.toMap()
             this.run {
+
                 val (xSize, synthNames) = pivotOutputColumns(fanOut, nama, axis, keys)
-                val synthMasterCopy = combine(nama.get(lhs), synthNames)
+                val get = nama.get(lhs)
+                val synthNames1 = synthNames
+                val synthMasterCopy = combine(get, synthNames1)
                 synthMasterCopy to data.let { (rows, sz) ->
                     pivotRemappedValues(
                         rows,
@@ -245,59 +214,6 @@ suspend fun KeyRow.pivot2(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Ro
         }
     }
 
-private fun pivotRemappedValues(
-    rows: Flow<Array<Any?>>,
-    lhs: IntArray,
-    xHash: Map<Int, Int>,
-    xSize: Int,
-    axis: IntArray,
-    fanOut: IntArray,
-    synthMasterCopy: Array<Column>
-) =
-    rows.map { row ->
-        arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
-            val key = row.get(axis).let(::arrayOfAnys)
-            for ((index, i) in lhs.withIndex()) {
-
-                grid[index] = row[i]
-            }
-            val x = xHash[key.contentDeepHashCode()]!!
-
-            for ((index, xcol) in fanOut.withIndex()) {
-                val x1 = lhs.size + (xSize * x + index)
-                grid[x1] = row[xcol]
-            }
-            grid(synthMasterCopy)
-        }
-    }
-
-private fun pivotOutputColumns(
-    fanOut: IntArray,
-    nama: Array<Column>,
-    axis: IntArray,
-    keys: List<Array<Any?>>
-): Pair<Int, Array<Pair<String, Option<xform>>>> {
-    val xSize = fanOut.size
-    val synthNames = nama.get(axis).let { axNam ->
-        keys.map { key ->
-            axNam.zip(key).let { keyPrefix ->
-
-                for (pos in fanOut) {
-
-                }
-                fanOut.map { pos ->
-                    val (aggregatedName, xForm) = nama[pos]
-                    "${keyPrefix.map { (col, imprintValue) ->
-                        val (str, optXform) = col
-                        "$str=${optXform.fold({ imprintValue }, { it(imprintValue) })}"
-                    }.joinToString(":")}:${aggregatedName}" to xForm
-                }
-            }
-        }
-    }.flatten().toTypedArray()
-    return Pair(xSize, synthNames)
-}
-
 
 suspend fun KeyRow.distinct(vararg axis: Int) =
     get(axis).let { (arrayOfPairs, pair) ->
@@ -306,9 +222,9 @@ suspend fun KeyRow.distinct(vararg axis: Int) =
         }
     }
 
-operator fun Array<Any?>.invoke(c: Array<Column>) =
+operator fun Array<Any?>.invoke(c: RowNormalizer) =
     this.also {
-        c.forEachIndexed { i, (a, b) ->
+        c.forEachIndexed { i, (a, c, b) ->
             b.fold({}) { function: xform ->
                 this[i] = function(this[i])
             }
@@ -347,7 +263,7 @@ suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
                     group.collectIndexed { index, row ->
                         assert(row.size == protoValues.size)
                         for ((index, any) in row.withIndex()) {
-                            cols[index][ix] = (columns[index].second.fold({ any }, { it(any) }))
+                            cols[index][ix] = (columns[index].third.fold({ any }, { it(any) }))
                         }
                     }
                 assert(cols.size == protoValues.size)
@@ -392,22 +308,6 @@ suspend fun RoutedRows.group2(vararg by: Int) = let {
     } to clusters.size)
 }
 
-operator fun RowTxtDecoder.invoke(t: xform): RowTxtDecoder = map { (a, b) ->
-    val (c, d) = b
-    a to (c to { any: Any? -> t(d(any)) })
-}.toTypedArray()
-
-
-operator fun KeyRow.invoke(t: xform): KeyRow = this.let { (a, b) ->
-    a.map { (c, d) ->
-        c to Some(d.fold({ t }, { dprime: xform ->
-            { rowval: Any? ->
-                t(dprime(rowval))
-            }
-        })) as Option<xform>
-    }.toTypedArray() to b
-}
-
 
 infix fun KeyRow.with(that: KeyRow): KeyRow = let { (theseCols, theseData) ->
     theseData.let { (theseRows, theseSize) ->
@@ -423,28 +323,6 @@ infix fun KeyRow.with(that: KeyRow): KeyRow = let { (theseCols, theseData) ->
     }
 }
 
-
-suspend fun show(it: KeyRow) = it.let { (cols, b) ->
-    b.let { (rows, sz) ->
-        System.err.println(cols.contentDeepToString())
-        rows.collect { ar ->
-            ar(cols).let {
-                println(deepArray(it.contentDeepToString()))
-            }
-        }
-    }
-}
-
-fun groupSumFloat(res: KeyRow, vararg exclusion: Int): KeyRow {
-    val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
-    return res.get(exclusion) with res.get(summationColumns).invoke { it: Any? ->
-        when {
-            it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
-            it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
-            else -> it
-        }
-    }
-}
 
 @UseExperimental(ExperimentalCoroutinesApi::class)
 suspend infix fun KeyRow.resample(indexcol: Int) = this[indexcol].let { (a, b) ->
@@ -479,4 +357,97 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
             cursor = cursor.plusDays(1)
         }
     }
+}
+
+suspend fun show(it: KeyRow) = it.let { (cols, b) ->
+    b.let { (rows, sz) ->
+        System.err.println(cols.contentDeepToString())
+        rows.collect { ar ->
+            ar(cols).let {
+                println(deepArray(it.contentDeepToString()))
+            }
+        }
+    }
+}
+
+private fun pivotRemappedValues(
+    rows: Flow<Array<Any?>>,
+    lhs: IntArray,
+    xHash: Map<Int, Int>,
+    xSize: Int,
+    axis: IntArray,
+    fanOut: IntArray,
+    synthMasterCopy: RowNormalizer
+) =
+    rows.map { row ->
+        arrayOfNulls<Any?>(+lhs.size + (xHash.size * xSize)).also { grid ->
+            val key = row.get(axis).let(::arrayOfAnys)
+            for ((index, i) in lhs.withIndex()) {
+
+                grid[index] = row[i]
+            }
+            val x = xHash[key.contentDeepHashCode()]!!
+
+            for ((index, xcol) in fanOut.withIndex()) {
+                val x1 = lhs.size + (xSize * x + index)
+                grid[x1] = row[xcol]
+            }
+            grid(synthMasterCopy)
+        }
+    }
+
+infix fun <A, B, C> Pair<A, B>.by(third: C) = this.let { (a, b) -> Triple(a, b, third) }
+
+
+operator fun RowNormalizer.invoke(t: xform): RowNormalizer = Array(size) {
+    this[it].let { (a, b, c) ->
+        a to b by c.fold({ -> { any: Any? -> any.let(t) } }, { { any: Any? -> any.let(it).let(t) } }).some()
+    }
+}
+
+
+operator fun KeyRow.invoke(t: xform): KeyRow = this.let { (a, b) ->
+    a.map { (c, e, d) ->
+        c to e by (d.fold({ t }, { dprime: xform ->
+            { rowval: Any? ->
+                t(dprime(rowval))
+            }
+        })).some()
+    }.toTypedArray() to b
+}
+
+
+fun groupSumFloat(res: KeyRow, vararg exclusion: Int): KeyRow {
+    val summationColumns = (res.first.indices - exclusion.toList()).toIntArray()
+    return res.get(exclusion) with res.get(summationColumns).invoke { it: Any? ->
+        when {
+            it is Array<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+            it is List<*> -> it.map { (it as? Float?) ?: 0f }.sum()
+            else -> it
+        }
+    }
+}
+
+private fun pivotOutputColumns(
+    fanOut: IntArray,
+    nama: RowNormalizer,
+    axis: IntArray,
+    keys: List<Array<Any?>>
+): Pair<Int, RowNormalizer> {
+    val xSize = fanOut.size
+    val synthNames = nama.get(axis).let { axNam ->
+        keys.map { key ->
+            axNam.zip(key).let { keyPrefix ->
+
+                fanOut.map { pos ->
+                    val (aggregatedName, coord, xForm) = nama[pos]
+                    "${keyPrefix.map { (col, imprintValue) ->
+                        val (str, second, optXform) = col
+                        "$str=${optXform.fold({ imprintValue }, { it(imprintValue) })}"
+                    }.joinToString(":")}:${aggregatedName}" to coord by xForm
+                }
+            }
+        }
+    }.flatten().toTypedArray()
+    return Pair(xSize, synthNames)
 }
