@@ -22,11 +22,20 @@ val RowBinEncoder.recordLen
 val RowBinEncoder.coords
     get() = this.let { (rowNormTriple, binWriter) ->
         var acc = 0
-        binWriter.mapIndexed { ix, (hint) ->
+//        binWriter.mapIndexed { ix, (hint) ->
+//
+//            val size = hint ?: rowNormTriple[ix].let { (_, b) -> b.let { (a) -> a.size } }
+//            acc to acc + size.also { acc = it }
+//        }
+        Array(binWriter.size){ix->
+         binWriter[ix].let{(hint)->
 
             val size = hint ?: rowNormTriple[ix].let { (_, b) -> b.let { (a) -> a.size } }
-            acc to acc + size.also { acc = it }
+            acc to (acc + size).also { acc = it }
+         }
         }
+
+
     }
 
 @UseExperimental(InternalCoroutinesApi::class)
@@ -63,39 +72,42 @@ class FileAccessTest : StringSpec() {
                 mm4.setLength(0)
                 val rafchannel = mm4.channel
 
-                System.err.println("row mappings: " + c4.first)
-                val rowBuf = ByteBuffer.allocateDirect(rowBinEncoder.recordLen)
-                val endl = ByteBuffer.allocateDirect(1).put('\n'.toByte())
-                val writeAr = arrayOf(rowBuf, endl)
-                c4.f.collect {
-                    rowBuf.clear().also {
-                        it.duplicate().put(ByteArray(rowBinEncoder.recordLen) { ' '.toByte() })
-                    }
-                    val coords = rowBinEncoder.coords
-                    for ((index, cellValue) in it.withIndex()) {
+                System.err.println("before row mappings: " + c4.let { (a, _) ->
+                    arrayOfAnys(a as Array<Any?>).contentDeepToString()
+                })
+                val coords = rowBinEncoder.coords
+                System.err.println("row mappings: " + coords.contentDeepToString()  )
+            val rowBuf = ByteBuffer.allocateDirect(rowBinEncoder.recordLen)
+            val endl = ByteBuffer.allocateDirect(1).put('\n'.toByte())
+            val writeAr = arrayOf(rowBuf, endl)
+            c4.f.collect {
+                rowBuf.clear().also {
+                    it.duplicate().put(ByteArray(rowBinEncoder.recordLen) { ' '.toByte() })
+                }
+                for ((index, cellValue) in it.withIndex()) {
 //                  coords[index]
 
-                        rowBinEncoder.let { (_, b) ->
-                            b[index].let { (_, d ) ->
-                                val c = coords[index]
-                                c.let { (start, end) ->
-                                    val aligned = rowBuf.position(start).slice().apply { limit(c.size) }
-                                    val d1 = (d as (ByteBuffer, Any?)->ByteBuffer)(aligned, cellValue  )
-                                }
+                    rowBinEncoder.let { (_, b) ->
+                        b[index].let { (_, d) ->
+                            val c = coords[index]
+                            c.let { (start, end) ->
+                                val aligned = rowBuf.position(start).slice().apply { limit(c.size) }
+                                val d1 = (d as (ByteBuffer,Any?)->ByteBuffer)(aligned, cellValue)
                             }
                         }
                     }
-                    rafchannel.write(writeAr.apply {
-                        for (bb in this) {
-                            bb.rewind()
-                        }
-                    })
-                    //byteArrayOf('\n'.toByte()))
                 }
+                rafchannel.write(writeAr.apply {
+                    for (bb in this) {
+                        bb.rewind()
+                    }
+                })
+                //byteArrayOf('\n'.toByte()))
             }
-
-            x()
-            println()
         }
+
+        x()
+        println()
     }
+}
 }
