@@ -4,4 +4,5 @@
 # Ignore Gradle build output directory
 build
 .idea
-target
+target.idea
+*.iml
