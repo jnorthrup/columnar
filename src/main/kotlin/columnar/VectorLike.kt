@@ -54,7 +54,7 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>) = this[ind
 
 @JvmName("vlike_Vect0r_IntArray3")
 inline operator fun <reified T> Vect0r<T>.get(index: IntArray) = this.let { (a, b) ->
-    a to { ix: Int -> b(index[ix]) }
+    index::size  to { ix: Int -> b(index[ix]) }
 }
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }

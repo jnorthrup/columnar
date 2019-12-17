@@ -48,7 +48,7 @@ class FileAccessTest : StringSpec() {
             }()
 
             suspend{
-
+                Json(Stable).parse(RowBinMeta::class.serializer().list, x.second)
             }
             println()
         }

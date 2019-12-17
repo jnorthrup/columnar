@@ -3,13 +3,13 @@ package columnar
 
 import arrow.core.some
 import kotlinx.coroutines.flow.*
-import kotlinx.serialization.ImplicitReflectionSerializer
 import kotlinx.serialization.Serializable
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.text.Charsets.UTF_8
 
 val KeyRow.f get() = second.first
@@ -17,12 +17,11 @@ val KeyRow.f get() = second.first
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
 val xInsertString = { a: ByteBuffer, b: String? ->
-    a.put(b?.toByteArray(UTF_8)); when {
-    a.hasRemaining() -> a.put(ByteArray(a.remaining()) { ' '.toByte() })
-    else -> a
-}
-}
+    a.put(b?.toByteArray(UTF_8))
+    while (a.hasRemaining()) a.put(' '.toByte())
+    a
 
+}
 
 inline class BinInt(val default: Int = Int.MIN_VALUE)
 inline class BinLong(val default: Long = Long.MIN_VALUE)
@@ -48,9 +47,7 @@ inline class BinAny(val default: Any = def) {
         val def by lazy { object : Any() {} }
     }
 }
-//inline class Bin   (val default:LocalDate= LocalDate.EPOCH)
-
-typealias RowBinEncoder = Pair<RowNormalizer, Array<Pair<Int?, Function2<ByteBuffer, *, ByteBuffer>>>>
+typealias RowBinEncoder = Pair<RowNormalizer, Array<Pair<Int?,   Function2<ByteBuffer,*,ByteBuffer>>>>
 
 @Serializable
 data class RowBinMeta(val name: String, val coord: Array<Int>, val typ: TypeMemento) {
@@ -58,26 +55,22 @@ data class RowBinMeta(val name: String, val coord: Array<Int>, val typ: TypeMeme
         fun RowBinMetaList(t: RowBinEncoder) = t.let { (a, _) ->
             //fake ctor
             fun RowBinMeta(t: Triple<String, Array<Int>, TypeMemento>) = t.let { (name, coord, memento) ->
-                RowBinMeta(name, coord, memento)
+                val typ = memento.let {
+                    it.takeIf { it.name.startsWith("mBin") }
+                        ?: TypeMemento.valueOf(it.name.replace(Regex("^m"), "mBin"))
+                }
+                RowBinMeta(name, coord, typ)
             }
-            val coords1 = t.coords
 
-            a.mapIndexed {ix, (name, normalizer) ->
+            val coords1 = t.coords
+            a.mapIndexed { ix, (name, normalizer) ->
                 normalizer.let { (_, kClass) ->
                     coords1[ix].let { (start, end) ->
-                        val n: Triple<String, Array<Int>, TypeMemento> =
-                            name to arrayOf(start, end) by TypeMemento[kClass]
-                        RowBinMeta(n)
+                        RowBinMeta(name to arrayOf(start, end) by TypeMemento[kClass])
                     }
                 }
             }
         }
-    }
-}
-
-fun RowBinMeta(n: RowNormalizer) = n.map { (a, b, c) ->
-    a to b.let { (c, d) ->
-        c.toList() to TypeMemento[d]
     }
 }
 
@@ -110,7 +103,6 @@ enum class TypeMemento(val t: KClass<*>) {
 }
 
 val binInsertionMapper = mapOf(
-
     Any::class to (null to { b, a: Any? -> xInsertString(b, a.toString()) }),
     Int::class to (4 to { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
     Long::class to (8 to { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) }),
@@ -120,7 +112,17 @@ val binInsertionMapper = mapOf(
     Instant::class to (8 to { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) }),
     LocalDate::class to (8 to { a: ByteBuffer, b: LocalDate? -> a.putLong((b ?: LocalDate.EPOCH).toEpochDay()) }),
     ByteArray::class to (null to { a: ByteBuffer, b: ByteArray? -> a.put(b) }),
-    ByteBuffer::class to (null to { a: ByteBuffer, b: ByteBuffer? -> a.put(b) })
+    ByteBuffer::class to (null to { a: ByteBuffer, b: ByteBuffer? -> a.put(b) }),
+    BinAny::class to (null to { b, a: Any? -> xInsertString(b, a.toString()) }),
+    BinInt::class to (4 to { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
+    BinLong::class to (8 to { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) }),
+    BinFloat::class to (4 to { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) }),
+    BinDouble::class to (8 to { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) }),
+    BinString::class to (null to xInsertString),
+    BinInstant::class to (8 to { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) }),
+    BinLocalDate::class to (8 to { a: ByteBuffer, b: LocalDate? -> a.putLong((b ?: LocalDate.EPOCH).toEpochDay()) }),
+    BinByteArray::class to (null to { a: ByteBuffer, b: ByteArray? -> a.put(b) }),
+    BinByteBuffer::class to (null to { a: ByteBuffer, b: ByteBuffer? -> a.put(b) })
 )
 
 operator fun Table1.get(vararg reorder: Int): Table1 = {
@@ -374,7 +376,6 @@ val RowBinEncoder.coords
         var acc = 0
         Array(binWriter.size) { ix ->
             binWriter[ix].let { (hint) ->
-
                 val size = hint ?: rowNormTriple[ix].let { (_, b) -> b.let { (a) -> a.size } }
                 acc to (acc + size).also { acc = it }
             }
