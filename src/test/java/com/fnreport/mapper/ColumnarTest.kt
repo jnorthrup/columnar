@@ -176,7 +176,7 @@ class ColumnarTest : StringSpec() {
 
                     val (a, b) = p4
                     println(a.map { it.first })
-                    val (c, d) = b
+                    val (c ) = b
                     c.collect { println(it.contentDeepToString()) }
                 }
             }

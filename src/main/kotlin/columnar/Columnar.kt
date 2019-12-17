@@ -3,6 +3,8 @@ package columnar
 
 import arrow.core.some
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.Serializable
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
@@ -19,6 +21,92 @@ val xInsertString = { a: ByteBuffer, b: String? ->
     a.hasRemaining() -> a.put(ByteArray(a.remaining()) { ' '.toByte() })
     else -> a
 }
+}
+
+
+inline class BinInt(val default: Int = Int.MIN_VALUE)
+inline class BinLong(val default: Long = Long.MIN_VALUE)
+inline class BinFloat(val default: Float = Float.NaN)
+inline class BinDouble(val default: Double = Double.NaN)
+inline class BinLocalDate(val default: LocalDate = LocalDate.MIN)
+inline class BinString(val default: String = "<default>")
+inline class BinInstant(val default: Instant = Instant.MIN)
+inline class BinByteArray(val default: ByteArray = def) {
+    companion object {
+        val def by lazy { byteArrayOf() }
+    }
+}
+
+inline class BinByteBuffer(val default: ByteBuffer = def) {
+    companion object {
+        val def by lazy { ByteBuffer.allocate(0) }
+    }
+}
+
+inline class BinAny(val default: Any = def) {
+    companion object {
+        val def by lazy { object : Any() {} }
+    }
+}
+//inline class Bin   (val default:LocalDate= LocalDate.EPOCH)
+
+typealias RowBinEncoder = Pair<RowNormalizer, Array<Pair<Int?, Function2<ByteBuffer, *, ByteBuffer>>>>
+
+@Serializable
+data class RowBinMeta(val name: String, val coord: Array<Int>, val typ: TypeMemento) {
+    companion object {
+        fun RowBinMetaList(t: RowBinEncoder) = t.let { (a, _) ->
+            //fake ctor
+            fun RowBinMeta(t: Triple<String, Array<Int>, TypeMemento>) = t.let { (name, coord, memento) ->
+                RowBinMeta(name, coord, memento)
+            }
+            val coords1 = t.coords
+
+            a.mapIndexed {ix, (name, normalizer) ->
+                normalizer.let { (_, kClass) ->
+                    coords1[ix].let { (start, end) ->
+                        val n: Triple<String, Array<Int>, TypeMemento> =
+                            name to arrayOf(start, end) by TypeMemento[kClass]
+                        RowBinMeta(n)
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun RowBinMeta(n: RowNormalizer) = n.map { (a, b, c) ->
+    a to b.let { (c, d) ->
+        c.toList() to TypeMemento[d]
+    }
+}
+
+enum class TypeMemento(val t: KClass<*>) {
+    mAny(Any::class),
+    mInt(Int::class),
+    mLong(Long::class),
+    mFloat(Float::class),
+    mDouble(Double::class),
+    mString(String::class),
+    mInstant(Instant::class),
+    mLocalDate(LocalDate::class),
+    mByteArray(ByteArray::class),
+    mByteBuffer(ByteBuffer::class),
+    mBinAny(BinAny::class),
+    mBinInt(BinInt::class),
+    mBinLong(BinLong::class),
+    mBinFloat(BinFloat::class),
+    mBinDouble(BinDouble::class),
+    mBinString(BinString::class),
+    mBinInstant(BinInstant::class),
+    mBinLocalDate(BinLocalDate::class),
+    mBinByteArray(BinByteArray::class),
+    mBinByteBuffer(BinByteBuffer::class);
+
+    companion object {
+        private val reverse by lazy { values().associateBy(TypeMemento::t) }
+        operator fun get(t: KClass<*>): TypeMemento = reverse[t]!!
+    }
 }
 
 val binInsertionMapper = mapOf(
@@ -43,20 +131,14 @@ operator fun Table1.get(vararg reorder: Int): Table1 = {
     }
 }
 
-inline class BinInt  (val default:Int=0)
-inline class BinLong  (val default:Long=0L)
-inline class BinFloat  (val default:Float=0F)
-inline class BinDouble  (val default:Double=0.0)
-inline class BinLocalDate   (val default:LocalDate= LocalDate.EPOCH)
-
 fun ByteBufferNormalizer.decode(buf: ByteBuffer) = let { (coords, mapper) ->
     ByteArray(coords.size).also { buf.get(it) }.let(
         mapOf<KClass<out Any>, Function1<*, Any>>(
-            BinInt::class to { buf: ByteBuffer -> buf.getInt() },
-            BinLong::class to { buf: ByteBuffer -> buf.getLong() },
-            BinFloat::class to { buf: ByteBuffer -> buf.getFloat() },
-            BinDouble::class to { buf: ByteBuffer -> buf.getDouble() },
-            BinLocalDate::class to { buf: ByteBuffer -> buf.getLong().let(LocalDate::ofEpochDay) },
+            BinInt::class to { buf: ByteBuffer -> buf.int },
+            BinLong::class to { buf: ByteBuffer -> buf.long },
+            BinFloat::class to { buf: ByteBuffer -> buf.float },
+            BinDouble::class to { buf: ByteBuffer -> buf.double },
+            BinLocalDate::class to { buf: ByteBuffer -> buf.long.let(LocalDate::ofEpochDay) },
             Int::class to intMapper,
             Long::class to longMapper,
             Float::class to floatMapper,
@@ -116,7 +198,7 @@ val dateMapper = { i: ByteArray ->
 infix fun RowNormalizer.reify(r: FixedRecordLengthFile): KeyRow = this to (r.map { fb ->
     (fb.first()).let { buf ->
         Array(size) {
-            this[it].let { (a, b) ->
+            this[it].let { (_, b) ->
                 b.decode(buf)
             }
         }
@@ -127,9 +209,9 @@ infix fun RowNormalizer.reify(r: FixedRecordLengthFile): KeyRow = this to (r.map
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(inbound: Any?): Any? =
-    if (inbound is Array<*>) inbound.also<Any?> { ar ->
-        inbound.forEachIndexed { i, v ->
-            (inbound as Array<Any?>)[i] = deepArray(inbound[i])
+    if (inbound is Array<*>) inbound.also {
+        it.forEachIndexed { i, v ->
+            (it as Array<Any?>)[i] = deepArray(v)
         }
     }
     else if (inbound is Iterable<*>) deepArray(inbound.map { it })
@@ -149,7 +231,7 @@ tailrec fun deepTrim(inbound: Any?): Any? =
 
 operator fun Array<Any?>.invoke(c: RowNormalizer) =
     this.also {
-        c.forEachIndexed { i, (a, c, b) ->
+        c.forEachIndexed { i, (_, _, b) ->
             b.fold({}) { function: xform ->
                 this[i] = function(this[i])
             }
@@ -162,7 +244,7 @@ operator fun Array<Any?>.invoke(c: RowNormalizer) =
  */
 suspend fun RoutedRows.group2(vararg by: Int) = let {
     val (columns, data) = this
-    val (rows, d) = data
+    val (rows, _) = data
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
     val clusters = mutableMapOf<Int, Pair<Array<Any?>, MutableList<Sequence<RouteHandle>>>>()
     rows.collect { row1 ->
@@ -179,7 +261,7 @@ suspend fun RoutedRows.group2(vararg by: Int) = let {
         val (key, cluster) = cluster1
         val chunky = cluster.map { it.iterator() }
         sequence {
-            for ((index, column) in columns.withIndex()) {
+            for (index in columns.indices) {
                 if (index in by)
                     yield(key[by.indexOf(index)])
                 else
@@ -202,7 +284,7 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
 }
 
 suspend fun show(it: KeyRow) = it.let { (cols, b) ->
-    b.let { (rows, sz) ->
+    b.let { (rows) ->
         System.err.println(cols.contentDeepToString())
         rows.collect { ar ->
             ar(cols).let {
@@ -273,7 +355,7 @@ fun pivotOutputColumns(
                 fanOut.map { pos ->
                     val (aggregatedName, coord, xForm) = nama[pos]
                     "${keyPrefix.map { (col, imprintValue) ->
-                        val (str, second, optXform) = col
+                        val (str, _, optXform) = col
                         "$str=${optXform.fold({ imprintValue }, { it(imprintValue) })}"
                     }.joinToString(":")}:${aggregatedName}" to coord by xForm
                 }
@@ -282,7 +364,7 @@ fun pivotOutputColumns(
     }.flatten().toTypedArray()
     return Pair(xSize, synthNames)
 }
-typealias RowBinEncoder = Pair<RowNormalizer, Array<Pair<Int?, Function2<ByteBuffer, *, ByteBuffer>>>>
+
 
 val RowBinEncoder.recordLen
     get() = coords.last().second
@@ -290,11 +372,6 @@ val RowBinEncoder.recordLen
 val RowBinEncoder.coords
     get() = this.let { (rowNormTriple, binWriter) ->
         var acc = 0
-//        binWriter.mapIndexed { ix, (hint) ->
-//
-//            val size = hint ?: rowNormTriple[ix].let { (_, b) -> b.let { (a) -> a.size } }
-//            acc to acc + size.also { acc = it }
-//        }
         Array(binWriter.size) { ix ->
             binWriter[ix].let { (hint) ->
 

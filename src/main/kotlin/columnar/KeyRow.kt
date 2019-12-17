@@ -2,9 +2,11 @@ package columnar
 
 import arrow.core.some
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 import java.time.LocalDate
 
 typealias KeyRow = Pair<RowNormalizer, Pair<Flow<RowHandle>, Int>>
@@ -75,9 +77,10 @@ suspend fun KeyRow.pivot2(lhs: IntArray, axis: IntArray, vararg fanOut: Int): Ro
         }
     }
 
+@ExperimentalCoroutinesApi
 suspend fun KeyRow.distinct(vararg axis: Int) =
-    get(axis).let { (arrayOfPairs, pair) ->
-        pair.let { (flow1, sz) ->
+    get(axis).let { (_, pair) ->
+        pair.let { (flow1, _) ->
             flow1.toList().map(::arrayOfAnys).distinctBy { it.contentDeepHashCode() }
         }
     }
@@ -85,9 +88,10 @@ suspend fun KeyRow.distinct(vararg axis: Int) =
 /**
  * cost of one full tablscan
  */
+@ExperimentalCoroutinesApi
 suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
     val (columns, data) = this
-    val (rows, d) = data
+    val (rows) = data
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
     val clusters = mutableMapOf<Int, Pair<Array<Any?>, MutableList<Flow<Array<Any?>>>>>()
     rows.collect { row ->
@@ -110,10 +114,10 @@ suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
             }
             val groupedRow = protoValues.map { arrayOfNulls<Any?>(cluster.size) }.let { cols ->
                 for ((ix, group) in cluster.withIndex())
-                    group.collectIndexed { index, row ->
+                    group.collectIndexed { _, row ->
                         assert(row.size == protoValues.size)
-                        for ((index, any) in row.withIndex()) {
-                            cols[index][ix] = (columns[index].third.fold({ any }, { it(any) }))
+                        for ((cindex, any) in row.withIndex()) {
+                            cols[cindex][ix] = (columns[cindex].third.fold({ any }, { it(any) }))
                         }
                     }
                 assert(cols.size == protoValues.size)
@@ -125,6 +129,7 @@ suspend fun KeyRow.group(vararg by: Int): KeyRow = let {
     }.asFlow() to clusters.size)
 }
 
+@ExperimentalCoroutinesApi
 infix fun KeyRow.with(that: KeyRow): KeyRow = let { (theseCols, theseData) ->
     theseData.let { (theseRows, theseSize) ->
         that.let { (thatCols, thatData) ->
@@ -139,9 +144,10 @@ infix fun KeyRow.with(that: KeyRow): KeyRow = let { (theseCols, theseData) ->
     }
 }
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
-suspend infix fun KeyRow.resample(indexcol: Int) = this[indexcol].let { (a, b) ->
-    val (c, d) = b
+@ExperimentalCoroutinesApi
+@FlowPreview
+suspend infix fun KeyRow.resample(indexcol: Int) = this[indexcol].let { (_, b) ->
+    val (c, _) = b
     val indexValues = c.toList().mapNotNull {
         (it.first() as? LocalDate?)
     }
@@ -156,10 +162,10 @@ suspend infix fun KeyRow.resample(indexcol: Int) = this[indexcol].let { (a, b) -
     }.asFlow()
 
     let {
-        val (a, b) = this
-        val (c, d) = b
+        val (rowNormalizer, data) = this
+        val (rows, rowCount) = data
 
-        a to (flowOf(c, empties).flattenConcat() to d + size)
+        rowNormalizer to (flowOf(rows, empties).flattenConcat() to rowCount + size)
     }
 }
 
@@ -173,12 +179,10 @@ operator fun KeyRow.invoke(t: xform): KeyRow = this.let { (a, b) ->
     }.toTypedArray() to b
 }
 
-suspend fun KeyRow.toFwf(columns1: RowNormalizer, tmpName: String): RowBinEncoder {
-    val rowBinEncoder: RowBinEncoder =
-        columns1 to binInsertionMapper[columns1.map { (_, b, _) -> b.let { (_, f) -> f } }]
-    assert(rowBinEncoder.first.size == first.size) { "row element count must be same as column count" }
+suspend fun KeyRow.toFwf(tmpName: String): RowBinEncoder {
+    val rowBinEncoder: RowBinEncoder = RowBinEncoder(first)
 
-    RandomAccessFile(tmpName, "rw").use{ mm4->
+    RandomAccessFile(tmpName, "rw").use { mm4 ->
         mm4.seek(0)
         mm4.setLength(0)
         val rafchannel = mm4.channel
@@ -199,17 +203,17 @@ suspend fun KeyRow.toFwf(columns1: RowNormalizer, tmpName: String): RowBinEncode
                 //                  coords[index]
 
                 rowBinEncoder.let { (_, b) ->
-                    b[index].let { (_, d) ->
+                    b[index].let { (_, d: Function2<ByteBuffer, *, ByteBuffer>) ->
                         val c = coords[index]
-                        c.let { (start, end) ->
+                        c.let { (start, _) ->
                             val aligned = rowBuf.position(start).slice().apply { limit(c.size) }
-                            val d1 = (d as (ByteBuffer, Any?) -> ByteBuffer)(aligned, cellValue)
+                            (d as (ByteBuffer, Any?) -> ByteBuffer)(aligned, cellValue)
                         }
                     }
                 }
             }
             rafchannel.write(writeAr.apply {
-                for (bb in this ) {
+                for (bb in this) {
                     bb.rewind()
                 }
             })
@@ -218,3 +222,71 @@ suspend fun KeyRow.toFwf(columns1: RowNormalizer, tmpName: String): RowBinEncode
     }
     return rowBinEncoder
 }
+
+/**
+ *
+-XX:MaxDirectMemorySize=<size>
+[SO Article]( https://stackoverflow.com/questions/50499238/bytebuffer-allocatedirect-and-xmx ) */
+
+@ExperimentalCoroutinesApi
+suspend fun KeyRow.toFwf2(tmpName: String): RowBinEncoder {
+    System.err.println("// don't forget -XX:MaxDirectMemorySize=4G")
+    val rowBinEncoder: RowBinEncoder = RowBinEncoder(first)
+
+
+    val recordLen = rowBinEncoder.recordLen
+    val rowsize: Long = (recordLen + 1L)
+    val filesize = rowsize * this.let { (_, b) -> b.let { (_, sz) -> sz } }.toLong()
+    val windowSize = (Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % rowsize))
+    val coords = rowBinEncoder.coords
+    var window = 0L to 0L
+    lateinit var buf: ByteBuffer
+
+    RandomAccessFile(tmpName, "rw").use { mm4 ->
+        mm4.seek(0)
+        mm4.setLength(filesize)
+          mm4.channel.use {rafchannel->
+              System.err.println("before row mappings: " + let { (a, _) ->
+                  arrayOfAnys(a as Array<Any?>).contentDeepToString()
+              })
+              System.err.println("row mappings: " + coords.contentDeepToString())
+              fun remap(window: Pair<Long, Long>) = window.let { (offsetToMap, sizeToMap) ->
+                  rafchannel.map(FileChannel.MapMode.READ_WRITE, offsetToMap, sizeToMap)
+              }
+              f.collectIndexed { ix, rowFlow ->
+                  val lix = ix.toLong()
+                  val seekTo = rowsize * lix
+                  if (seekTo >= window.second) {
+                      val l = seekTo
+                      window = l to minOf(filesize-seekTo,  (windowSize))
+                      buf = remap(window)
+                  }
+                  val rowBuf = buf.position(seekTo.toInt() - window.first.toInt()).slice()
+                  for ((index, cellValue) in rowFlow.withIndex()) {
+                      rowBinEncoder.let { (_, b) ->
+                          b[index].let { (_, d) ->
+                              coords[index].let { (start) ->
+                                  (d)(rowBuf.position(start)/*.slice()*/, cellValue)
+                              }
+                          }
+                      }
+                  }
+                  rowBuf.put(recordLen.toInt(), '\n'.toByte())
+                  if(  ix.rem(100_000) ==0 )
+                      System.err.println(
+                          listOf(
+                              ix,window,rowFlow.let(::arrayOfAnys ).contentDeepToString()
+
+                          )
+
+                      )
+              }
+          }
+
+
+    }
+    return rowBinEncoder
+}
+
+fun RowBinEncoder(rowmeta: RowNormalizer): RowBinEncoder =
+    rowmeta.let { columns1 -> columns1 to binInsertionMapper[columns1.map { (_, b, _) -> b.let { (_, f) -> f } }] }
