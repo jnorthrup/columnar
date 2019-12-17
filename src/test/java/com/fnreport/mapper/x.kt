@@ -14,7 +14,9 @@ import kotlin.system.measureTimeMillis
 @UseExperimental(InternalCoroutinesApi::class)
 
 suspend fun main() {
-    val s = "/vol/aux/rejuve/rejuvesinceapril2019_RD" +
+    val suffix = "_RD"
+    val s = "/vol/aux/rejuve/rejuvesinceapril2019" +
+            suffix +
             ".fwf"
     val fixedRecordLengthFile = FixedRecordLengthFile(s)
     val decoder:RowNormalizer = listOf("SalesNo", "SalesAreaID", "date", "PluNo", "ItemName", "Quantity", "Amount", "TransMode").zip(
@@ -31,22 +33,16 @@ suspend fun main() {
             )
         )
     ).map { it by none<xform>() } .toTypedArray()
-    val rejuve = decoder reify fixedRecordLengthFile
-
-    val forecast = rejuve[2, 1, 3, 5]
-
-    forecast.let { (a, b ) ->
-        b.let { (c, d) ->
-            c.take(10).collect {it->
-                System.err.println(it.contentDeepToString())
-            }
-        }
-    }
+    var rejuve = decoder reify fixedRecordLengthFile
+    System.err.println("rows ppre-resampling: "+rejuve.second.second)
+      rejuve = rejuve[2, 1, 3, 5] .resample(0)
+    System.err.println("rows post-resampling: "+rejuve.second.second)
+    rejuve.head(10)
     val keyAxis = intArrayOf(1, 2)
     suspend {
         lateinit var dist: List<Array<Any?>>
         var t = measureTimeMillis {
-            dist = forecast.distinct(*keyAxis)
+            dist = rejuve.distinct(*keyAxis)
         }
 
         System.err.println("$t ms for  rows with distinct: ${dist.size}")
@@ -55,8 +51,9 @@ suspend fun main() {
     }()
     System.err.println()
 
-    val pivot2 = forecast.pivot2(intArrayOf(0), keyAxis, 3)
-
+    rejuve = rejuve.pivot(intArrayOf(0), keyAxis, 3)
+    val toFwf = rejuve.toFwf2("/tmp/rjuv2" + suffix + ".fwf")
+//    System.err.println( ""+deepArray( toFwf.toList()) )
 //    val g = pivot2.group2(0)
 /*    var t = measureTimeMillis {
         val left = pivot[0]
@@ -66,4 +63,14 @@ suspend fun main() {
         show(left with right)
     }
     System.err.println("$t ms  ")*/
+}
+
+private suspend fun KeyRow.head(n: Int) {
+    let { (a, b) ->
+        b.let { (c, d) ->
+            c.take(n).collect { it ->
+                System.err.println(it.contentDeepToString())
+            }
+        }
+    }
 }

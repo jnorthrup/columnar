@@ -5,10 +5,7 @@ import arrow.core.none
 import columnar.*
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import java.io.File
-import java.io.RandomAccessFile
-import java.nio.ByteBuffer
 import java.time.LocalDate
 
 
@@ -36,7 +33,7 @@ class FileAccessTest : StringSpec() {
                 System.err.println("using " + tmpName)
 
                 val columns1 = columns
-                c4.toFwf(columns1, tmpName)
+                c4.toFwf(tmpName)
             }
 
             x()

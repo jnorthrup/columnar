@@ -116,7 +116,7 @@ val dateMapper = { i: ByteArray ->
 infix fun RowNormalizer.reify(r: FixedRecordLengthFile): KeyRow = this to (r.map { fb ->
     (fb.first()).let { buf ->
         Array(size) {
-            this[it].let { (a, b) ->
+            this[it].let { (_, b) ->
                 b.decode(buf)
             }
         }
@@ -127,9 +127,9 @@ infix fun RowNormalizer.reify(r: FixedRecordLengthFile): KeyRow = this to (r.map
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
 tailrec fun deepArray(inbound: Any?): Any? =
-    if (inbound is Array<*>) inbound.also<Any?> { ar ->
-        inbound.forEachIndexed { i, v ->
-            (inbound as Array<Any?>)[i] = deepArray(inbound[i])
+    if (inbound is Array<*>) inbound.also {
+        it.forEachIndexed { i, v ->
+            (it as Array<Any?>)[i] = deepArray(v)
         }
     }
     else if (inbound is Iterable<*>) deepArray(inbound.map { it })
@@ -149,7 +149,7 @@ tailrec fun deepTrim(inbound: Any?): Any? =
 
 operator fun Array<Any?>.invoke(c: RowNormalizer) =
     this.also {
-        c.forEachIndexed { i, (a, c, b) ->
+        c.forEachIndexed { i, (_, _, b) ->
             b.fold({}) { function: xform ->
                 this[i] = function(this[i])
             }
@@ -162,7 +162,7 @@ operator fun Array<Any?>.invoke(c: RowNormalizer) =
  */
 suspend fun RoutedRows.group2(vararg by: Int) = let {
     val (columns, data) = this
-    val (rows, d) = data
+    val (rows, _) = data
     val protoValues = (columns.indices - by.toTypedArray()).toIntArray()
     val clusters = mutableMapOf<Int, Pair<Array<Any?>, MutableList<Sequence<RouteHandle>>>>()
     rows.collect { row1 ->
@@ -179,7 +179,7 @@ suspend fun RoutedRows.group2(vararg by: Int) = let {
         val (key, cluster) = cluster1
         val chunky = cluster.map { it.iterator() }
         sequence {
-            for ((index, column) in columns.withIndex()) {
+            for ( index  in columns.indices) {
                 if (index in by)
                     yield(key[by.indexOf(index)])
                 else
@@ -202,7 +202,7 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
 }
 
 suspend fun show(it: KeyRow) = it.let { (cols, b) ->
-    b.let { (rows, sz) ->
+    b.let { (rows ) ->
         System.err.println(cols.contentDeepToString())
         rows.collect { ar ->
             ar(cols).let {
@@ -273,7 +273,7 @@ fun pivotOutputColumns(
                 fanOut.map { pos ->
                     val (aggregatedName, coord, xForm) = nama[pos]
                     "${keyPrefix.map { (col, imprintValue) ->
-                        val (str, second, optXform) = col
+                        val (str, _, optXform) = col
                         "$str=${optXform.fold({ imprintValue }, { it(imprintValue) })}"
                     }.joinToString(":")}:${aggregatedName}" to coord by xForm
                 }
