@@ -5,10 +5,16 @@ import arrow.core.none
 import columnar.*
 import io.kotlintest.specs.StringSpec
 import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration.Companion.Stable
+import kotlinx.serialization.list
+import kotlinx.serialization.serializer
 import java.io.File
 import java.time.LocalDate
 
 
+@ImplicitReflectionSerializer
 @UseExperimental(InternalCoroutinesApi::class)
 class FileAccessTest : StringSpec() {
     val columns: RowNormalizer = listOf("date", "channel", "delivered", "ret").zip(
@@ -33,7 +39,12 @@ class FileAccessTest : StringSpec() {
                 System.err.println("using " + tmpName)
 
                 val columns1 = columns
-                c4.toFwf(tmpName)
+                val toFwf2 = c4.toFwf2(tmpName)
+                val value = RowBinMeta.RowBinMetaList(toFwf2)
+                val toJson =
+                    Json(Stable).toJson(RowBinMeta::class.serializer().list, value)
+                System.err.println(""+toJson)
+
             }
 
             x()

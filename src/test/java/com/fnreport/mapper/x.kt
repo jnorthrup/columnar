@@ -7,8 +7,11 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.take
 import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.list
+import kotlinx.serialization.serializer
 import java.io.FileWriter
 import java.time.LocalDate
 import kotlin.reflect.KClass
@@ -16,7 +19,6 @@ import kotlin.system.measureTimeMillis
 
 @ImplicitReflectionSerializer
 @ExperimentalCoroutinesApi
-@UseExperimental(InternalCoroutinesApi::class)
 
 suspend fun main() {
     val suffix = "_RD"
@@ -69,22 +71,13 @@ suspend fun main() {
     rejuve = rejuve.pivot(intArrayOf(0), keyAxis, 3)
     val tmpPrefix = "/tmp/rjuv2" + suffix
     val tmpName = tmpPrefix + ".fwf"
-    val meta = tmpName to rejuve.toFwf2(tmpName)
-    val out = Json(JsonConfiguration.Default).toJson(meta)
+    val elements:RowBinEncoder = rejuve.toFwf2(tmpName)
+    val meta: List<RowBinMeta> =  RowBinMeta.RowBinMetaList(elements)
+    val out = Json(JsonConfiguration.Default).toJson(RowBinMeta::class.serializer().list, meta.map {  (it) }  )
     FileWriter(tmpPrefix+".json").use{
         it.write(out.toString())
     }
-    println(out)
-//    System.err.println( ""+deepArray( toFwf.toList()) )
-//    val g = pivot2.group2(0)
-/*    var t = measureTimeMillis {
-        val left = pivot[0]
-        val right = pivot[ (1 until pivot.first.size).toList().toIntArray() ].invoke {
-            (it.let { deepTrim(it) as Array<Any?> }.map { (it as? Float) ?: 0f }.sum())
-        }
-        show(left with right)
-    }
-    System.err.println("$t ms  ")*/
+//    println(out)
 }
 
 private suspend fun KeyRow.head(n: Int) {
