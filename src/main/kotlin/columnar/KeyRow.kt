@@ -230,6 +230,7 @@ suspend fun KeyRow.toFwf(tmpName: String): RowBinEncoder {
 
 @ExperimentalCoroutinesApi
 suspend fun KeyRow.toFwf2(tmpName: String): RowBinEncoder {
+    System.err.println("// don't forget -XX:MaxDirectMemorySize=4G")
     val rowBinEncoder: RowBinEncoder = RowBinEncoder(first)
 
 
