@@ -41,13 +41,15 @@ class FileAccessTest : StringSpec() {
                 val columns1 = columns
                 val toFwf2 = c4.toFwf2(tmpName)
                 val value = RowBinMeta.RowBinMetaList(toFwf2)
-                val toJson =
+                val jsonElement =
                     Json(Stable).toJson(RowBinMeta::class.serializer().list, value)
-                System.err.println(""+toJson)
+                System.err.println("" + jsonElement.toString())
+                tmpName to jsonElement.toString()
+            }()
+
+            suspend{
 
             }
-
-            x()
             println()
         }
     }
