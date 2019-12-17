@@ -1,5 +1,6 @@
 package columnar
 
+import arrow.core.Option
 import arrow.core.some
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -8,6 +9,7 @@ import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.LocalDate
+import kotlin.reflect.KClass
 
 typealias KeyRow = Pair<RowNormalizer, Pair<Flow<RowHandle>, Int>>
 
@@ -179,50 +181,6 @@ operator fun KeyRow.invoke(t: xform): KeyRow = this.let { (a, b) ->
     }.toTypedArray() to b
 }
 
-suspend fun KeyRow.toFwf(tmpName: String): RowBinEncoder {
-    val rowBinEncoder: RowBinEncoder = RowBinEncoder(first)
-
-    RandomAccessFile(tmpName, "rw").use { mm4 ->
-        mm4.seek(0)
-        mm4.setLength(0)
-        val rafchannel = mm4.channel
-
-        System.err.println("before row mappings: " + let { (a, _) ->
-            arrayOfAnys(a as Array<Any?>).contentDeepToString()
-        })
-        val coords = rowBinEncoder.coords
-        System.err.println("row mappings: " + coords.contentDeepToString())
-        val rowBuf = ByteBuffer.allocateDirect(rowBinEncoder.recordLen)
-        val endl = ByteBuffer.allocateDirect(1).put('\n'.toByte())
-        val writeAr = arrayOf(rowBuf, endl)
-        f.collect {
-            rowBuf.clear().also {
-                it.duplicate().put(ByteArray(rowBinEncoder.recordLen) { ' '.toByte() })
-            }
-            for ((index, cellValue) in it.withIndex()) {
-                //                  coords[index]
-
-                rowBinEncoder.let { (_, b) ->
-                    b[index].let { (_, d: Function2<ByteBuffer, *, ByteBuffer>) ->
-                        val c = coords[index]
-                        c.let { (start, _) ->
-                            val aligned = rowBuf.position(start).slice().apply { limit(c.size) }
-                            (d as (ByteBuffer, Any?) -> ByteBuffer)(aligned, cellValue)
-                        }
-                    }
-                }
-            }
-            rafchannel.write(writeAr.apply {
-                for (bb in this) {
-                    bb.rewind()
-                }
-            })
-            //byteArrayOf('\n'.toByte()))
-        }
-    }
-    return rowBinEncoder
-}
-
 /**
  *
 -XX:MaxDirectMemorySize=<size>
@@ -232,7 +190,6 @@ suspend fun KeyRow.toFwf(tmpName: String): RowBinEncoder {
 suspend fun KeyRow.toFwf2(tmpName: String): RowBinEncoder {
     System.err.println("// don't forget -XX:MaxDirectMemorySize=4G")
     val rowBinEncoder: RowBinEncoder = RowBinEncoder(first)
-
 
     val recordLen = rowBinEncoder.recordLen
     val rowsize: Long = (recordLen + 1L)
@@ -245,48 +202,59 @@ suspend fun KeyRow.toFwf2(tmpName: String): RowBinEncoder {
     RandomAccessFile(tmpName, "rw").use { mm4 ->
         mm4.seek(0)
         mm4.setLength(filesize)
-          mm4.channel.use {rafchannel->
-              System.err.println("before row mappings: " + let { (a, _) ->
-                  arrayOfAnys(a as Array<Any?>).contentDeepToString()
-              })
-              System.err.println("row mappings: " + coords.contentDeepToString())
-              fun remap(window: Pair<Long, Long>) = window.let { (offsetToMap, sizeToMap) ->
-                  rafchannel.map(FileChannel.MapMode.READ_WRITE, offsetToMap, sizeToMap)
-              }
-              f.collectIndexed { ix, rowFlow ->
-                  val lix = ix.toLong()
-                  val seekTo = rowsize * lix
-                  if (seekTo >= window.second) {
-                      val l = seekTo
-                      window = l to minOf(filesize-seekTo,  (windowSize))
-                      buf = remap(window)
-                  }
-                  val rowBuf = buf.position(seekTo.toInt() - window.first.toInt()).slice()
-                  for ((index, cellValue) in rowFlow.withIndex()) {
-                      rowBinEncoder.let { (_, b) ->
-                          b[index].let { (_, d) ->
-                              coords[index].let { (start) ->
-                                  (d)(rowBuf.position(start)/*.slice()*/, cellValue)
-                              }
-                          }
-                      }
-                  }
-                  rowBuf.put(recordLen.toInt(), '\n'.toByte())
-                  if(  ix.rem(100_000) ==0 )
-                      System.err.println(
-                          listOf(
-                              ix,window,rowFlow.let(::arrayOfAnys ).contentDeepToString()
+        mm4.channel.use { rafchannel ->
+            System.err.println("before row mappings: " + let { (a, _) ->
+                arrayOfAnys(a as Array<Any?>).contentDeepToString()
+            })
+            System.err.println("row mappings: " + coords.contentDeepToString())
+            fun remap(window: Pair<Long, Long>) = window.let { (offsetToMap, sizeToMap) ->
+                rafchannel.map(FileChannel.MapMode.READ_WRITE, offsetToMap, sizeToMap)
+            }
+            f.collectIndexed { ix, rowFlow ->
+                val lix = ix.toLong()
+                val seekTo = rowsize * lix
+                if (seekTo >= window.second) {
+                    val l = seekTo
+                    window = l to minOf(filesize - seekTo, (windowSize))
+                    buf = remap(window)
+                }
+                val rowBuf = buf.position(seekTo.toInt() - window.first.toInt()).slice()
+                for ((index, cellValue) in rowFlow.withIndex()) {
+                    rowBinEncoder.let { (_, b) ->
+                        b[index].let { (_, d) ->
+                            val coord = coords[index]
+                            coord.let { (start, end) ->
+                                (d)(rowBuf.position(start).slice().limit(coord.size), cellValue)
+                            }
+                        }
+                    }
+                }
+                rowBuf.put(recordLen.toInt(), '\n'.toByte())
+                if (ix.rem(100_000) == 0)
+                    System.err.println(
+                        listOf(
+                            ix, window, rowFlow.let(::arrayOfAnys).contentDeepToString()
 
-                          )
+                        )
 
-                      )
-              }
-          }
+                    )
+            }
+        }
 
 
     }
     return rowBinEncoder
 }
+typealias Decorator = Option<xform>
+typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, KClass<*>>
+typealias RowNormalizer = Array<Triple<String, ByteBufferNormalizer, Decorator>>
 
 fun RowBinEncoder(rowmeta: RowNormalizer): RowBinEncoder =
-    rowmeta.let { columns1 -> columns1 to binInsertionMapper[columns1.map { (_, b, _) -> b.let { (_, f) -> f } }] }
+    rowmeta.let { columns1 ->
+        val map = columns1.map { (_, b, _) ->
+            val klass = b.let { (_, f) -> f }
+            klass
+        }
+        val arrayOfPairs = binInsertionMapper[map]
+        columns1 to arrayOfPairs
+    }
