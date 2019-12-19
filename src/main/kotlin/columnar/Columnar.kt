@@ -7,21 +7,14 @@ import kotlinx.serialization.Serializable
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
 import kotlin.text.Charsets.UTF_8
 
 val KeyRow.f get() = second.first
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
-val xInsertString = { a: ByteBuffer, b: String? ->
-    a.put(b?.toByteArray(UTF_8))
-    while (a.hasRemaining()) a.put(' '.toByte())
-    a
 
-}
 
 inline class BinInt(val default: Int = Int.MIN_VALUE)
 inline class BinLong(val default: Long = Long.MIN_VALUE)
@@ -49,58 +42,6 @@ inline class BinAny(val default: Any = def) {
 }
 typealias RowBinEncoder = Pair<RowNormalizer, Array<Pair<Int?,   Function2<ByteBuffer,*,ByteBuffer>>>>
 
-@Serializable
-data class RowBinMeta(val name: String, val coord: Array<Int>, val typ: TypeMemento) {
-    companion object {
-        fun RowBinMetaList(t: RowBinEncoder) = t.let { (a, _) ->
-            //fake ctor
-            fun RowBinMeta(t: Triple<String, Array<Int>, TypeMemento>) = t.let { (name, coord, memento) ->
-                val typ = memento.let {
-                    it.takeIf { it.name.startsWith("mBin") }
-                        ?: TypeMemento.valueOf(it.name.replace(Regex("^m"), "mBin"))
-                }
-                RowBinMeta(name, coord, typ)
-            }
-
-            val coords1 = t.coords
-            a.mapIndexed { ix, (name, normalizer) ->
-                normalizer.let { (_, kClass) ->
-                    coords1[ix].let { (start, end) ->
-                        RowBinMeta(name to arrayOf(start, end) by TypeMemento[kClass])
-                    }
-                }
-            }
-        }
-    }
-}
-
-enum class TypeMemento(val t: KClass<*>) {
-    mAny(Any::class),
-    mInt(Int::class),
-    mLong(Long::class),
-    mFloat(Float::class),
-    mDouble(Double::class),
-    mString(String::class),
-    mInstant(Instant::class),
-    mLocalDate(LocalDate::class),
-    mByteArray(ByteArray::class),
-    mByteBuffer(ByteBuffer::class),
-    mBinAny(BinAny::class),
-    mBinInt(BinInt::class),
-    mBinLong(BinLong::class),
-    mBinFloat(BinFloat::class),
-    mBinDouble(BinDouble::class),
-    mBinString(BinString::class),
-    mBinInstant(BinInstant::class),
-    mBinLocalDate(BinLocalDate::class),
-    mBinByteArray(BinByteArray::class),
-    mBinByteBuffer(BinByteBuffer::class);
-
-    companion object {
-        private val reverse by lazy { values().associateBy(TypeMemento::t) }
-        operator fun get(t: KClass<*>): TypeMemento = reverse[t]!!
-    }
-}
 
 val binInsertionMapper = mapOf(
     Any::class to (null to { b, a: Any? -> xInsertString(b, a.toString()) }),
@@ -133,36 +74,6 @@ operator fun Table1.get(vararg reorder: Int): Table1 = {
     }
 }
 
-fun ByteBufferNormalizer.decode(buf: ByteBuffer) = let { (coords, mapper) ->
-    ByteArray(coords.size).also { buf.get(it) }.let(
-        mapOf<KClass<out Any>, Function1<*, Any>>(
-            BinInt::class to { buf: ByteBuffer -> buf.int },
-            BinLong::class to { buf: ByteBuffer -> buf.long },
-            BinFloat::class to { buf: ByteBuffer -> buf.float },
-            BinDouble::class to { buf: ByteBuffer -> buf.double },
-            BinLocalDate::class to { buf: ByteBuffer -> buf.long.let(LocalDate::ofEpochDay) },
-            Int::class to intMapper,
-            Long::class to longMapper,
-            Float::class to floatMapper,
-            Double::class to doubleMapper,
-            String::class to stringMapper,
-            LocalDate::class to dateMapper
-        )[mapper]!! as (ByteArray) -> Any?
-    )
-}
-
-infix fun RowNormalizer.from(rs: RowStore<Flow<ByteBuffer>>): Table1 = { row ->
-    rs.values(row).let { values ->
-        val first = values.first()
-        first.let { buf ->
-            Array(this.size) { index ->
-                val (_, convertor) = this[index]
-                flowOf(convertor.decode(buf))
-            }
-        }
-    }
-}
-
 
 val stringMapper: (Any?) -> String = { i ->
     (i as? ByteArray)?.let {
@@ -172,41 +83,6 @@ val stringMapper: (Any?) -> String = { i ->
         )?.trim()
     } ?: ""
 }
-
-fun btoa(i: Any?) = (i as? ByteArray)?.let {
-    val stringMapper1 = stringMapper(it)
-    stringMapper1.toString()
-}
-
-val intMapper = { i: ByteArray -> btoa(i)?.toInt() ?: 0 }
-val floatMapper = { i: ByteArray -> btoa(i)?.toFloat() ?: 0f }
-val doubleMapper = { i: ByteArray -> btoa(i)?.toDouble() ?: 0.0 }
-val longMapper = { i: ByteArray -> btoa(i)?.toLong() ?: 0L }
-val dateMapper = { i: ByteArray ->
-    val btoa = btoa(i)
-    btoa?.let {
-        var res: LocalDate?
-        try {
-            res = LocalDate.parse(it)
-        } catch (e: Exception) {
-            val parseBest = DateTimeFormatter.ISO_DATE.parseBest(it)
-            res = LocalDate.from(parseBest)
-        }
-        res
-    } ?: LocalDate.EPOCH
-}
-
-
-infix fun RowNormalizer.reify(r: FixedRecordLengthFile): KeyRow = this to (r.map { fb ->
-    (fb.first()).let { buf ->
-        Array(size) {
-            this[it].let { (_, b) ->
-                b.decode(buf)
-            }
-        }
-    }
-} to r.size)
-
 
 fun arrayOfAnys(it: Array<Any?>): Array<Any?> = deepArray(it) as Array<Any?>
 
