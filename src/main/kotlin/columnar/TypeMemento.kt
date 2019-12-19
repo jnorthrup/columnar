@@ -5,65 +5,75 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-val btoa ={i:ByteArray-> (i as ByteArray)?.let { val stringMapper1 = stringMapper(it); stringMapper1 }}
-val bb2ba ={i:ByteBuffer-> (i as ByteBuffer)?.let {ByteArray(i.remaining()){i.get()} }}
+val xInsertString = { a: ByteBuffer, b: String? ->
+    a.put(b?.toByteArray(Charsets.UTF_8))
+    while (a.hasRemaining()) a.put(' '.toByte())
+}
+val dateMapper = { s: String ->
+    s.let {
+        var res: LocalDate?
+        try {
+            res = LocalDate.parse(it)
+        } catch (e: Exception) {
+            val parseBest = DateTimeFormatter.ISO_DATE.parseBest(it)
+            res = LocalDate.from(parseBest)
+        }
+        res
+    } ?: LocalDate.EPOCH
+}
+val instantMapper = { s: String ->
+    s.let {
+        var res: Instant?
+        try {
+            res = Instant.parse(it)
+        } catch (e: Exception) {
+            val parseBest = DateTimeFormatter.ISO_DATE_TIME.parseBest(it)
+            res = Instant.from(parseBest)
+        }
+        res
+    } ?: Instant.EPOCH
+}
+typealias writefn = Function2<ByteBuffer, *, Unit>
+typealias readfn = Function1<ByteBuffer, *>
 
-val intMapper = { i: ByteArray -> btoa(i)?.toInt() ?: 0 }
-val floatMapper = { i: ByteArray -> btoa(i)?.toFloat() ?: 0f }
-val doubleMapper = { i: ByteArray -> btoa(i)?.toDouble() ?: 0.0 }
-val longMapper = { i: ByteArray -> btoa(i)?.toLong() ?: 0L }
-val dateMapper = { i: ByteArray ->
- val btoa = btoa(i)
- btoa?.let {
- var res: LocalDate?
- try {
- res = LocalDate.parse(it)
- } catch (e: Exception) {
- val parseBest = DateTimeFormatter.ISO_DATE.parseBest(it)
- res = LocalDate.from(parseBest)
- }
- res
- } ?: LocalDate.EPOCH
-}
-val instantMapper = { i: ByteArray ->
- val btoa = btoa(i)
- btoa?.let {
- var res: Instant?
- try {
- res = Instant.parse(it)
- } catch (e: Exception) {
- val parseBest = DateTimeFormatter.ISO_DATE_TIME.parseBest(it)
- res = Instant.from(parseBest)
- }
- res
- } ?: Instant.EPOCH
-}
-typealias writefn = Function2<ByteBuffer, Any?, *>
-typealias readfn = Function1<ByteBuffer, Any?>
-operator fun< A,B,C > Function1<A,B>.times (r: Function1<B,C>) = { x:A->r(this(x)) }
-typealias b2a=Function1<ByteArray,*>
-enum class TypeMemento(val bytes: Int?, val write: writefn, val read:readfn) {
- mInt(4, { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) } as writefn, (bb2ba * btoa * (intMapper as Function1<String, *>)) ),
- mLong(8, { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) } as writefn, (bb2ba * btoa * (longMapper as Function1<String, *>))),
- mFloat(4, { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) } as writefn, (bb2ba * btoa * (floatMapper as Function1<String, *>))),
- mDouble(8, { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) } as writefn, (bb2ba * btoa * (doubleMapper as Function1<String, *>))),
- mString(null, xInsertString as writefn, stringMapper),
- mLocalDate(
- 8,
- { a: ByteBuffer, b: LocalDate? -> a.putLong((b ?: LocalDate.EPOCH).toEpochDay()) } as writefn,
- (bb2ba * btoa * ( dateMapper
- as Function1<String, *>))),
- mInstant(
- 8,
- { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) } as writefn,
- (bb2ba * btoa * ( instantMapper
- as Function1<String, *>))),
- mBinInt(4, { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) } as writefn, { buf: ByteBuffer -> buf.int }),
- mBinLong(8, { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) } as writefn, { buf: ByteBuffer -> buf.long }),
- mBinFloat(4, { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) } as writefn, { buf: ByteBuffer -> buf.float }),
- mBinDouble(8, { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) } as writefn, { buf: ByteBuffer -> buf.double }),
- mBinString(null, xInsertString as writefn, { buf: ByteBuffer -> String(ByteArray(buf.remaining()).let(buf::get)) }),
- mBinLocalDate(8, { a: ByteBuffer, b: LocalDate? -> a.putLong((b ?: LocalDate.EPOCH).toEpochDay())} as writefn, { buf: ByteBuffer -> buf.long.let(LocalDate::ofEpochDay) }as readfn),
- mBinInstant(8, { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli())}as writefn, { buf: ByteBuffer -> buf.long.let(LocalDate::ofInstant) }as readfn)
+val bb2ba: (ByteBuffer) -> ByteArray = { bb: ByteBuffer -> ByteArray(bb.remaining()).also { bb[it] } }
+val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) }
+val trim: (String) -> String = String::trim
+infix fun <O, R,F: Function1<O, R>> O.`•`(f:F): R = this.let(f)
+infix fun <A, B, R, O : Function1<A, B>,G:Function1<B, R>> O.`•`(b: G): (A) -> R = this*b
+operator fun <A, B, R, G:Function1<B, R>,O : Function1<A, B>> O.times(b: Function1<B, R>): (A) -> R = { a: A -> a `•` this `•` (b) }
+enum class TypeMemento(val bytes: Int?, val read: readfn, val write: writefn) {
+    txtInt(4, (bb2ba `•` btoa `•` trim * String::toInt), { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) } as writefn),
+    txtLong(8, (bb2ba * btoa * trim * String::toLong), { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0) } as writefn),
+    txtFloat(
+        4,
+        (bb2ba * btoa * trim * String::toFloat),
+        { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f) } as writefn),
+    txtDouble(
+        8,
+        (bb2ba * btoa * trim * String::toDouble),
+        { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0) } as writefn),
+    txtString(null, bb2ba * btoa * String::trim, xInsertString as writefn),
+    txtLocalDate(
+        8,
+        bb2ba * btoa * trim * dateMapper,
+        { a: ByteBuffer, b: LocalDate? -> a.putLong((b ?: LocalDate.EPOCH).toEpochDay()) } as writefn),
+    txtInstant(
+        8,
+        bb2ba * btoa * trim * instantMapper,
+        { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) } as writefn),
+    bInt(4, ByteBuffer::getInt, { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0);Unit } as writefn),
+    bLong(8, ByteBuffer::getLong, { a: ByteBuffer, b: Long? -> a.putLong(b ?: 0);Unit } as writefn),
+    bFloat(4, ByteBuffer::getFloat, { a: ByteBuffer, b: Float? -> a.putFloat(b ?: 0f);Unit } as writefn),
+    bDouble(8, ByteBuffer::getDouble, { a: ByteBuffer, b: Double? -> a.putDouble(b ?: 0.0);Unit } as writefn),
+    bString(null, bb2ba * btoa * trim, xInsertString),
+    bLocalDate(
+        8,
+        { buf: ByteBuffer -> buf.long.let(LocalDate::ofEpochDay) } as readfn,
+        { a: ByteBuffer, b: LocalDate? -> a.putLong((b ?: LocalDate.EPOCH).toEpochDay()) } as writefn),
+    bInstant(
+        8,
+        { buf: ByteBuffer -> buf.long.let(Instant::ofEpochMilli) },
+        { a: ByteBuffer, b: Instant? -> a.putLong((b ?: Instant.EPOCH).toEpochMilli()) } as writefn);
 
 }
