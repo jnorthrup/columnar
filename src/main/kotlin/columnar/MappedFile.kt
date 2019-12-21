@@ -7,6 +7,7 @@ import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import kotlin.math.min
 
 /**
  * mapmodes  READ_ONLY, READ_WRITE, or PRIVATE
@@ -19,20 +20,11 @@ open class MappedFile(
     filename: String,
     mode: String = "r",
     mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
-    val randomAccessFile: RandomAccessFile = RandomAccessFile(
+    public val randomAccessFile: RandomAccessFile = RandomAccessFile(
         filename,
         mode
     ),
-    channel: FileChannel = randomAccessFile.channel,
-    length: Long = randomAccessFile.length(),
-    val mappedByteBuffer: MappedByteBuffer = channel.map(mapMode, 0, length),
-    override val size: Int = mappedByteBuffer.limit(),
-    /**default returns a line seeked EOL buffer.*/
-    override var values: suspend (Int) -> Flow<ByteBuffer> = { row ->
-        flowOf(mappedByteBuffer.apply { position(row) }.slice().also {
-            while (it.hasRemaining() && it.get() != '\n'.toByte());
-            (it as ByteBuffer).flip()
-        })
-    }
-) : FileAccess(filename),
-    RowStore<Flow<ByteBuffer>>, Closeable by randomAccessFile
+    val channel: FileChannel = randomAccessFile.channel,
+    val length: Long = randomAccessFile.length(),
+    val mappedByteBuffer: MappedByteBuffer = channel.map(mapMode, 0, min(Int.MAX_VALUE.toLong(),length))
+) : FileAccess(filename),  Closeable by randomAccessFile

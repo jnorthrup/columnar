@@ -86,6 +86,17 @@ inline fun <reified T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
     for (ix in (0 until size)) fn(ix, this[ix])
 }
 
+fun <T> vect0rOf  (vararg a:T): Vect0r<T> = {a. size } to {i   -> a[i] }
+/**
+ * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
+ * The returned list has length of the shortest collection.
+ *
+ * @sample samples.collections.Iterables.Operations.zipIterable
+ */
+public inline infix fun <T, reified R>  List<out T>.zip(other:  Vect0r< out  R>): List<Pair<T, R>> {
+    return zip(other.toArray()) { t1, t2 -> t1 to t2 }
+}
+
 fun <T> Array<T>.toVect0r(): Vect0r<T> = { size } to { ix: Int -> this[ix] }
 fun <T> List<T>.toVect0r(): Vect0r<T> = { size } to { ix: Int -> this[ix] }
 suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
