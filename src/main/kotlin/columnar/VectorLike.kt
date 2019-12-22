@@ -170,5 +170,6 @@ inline fun <reified T> combine(vararg a: Array<T>) =
     }
 
 //array-like mapped map
+inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>) = this.get(*ks.toList().toTypedArray())
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>) = this.get(*ks.toList().toTypedArray())
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size){ ix->ks[ix].let(this::get)!!}
