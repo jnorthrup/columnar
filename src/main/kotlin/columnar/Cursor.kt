@@ -1,12 +1,16 @@
 package columnar
 
 import columnar.IOMemento.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext.Element
 import kotlin.coroutines.CoroutineContext.Key
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.coroutineContext
 
 /**
 iterators of mmap (or unmapped) bytes exist has a new design falling out of this decomposition:
@@ -23,41 +27,50 @@ val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 sealed class Arity : Element {
     open class Scalar(val type: IOMemento) : Arity()
     class Matrix(type: IOMemento, vararg val shape: Int) : Scalar(type)
-    class Columnar(val type: Vect0r<IOMemento>) : Arity() {
+    class Columnar(val type: Vect0r<IOMemento>, val names: Vect0r<String>? = null) : Arity() {
         companion object {
             fun of(vararg type: IOMemento) = Columnar(type.toVect0r())
+            fun of(mapping: Iterable<Pair<String, IOMemento>>) =
+                Columnar(mapping.map { it.second }.toVect0r(), mapping.map { it.first }.toVect0r())
         }
     }
 
     class Variadic(val types: () -> Vect0r<IOMemento>) : Arity()
 
-    override val key: Key<Arity> get() = theKey
+    override val key: Key<Arity> get() = arityKey
 
     companion object {
-        val theKey = object : Key<Arity> {}
+        val arityKey = object : Key<Arity> {}
     }
 }
 
 sealed class Addressable : Element {
     class Forward(val hasRemaining: () -> Boolean, val next: () -> Unit) : Addressable()
     class Indexable(val size: Long, val seek: (Int) -> Unit) : Addressable()
+
+    override val key: Key<Addressable> get() = addressableKey
+
     class Abstract<T, Q>(val size: () -> Q, val seek: (T) -> Unit) : Addressable()
     companion object {
-        val theKey = object : Key<Addressable> {}
-    }
+        val addressableKey = object : Key<Addressable> {}
 
-    override val key: Key<Addressable> get() = theKey
+    }
 }
 
 sealed class Boundary : Element {
     class Tokenized(val tokenizer: (String) -> List<String>) : Boundary()
-    class FixedWidth(val recordLen: Int, val endl: () -> Byte? = { '\n'.toByte() }, val pad: Byte? = ' '.toByte()) :
+    class FixedWidth(
+        val recordLen: Int,
+        val coords: Vect0r<IntArray>,
+        val endl: () -> Byte? = { '\n'.toByte() },
+        val pad: Byte? = ' '.toByte()
+    ) :
         Boundary()
 
-    override val key: Key<Boundary> get() = theKey
+    override val key: Key<Boundary> get() = boundaryKey
 
     companion object {
-        val theKey = object : Key<Boundary> {}
+        val boundaryKey = object : Key<Boundary> {}
     }
 }
 
@@ -87,33 +100,41 @@ sealed class Ordering : Element {
      */
     class Diagonal : Ordering()
 
-    override val key: Key<Ordering> get() = theKey
+    override val key: Key<Ordering> get() = orderingKey
 
     companion object {
-        val theKey = object : Key<Ordering> {}
+        val orderingKey = object : Key<Ordering> {}
     }
 }
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
+/*
+typealias Decorator = (Any?) -> Any??
+typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, IOMemento>
+typealias RowNormalizer = Array<Triple<String, ByteBufferNormalizer, Decorator>>
+*/
 
-abstract sealed class Medium : Element {
-    class Nio(val mf: MappedFile) : Medium() {
-        override val seek: (Int) -> Unit = { i -> mf.mappedByteBuffer.position(i * seekEof).slice().limit(seekEof) }
+sealed class Medium : Element {
+    override val key: Key<Medium> get() =mediumKey
+    abstract val seek: (Int) -> Unit
+    abstract val size: Long
+    abstract val recordLen: Int
+companion object{
+    val mediumKey=object : Key<Medium> {}
+}
+
+    class Nio(
+        val mf: MappedFile,
+        val drivers: Vect0r<NioMemento<ByteBuffer, *>>? = null
+    ) : Medium() {
+        override val seek: (Int) -> Unit = { i -> mf.mappedByteBuffer.position(i * recordLen).slice().limit(recordLen) }
         override val size = mf.randomAccessFile.length()
-        override val seekEof by lazy {
+        override val recordLen by lazy {
             mf.mappedByteBuffer.duplicate().clear().let { mm -> while (mm.get() != '\n'.toByte()); mm.position() }
         }
 
-        open class Tokenized<T>(override val read: readfn<ByteBuffer, T>, override val write: writefn<ByteBuffer, T>) :
-            NioMemento<ByteBuffer, T>
-
-        open class Fixed<T>(
-            val bytes: Int,
-            override val read: readfn<ByteBuffer, T>,
-            override val write: writefn<ByteBuffer, T>
-        ) : NioMemento<ByteBuffer, T>
-
         companion object {
+
             val IO =
                 mapOf(
                     txtInt to Tokenized(
@@ -164,25 +185,93 @@ abstract sealed class Medium : Element {
                 val write: writefn<B, R>
             }
         }
+        open class Tokenized<T>(override val read: readfn<ByteBuffer, T>, override val write: writefn<ByteBuffer, T>) :
+            NioMemento<ByteBuffer, T>
 
-        class Kxio : Medium() {
-            override val seek: (Int) -> Unit
-                get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-            override val size: Long
-                get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-            override val seekEof: Int
-                get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        open class Fixed<T>(
+            val bytes: Int,
+            override val read: readfn<ByteBuffer, T>,
+            override val write: writefn<ByteBuffer, T>
+        ) : NioMemento<ByteBuffer, T>
+
+        fun remap(
+            window: Pair<
+                    /**offsetToMap*/
+                    Long,
+                    /**sizeToMap*/
+                    Long>, rafchannel: FileChannel
+        ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
+            rafchannel.map(FileChannel.MapMode.READ_WRITE, offsetToMap, sizeToMap)
         }
+
+        /**
+         * any seek on a large volume (over MAXINT size) need to be sure there is a mapped extent.
+         * this will perform necessary mapping changes to an existing context state.
+         *
+         * this will also use the context buffer to prepare a rowbuf slice
+         *
+         * @return
+         */
+        fun translateMapping(
+            ix: Int,
+            rowsize: Long,
+            window: Pair<Long, Long>,
+            filesize: Long,
+            windowSize: Long,
+            buf: ByteBuffer
+        ): Pair<ByteBuffer, Pair<Long, Long>> {
+            var window1 = window
+            var buf1 = buf
+            val lix = ix.toLong()
+            val seekTo = rowsize * lix
+            if (seekTo >= window1.second) {
+                val l = seekTo
+                window1 = l to minOf(filesize - seekTo, (windowSize))
+                buf1 = remap(window1, mf.channel)
+            }
+            val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen)
+            return Pair(rowBuf, window1)
+        }
+
+/*        *//**
+         *
+         *//*
+        suspend fun outputRow(
+            cells: Vect0r<Any?>,
+            rowBuf: ByteBuffer,
+            recordLen: Int
+        ) {
+            val medium = coroutineContext[mediumKey]
+            val boundary = coroutineContext[Boundary.boundaryKey]
+            val arity = coroutineContext[Arity.arityKey]
+//            val addressable = coroutineContext[Addressable.addressableKey]
+            val ordering = coroutineContext[Ordering.orderingKey]
+            when (medium) {
+                is Nio -> {
+                    medium
+                    when (arity) {
+                        is Arity.Columnar -> arity
+                        when (ordering) {
+                            is Ordering.ColumnMajor ->
+                        }
+                    }
+
+
+                }
+            }
+        }*/
     }
 
-    override val key: Key<Medium> get() = mediumKey
-    abstract val seek: (Int) -> Unit
-    abstract val size: Long
-    abstract val seekEof: Int
 
-    companion object {
-        val mediumKey = object : Key<Medium> {}
+    class Kxio : Medium() {
+        override val seek: (Int) -> Unit
+            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        override val size: Long
+            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        override val recordLen: Int
+            get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     }
+
 }
 
 
@@ -192,39 +281,36 @@ abstract sealed class Medium : Element {
  * if this is to be a  trait system, the functional objects need to look like a blackboard
  */
 suspend fun main() {
-
-    MappedFile("src/test/resources/caven4.fwf").use { mf ->
-        Medium.Nio(mf).let { nio ->
-            val reclen by lazy {
-
-                nio.seekEof
-            }
-
-            val columnar = Arity.Columnar.of(
-                txtLocalDate,
-                txtString,
-                txtFloat,
-                txtFloat
+    runBlocking {
+        MappedFile("src/test/resources/caven4.fwf").use { mf ->
+            val columnarArity = Arity.Columnar.of(
+                listOf(
+                    "date" to txtLocalDate,
+                    "channel" to txtString,
+                    "delivered" to txtFloat,
+                    "ret" to txtFloat
+                )
             )
-            val meta =
-                arrayOf("date", "channel", "delivered", "ret")
-                    .zip(
-                        arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164))
-                    ).zip(Medium.Nio.IO[columnar.type])
+            val nio = Medium.Nio(mf, Medium.Nio.IO[columnarArity.type].toVect0r())
+            val coroutineContext =
+                EmptyCoroutineContext +
+                        columnarArity + nio +
+                        Boundary.FixedWidth(
+                            nio.recordLen,
+                            arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
+                                it.toList().toIntArray()
+                            }.toVect0r()
+                        ) +
+                        Addressable.Indexable(nio.recordLen / nio.size, nio.seek) +
+                        Ordering.RowMajor()
 
-
-            val channel = mf.channel
-
-            val coroutineContext = EmptyCoroutineContext + (Boundary.FixedWidth(reclen) + columnar + Addressable.Indexable(
-                reclen / nio.size,
-                nio.seek
-            ) + Ordering.RowMajor() + nio)
             coroutineContext.run {
+                val x = async {
+                    1
+                }
             }
-
         }
     }
 }
-
 
 
