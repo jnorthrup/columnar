@@ -2,7 +2,6 @@ package columnar
 
 import columnar.IOMemento.*
 import columnar.Medium.Companion.mediumKey
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -12,6 +11,7 @@ import kotlin.coroutines.CoroutineContext.Element
 import kotlin.coroutines.CoroutineContext.Key
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.coroutineContext
+import kotlin.math.min
 
 /**
 iterators of mmap (or unmapped) bytes exist has a new design falling out of this decomposition:
@@ -27,7 +27,7 @@ val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
 sealed class Arity : Element {
     open class Scalar(val type: IOMemento) : Arity()
-    class Matrix(type: IOMemento, vararg val shape: Int) : Scalar(type)
+    class Matrix(type: IOMemento, val shape: Vect0r<Int>) : Scalar(type)
     class Columnar(val type: Vect0r<IOMemento>, val names: Vect0r<String>? = null) : Arity() {
         companion object {
             fun of(vararg type: IOMemento) = Columnar(type.toVect0r())
@@ -38,7 +38,7 @@ sealed class Arity : Element {
 
     class Variadic(val types: () -> Vect0r<IOMemento>) : Arity()
 
-    override val key: Key<Arity> get() = arityKey
+    override val key get() = arityKey
 
     companion object {
         val arityKey = object : Key<Arity> {}
@@ -46,97 +46,141 @@ sealed class Arity : Element {
 }
 
 sealed class Addressable : Element {
-    class Forward(val hasRemaining: () -> Boolean, val next: () -> Unit) : Addressable()
-    class Indexable(val size: Long, val seek: (Int) -> Unit) : Addressable()
+   abstract class Forward<T>: Iterable<T> , Addressable()
 
-    override val key: Key<Addressable> get() = addressableKey
+    class Indexable(
+        /**count of records*/
+        val size: () -> Int, val seek: (Int) -> Unit
+    ) : Addressable()
+
+    override val key get() = addressableKey
 
     class Abstract<T, Q>(val size: () -> Q, val seek: (T) -> Unit) : Addressable()
     companion object {
         val addressableKey = object : Key<Addressable> {}
-
     }
 }
 
-sealed class Boundary : Element {
-    open class CellDriver<B, R>(
-
-        open val read: readfn<B, R>,
-
-        val write: writefn<B, R>
-
-    )
-
-    class Tokenized(val tokenizer: (String) -> List<String>) : Boundary() {
-
-        companion object {
-            suspend fun getIO(): Map<IOMemento, CellDriver<*, *>>? =
-                (coroutineContext.get(mediumKey) as? Medium.Nio)?.let {
-                    mapOf<IOMemento, CellDriver<ByteBuffer, out Any>>(
-                        IoInt to CellDriver(
-                            bb2ba `•` btoa `•` trim * String::toInt,
-                            { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
-                        IoLong to CellDriver((bb2ba `•` btoa `•` trim * String::toLong), { a, b -> a.putLong(b) }),
-                        IoFloat to CellDriver(
-                            (bb2ba `•` btoa `•` trim `•` String::toFloat),
-                            { a, b -> a.putFloat(b) }),
-                        IoDouble to CellDriver(
-                            (bb2ba `•` btoa `•` trim `•` String::toDouble),
-                            { a, b -> a.putDouble(b) }),
-                        IoString to CellDriver(bb2ba `•` btoa `•` trim, xInsertString),
-                        IoLocalDate to CellDriver(
-                            bb2ba `•` btoa `•` trim `•` dateMapper,
-                            { a, b -> a.putLong(b.toEpochDay()) }),
-                        IoInstant to CellDriver(
-                            bb2ba `•` btoa `•` trim `•` instantMapper,
-                            { a, b -> a.putLong(b.toEpochMilli()) })
-
-                    )
-
-                }
-
-        }
+/**
+ * context-level support class for Fixed or Tokenized Record boundary conditions.
+ *
+ *
+ * This does not extend guarantees to cell-level definitions--
+ * FWF cells are parsed strings, thus tokenized within fixed records, and may carry lineendings
+ * csv records with fixed length fields is rare but has its place in aged messaging formats.
+ * even fixed-record fixed-cell (e.g. purer ISAM) formats have to use external size variables for varchar
+ *
+ * it is assumed that record-level granularity and above are efficiently held in context details to perform outer loops
+ * once the context variables are activated and conjoined per thier roles.
+ *
+ */
+sealed class RecordBoundary : Element {
+    class Tokenized(val tokenizer: (String) -> List<String>) : RecordBoundary() {
+        companion object
     }
 
     class FixedWidth(
         val recordLen: Int,
         val coords: Vect0r<IntArray>,
-        val endl: () -> Byte? = { '\n'.toByte() },
-        val pad: Byte? = ' '.toByte()
-    ) : Boundary()
+        val endl: () -> Byte? = '\n'::toByte,
+        val pad: () -> Byte? = ' '::toByte
+    ) : RecordBoundary()
 
     companion object {
-        class Fixed<B, R>(val bound: Int?, read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write)
-
-        suspend fun getIO(): Map<IOMemento, CellDriver<*, *>>? = (coroutineContext.get(mediumKey) as? Medium.Nio)?.let {
-            mapOf<IOMemento, CellDriver<ByteBuffer, out Any>>(
 
 
-                IoInt to Fixed(4, ByteBuffer::getInt, { a, b -> a.putInt(b);Unit }),
-                IoLong to Fixed(8, ByteBuffer::getLong, { a, b -> a.putLong(b);Unit }),
-                IoFloat to Fixed(4, ByteBuffer::getFloat, { a, b -> a.putFloat(b);Unit }),
-                IoDouble to Fixed(8, ByteBuffer::getDouble, { a, b -> a.putDouble(b);Unit }),
-                IoString to Fixed(null, bb2ba `•` btoa `•` trim, xInsertString),
-                IoLocalDate to Fixed(
-                    8,
-                    { it.long `•` LocalDate::ofEpochDay },
-                    { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
-                IoInstant to Fixed(
-                    8,
-                    { it.long `•` Instant::ofEpochMilli },
-                    { a, b: Instant -> a.putLong(b.toEpochMilli()) })
-            )
-
-        }
-
-        val boundaryKey = object : Key<Boundary> {}
-
+        val boundaryKey = object : Key<RecordBoundary> {}
     }
 
-    override val key: Key<Boundary> get() = boundaryKey
+    override val key get() = boundaryKey
 
 }
 
+/**
+ * CellDriver functions to read and write primitive  state instances to more persistent tiers.
+ *
+ * struct level abstractions exist without coroutineContext representation.  the structs must be assembled in user space
+ * and passed into the context-based machinery for various transforms
+ */
+open class CellDriver<B, R>(
+    open val read: readfn<B, R>,
+    val write: writefn<B, R>
+) {
+    companion object {
+        class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
+
+            companion object {
+                /**coroutineContext derived map of Medium access drivers
+                 *
+                 */
+                suspend fun currentMedium(medium: Medium?) =
+                    (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
+                        mapOf(
+                            IoInt to Tokenized(
+                                bb2ba `•` btoa `•` trim * String::toInt,
+                                { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
+                            IoLong to Tokenized((bb2ba `•` btoa `•` trim * String::toLong), { a, b -> a.putLong(b) }),
+                            IoFloat to Tokenized(
+                                (bb2ba `•` btoa `•` trim `•` String::toFloat),
+                                { a, b -> a.putFloat(b) }),
+                            IoDouble to Tokenized(
+                                (bb2ba `•` btoa `•` trim `•` String::toDouble),
+                                { a, b -> a.putDouble(b) }),
+                            IoString to Tokenized(bb2ba `•` btoa `•` trim, xInsertString),
+                            IoLocalDate to Tokenized(
+                                bb2ba `•` btoa `•` trim `•` dateMapper,
+                                { a, b -> a.putLong(b.toEpochDay()) }),
+                            IoInstant to Tokenized(
+                                bb2ba `•` btoa `•` trim `•` instantMapper,
+                                { a, b -> a.putLong(b.toEpochMilli()) })
+                        )
+                    }
+            }
+        }
+
+        class Fixed<B, R>(val bound: Int?, read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
+            companion object {
+                /**coroutineContext derived map of Medium access drivers
+                 *
+                 */
+                suspend fun currentMedium(medium: Medium?) =
+                    (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
+                        mapOf(
+                            IoInt to Fixed(
+                                4,
+                                ByteBuffer::getInt,
+                                { a, b -> a.putInt(b);Unit }),
+                            IoLong to Fixed(
+                                8,
+                                ByteBuffer::getLong,
+                                { a, b -> a.putLong(b);Unit }),
+                            IoFloat to Fixed(
+                                4,
+                                ByteBuffer::getFloat,
+                                { a, b -> a.putFloat(b);Unit }),
+                            IoDouble to Fixed(
+                                8,
+                                ByteBuffer::getDouble,
+                                { a, b -> a.putDouble(b);Unit }),
+                            /**
+                             * Array-like has no constant bound.
+                             */
+                            IoString to Tokenized.currentMedium(medium)!![IoString]!!,
+                            IoLocalDate to Fixed(
+                                8,
+                                { it.long `•` LocalDate::ofEpochDay },
+                                { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
+                            IoInstant to Fixed(
+                                8,
+                                { it.long `•` Instant::ofEpochMilli },
+                                { a, b: Instant -> a.putLong(b.toEpochMilli()) })
+                        )
+                    }
+            }
+        }
+    }
+
+}
 
 sealed class Ordering : Element {
 
@@ -176,22 +220,33 @@ typealias readfn<M, R> = Function1<M, R>
 sealed class Medium : Element {
     override val key: Key<Medium> get() = mediumKey
     abstract val seek: (Int) -> Unit
-    abstract val size: Long
-    abstract val recordLen: Int
+    abstract val size: () -> Long
+    abstract val recordLen: () -> Int
 
     companion object {
         val mediumKey = object : Key<Medium> {}
     }
 
-    class Nio(
+    class NioMMap(
         val mf: MappedFile,
-        val drivers: Vect0r<Boundary.CellDriver<ByteBuffer, *>>? = null
+        val drivers: Vect0r<CellDriver<ByteBuffer, *>>? = null
     ) : Medium() {
-        override val seek: (Int) -> Unit = { i -> mf.mappedByteBuffer.position(i * recordLen).slice().limit(recordLen) }
-        override val size = mf.randomAccessFile.length()
-        override val recordLen by lazy {
-            mf.mappedByteBuffer.duplicate().clear().let { mm -> while (mm.get() != '\n'.toByte()); mm.position() }
+        /**
+         * seek to record offset
+         */
+        override val seek: (Int) -> Unit = {
+            mf.mappedByteBuffer.position(it * recordLen()).slice().limit(recordLen())
         }
+        override val size = { mf.randomAccessFile.length() }
+        override val recordLen = {
+            mf.mappedByteBuffer.duplicate().clear().run {
+                run {
+                    while (get() != '\n'.toByte());
+                    position()
+                }
+            }
+        }
+        val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
         companion object
 
@@ -214,63 +269,29 @@ sealed class Medium : Element {
          * @return
          */
         fun translateMapping(
-            ix: Int,
-            rowsize: Long,
-            window: Pair<Long, Long>,
-            filesize: Long,
-            windowSize: Long,
-            buf: ByteBuffer
+            rowIndex: Int,
+            rowsize: Int, state: Pair<ByteBuffer, Pair<Long, Long>>
         ): Pair<ByteBuffer, Pair<Long, Long>> {
-            var window1 = window
-            var buf1 = buf
-            val lix = ix.toLong()
+            var (buf1, window1) = state
+            val lix = rowIndex.toLong()
             val seekTo = rowsize * lix
             if (seekTo >= window1.second) {
                 val l = seekTo
-                window1 = l to minOf(filesize - seekTo, (windowSize))
+                window1 = l to min(size() - seekTo, windowSize)
                 buf1 = remap(window1, mf.channel)
             }
-            val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen)
+            val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
             return Pair(rowBuf, window1)
         }
-
-/*        */
-        /**
-         *
-         *//*
-        suspend fun outputRow(
-            cells: Vect0r<Any?>,
-            rowBuf: ByteBuffer,
-            recordLen: Int
-        ) {
-            val medium = coroutineContext[mediumKey]
-            val boundary = coroutineContext[Boundary.boundaryKey]
-            val arity = coroutineContext[Arity.arityKey]
-//            val addressable = coroutineContext[Addressable.addressableKey]
-            val ordering = coroutineContext[Ordering.orderingKey]
-            when (medium) {
-                is Nio -> {
-                    medium
-                    when (arity) {
-                        is Arity.Columnar -> arity
-                        when (ordering) {
-                            is Ordering.ColumnMajor ->
-                        }
-                    }
-
-
-                }
-            }
-        }*/
     }
 
 
     class Kxio : Medium() {
         override val seek: (Int) -> Unit
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-        override val size: Long
+        override val size: () -> Long
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-        override val recordLen: Int
+        override val recordLen: () -> Int
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     }
 
@@ -293,23 +314,35 @@ suspend fun main() {
                     "ret" to IoFloat
                 )
             )
-            val nio = Medium.Nio(mf)
-            val fixedWidth = Boundary.FixedWidth(
-                nio.recordLen,
+            val nio = Medium.NioMMap(mf)
+            val fixedWidth = RecordBoundary.FixedWidth(
+                nio.recordLen(),
                 arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
                     it.toList().toIntArray()
                 }.toVect0r()
             )
+            val indexable = Addressable.Indexable(size = { (nio.recordLen() / nio.size()).toInt() }, seek = nio.seek)
+            val rowMajor = Ordering.RowMajor()
             val coroutineContext =
                 EmptyCoroutineContext +
-                        columnarArity + nio +
+                        columnarArity +
                         fixedWidth +
-                        Addressable.Indexable(nio.recordLen / nio.size, nio.seek) +
-                        Ordering.RowMajor()
+                        indexable +
+                        rowMajor + nio
 
             coroutineContext.run {
-                val x = async {
-                    1
+                var state = Pair(ByteBuffer.allocate(0), Pair(-1L, -1L))
+                sequence {
+                    for (ix in (0 until indexable.size())) {
+                        state = nio.run {
+                            translateMapping(
+                                ix,
+                                fixedWidth.recordLen,
+                                state
+                            )
+                        }
+                        yield(state.first)
+                    }
                 }
             }
         }
