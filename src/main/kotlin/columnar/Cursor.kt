@@ -1,6 +1,7 @@
 package columnar
 
 import columnar.IOMemento.*
+import columnar.Medium.Companion.mediumKey
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
@@ -58,21 +59,84 @@ sealed class Addressable : Element {
 }
 
 sealed class Boundary : Element {
-    class Tokenized(val tokenizer: (String) -> List<String>) : Boundary()
+    open class CellDriver<B, R>(
+
+        open val read: readfn<B, R>,
+
+        val write: writefn<B, R>
+
+    )
+
+    class Tokenized(val tokenizer: (String) -> List<String>) : Boundary() {
+
+        companion object {
+            suspend fun getIO(): Map<IOMemento, CellDriver<*, *>>? =
+                (coroutineContext.get(mediumKey) as? Medium.Nio)?.let {
+                    mapOf<IOMemento, CellDriver<ByteBuffer, out Any>>(
+                        IoInt to CellDriver(
+                            bb2ba `•` btoa `•` trim * String::toInt,
+                            { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
+                        IoLong to CellDriver((bb2ba `•` btoa `•` trim * String::toLong), { a, b -> a.putLong(b) }),
+                        IoFloat to CellDriver(
+                            (bb2ba `•` btoa `•` trim `•` String::toFloat),
+                            { a, b -> a.putFloat(b) }),
+                        IoDouble to CellDriver(
+                            (bb2ba `•` btoa `•` trim `•` String::toDouble),
+                            { a, b -> a.putDouble(b) }),
+                        IoString to CellDriver(bb2ba `•` btoa `•` trim, xInsertString),
+                        IoLocalDate to CellDriver(
+                            bb2ba `•` btoa `•` trim `•` dateMapper,
+                            { a, b -> a.putLong(b.toEpochDay()) }),
+                        IoInstant to CellDriver(
+                            bb2ba `•` btoa `•` trim `•` instantMapper,
+                            { a, b -> a.putLong(b.toEpochMilli()) })
+
+                    )
+
+                }
+
+        }
+    }
+
     class FixedWidth(
         val recordLen: Int,
         val coords: Vect0r<IntArray>,
         val endl: () -> Byte? = { '\n'.toByte() },
         val pad: Byte? = ' '.toByte()
-    ) :
-        Boundary()
+    ) : Boundary()
+
+    companion object {
+        class Fixed<B, R>(val bound: Int?, read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write)
+
+        suspend fun getIO(): Map<IOMemento, CellDriver<*, *>>? = (coroutineContext.get(mediumKey) as? Medium.Nio)?.let {
+            mapOf<IOMemento, CellDriver<ByteBuffer, out Any>>(
+
+
+                IoInt to Fixed(4, ByteBuffer::getInt, { a, b -> a.putInt(b);Unit }),
+                IoLong to Fixed(8, ByteBuffer::getLong, { a, b -> a.putLong(b);Unit }),
+                IoFloat to Fixed(4, ByteBuffer::getFloat, { a, b -> a.putFloat(b);Unit }),
+                IoDouble to Fixed(8, ByteBuffer::getDouble, { a, b -> a.putDouble(b);Unit }),
+                IoString to Fixed(null, bb2ba `•` btoa `•` trim, xInsertString),
+                IoLocalDate to Fixed(
+                    8,
+                    { it.long `•` LocalDate::ofEpochDay },
+                    { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
+                IoInstant to Fixed(
+                    8,
+                    { it.long `•` Instant::ofEpochMilli },
+                    { a, b: Instant -> a.putLong(b.toEpochMilli()) })
+            )
+
+        }
+
+        val boundaryKey = object : Key<Boundary> {}
+
+    }
 
     override val key: Key<Boundary> get() = boundaryKey
 
-    companion object {
-        val boundaryKey = object : Key<Boundary> {}
-    }
 }
+
 
 sealed class Ordering : Element {
 
@@ -108,24 +172,20 @@ sealed class Ordering : Element {
 }
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
-/*
-typealias Decorator = (Any?) -> Any??
-typealias ByteBufferNormalizer = Pair<Pair<Int, Int>, IOMemento>
-typealias RowNormalizer = Array<Triple<String, ByteBufferNormalizer, Decorator>>
-*/
 
 sealed class Medium : Element {
-    override val key: Key<Medium> get() =mediumKey
+    override val key: Key<Medium> get() = mediumKey
     abstract val seek: (Int) -> Unit
     abstract val size: Long
     abstract val recordLen: Int
-companion object{
-    val mediumKey=object : Key<Medium> {}
-}
+
+    companion object {
+        val mediumKey = object : Key<Medium> {}
+    }
 
     class Nio(
         val mf: MappedFile,
-        val drivers: Vect0r<NioMemento<ByteBuffer, *>>? = null
+        val drivers: Vect0r<Boundary.CellDriver<ByteBuffer, *>>? = null
     ) : Medium() {
         override val seek: (Int) -> Unit = { i -> mf.mappedByteBuffer.position(i * recordLen).slice().limit(recordLen) }
         override val size = mf.randomAccessFile.length()
@@ -133,66 +193,7 @@ companion object{
             mf.mappedByteBuffer.duplicate().clear().let { mm -> while (mm.get() != '\n'.toByte()); mm.position() }
         }
 
-        companion object {
-
-            val IO =
-                mapOf(
-                    txtInt to Tokenized(
-                        bb2ba `•` btoa `•` trim * String::toInt,
-                        { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
-                    txtLong to Tokenized((bb2ba `•` btoa `•` trim * String::toLong), { a, b -> a.putLong(b) }),
-                    txtFloat to Tokenized(
-                        (bb2ba `•` btoa `•` trim `•` String::toFloat),
-                        { a, b -> a.putFloat(b) }),
-                    txtDouble to Tokenized(
-                        (bb2ba `•` btoa `•` trim `•` String::toDouble),
-                        { a, b -> a.putDouble(b) }),
-                    txtString to Tokenized(bb2ba `•` btoa `•` trim, xInsertString),
-                    txtLocalDate to Tokenized<LocalDate>(
-                        bb2ba `•` btoa `•` trim `•` dateMapper,
-                        { a, b -> a.putLong(b.toEpochDay()) }),
-                    txtInstant to Tokenized<Instant>(
-                        bb2ba `•` btoa `•` trim `•` instantMapper,
-                        { a, b -> a.putLong(b.toEpochMilli()) }),
-                    bInt to Fixed(4, ByteBuffer::getInt, { a, b -> a.putInt(b);Unit }),
-                    bLong to Fixed(8, ByteBuffer::getLong, { a, b -> a.putLong(b);Unit }),
-                    bFloat to Fixed(4, ByteBuffer::getFloat, { a, b -> a.putFloat(b);Unit }),
-                    bDouble to Fixed(8, ByteBuffer::getDouble, { a, b -> a.putDouble(b);Unit }),
-                    bString to Tokenized(bb2ba `•` btoa `•` trim, xInsertString),
-                    bLocalDate to Fixed<LocalDate>(
-                        8,
-                        { it.long `•` LocalDate::ofEpochDay },
-                        { a, b -> a.putLong(b.toEpochDay()) }),
-                    bInstant to Fixed<Instant>(
-                        8,
-                        { it.long `•` Instant::ofEpochMilli },
-                        { a, b -> a.putLong(b.toEpochMilli()) })
-                )
-
-            /**
-             * IOMemento is a helper to simplify common bounded width bytebuffer FWF and CSV field usecases.
-             *
-             * the KClass type of value is part of the implementations but has not been added to the tuples
-             */
-            interface NioMemento<B, R> {
-                /** this operation takes a bytebuffer and returns a value leaving the bytebuffer in an undefined state.
-                 * The bytebuffers are assumed to be defensive slices that contain only one value and the value returned reads the whole buffer into conversion.
-                 */
-                val read: readfn<B, R>
-                /**
-                 * this operation uses a bytebuffer and an input value and writes the value into the bytebuffer leaving it in an undefined state.
-                 */
-                val write: writefn<B, R>
-            }
-        }
-        open class Tokenized<T>(override val read: readfn<ByteBuffer, T>, override val write: writefn<ByteBuffer, T>) :
-            NioMemento<ByteBuffer, T>
-
-        open class Fixed<T>(
-            val bytes: Int,
-            override val read: readfn<ByteBuffer, T>,
-            override val write: writefn<ByteBuffer, T>
-        ) : NioMemento<ByteBuffer, T>
+        companion object
 
         fun remap(
             window: Pair<
@@ -233,7 +234,8 @@ companion object{
             return Pair(rowBuf, window1)
         }
 
-/*        *//**
+/*        */
+        /**
          *
          *//*
         suspend fun outputRow(
@@ -285,22 +287,23 @@ suspend fun main() {
         MappedFile("src/test/resources/caven4.fwf").use { mf ->
             val columnarArity = Arity.Columnar.of(
                 listOf(
-                    "date" to txtLocalDate,
-                    "channel" to txtString,
-                    "delivered" to txtFloat,
-                    "ret" to txtFloat
+                    "date" to IoLocalDate,
+                    "channel" to IoString,
+                    "delivered" to IoFloat,
+                    "ret" to IoFloat
                 )
             )
-            val nio = Medium.Nio(mf, Medium.Nio.IO[columnarArity.type].toVect0r())
+            val nio = Medium.Nio(mf)
+            val fixedWidth = Boundary.FixedWidth(
+                nio.recordLen,
+                arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
+                    it.toList().toIntArray()
+                }.toVect0r()
+            )
             val coroutineContext =
                 EmptyCoroutineContext +
                         columnarArity + nio +
-                        Boundary.FixedWidth(
-                            nio.recordLen,
-                            arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
-                                it.toList().toIntArray()
-                            }.toVect0r()
-                        ) +
+                        fixedWidth +
                         Addressable.Indexable(nio.recordLen / nio.size, nio.seek) +
                         Ordering.RowMajor()
 
