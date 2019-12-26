@@ -42,18 +42,11 @@ infix fun <A, B, R, O : (A) -> B, G : (B) -> R> O.`•`(b: G) = this * b
 operator fun <A, B, R, O : (A) -> B> O.times(b: (B) -> R) = { a: A -> a `•` this `•` (b) }
 
 enum class IOMemento{
-    txtInt,
-    txtLong,
-    txtFloat,
-    txtDouble,
-    txtString,
-    txtLocalDate,
-    txtInstant,
-    bInt,
-    bLong,
-    bFloat,
-    bDouble,
-    bString,
-    bLocalDate,
-    bInstant;
+    IoInt,
+    IoLong,
+    IoFloat,
+    IoDouble,
+    IoString,
+    IoLocalDate,
+    IoInstant
 }
