@@ -1,7 +1,9 @@
 package columnar
 
+import columnar.CellDriver.Companion.Fixed
 import columnar.IOMemento.*
 import columnar.Medium.Companion.mediumKey
+import columnar.RecordBoundary.FixedWidth
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -24,9 +26,13 @@ where iterator is random-access (for fwf) or pre-indexed with an intial EOL scan
  */
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
+typealias writefn<M, R> = Function2<M, R, Unit>
+typealias readfn<M, R> = Function1<M, R>
+
+infix fun <A, B, C> Pair<A, B>.by(t: C) = Triple(first, second, t)
 
 sealed class Arity : Element {
-    open class Scalar(val type: IOMemento) : Arity()
+    open class Scalar(val type: IOMemento, name: String? = null) : Arity()
     class Matrix(type: IOMemento, val shape: Vect0r<Int>) : Scalar(type)
     class Columnar(val type: Vect0r<IOMemento>, val names: Vect0r<String>? = null) : Arity() {
         companion object {
@@ -46,7 +52,7 @@ sealed class Arity : Element {
 }
 
 sealed class Addressable : Element {
-   abstract class Forward<T>: Iterable<T> , Addressable()
+    abstract class Forward<T> : Iterable<T>, Addressable()
 
     class Indexable(
         /**count of records*/
@@ -107,24 +113,24 @@ open class CellDriver<B, R>(
     val write: writefn<B, R>
 ) {
     companion object {
+
+
         class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
 
             companion object {
                 /**coroutineContext derived map of Medium access drivers
                  *
                  */
-                suspend fun currentMedium(medium: Medium?) =
+                suspend fun forMedium(medium: Medium?) =
                     (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
                         mapOf(
-                            IoInt to Tokenized(
-                                bb2ba `•` btoa `•` trim * String::toInt,
-                                { a: ByteBuffer, b: Int? -> a.putInt(b ?: 0) }),
+                            IoInt to Tokenized(bb2ba `•` btoa `•` trim * String::toInt, { a, b -> a.putInt(b) }),
                             IoLong to Tokenized((bb2ba `•` btoa `•` trim * String::toLong), { a, b -> a.putLong(b) }),
                             IoFloat to Tokenized(
-                                (bb2ba `•` btoa `•` trim `•` String::toFloat),
+                                bb2ba `•` btoa `•` trim `•` String::toFloat,
                                 { a, b -> a.putFloat(b) }),
                             IoDouble to Tokenized(
-                                (bb2ba `•` btoa `•` trim `•` String::toDouble),
+                                bb2ba `•` btoa `•` trim `•` String::toDouble,
                                 { a, b -> a.putDouble(b) }),
                             IoString to Tokenized(bb2ba `•` btoa `•` trim, xInsertString),
                             IoLocalDate to Tokenized(
@@ -143,29 +149,13 @@ open class CellDriver<B, R>(
                 /**coroutineContext derived map of Medium access drivers
                  *
                  */
-                suspend fun currentMedium(medium: Medium?) =
+                suspend fun forMedium(medium: Medium?) =
                     (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
                         mapOf(
-                            IoInt to Fixed(
-                                4,
-                                ByteBuffer::getInt,
-                                { a, b -> a.putInt(b);Unit }),
-                            IoLong to Fixed(
-                                8,
-                                ByteBuffer::getLong,
-                                { a, b -> a.putLong(b);Unit }),
-                            IoFloat to Fixed(
-                                4,
-                                ByteBuffer::getFloat,
-                                { a, b -> a.putFloat(b);Unit }),
-                            IoDouble to Fixed(
-                                8,
-                                ByteBuffer::getDouble,
-                                { a, b -> a.putDouble(b);Unit }),
-                            /**
-                             * Array-like has no constant bound.
-                             */
-                            IoString to Tokenized.currentMedium(medium)!![IoString]!!,
+                            IoInt to Fixed(4, ByteBuffer::getInt, { a, b -> a.putInt(b);Unit }),
+                            IoLong to Fixed(8, ByteBuffer::getLong, { a, b -> a.putLong(b);Unit }),
+                            IoFloat to Fixed(4, ByteBuffer::getFloat, { a, b -> a.putFloat(b);Unit }),
+                            IoDouble to Fixed(8, ByteBuffer::getDouble, { a, b -> a.putDouble(b);Unit }),
                             IoLocalDate to Fixed(
                                 8,
                                 { it.long `•` LocalDate::ofEpochDay },
@@ -173,7 +163,12 @@ open class CellDriver<B, R>(
                             IoInstant to Fixed(
                                 8,
                                 { it.long `•` Instant::ofEpochMilli },
-                                { a, b: Instant -> a.putLong(b.toEpochMilli()) })
+                                { a, b: Instant -> a.putLong(b.toEpochMilli()) }),
+                            IoString to
+                                    /**
+                                     * Array-like has no constant bound.
+                                     */
+                                    Tokenized.forMedium(medium)!![IoString]!!
                         )
                     }
             }
@@ -182,31 +177,126 @@ open class CellDriver<B, R>(
 
 }
 
+
+/**
+ * ordering arranges the row and column IO chunking to tailor the io access patterns.
+ *
+ * The composable options are
+ *  * Indexable Addressability Consumer
+ *  * linear Addressability provider
+ *  * coordinate system translations for such as pivot and inversion
+ *
+ *
+ */
 sealed class Ordering : Element {
+
+    abstract suspend fun arrange()
 
     /**
      * [x++,y,z]
      * [x,y++,z]
      */
-    class RowMajor : Ordering()
+    class RowMajor : Ordering() {
+        override suspend fun arrange() {
+            val medium = coroutineContext[mediumKey]!!
+            val arity = coroutineContext[Arity.arityKey]!!
+            val addressable = coroutineContext[Addressable.addressableKey]!!
+            val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
+            when {
+                medium is Medium.NioMMap -> {
+                    val drivers = when (arity) {
+                        is Arity.Columnar -> Fixed.forMedium(medium)!![arity.type]
+                        is Arity.Scalar -> TODO()
+                        is Arity.Variadic -> TODO()
+                    }
+
+                    val coords = when (recordBoundary) {
+                        is FixedWidth -> recordBoundary.coords
+                        is RecordBoundary.Tokenized -> TODO()
+                    }
+
+                    var y = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary).second
+                    var x = { y: ByteBuffer ->
+                        Vect0r<Any?>({ drivers.size }, { x: Int ->
+                            drivers[x].let { driver ->
+                                coords[x].let { (start, end) ->
+                                    driver.read(
+                                        when (driver) {
+                                            is Fixed -> y at start
+                                            else -> y[start, end]
+                                        }
+                                    )
+                                }
+                            }
+                        })
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * [x,y++]
      * [x++,y]
      */
-    class ColumnMajor : Ordering()
+    class ColumnMajor : Ordering() {
+        override suspend fun arrange() {
+            val medium = coroutineContext[mediumKey]!!
+            val arity = coroutineContext[Arity.arityKey]!!
+            val addressable = coroutineContext[Addressable.addressableKey]!!
+            val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
+            when {
+                medium is Medium.NioMMap -> {
+                    val drivers = when (arity) {
+                        is Arity.Columnar -> Fixed.forMedium(medium)!![arity.type]
+                        is Arity.Scalar -> TODO()
+                        is Arity.Variadic -> TODO()
+                    }
+
+                    val coords = when (recordBoundary) {
+                        is FixedWidth -> recordBoundary.coords
+                        is RecordBoundary.Tokenized -> TODO()
+                    }
+
+                    var x = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary).second
+                    var y = { x: ByteBuffer ->
+                        Vect0r<Any?>({ drivers.size }, { y: Int ->
+                            drivers[y].let { driver ->
+                                coords[y].let { (start, end) ->
+                                    driver.read(
+                                        when (driver) {
+                                            is Fixed -> x at start
+                                            else -> x[start, end]
+                                        }
+                                    )
+                                }
+                            }
+                        })
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * {x,y,z}+-(1|n|n^?)]
      */
-    class Hilbert : Ordering()
+    class Hilbert : Ordering() {
+        override suspend fun arrange() {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    }
 
     /**
      * [0,0,0]
      * [1,..1,..1]
      * [2,..2,..2]
      */
-    class Diagonal : Ordering()
+    class Diagonal : Ordering() {
+        override suspend fun arrange() {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+    }
 
     override val key: Key<Ordering> get() = orderingKey
 
@@ -214,8 +304,6 @@ sealed class Ordering : Element {
         val orderingKey = object : Key<Ordering> {}
     }
 }
-typealias writefn<M, R> = Function2<M, R, Unit>
-typealias readfn<M, R> = Function1<M, R>
 
 sealed class Medium : Element {
     override val key: Key<Medium> get() = mediumKey
@@ -231,6 +319,37 @@ sealed class Medium : Element {
         val mf: MappedFile,
         val drivers: Vect0r<CellDriver<ByteBuffer, *>>? = null
     ) : Medium() {
+
+
+        fun asContextVect0r(
+            indexable: Addressable.Indexable,
+            fixedWidth: FixedWidth,
+            state: () -> Pair<ByteBuffer, Pair<Long, Long>> = { Pair(ByteBuffer.allocate(0), Pair(-1L, -1L)) }
+        ) = Vect0r(indexable.size, { ix ->
+            translateMapping(
+                ix,
+                fixedWidth.recordLen,
+                state()
+            )
+        })
+
+        suspend fun asSequence(): Sequence<ByteBuffer> {
+            val indexable = coroutineContext[Addressable.addressableKey]
+            val fixedWidth = coroutineContext[RecordBoundary.boundaryKey]
+
+            var state = Pair(ByteBuffer.allocate(0), Pair(-1L, -1L))
+            val cvec = asContextVect0r(
+                indexable as Addressable.Indexable,
+                fixedWidth as FixedWidth,
+                { -> state })
+            return sequence {
+                for (ix in 0 until cvec.size) {
+                    state = cvec[ix]
+                    yield(state.first)
+                }
+            }
+        }
+
         /**
          * seek to record offset
          */
@@ -248,14 +367,9 @@ sealed class Medium : Element {
         }
         val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-        companion object
 
         fun remap(
-            window: Pair<
-                    /**offsetToMap*/
-                    Long,
-                    /**sizeToMap*/
-                    Long>, rafchannel: FileChannel
+            rafchannel: FileChannel, window: Pair<Long, Long>
         ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
             rafchannel.map(FileChannel.MapMode.READ_WRITE, offsetToMap, sizeToMap)
         }
@@ -276,13 +390,14 @@ sealed class Medium : Element {
             val lix = rowIndex.toLong()
             val seekTo = rowsize * lix
             if (seekTo >= window1.second) {
-                val l = seekTo
-                window1 = l to min(size() - seekTo, windowSize)
-                buf1 = remap(window1, mf.channel)
+                val recordOffset0 = seekTo
+                window1 = recordOffset0 to min(size() - seekTo, windowSize)
+                buf1 = remap(mf.channel, window1)
             }
             val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
             return Pair(rowBuf, window1)
         }
+
     }
 
 
@@ -315,7 +430,7 @@ suspend fun main() {
                 )
             )
             val nio = Medium.NioMMap(mf)
-            val fixedWidth = RecordBoundary.FixedWidth(
+            val fixedWidth = FixedWidth(
                 nio.recordLen(),
                 arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
                     it.toList().toIntArray()
@@ -331,22 +446,28 @@ suspend fun main() {
                         rowMajor + nio
 
             coroutineContext.run {
-                var state = Pair(ByteBuffer.allocate(0), Pair(-1L, -1L))
-                sequence {
-                    for (ix in (0 until indexable.size())) {
-                        state = nio.run {
-                            translateMapping(
-                                ix,
-                                fixedWidth.recordLen,
-                                state
-                            )
+                val drivers = Fixed.forMedium(nio)!![columnarArity.type]
+                val coords = fixedWidth.coords
+                nio.asSequence().map { rowbuf ->
+                    Vect0r<Any?>({ -> drivers.size }, { ix: Int ->
+                        drivers[ix].let { driver ->
+                            coords[ix].let { (start, end) ->
+                                driver.read(
+                                    when (driver) {
+                                        is Fixed -> rowbuf at start
+                                        else -> rowbuf[start, end]
+                                    }
+                                )
+                            }
                         }
-                        yield(state.first)
-                    }
+                    })
                 }
             }
         }
     }
 }
+
+infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
+operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
 
 
