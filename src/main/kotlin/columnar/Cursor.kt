@@ -11,6 +11,7 @@ import kotlin.coroutines.CoroutineContext.Element
 import kotlin.coroutines.CoroutineContext.Key
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.coroutineContext
+import kotlin.math.min
 
 /**
 iterators of mmap (or unmapped) bytes exist has a new design falling out of this decomposition:
@@ -45,11 +46,11 @@ sealed class Arity : Element {
 }
 
 sealed class Addressable : Element {
-    class Forward(val hasRemaining: () -> Boolean, val next: () -> Unit) : Addressable()
+   abstract class Forward<T>: Iterable<T> , Addressable()
 
     class Indexable(
         /**count of records*/
-        val size: Int, val seek: (Int) -> Unit
+        val size: () -> Int, val seek: (Int) -> Unit
     ) : Addressable()
 
     override val key get() = addressableKey
@@ -67,8 +68,7 @@ sealed class Addressable : Element {
  * This does not extend guarantees to cell-level definitions--
  * FWF cells are parsed strings, thus tokenized within fixed records, and may carry lineendings
  * csv records with fixed length fields is rare but has its place in aged messaging formats.
- * fixed-record fixed-cell (e.g. purer ISAM) formats that have varchar cannot escape basic string tokenization and trim
- * in order to pad or zero correctly
+ * even fixed-record fixed-cell (e.g. purer ISAM) formats have to use external size variables for varchar
  *
  * it is assumed that record-level granularity and above are efficiently held in context details to perform outer loops
  * once the context variables are activated and conjoined per thier roles.
@@ -82,8 +82,8 @@ sealed class RecordBoundary : Element {
     class FixedWidth(
         val recordLen: Int,
         val coords: Vect0r<IntArray>,
-        val endl: () -> Byte? = { '\n'.toByte() },
-        val pad: Byte? = ' '.toByte()
+        val endl: () -> Byte? = '\n'::toByte,
+        val pad: () -> Byte? = ' '::toByte
     ) : RecordBoundary()
 
     companion object {
@@ -114,7 +114,7 @@ open class CellDriver<B, R>(
                  *
                  */
                 suspend fun currentMedium(medium: Medium?) =
-                    (medium ?: coroutineContext.get(mediumKey) as? Medium.Nio)?.let {
+                    (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
                         mapOf(
                             IoInt to Tokenized(
                                 bb2ba `•` btoa `•` trim * String::toInt,
@@ -144,7 +144,7 @@ open class CellDriver<B, R>(
                  *
                  */
                 suspend fun currentMedium(medium: Medium?) =
-                    (medium ?: coroutineContext.get(mediumKey) as? Medium.Nio)?.let {
+                    (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
                         mapOf(
                             IoInt to Fixed(
                                 4,
@@ -172,7 +172,7 @@ open class CellDriver<B, R>(
                                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
                             IoInstant to Fixed(
                                 8,
-                                { it: ByteBuffer -> it.long `•` Instant::ofEpochMilli },
+                                { it.long `•` Instant::ofEpochMilli },
                                 { a, b: Instant -> a.putLong(b.toEpochMilli()) })
                         )
                     }
@@ -220,25 +220,33 @@ typealias readfn<M, R> = Function1<M, R>
 sealed class Medium : Element {
     override val key: Key<Medium> get() = mediumKey
     abstract val seek: (Int) -> Unit
-    abstract val size: Long
-    abstract val recordLen: Int
+    abstract val size: () -> Long
+    abstract val recordLen: () -> Int
 
     companion object {
         val mediumKey = object : Key<Medium> {}
     }
 
-    class Nio(
+    class NioMMap(
         val mf: MappedFile,
         val drivers: Vect0r<CellDriver<ByteBuffer, *>>? = null
     ) : Medium() {
         /**
          * seek to record offset
          */
-        override val seek: (Int) -> Unit = { i -> mf.mappedByteBuffer.position(i * recordLen).slice().limit(recordLen) }
-        override val size = mf.randomAccessFile.length()
-        override val recordLen by lazy {
-            mf.mappedByteBuffer.duplicate().clear().let { mm -> while (mm.get() != '\n'.toByte()); mm.position() }
+        override val seek: (Int) -> Unit = {
+            mf.mappedByteBuffer.position(it * recordLen()).slice().limit(recordLen())
         }
+        override val size = { mf.randomAccessFile.length() }
+        override val recordLen = {
+            mf.mappedByteBuffer.duplicate().clear().run {
+                run {
+                    while (get() != '\n'.toByte());
+                    position()
+                }
+            }
+        }
+        val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
         companion object
 
@@ -262,20 +270,17 @@ sealed class Medium : Element {
          */
         fun translateMapping(
             rowIndex: Int,
-            rowsize: Int,
-            filesize: Long,
-            windowSize: Long,
-            state: Pair<ByteBuffer, Pair<Long, Long>>
+            rowsize: Int, state: Pair<ByteBuffer, Pair<Long, Long>>
         ): Pair<ByteBuffer, Pair<Long, Long>> {
             var (buf1, window1) = state
             val lix = rowIndex.toLong()
             val seekTo = rowsize * lix
             if (seekTo >= window1.second) {
                 val l = seekTo
-                window1 = l to minOf(filesize - seekTo, (windowSize))
+                window1 = l to min(size() - seekTo, windowSize)
                 buf1 = remap(window1, mf.channel)
             }
-            val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen)
+            val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
             return Pair(rowBuf, window1)
         }
     }
@@ -284,9 +289,9 @@ sealed class Medium : Element {
     class Kxio : Medium() {
         override val seek: (Int) -> Unit
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-        override val size: Long
+        override val size: () -> Long
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-        override val recordLen: Int
+        override val recordLen: () -> Int
             get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     }
 
@@ -309,33 +314,31 @@ suspend fun main() {
                     "ret" to IoFloat
                 )
             )
-            val nio = Medium.Nio(mf)
+            val nio = Medium.NioMMap(mf)
             val fixedWidth = RecordBoundary.FixedWidth(
-                nio.recordLen,
+                nio.recordLen(),
                 arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
                     it.toList().toIntArray()
                 }.toVect0r()
             )
-            val indexable = Addressable.Indexable((nio.recordLen / nio.size).toInt(), nio.seek)
+            val indexable = Addressable.Indexable(size = { (nio.recordLen() / nio.size()).toInt() }, seek = nio.seek)
             val rowMajor = Ordering.RowMajor()
             val coroutineContext =
                 EmptyCoroutineContext +
-                        columnarArity + nio +
+                        columnarArity +
                         fixedWidth +
                         indexable +
-                        rowMajor
+                        rowMajor + nio
 
             coroutineContext.run {
                 var state = Pair(ByteBuffer.allocate(0), Pair(-1L, -1L))
-                val windowSize = (Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % fixedWidth.recordLen))
                 sequence {
-                    for (ix in 0 until indexable.size) {
+                    for (ix in (0 until indexable.size())) {
                         state = nio.run {
                             translateMapping(
                                 ix,
                                 fixedWidth.recordLen,
-                                nio.size,
-                                windowSize, state
+                                state
                             )
                         }
                         yield(state.first)
