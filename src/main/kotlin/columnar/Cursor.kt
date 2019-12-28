@@ -1,20 +1,21 @@
 package columnar
 
 import columnar.IOMemento.*
-import columnar.context.*
+import columnar.context.Addressable
 import columnar.context.Addressable.Indexable
+import columnar.context.Arity
+import columnar.context.Medium
 import columnar.context.Medium.NioMMap
+import columnar.context.Medium.NioMMap.Companion.text
+import columnar.context.Ordering
 import columnar.context.RecordBoundary.FixedWidth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.nio.ByteBuffer
 
 
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
-
-typealias NioCursor = Matrix<Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, *>, IOMemento, Int>>>
 
 
 /**
@@ -42,20 +43,15 @@ suspend fun main() {
                 }.toVect0r()
             )
             val indexable = Indexable(size = { (nio.size() / nio.recordLen()).toInt() }, seek = nio.seek)
-            val rowMajor = Ordering.RowMajor()
 
             val size1 = nio.size()
             assert(660L == size1)
             val size2 = indexable.size().toInt()
             assert(size2 == 4)
-            val celldrivers = NioMapper.text(*columnarArity.type.toArray())
+            nio.drivers = text(*columnarArity.type.toArray())
 
-            CoroutineScope(
-                columnarArity +
-                        fixedWidth +
-                        indexable +
-                        rowMajor + nio + celldrivers
-            ).launch {
+            val fourBy: suspend CoroutineScope.() -> Unit = {
+                System.err.println(""+coroutineContext)
                 val medium = coroutineContext[Medium.mediumKey]
                 val size3 = (medium as NioMMap).size()
                 val addressable = coroutineContext[Addressable.addressableKey]
@@ -63,15 +59,32 @@ suspend fun main() {
                 val size = (addressable as Indexable).size()
                 assert(size == 4)
 
-                val nioCursor = rowMajor.nioCursor()
+                val nioCursor = nio.values()
                 nioCursor.let { (a, b) ->
                     System.err.println("" + a.toList())
                 }
                 System.err.println(nioCursor[3, 3].first())
                 System.err.println(nioCursor[0, 0].first())
                 System.err.println(nioCursor[1, 1].first())
-                System.err.println(nioCursor[2, 2].first())
-            }.join()
+                System.err.println(nioCursor[0, 0].first())
+                System.err.println(nioCursor[0, 1].first())
+                System.err.println(nioCursor[0, 2].first())
+            }
+runBlocking {      val coroutineScope = CoroutineScope(
+    columnarArity +
+            fixedWidth +
+            indexable +
+            nio + Ordering.RowMajor()
+)
+    coroutineScope.launch(block = fourBy).join() }
+       runBlocking { val coroutineScope= CoroutineScope(
+           columnarArity +
+                   fixedWidth +
+                   indexable +
+                   nio    + Ordering.ColumnMajor()
+       )
+           coroutineScope.launch(block = fourBy).join() }
+
 
         }
     }
