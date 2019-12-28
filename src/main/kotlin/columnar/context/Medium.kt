@@ -23,18 +23,20 @@ sealed class Medium : CoroutineContext.Element {
     }
 
     class NioMMap(
-        val mf: MappedFile,
-        val drivers: Vect0r<CellDriver<ByteBuffer, *>>? = null
+        val mf: MappedFile
     ) : Medium() {
 
 
         fun asContextVect0r(
             indexable: Addressable.Indexable,
             fixedWidth: FixedWidth,
-            state: () -> Pair<ByteBuffer, Pair<Long, Long>> = { Pair(
-                ByteBuffer.allocate(
-                    0
-                ), Pair(-1L, -1L)) }
+            state: () -> Pair<ByteBuffer, Pair<Long, Long>> = {
+                Pair(
+                    ByteBuffer.allocate(
+                        0
+                    ), Pair(-1L, -1L)
+                )
+            }
         ) = Vect0r(indexable.size, { ix ->
             translateMapping(
                 ix,
@@ -81,7 +83,7 @@ sealed class Medium : CoroutineContext.Element {
         fun remap(
             rafchannel: FileChannel, window: Pair<Long, Long>
         ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
-            rafchannel.map(FileChannel.MapMode.READ_WRITE, offsetToMap, sizeToMap)
+            rafchannel.map(mf.mapMode, offsetToMap, sizeToMap)
         }
 
         /**

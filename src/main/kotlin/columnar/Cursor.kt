@@ -1,22 +1,20 @@
 package columnar
 
 import columnar.IOMemento.*
-import columnar.context.Addressable
-import columnar.context.Arity
-import columnar.context.CellDriver
-import columnar.context.CellDriver.Companion.Fixed
+import columnar.context.*
+import columnar.context.Addressable.Indexable
 import columnar.context.Medium.NioMMap
-import columnar.context.Ordering
 import columnar.context.RecordBoundary.FixedWidth
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
-import kotlin.coroutines.EmptyCoroutineContext
 
 
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
 
-typealias NioCursor = Matrix<Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
+typealias NioCursor = Matrix<Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, *>, IOMemento, Int>>>
 
 
 /**
@@ -36,41 +34,46 @@ suspend fun main() {
                 )
             )
             val nio = NioMMap(mf)
+            val recordLen = nio.recordLen()
             val fixedWidth = FixedWidth(
-                nio.recordLen(),
+                recordLen,
                 arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
                     it.toList().toIntArray()
                 }.toVect0r()
             )
-            val indexable = Addressable.Indexable(size = { (nio.recordLen() / nio.size()).toInt() }, seek = nio.seek)
+            val indexable = Indexable(size = { (nio.size() / nio.recordLen()).toInt() }, seek = nio.seek)
             val rowMajor = Ordering.RowMajor()
 
-            /**
-             * for java readers,  these elements are same as reifiable threadlocals
-             */
-            val coroutineContext =
-                EmptyCoroutineContext +
-                        columnarArity +
-                        fixedWidth +
-                        indexable +
-                        rowMajor + nio
+            val size1 = nio.size()
+            assert(660L == size1)
+            val size2 = indexable.size().toInt()
+            assert(size2 == 4)
+            val celldrivers = NioMapper.text(*columnarArity.type.toArray())
 
-            val newCoroutineContext = newCoroutineContext(
+            CoroutineScope(
                 columnarArity +
                         fixedWidth +
                         indexable +
-                        rowMajor + nio
-            )
-            CoroutineScope(newCoroutineContext).launch {
-                this.ensureActive()
-                 rowMajor.nioCursor().let{
-                     (a,b )->
-                     System.err.println(""+a.toList())
-                 }
+                        rowMajor + nio + celldrivers
+            ).launch {
+                val medium = coroutineContext[Medium.mediumKey]
+                val size3 = (medium as NioMMap).size()
+                val addressable = coroutineContext[Addressable.addressableKey]
+                assert(addressable is Indexable)
+                val size = (addressable as Indexable).size()
+                assert(size == 4)
+
+                val nioCursor = rowMajor.nioCursor()
+                nioCursor.let { (a, b) ->
+                    System.err.println("" + a.toList())
+                }
+                System.err.println(nioCursor[3, 3].first())
+                System.err.println(nioCursor[0, 0].first())
+                System.err.println(nioCursor[1, 1].first())
+                System.err.println(nioCursor[2, 2].first())
             }.join()
 
         }
     }
 }
-
 
