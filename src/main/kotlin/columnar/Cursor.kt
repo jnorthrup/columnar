@@ -16,36 +16,6 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
-/**
-iterators of mmap (or unmapped) bytes exist has a new design falling out of this decomposition:
-where iterator is random-access (for fwf) or pre-indexed with an intial EOL scanner or streaming:
- * Addressability Indexed(recordCount:Int)/Iterated(Unit)
- * Arity Unary(type:T)/Variadic(type:Array<T>)
- * fixed-width(recordlen:Int)/line-parsed(recordLen=IntArray)
- * input(Function<Cursor>->T)/output(Function<Cursor,T>->Unit)
- * row([x,y]++)/column([y,x]++) sequential orientation (e.g.  [un]like apache arrow)
- */
-
-val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
-
-
-typealias Matrix<T> = Pair<
-        /**shape*/
-        IntArray,
-        /**accessor*/
-            (IntArray) -> T>
-
-infix fun <A, B, C> Pair<A, B>.by(t: C) = Triple(first, second, t)
-
-infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
-operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
-
-val bb2ba: (ByteBuffer) -> ByteArray = { bb: ByteBuffer -> ByteArray(bb.remaining()).also { bb[it] } }
-val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) }
-val trim: (String) -> String = String::trim
-infix fun <O, R, F : (O) -> R> O.`•`(f: F) = this.let(f)
-infix fun <A, B, R, O : (A) -> B, G : (B) -> R> O.`•`(b: G) = this * b
-operator fun <A, B, R, O : (A) -> B> O.times(b: (B) -> R) = { a: A -> a `•` this `•` (b) }
 
 sealed class Arity : Element {
     open class Scalar(val type: IOMemento, name: String? = null) : Arity()
@@ -196,6 +166,8 @@ open class CellDriver<B, R>(
 
 }
 
+typealias NioCursor = Matrix<Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
+
 
 /**
  * ordering arranges the row and column IO chunking to tailor the io access patterns.
@@ -239,25 +211,26 @@ sealed class Ordering : Element {
                     })
                 }
                 NioCursor(
-                    intArrayOf(drivers.size, row.size),
-                    { coords: IntArray ->
-                        val (x, y) = coords
-                        val (row1, state) = row[y]
-                        val (size, triple) = col(row1)
-                        triple(x).let { theTriple ->
-                            theTriple.let { (driver, type, size) ->
-                                val rfn = { row1.duplicate() `•` driver.read }
-                                @Suppress("UNCHECKED_CAST") val wfn =
-                                    { a: Any? ->
-                                        ((driver as CellDriver<ByteBuffer, Any?>).write)(
-                                            row1.duplicate(),
-                                            a
-                                        )
-                                    }
-                                rfn to wfn by theTriple
-                            }
+                    intArrayOf(drivers.size, row.size)
+                ) { coords: IntArray ->
+                    val (x, y) = coords
+                    val (row1, state) = row[y]
+                    val (size, triple) = col(row1)
+                    triple(x).let { theTriple ->
+                        theTriple.let { (driver, type, size) ->
+                            val rfn = { row1.duplicate() `•` driver.read }
+                            @Suppress("UNCHECKED_CAST") val wfn =
+                                { a: Any? ->
+                                    ((driver as CellDriver<ByteBuffer, Any?>).write)(
+                                        row1.duplicate(),
+                                        a
+                                    )
+                                }
+                            @Suppress("UNCHECKED_CAST")
+                            rfn to wfn by theTriple as Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
                         }
-                    })
+                    }
+                }
             }
         }
     }
@@ -279,18 +252,22 @@ sealed class Ordering : Element {
      * [2,..2,..2]
      */
     abstract class Diagonal : Ordering()
+    /**for seh*/
+    abstract class RTree : Ordering()
 
     override val key: Key<Ordering> get() = orderingKey
 
     companion object {
         val orderingKey = object : Key<Ordering> {}
 
-        data class NioCursor(
-            val shape: IntArray,
-            val access: (IntArray) -> Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, out Any>, IOMemento, Int>>
-        )
     }
 }
+
+data class NioCursor1(
+    val shape: IntArray,
+    val access: (IntArray) -> Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, out Any>, IOMemento, Int>>
+)
+
 
 sealed class Medium : Element {
     override val key: Key<Medium> get() = mediumKey
