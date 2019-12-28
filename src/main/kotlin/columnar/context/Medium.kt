@@ -25,6 +25,89 @@ sealed class Medium : CoroutineContext.Element {
         val mf: MappedFile
     ) : Medium() {
         var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null
+        @Suppress("UNCHECKED_CAST")
+        suspend fun values() = let {
+            val medium = this
+            val ordering = coroutineContext[Ordering.orderingKey]!!
+            val arity = coroutineContext[Arity.arityKey]!!
+            val addressable = coroutineContext[Addressable.addressableKey]!!
+            val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
+//            val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!!
+            medium.let {
+                val drivers = medium.drivers
+                    ?: Medium.NioMMap.text(*(arity as Arity.Columnar).type.toArray())/*assuming fwf here*/
+                val coords = when (recordBoundary) {
+                    is RecordBoundary.FixedWidth -> recordBoundary.coords
+                    is RecordBoundary.Tokenized -> TODO()
+                }
+
+
+
+                when (ordering) {
+                    is Ordering.RowMajor -> {
+                        val row = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary)
+                        val col = { y: ByteBuffer ->
+                            Vect0r({ drivers.size }, { x: Int ->
+                                drivers[x] to (arity as Arity.Columnar).type[x] by coords[x].size
+                            })
+                        }
+                        NioCursor(
+                            intArrayOf(drivers.size, row.size)
+                        ) { requestCoords: IntArray ->
+                            val (x, y) = requestCoords
+                            val (row1, state) = row[y]
+                            val (_, triple) = col(row1)
+                            val triple1 = triple(x)
+                            triple1.let { (driver, type, cellSize) ->
+                                val (start, end) = coords[x]
+                                { row1[start, end] `•` driver.read } as () -> Any to
+                                        { v: Any? ->
+                                             driver.write(
+                                                row1[start, end],
+                                                v
+                                            )
+                                        } by
+                                        triple1
+                            }
+
+                        }
+                    }
+                    is Ordering.ColumnMajor -> {
+                        val row = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary)
+                        val col = { y: ByteBuffer ->
+                            Vect0r({ drivers.size }, { x: Int ->
+                                drivers[x] to (arity as Arity.Columnar).type[x] by coords[x].size
+                            })
+                        }
+                        NioCursor(
+                            intArrayOf(row.size, drivers.size)
+                        ) { requestCoords: IntArray ->
+                            val (y, x) = requestCoords
+                            val (row1, state) = row[y]
+                            val (_, triple) = col(row1)
+                            val triple1 = triple(x)
+                            triple1.let { (driver, type, cellSize) ->
+                                val (start, end) = coords[x]
+                                { row1[start, end] `•` driver.read } as () -> Any to
+                                        { v: Any? ->
+                                             driver.write(
+                                                row1[start, end],
+                                                v
+                                            )
+                                        } by
+                                        triple1
+                            }
+
+                        }
+                    }
+
+
+                    is Ordering.Hilbert -> TODO()
+                    is Ordering.Diagonal -> TODO()
+                    is Ordering.RTree -> TODO()
+                }
+            }
+        }
 
         companion object {
             fun text(vararg m: IOMemento) =

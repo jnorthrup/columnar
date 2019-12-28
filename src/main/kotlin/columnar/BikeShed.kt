@@ -7,11 +7,6 @@ package columnar
 import java.nio.ByteBuffer
 
 
-typealias Matrix<T> = Pair<
-        /**shape*/
-        IntArray,
-        /**accessor*/
-            (IntArray) -> T>
 
 infix fun <A, B, C> Pair<A, B>.by(t: C) = Triple(first, second, t)
 
@@ -22,7 +17,3 @@ val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 val bb2ba: (ByteBuffer) -> ByteArray = { bb: ByteBuffer -> ByteArray(bb.remaining()).also { bb[it] } }
 val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) }
 val trim: (String) -> String = String::trim
-infix fun <O, R, F : (O) -> R> O.`•`(f: F) = this.let(f)
-operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G) = { a: A -> a `•` this `•` (b) }
-infix fun <A, B, R, O : (A) -> B, G : (B) -> R> O.`•`(b: G) = this * b
-operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
