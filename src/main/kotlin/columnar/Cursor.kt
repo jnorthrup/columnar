@@ -4,6 +4,7 @@ import columnar.IOMemento.*
 import columnar.context.*
 import columnar.context.Addressable.Indexable
 import columnar.context.Medium.NioMMap
+import columnar.context.Medium.NioMMap.Companion.text
 import columnar.context.RecordBoundary.FixedWidth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -14,7 +15,7 @@ import java.nio.ByteBuffer
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
 
-typealias NioCursor = Matrix<Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, *>, IOMemento, Int>>>
+typealias NioCursor = Matrix<Triple<() -> Any, (Any?) -> Unit, Triple<NioMMap.Companion.CellDriver<ByteBuffer, *>, IOMemento, Int>>>
 
 
 /**
@@ -48,13 +49,13 @@ suspend fun main() {
             assert(660L == size1)
             val size2 = indexable.size().toInt()
             assert(size2 == 4)
-            val celldrivers = NioMapper.text(*columnarArity.type.toArray())
+            nio.drivers = text(*columnarArity.type.toArray())!!
 
             CoroutineScope(
                 columnarArity +
                         fixedWidth +
                         indexable +
-                        rowMajor + nio + celldrivers
+                        rowMajor + nio
             ).launch {
                 val medium = coroutineContext[Medium.mediumKey]
                 val size3 = (medium as NioMMap).size()

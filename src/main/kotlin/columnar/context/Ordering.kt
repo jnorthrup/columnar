@@ -30,10 +30,9 @@ sealed class Ordering : CoroutineContext.Element {
             val arity = coroutineContext[Arity.arityKey]!!
             val addressable = coroutineContext[Addressable.addressableKey]!!
             val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-            val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!!
+//            val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!!
             (medium as Medium.NioMMap).let {
-                val drivers = nioDrivers.drivers
-
+                val drivers = medium.drivers?:Medium.NioMMap.text(*(arity as Arity.Columnar).type.toArray())/*assuming fwf here*/
                 val coords = when (recordBoundary) {
                     is RecordBoundary.FixedWidth -> recordBoundary.coords
                     is RecordBoundary.Tokenized -> TODO()
