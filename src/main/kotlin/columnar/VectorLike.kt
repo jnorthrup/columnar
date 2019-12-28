@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.*
 
 typealias Vect0r<Value> = Pair< /*Size*/ () -> Int, ( /*Key*/ Int) -> Value>
 
-val<T> Vect0r<T>.size: Int get() = first.invoke()
+val <T> Vect0r<T>.size: Int get() = first.invoke()
 
 @JvmName("vlike_Sequence_1")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
@@ -54,7 +54,7 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>) = this[ind
 
 @JvmName("vlike_Vect0r_IntArray3")
 inline operator fun <reified T> Vect0r<T>.get(index: IntArray) = this.let { (a, b) ->
-    index::size  to { ix: Int -> b(index[ix]) }
+    index::size to { ix: Int -> b(index[ix]) }
 }
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
@@ -86,14 +86,14 @@ inline fun <reified T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
     for (ix in (0 until size)) fn(ix, this[ix])
 }
 
-fun <T> vect0rOf  (vararg a:T): Vect0r<T> = {a. size } to {i   -> a[i] }
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = { a.size } to { i -> a[i] }
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
  * The returned list has length of the shortest collection.
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-public inline infix fun <T, reified R>  List<out T>.zip(other:  Vect0r< out  R>): List<Pair<T, R>> {
+inline infix fun <T, reified R> List<out T>.zip(other: Vect0r<out R>): List<Pair<T, R>> {
     return zip(other.toArray()) { t1, t2 -> t1 to t2 }
 }
 
@@ -171,5 +171,6 @@ inline fun <reified T> combine(vararg a: Array<T>) =
 
 //array-like mapped map
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>) = this.get(*ks.toList().toTypedArray())
+
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>) = this.get(*ks.toList().toTypedArray())
-inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size){ ix->ks[ix].let(this::get)!!}
+inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size) { ix -> ks[ix].let(this::get)!! }

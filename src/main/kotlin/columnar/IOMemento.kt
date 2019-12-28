@@ -34,7 +34,7 @@ val instantMapper = { s: String ->
     } ?: Instant.EPOCH
 }
 
-enum class IOMemento{
+enum class IOMemento {
     IoInt,
     IoLong,
     IoFloat,

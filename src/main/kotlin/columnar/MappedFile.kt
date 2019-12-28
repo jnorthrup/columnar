@@ -1,10 +1,7 @@
 package columnar
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import java.io.Closeable
 import java.io.RandomAccessFile
-import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import kotlin.math.min
@@ -20,11 +17,11 @@ open class MappedFile(
     filename: String,
     mode: String = "r",
     mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
-    public val randomAccessFile: RandomAccessFile = RandomAccessFile(
+    val randomAccessFile: RandomAccessFile = RandomAccessFile(
         filename,
         mode
     ),
     val channel: FileChannel = randomAccessFile.channel,
     val length: Long = randomAccessFile.length(),
-    val mappedByteBuffer: MappedByteBuffer = channel.map(mapMode, 0, min(Int.MAX_VALUE.toLong(),length))
-) : FileAccess(filename),  Closeable by randomAccessFile
+    val mappedByteBuffer: MappedByteBuffer = channel.map(mapMode, 0, min(Int.MAX_VALUE.toLong(), length))
+) : FileAccess(filename), Closeable by randomAccessFile

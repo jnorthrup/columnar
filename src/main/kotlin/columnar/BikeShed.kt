@@ -25,5 +25,5 @@ val bb2ba: (ByteBuffer) -> ByteArray = { bb: ByteBuffer -> ByteArray(bb.remainin
 val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) }
 val trim: (String) -> String = String::trim
 infix fun <O, R, F : (O) -> R> O.`•`(f: F) = this.let(f)
+operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G) = { a: A -> a `•` this `•` (b) }
 infix fun <A, B, R, O : (A) -> B, G : (B) -> R> O.`•`(b: G) = this * b
-operator fun <A, B, R, O : (A) -> B> O.times(b: (B) -> R) = { a: A -> a `•` this `•` (b) }

@@ -15,13 +15,10 @@ import kotlin.coroutines.coroutineContext
  */
 open class CellDriver<B, R>(
     open val read: readfn<B, R>,
-    val write: writefn<B, R>
+    open val write: writefn<B, R>
 ) {
     companion object {
-
-
         class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
-
             companion object {
                 /**coroutineContext derived map of Medium access drivers
                  *
@@ -29,8 +26,12 @@ open class CellDriver<B, R>(
                 suspend fun forMedium(medium: Medium?) =
                     (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
                         mapOf(
-                            IOMemento.IoInt to Tokenized(bb2ba `•` btoa `•` trim * String::toInt, { a, b -> a.putInt(b) }),
-                            IOMemento.IoLong to Tokenized((bb2ba `•` btoa `•` trim * String::toLong), { a, b -> a.putLong(b) }),
+                            IOMemento.IoInt to Tokenized(
+                                bb2ba `•` btoa `•` trim * String::toInt,
+                                { a, b -> a.putInt(b as Int) }),
+                            IOMemento.IoLong to Tokenized(
+                                (bb2ba `•` btoa `•` trim * String::toLong),
+                                { a, b -> a.putLong(b as Long) }),
                             IOMemento.IoFloat to Tokenized(
                                 bb2ba `•` btoa `•` trim `•` String::toFloat,
                                 { a, b -> a.putFloat(b) }),

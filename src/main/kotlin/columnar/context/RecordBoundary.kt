@@ -1,6 +1,6 @@
 package columnar.context
 
-import columnar.*
+import columnar.Vect0r
 import kotlin.coroutines.CoroutineContext
 
 /**
