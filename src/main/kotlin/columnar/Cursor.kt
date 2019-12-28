@@ -3,6 +3,7 @@ package columnar
 import columnar.CellDriver.Companion.Fixed
 import columnar.IOMemento.*
 import columnar.Medium.Companion.mediumKey
+import columnar.Medium.NioMMap
 import columnar.RecordBoundary.FixedWidth
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
@@ -26,10 +27,25 @@ where iterator is random-access (for fwf) or pre-indexed with an intial EOL scan
  */
 
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
-typealias writefn<M, R> = Function2<M, R, Unit>
-typealias readfn<M, R> = Function1<M, R>
+
+
+typealias Matrix<T> = Pair<
+        /**shape*/
+        IntArray,
+        /**accessor*/
+            (IntArray) -> T>
 
 infix fun <A, B, C> Pair<A, B>.by(t: C) = Triple(first, second, t)
+
+infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
+operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
+
+val bb2ba: (ByteBuffer) -> ByteArray = { bb: ByteBuffer -> ByteArray(bb.remaining()).also { bb[it] } }
+val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) }
+val trim: (String) -> String = String::trim
+infix fun <O, R, F : (O) -> R> O.`•`(f: F) = this.let(f)
+infix fun <A, B, R, O : (A) -> B, G : (B) -> R> O.`•`(b: G) = this * b
+operator fun <A, B, R, O : (A) -> B> O.times(b: (B) -> R) = { a: A -> a `•` this `•` (b) }
 
 sealed class Arity : Element {
     open class Scalar(val type: IOMemento, name: String? = null) : Arity()
@@ -102,6 +118,9 @@ sealed class RecordBoundary : Element {
 
 }
 
+typealias writefn<M, R> = Function2<M, R, Unit>
+typealias readfn<M, R> = Function1<M, R>
+
 /**
  * CellDriver functions to read and write primitive  state instances to more persistent tiers.
  *
@@ -122,7 +141,7 @@ open class CellDriver<B, R>(
                  *
                  */
                 suspend fun forMedium(medium: Medium?) =
-                    (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
+                    (medium ?: coroutineContext.get(mediumKey) as? NioMMap)?.let {
                         mapOf(
                             IoInt to Tokenized(bb2ba `•` btoa `•` trim * String::toInt, { a, b -> a.putInt(b) }),
                             IoLong to Tokenized((bb2ba `•` btoa `•` trim * String::toLong), { a, b -> a.putLong(b) }),
@@ -144,13 +163,13 @@ open class CellDriver<B, R>(
             }
         }
 
-        class Fixed<B, R>(val bound: Int?, read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
+        class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
             companion object {
                 /**coroutineContext derived map of Medium access drivers
                  *
                  */
                 suspend fun forMedium(medium: Medium?) =
-                    (medium ?: coroutineContext.get(mediumKey) as? Medium.NioMMap)?.let {
+                    (medium ?: coroutineContext.get(mediumKey) as? NioMMap)?.let {
                         mapOf(
                             IoInt to Fixed(4, ByteBuffer::getInt, { a, b -> a.putInt(b);Unit }),
                             IoLong to Fixed(8, ByteBuffer::getLong, { a, b -> a.putLong(b);Unit }),
@@ -190,47 +209,55 @@ open class CellDriver<B, R>(
  */
 sealed class Ordering : Element {
 
-    abstract suspend fun arrange()
-
+    abstract suspend fun nioCursor(): NioCursor
     /**
      * [x++,y,z]
      * [x,y++,z]
      */
     class RowMajor : Ordering() {
-        override suspend fun arrange() {
+        override suspend fun nioCursor() = let {
             val medium = coroutineContext[mediumKey]!!
             val arity = coroutineContext[Arity.arityKey]!!
             val addressable = coroutineContext[Addressable.addressableKey]!!
             val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-            when {
-                medium is Medium.NioMMap -> {
-                    val drivers = when (arity) {
-                        is Arity.Columnar -> Fixed.forMedium(medium)!![arity.type]
-                        is Arity.Scalar -> TODO()
-                        is Arity.Variadic -> TODO()
-                    }
-
-                    val coords = when (recordBoundary) {
-                        is FixedWidth -> recordBoundary.coords
-                        is RecordBoundary.Tokenized -> TODO()
-                    }
-
-                    var y = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary).second
-                    var x = { y: ByteBuffer ->
-                        Vect0r<Any?>({ drivers.size }, { x: Int ->
-                            drivers[x].let { driver ->
-                                coords[x].let { (start, end) ->
-                                    driver.read(
-                                        when (driver) {
-                                            is Fixed -> y at start
-                                            else -> y[start, end]
-                                        }
-                                    )
-                                }
-                            }
-                        })
-                    }
+            (medium as NioMMap).let {
+                val drivers = when (arity) {
+                    is Arity.Columnar -> Fixed.forMedium(medium)!![arity.type]
+                    is Arity.Scalar -> TODO()
+                    is Arity.Variadic -> TODO()
                 }
+
+                val coords = when (recordBoundary) {
+                    is FixedWidth -> recordBoundary.coords
+                    is RecordBoundary.Tokenized -> TODO()
+                }
+
+                val row = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary)
+                val col = { y: ByteBuffer ->
+                    Vect0r({ drivers.size }, { x: Int ->
+                        drivers[x] to arity.type[x] by coords[x].size
+                    })
+                }
+                NioCursor(
+                    intArrayOf(drivers.size, row.size),
+                    { coords: IntArray ->
+                        val (x, y) = coords
+                        val (row1, state) = row[y]
+                        val (size, triple) = col(row1)
+                        triple(x).let { theTriple ->
+                            theTriple.let { (driver, type, size) ->
+                                val rfn = { row1.duplicate() `•` driver.read }
+                                @Suppress("UNCHECKED_CAST") val wfn =
+                                    { a: Any? ->
+                                        ((driver as CellDriver<ByteBuffer, Any?>).write)(
+                                            row1.duplicate(),
+                                            a
+                                        )
+                                    }
+                                rfn to wfn by theTriple
+                            }
+                        }
+                    })
             }
         }
     }
@@ -239,69 +266,29 @@ sealed class Ordering : Element {
      * [x,y++]
      * [x++,y]
      */
-    class ColumnMajor : Ordering() {
-        override suspend fun arrange() {
-            val medium = coroutineContext[mediumKey]!!
-            val arity = coroutineContext[Arity.arityKey]!!
-            val addressable = coroutineContext[Addressable.addressableKey]!!
-            val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-            when {
-                medium is Medium.NioMMap -> {
-                    val drivers = when (arity) {
-                        is Arity.Columnar -> Fixed.forMedium(medium)!![arity.type]
-                        is Arity.Scalar -> TODO()
-                        is Arity.Variadic -> TODO()
-                    }
-
-                    val coords = when (recordBoundary) {
-                        is FixedWidth -> recordBoundary.coords
-                        is RecordBoundary.Tokenized -> TODO()
-                    }
-
-                    var x = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary).second
-                    var y = { x: ByteBuffer ->
-                        Vect0r<Any?>({ drivers.size }, { y: Int ->
-                            drivers[y].let { driver ->
-                                coords[y].let { (start, end) ->
-                                    driver.read(
-                                        when (driver) {
-                                            is Fixed -> x at start
-                                            else -> x[start, end]
-                                        }
-                                    )
-                                }
-                            }
-                        })
-                    }
-                }
-            }
-        }
-    }
+    abstract class ColumnMajor : Ordering()
 
     /**
      * {x,y,z}+-(1|n|n^?)]
      */
-    class Hilbert : Ordering() {
-        override suspend fun arrange() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    }
+    abstract class Hilbert : Ordering()
 
     /**
      * [0,0,0]
      * [1,..1,..1]
      * [2,..2,..2]
      */
-    class Diagonal : Ordering() {
-        override suspend fun arrange() {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-    }
+    abstract class Diagonal : Ordering()
 
     override val key: Key<Ordering> get() = orderingKey
 
     companion object {
         val orderingKey = object : Key<Ordering> {}
+
+        data class NioCursor(
+            val shape: IntArray,
+            val access: (IntArray) -> Triple<() -> Any, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, out Any>, IOMemento, Int>>
+        )
     }
 }
 
@@ -429,7 +416,7 @@ suspend fun main() {
                     "ret" to IoFloat
                 )
             )
-            val nio = Medium.NioMMap(mf)
+            val nio = NioMMap(mf)
             val fixedWidth = FixedWidth(
                 nio.recordLen(),
                 arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
@@ -438,6 +425,10 @@ suspend fun main() {
             )
             val indexable = Addressable.Indexable(size = { (nio.recordLen() / nio.size()).toInt() }, seek = nio.seek)
             val rowMajor = Ordering.RowMajor()
+
+            /**
+             * for java readers,  these elements are same as reifiable threadlocals
+             */
             val coroutineContext =
                 EmptyCoroutineContext +
                         columnarArity +
@@ -448,26 +439,11 @@ suspend fun main() {
             coroutineContext.run {
                 val drivers = Fixed.forMedium(nio)!![columnarArity.type]
                 val coords = fixedWidth.coords
-                nio.asSequence().map { rowbuf ->
-                    Vect0r<Any?>({ -> drivers.size }, { ix: Int ->
-                        drivers[ix].let { driver ->
-                            coords[ix].let { (start, end) ->
-                                driver.read(
-                                    when (driver) {
-                                        is Fixed -> rowbuf at start
-                                        else -> rowbuf[start, end]
-                                    }
-                                )
-                            }
-                        }
-                    })
-                }
+                val cursor = rowMajor.nioCursor()
+
             }
         }
     }
 }
-
-infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
-operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
 
 
