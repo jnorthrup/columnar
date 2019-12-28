@@ -83,7 +83,7 @@ sealed class Medium : CoroutineContext.Element {
         fun remap(
             rafchannel: FileChannel, window: Pair<Long, Long>
         ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
-            rafchannel.map(FileChannel.MapMode.READ_WRITE, offsetToMap, sizeToMap)
+            rafchannel.map(mf.mapMode, offsetToMap, sizeToMap)
         }
 
         /**

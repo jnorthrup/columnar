@@ -24,17 +24,15 @@ sealed class Ordering : CoroutineContext.Element {
      * [x,y++,z]
      */
     class RowMajor : Ordering() {
+        @Suppress("UNCHECKED_CAST")
         override suspend fun nioCursor() = let {
             val medium = coroutineContext[mediumKey]!!
             val arity = coroutineContext[Arity.arityKey]!!
             val addressable = coroutineContext[Addressable.addressableKey]!!
             val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
+            val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!!
             (medium as Medium.NioMMap).let {
-                val drivers = when (arity) {
-                    is Arity.Columnar -> CellDriver.Companion.Fixed.forMedium(medium)!![arity.type]
-                    is Arity.Scalar -> TODO()
-                    is Arity.Variadic -> TODO()
-                }
+                val drivers = nioDrivers.drivers
 
                 val coords = when (recordBoundary) {
                     is RecordBoundary.FixedWidth -> recordBoundary.coords
@@ -44,33 +42,27 @@ sealed class Ordering : CoroutineContext.Element {
                 val row = medium.asContextVect0r(addressable as Addressable.Indexable, recordBoundary)
                 val col = { y: ByteBuffer ->
                     Vect0r({ drivers.size }, { x: Int ->
-                        drivers[x] to arity.type[x] by coords[x].size
+                        drivers[x] to (arity as Arity.Columnar).type[x] by coords[x].size
                     })
                 }
                 NioCursor(
                     intArrayOf(drivers.size, row.size)
-                ) { coords: IntArray ->
-                    val (x, y) = coords
+                ) { requestCoords: IntArray ->
+                    val (x, y) = requestCoords
                     val (row1, state) = row[y]
-                    val (size, triple) = col(row1)
-                    triple(x).let { theTriple ->
-                        theTriple.let { (driver, type, size) ->
-                            val rfn = { row1.duplicate() `•` driver.read }
-                            @Suppress("UNCHECKED_CAST") val wfn =
-                                { a: Any? ->
-                                    ((driver as CellDriver<ByteBuffer, Any?>).write)(
-                                        row1.duplicate(),
-                                        a
-                                    )
-                                }
-                            @Suppress("UNCHECKED_CAST")
-                            rfn to wfn by theTriple as Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
-                        }
+                    val (_, triple) = col(row1)
+                    val triple1 = triple(x)
+                    triple1.let { (driver, type, cellSize) ->
+                               val (start,end) = coords[x]
+                                { row1[start,end] `•` driver.read } as () -> Any to
+                                { v: Any? -> (driver.write as (ByteBuffer,Any?)->Unit)(row1[start,end], v) } by
+                                triple1
                     }
                 }
             }
         }
     }
+
 
     /**
      * [x,y++]

@@ -15,8 +15,8 @@ import kotlin.math.min
  */
 open class MappedFile(
     filename: String,
-    mode: String = "r",
-    mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
+    val mode: String = "r",
+    val mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
     val randomAccessFile: RandomAccessFile = RandomAccessFile(
         filename,
         mode
