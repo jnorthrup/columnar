@@ -15,6 +15,10 @@ val <T> Vect0r<T>.size: Int get() = first.invoke()
 infix fun <O, R, F : (O) -> R> O.`→`(f: F) = this.let(f)
 operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G) = { a: A -> a `→` this `→` (b) }
 infix fun <A, B, R, O : (A) -> B, G : (B) -> R> O.`→`(b: G) = this * b
+
+infix fun<A,B,C,G:(B)->C , F:(A)->B > G.`●`( f:F ) = {a:A-> a `→` f   `→` this}
+
+
 @JvmName("vlike_Sequence_1")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
 
