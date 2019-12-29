@@ -19,41 +19,46 @@ typealias readfn<M, R> = Function1<M, R>
  * if this is to be a  trait system, the functional objects need to look like a blackboard
  */
 suspend fun main() {
-    runBlocking {
-        MappedFile("src/test/resources/caven4.fwf").use { mf ->
-            val columnarArity = Columnar.of(
-                listOf(
-                    "date" to IoLocalDate,
-                    "channel" to IoString,
-                    "delivered" to IoFloat,
-                    "ret" to IoFloat
-                )
-            )
-            val nio = NioMMap(mf)
-            val recordLen = nio.recordLen()
-            val fixedWidth = FixedWidth(
-                recordLen,
-                arrayOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
-                    it.toList().toIntArray()
-                }.toVect0r()
-            )
-            val indexable = Indexable(size = { (nio.size() / nio.recordLen()).toInt() }, seek = nio.seek)
+    val mapping = listOf(
+        "date" to IoLocalDate,
+        "channel" to IoString,
+        "delivered" to IoFloat,
+        "ret" to IoFloat
+    )
+    val coords = vect0rOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)).map {
+        it.toList().toIntArray()
+    }.toVect0r()
 
-            val size1 = nio.size()
-            assert(660L == size1)
-            val size2 = indexable.size().toInt()
-            assert(size2 == 4)
+    val filename = "src/test/resources/caven4.fwf"
+    runBlocking {
+        MappedFile(filename).use { mf ->
+            val columnarArity = Columnar.of(mapping)
+            val nio = NioMMap(mf)
+             val fixedWidth = FixedWidth(recordLen = ({
+                 nio.mf.mappedByteBuffer.duplicate().clear().run {
+                     run {
+                         while (get() != '\n'.toByte());
+                         position()
+                     }
+                 }
+             })(), coords = coords)
+            val indexable = Indexable(size = (({ nio.mf.randomAccessFile.length() })() / ({
+                nio.mf.mappedByteBuffer.duplicate().clear().run {
+                    run {
+                        while (get() != '\n'.toByte());
+                        position()
+                    }
+                }
+            })())::toInt) { recordIndex->
+                nio.mf.mappedByteBuffer.position(recordIndex * fixedWidth.recordLen ).slice().limit( fixedWidth.recordLen )
+            }
             nio.drivers = text(*columnarArity.type.toArray())
 
             val fourBy: suspend CoroutineScope.() -> Unit = {
                 System.err.println(""+coroutineContext)
                 val medium = coroutineContext[Medium.mediumKey]
-                val size3 = (medium as NioMMap).size()
                 val addressable = coroutineContext[Addressable.addressableKey]
                 assert(addressable is Indexable)
-                val size = (addressable as Indexable).size()
-                assert(size == 4)
-
                 val nioCursor = nio.values()
                 nioCursor.let { (a, b) ->
                     System.err.println("" + a.toList())
