@@ -14,9 +14,9 @@ typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple< CellDriv
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
-    abstract val seek: (Int) -> Unit
-    abstract val size: () -> Long
-    abstract val recordLen: () -> Int
+ @Deprecated("These should be vastly more local in the Addressable ")abstract  val seek: (Int) -> Unit
+ @Deprecated("These should be vastly more local in the Addressable ")abstract  val size: () -> Long
+ @Deprecated("These should be vastly more local in the Addressable ")abstract  val recordLen: () -> Int
 
     companion object {
         val mediumKey = object :
@@ -201,7 +201,8 @@ class NioMMap(
      */
     fun translateMapping(
         rowIndex: Int,
-        rowsize: Int, state: Pair<ByteBuffer, Pair<Long, Long>>
+        rowsize: Int,
+        state: Pair<ByteBuffer, Pair<Long, Long>>
     ): Pair<ByteBuffer, Pair<Long, Long>> {
         var (buf1, window1) = state
         val lix = rowIndex.toLong()
