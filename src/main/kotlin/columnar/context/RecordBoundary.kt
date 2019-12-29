@@ -17,25 +17,21 @@ import kotlin.coroutines.CoroutineContext
  *
  */
 sealed class RecordBoundary : CoroutineContext.Element {
-    class Tokenized(val tokenizer: (String) -> List<String>) : RecordBoundary() {
-        companion object
-    }
-
-    class FixedWidth(
-        val recordLen: Int,
-        val coords: Vect0r<IntArray>,
-        val endl: () -> Byte? = '\n'::toByte,
-        val pad: () -> Byte? = ' '::toByte
-    ) : RecordBoundary()
-
     companion object {
-
-
-        val boundaryKey = object :
-            CoroutineContext.Key<RecordBoundary> {}
+        val boundaryKey = object : CoroutineContext.Key<RecordBoundary> {}
     }
 
     override val key get() = boundaryKey
-
 }
 
+
+class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
+    companion object
+}
+
+class FixedWidth(
+    val recordLen: Int,
+    val coords: Vect0r<IntArray>,
+    val endl: () -> Byte? = '\n'::toByte,
+    val pad: () -> Byte? = ' '::toByte
+) : RecordBoundary()

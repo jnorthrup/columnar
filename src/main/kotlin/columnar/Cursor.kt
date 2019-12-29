@@ -1,15 +1,10 @@
 package columnar
 
 import columnar.IOMemento.*
-import columnar.context.Addressable
-import columnar.context.Addressable.Indexable
-import columnar.context.Arity
-import columnar.context.Medium
-import columnar.context.Medium.NioMMap
-import columnar.context.Medium.NioMMap.Companion.text
-import columnar.context.Ordering
-import columnar.context.RecordBoundary.FixedWidth
-import kotlinx.coroutines.CoroutineScope
+import columnar.context.*
+import columnar.context. Indexable
+import columnar.context.NioMMap.Companion.text
+ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -26,7 +21,7 @@ typealias readfn<M, R> = Function1<M, R>
 suspend fun main() {
     runBlocking {
         MappedFile("src/test/resources/caven4.fwf").use { mf ->
-            val columnarArity = Arity.Columnar.of(
+            val columnarArity = Columnar.of(
                 listOf(
                     "date" to IoLocalDate,
                     "channel" to IoString,
@@ -74,14 +69,14 @@ runBlocking {      val coroutineScope = CoroutineScope(
     columnarArity +
             fixedWidth +
             indexable +
-            nio + Ordering.RowMajor()
+            nio + RowMajor()
 )
     coroutineScope.launch(block = fourBy).join() }
        runBlocking { val coroutineScope= CoroutineScope(
            columnarArity +
                    fixedWidth +
                    indexable +
-                   nio    + Ordering.ColumnMajor()
+                   nio    +  ColumnMajor()
        )
            coroutineScope.launch(block = fourBy).join() }
 
