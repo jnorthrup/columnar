@@ -113,7 +113,7 @@ class NioMMap(
             col(row1).let { (_, triple) ->
                 triple(x).let { triple1 ->
                     triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
-                            { row1[start, end] `•` driver.read } as () -> Any to
+                            { row1[start, end] `→` driver.read } as () -> Any to
                                     { v: Any? -> driver.write(row1[start, end], v) } by
                                     triple1
                         }
@@ -237,26 +237,26 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
 
         val mapped = mapOf(
             IOMemento.IoInt to Tokenized(
-                bb2ba `•` btoa `•` trim * String::toInt,
+                bb2ba `→` btoa `→` trim * String::toInt,
                 { a, b -> a.putInt(b as Int) }),
             IOMemento.IoLong to Tokenized(
-                (bb2ba `•` btoa `•` trim * String::toLong),
+                (bb2ba `→` btoa `→` trim * String::toLong),
                 { a, b -> a.putLong(b as Long) }),
             IOMemento.IoFloat to Tokenized(
-                bb2ba `•` btoa `•` trim `•` String::toFloat,
+                bb2ba `→` btoa `→` trim `→` String::toFloat,
                 { a, b -> a.putFloat(b) }),
             IOMemento.IoDouble to Tokenized(
-                bb2ba `•` btoa `•` trim `•` String::toDouble,
+                bb2ba `→` btoa `→` trim `→` String::toDouble,
                 { a, b -> a.putDouble(b) }),
             IOMemento.IoString to Tokenized(
-                bb2ba `•` btoa `•` trim,
+                bb2ba `→` btoa `→` trim,
                 xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
-                bb2ba `•` btoa `•` trim `•` dateMapper,
+                bb2ba `→` btoa `→` trim `→` dateMapper,
                 { a, b -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
-                bb2ba `•` btoa `•` trim `•` instantMapper,
+                bb2ba `→` btoa `→` trim `→` instantMapper,
                 { a, b -> a.putLong(b.toEpochMilli()) })
         )
     }
@@ -287,11 +287,11 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                 { a, b -> a.putDouble(b);Unit }),
             IOMemento.IoLocalDate to Fixed(
                 8,
-                { it.long `•` LocalDate::ofEpochDay },
+                { it.long `→` LocalDate::ofEpochDay },
                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Fixed(
                 8,
-                { it.long `•` Instant::ofEpochMilli },
+                { it.long `→` Instant::ofEpochMilli },
                 { a, b: Instant -> a.putLong(b.toEpochMilli()) }),
             IOMemento.IoString to /*Array-like has no constant bound. */ Tokenized.mapped[IOMemento.IoString]!!
         )
