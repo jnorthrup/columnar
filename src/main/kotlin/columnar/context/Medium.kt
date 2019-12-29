@@ -49,10 +49,10 @@ class NioMMap(
         val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-//            val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!!
+        /* val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!! */
         medium.let {
             val drivers = medium.drivers
-                ?: NioMMap.text(*(arity as Columnar).type.toArray())/*assuming fwf here*/
+                ?: text(*(arity as Columnar).type.toArray())/*assuming fwf here*/
             val coords = when (recordBoundary) {
                 is FixedWidth -> recordBoundary.coords
                 is TokenizedRow -> TODO()
@@ -89,16 +89,7 @@ class NioMMap(
                     }
                     NioCursor(
                         intArrayOf(row.size, drivers.size)
-                    ) { (y, x) ->
-                        dfn(
-                            row,
-                            y,
-                            col,
-                            x,
-                            coords
-                        )
-
-                    }
+                    ) { (y, x) ->  dfn(row, y, col, x, coords) }
                 }
 
 
