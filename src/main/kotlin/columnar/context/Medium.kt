@@ -89,7 +89,7 @@ class NioMMap(
                     }
                     NioCursor(
                         intArrayOf(row.size, drivers.size)
-                    ) { (y, x) ->  dfn(row, y, col, x, coords) }
+                    ) { (y, x) -> dfn(row, y, col, x, coords) }
                 }
 
 
@@ -109,10 +109,10 @@ class NioMMap(
         coords: Vect0r<IntArray>
     ) = let {
         coords[x].let { (start, end) ->
-        row[y].let { (row1) ->
-            col(row1).let { (_, triple) ->
-                triple(x).let { triple1 ->
-                    triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
+            row[y].let { (row1) ->
+                col(row1).let { (_, triple) ->
+                    triple(x).let { triple1 ->
+                        triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
                             { row1[start, end] `→` driver.read } as () -> Any to
                                     { v: Any? -> driver.write(row1[start, end], v) } by
                                     triple1
@@ -253,7 +253,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
-                bb2ba `→` btoa `→` trim `→` dateMapper,
+                dateMapper `●`  trim `●` btoa `●` bb2ba,
                 { a, b -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
                 bb2ba `→` btoa `→` trim `→` instantMapper,
