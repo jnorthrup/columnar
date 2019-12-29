@@ -2,7 +2,7 @@ package columnar.context
 
 import columnar.*
 import columnar.context.Arity.Companion.arityKey
- import java.nio.ByteBuffer
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
@@ -10,13 +10,16 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
-typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple< CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
+typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
- @Deprecated("These should be vastly more local in the Addressable ")abstract  val seek: (Int) -> Unit
- @Deprecated("These should be vastly more local in the Addressable ")abstract  val size: () -> Long
- @Deprecated("These should be vastly more local in the Addressable ")abstract  val recordLen: () -> Int
+    @Deprecated("These should be vastly more local in the Indexable ")
+    abstract val seek: (Int) -> Unit
+    @Deprecated("These should be vastly more local in the Indexable ")
+    abstract val size: () -> Long
+    @Deprecated("These should be vastly more local in the FixedWidth ")
+    abstract val recordLen: () -> Int
 
     companion object {
         val mediumKey = object :
@@ -43,23 +46,23 @@ class NioMMap(
     suspend fun values() = let {
         val medium = this
         val ordering = coroutineContext[Ordering.orderingKey]!!
-        val arity = coroutineContext[ arityKey]!!
+        val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
 //            val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!!
         medium.let {
             val drivers = medium.drivers
-                ?: NioMMap.text(*(arity as  Columnar).type.toArray())/*assuming fwf here*/
+                ?: NioMMap.text(*(arity as Columnar).type.toArray())/*assuming fwf here*/
             val coords = when (recordBoundary) {
                 is FixedWidth -> recordBoundary.coords
-                is  TokenizedRow -> TODO()
+                is TokenizedRow -> TODO()
             }
 
 
 
             when (ordering) {
                 is RowMajor -> {
-                    val row = medium.asContextVect0r(addressable as  Indexable, recordBoundary)
+                    val row = medium.asContextVect0r(addressable as Indexable, recordBoundary)
                     val col = { y: ByteBuffer ->
                         Vect0r({ drivers.size }, { x: Int ->
                             drivers[x] to (arity as Columnar).type[x] by coords[x].size
@@ -67,27 +70,18 @@ class NioMMap(
                     }
                     NioCursor(
                         intArrayOf(drivers.size, row.size)
-                    ) { requestCoords: IntArray ->
-                        val (x, y) = requestCoords
-                        val (row1, state) = row[y]
-                        val (_, triple) = col(row1)
-                        val triple1 = triple(x)
-                        triple1.let { (driver, type, cellSize) ->
-                            val (start, end) = coords[x]
-                            { row1[start, end] `•` driver.read } as () -> Any to
-                                    { v: Any? ->
-                                        driver.write(
-                                            row1[start, end],
-                                            v
-                                        )
-                                    } by
-                                    triple1
-                        }
-
+                    ) { (x, y) ->
+                        dfn(
+                            row,
+                            y,
+                            col,
+                            x,
+                            coords
+                        )
                     }
                 }
                 is ColumnMajor -> {
-                    val row = medium.asContextVect0r(addressable as  Indexable, recordBoundary)
+                    val row = medium.asContextVect0r(addressable as Indexable, recordBoundary)
                     val col = { y: ByteBuffer ->
                         Vect0r({ drivers.size }, { x: Int ->
                             drivers[x] to (arity as Columnar).type[x] by coords[x].size
@@ -95,22 +89,14 @@ class NioMMap(
                     }
                     NioCursor(
                         intArrayOf(row.size, drivers.size)
-                    ) { requestCoords: IntArray ->
-                        val (y, x) = requestCoords
-                        val (row1, state) = row[y]
-                        val (_, triple) = col(row1)
-                        val triple1 = triple(x)
-                        triple1.let { (driver, type, cellSize) ->
-                            val (start, end) = coords[x]
-                            { row1[start, end] `•` driver.read } as () -> Any to
-                                    { v: Any? ->
-                                        driver.write(
-                                            row1[start, end],
-                                            v
-                                        )
-                                    } by
-                                    triple1
-                        }
+                    ) { (y, x) ->
+                        dfn(
+                            row,
+                            y,
+                            col,
+                            x,
+                            coords
+                        )
 
                     }
                 }
@@ -123,17 +109,40 @@ class NioMMap(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun dfn(
+        row: Vect0r<Pair<ByteBuffer, Pair<Long, Long>>>,
+        y: Int,
+        col: (ByteBuffer) -> Vect0r<Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
+        x: Int,
+        coords: Vect0r<IntArray>
+    ) = let {
+        coords[x].let { (start, end) ->
+        row[y].let { (row1) ->
+            col(row1).let { (_, triple) ->
+                triple(x).let { triple1 ->
+                    triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
+                            { row1[start, end] `•` driver.read } as () -> Any to
+                                    { v: Any? -> driver.write(row1[start, end], v) } by
+                                    triple1
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
         fun text(vararg m: IOMemento) =
             Tokenized.mapped.get(*m) as Array<CellDriver<ByteBuffer, Any?>>
 
         fun binary(vararg m: IOMemento) =
-             Fixed.mapped.get(*m) as Array<CellDriver<ByteBuffer, Any?>>
+            Fixed.mapped.get(*m) as Array<CellDriver<ByteBuffer, Any?>>
 
     }
 
     fun asContextVect0r(
-        indexable:  Indexable,
+        indexable: Indexable,
         fixedWidth: FixedWidth,
         state: () -> Pair<ByteBuffer, Pair<Long, Long>> = {
             Pair(
@@ -156,7 +165,7 @@ class NioMMap(
 
         var state = Pair(ByteBuffer.allocate(0), Pair(-1L, -1L))
         val cvec = asContextVect0r(
-            indexable as  Indexable,
+            indexable as Indexable,
             fixedWidth as FixedWidth,
             { -> state })
         return sequence {
@@ -217,8 +226,8 @@ class NioMMap(
     }
 
 
+}
 
-};  
 /**
  * CellDriver functions to read and write primitive  state instances to more persistent tiers.
  *
@@ -229,6 +238,7 @@ open class CellDriver<B, R>(
     open val read: readfn<B, R>,
     open val write: writefn<B, R>
 )
+
 class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
     companion object {
         /**coroutineContext derived map of Medium access drivers
