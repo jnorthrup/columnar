@@ -26,7 +26,6 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B> G.`⚬`(f: F) = { a: A -> a `→
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
 inline infix fun <reified A, C, B : (A) -> C> Vect0r<A>.α(m: B) = Vect0r(first) { i -> this.second(i) `→` m }
-
 infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) = this.map { it `→` m }
 infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B) = this.map { it `→` m }
 infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B) = this.map { it `→` m }
@@ -90,7 +89,7 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>) = this[ind
 
 @JvmName("vlike_Vect0r_IntArray3")
 inline operator fun <reified T> Vect0r<T>.get(index: IntArray) = this.let { (a, b) ->
-    index::size to { ix: Int -> b(index[ix]) }
+    {index.size} to { ix: Int -> b(index[ix]) }
 }
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
