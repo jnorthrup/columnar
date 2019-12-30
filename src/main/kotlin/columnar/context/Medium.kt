@@ -251,7 +251,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
-                dateMapper `○`  trim `○`  btoa `○`  bb2ba,
+                dateMapper `⚬`  trim `⚬`  btoa `⚬`  bb2ba,
                 { a, b -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
                 bb2ba `→` btoa `→` trim `→` instantMapper,

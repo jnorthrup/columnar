@@ -19,25 +19,29 @@ infix fun <A, B, R, O : (A) -> B, G : (B) -> R> O.`→`(b: G) = this * b
 /**
  * G follows F
  */
-infix fun <A, B, C, G : (B) -> C, F : (A) -> B> G.`○`(f: F) = { a: A -> a `→` f `→` this }
+infix fun <A, B, C, G : (B) -> C, F : (A) -> B> G.`⚬`(f: F) = { a: A -> a `→` f `→` this }
 
 /**
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-inline infix fun <reified A, C, B : (A) -> C> Vect0r<A>.`α`(m: B) = Vect0r(first) { i -> this.second(i) `→` m } 
-infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.`α`(m: B) = this.map { it `→` m }
-infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.`α`(m: B) = this.map { it `→` m }
-infix fun <A, C, B : (A) -> C, T : Flow<A>> T.`α`(m: B) = this.map { it `→` m }
-infix fun <A, C, B : (A) -> C> List<A>.`α`(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
-infix fun <A, C, B : (A) -> C> Array<A>.`α`(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
-infix fun <C, B : (Int) -> C> IntArray.`α`(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
-infix fun <C, B : (Float) -> C> FloatArray.`α`(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
-infix fun <C, B : (Double) -> C> DoubleArray.`α`(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
-infix fun <C, B : (Long) -> C> LongArray.`α`(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
+inline infix fun <reified A, C, B : (A) -> C> Vect0r<A>.α(m: B) = Vect0r(first) { i -> this.second(i) `→` m }
+
+infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) = this.map { it `→` m }
+infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B) = this.map { it `→` m }
+infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B) = this.map { it `→` m }
+infix fun <A, C, B : (A) -> C> List<A>.α(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
+infix fun <A, C, B : (A) -> C> Array<A>.α(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
+infix fun <C, B : (Int) -> C> IntArray.α(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
+infix fun <C, B : (Float) -> C> FloatArray.α(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
+infix fun <C, B : (Long) -> C> LongArray.α(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
 
 /**right identity*/
 infix fun <T, R, F : (T) -> R> T.`⟲`(f: F) = { f(this) }
+
+
+
 
 @JvmName("vlike_Sequence_1")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
