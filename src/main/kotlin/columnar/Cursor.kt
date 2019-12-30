@@ -2,11 +2,11 @@ package columnar
 
 import columnar.IOMemento.*
 import columnar.context.*
-import columnar.context. Indexable
 import columnar.context.NioMMap.Companion.text
- import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.nio.ByteBuffer
 
 
 typealias writefn<M, R> = Function2<M, R, Unit>
@@ -33,15 +33,19 @@ suspend fun main() {
     runBlocking {
         MappedFile(filename).use { mf ->
             val columnarArity = Columnar.of(mapping)
+
             val nio = NioMMap(mf)
-             val fixedWidth = FixedWidth(recordLen = ({
-                 nio.mf.mappedByteBuffer.duplicate().clear().run {
-                     run {
-                         while (get() != '\n'.toByte());
-                         position()
-                     }
-                 }
-             })(), coords = coords)
+            nio.drivers = text(*columnarArity.type.toArray())
+
+            val fixedWidth = FixedWidth(recordLen = ({
+                nio.mf.mappedByteBuffer.duplicate().clear().run {
+                    run {
+                        while (get() != '\n'.toByte());
+                        position()
+                    }
+                }
+            })(), coords = coords)
+
             val indexable = Indexable(size = (({ nio.mf.randomAccessFile.length() })() / ({
                 nio.mf.mappedByteBuffer.duplicate().clear().run {
                     run {
@@ -49,13 +53,15 @@ suspend fun main() {
                         position()
                     }
                 }
-            })())::toInt) { recordIndex->
-                nio.mf.mappedByteBuffer.position(recordIndex * fixedWidth.recordLen ).slice().limit( fixedWidth.recordLen )
+            })())::toInt) { recordIndex ->
+                val lim = { b: ByteBuffer -> fixedWidth.recordLen.let(b::limit) }
+                val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
+                val sl = { b: ByteBuffer -> b.slice() }
+                nio.mf.mappedByteBuffer.`⟲` (lim `●` sl `●` pos)
             }
-            nio.drivers = text(*columnarArity.type.toArray())
 
             val fourBy: suspend CoroutineScope.() -> Unit = {
-                System.err.println(""+coroutineContext)
+                System.err.println("" + coroutineContext)
                 val medium = coroutineContext[Medium.mediumKey]
                 val addressable = coroutineContext[Addressable.addressableKey]
                 assert(addressable is Indexable)
@@ -70,20 +76,24 @@ suspend fun main() {
                 System.err.println(nioCursor[0, 1].first())
                 System.err.println(nioCursor[0, 2].first())
             }
-runBlocking {      val coroutineScope = CoroutineScope(
-    columnarArity +
-            fixedWidth +
-            indexable +
-            nio + RowMajor()
-)
-    coroutineScope.launch(block = fourBy).join() }
-       runBlocking { val coroutineScope= CoroutineScope(
-           columnarArity +
-                   fixedWidth +
-                   indexable +
-                   nio    +  ColumnMajor()
-       )
-           coroutineScope.launch(block = fourBy).join() }
+            runBlocking {
+                val coroutineScope = CoroutineScope(
+                    columnarArity +
+                            fixedWidth +
+                            indexable +
+                            nio + RowMajor()
+                )
+                coroutineScope.launch(block = fourBy).join()
+            }
+            runBlocking {
+                val coroutineScope = CoroutineScope(
+                    columnarArity +
+                            fixedWidth +
+                            indexable +
+                            nio + ColumnMajor()
+                )
+                coroutineScope.launch(block = fourBy).join()
+            }
 
 
         }
