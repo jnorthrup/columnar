@@ -50,11 +50,14 @@ fun main() {
         val dframe: Vect0r<Vect0r<Any?>> =
             Vect0r({ a[1] }) { iy -> Vect0r({ a[0] }) { ix -> byRows.first[ix, iy].first() } }
 
-        System.err.println(dframe[1][0])
-        System.err.println(dframe[1][0])
-        System.err.println(dframe[1][0])
-        System.err.println(dframe[1][0])
-        System.err.println(dframe[1][0])
+        for (i in 0 until dframe[1].size) {
+            System.err.print(""+dframe[1][i]+"|")
+
+        }
+        for (i in 0 until dframe[1].size) {
+            System.err.print(""+dframe[1][i]+"|")
+
+        }
     }
 }
 
