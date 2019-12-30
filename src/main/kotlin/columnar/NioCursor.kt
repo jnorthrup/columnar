@@ -50,14 +50,15 @@ fun main() {
         val dframe: Vect0r<Vect0r<Any?>> =
             Vect0r({ a[1] }) { iy -> Vect0r({ a[0] }) { ix -> byRows.first[ix, iy].first() } }
 
-        for (i in 0 until dframe[1].size) {
-            System.err.print(""+dframe[1][i]+"|")
+        for (i in 0 until dframe[1].size) System.err.print(""+dframe[1][i]+"|")
+        System.err.println()
+        val shaken = dframe[1][0, 1, 0, 0, 0, 1, 0, 0, 1, 3, 3, 3, 3, 3]
+        System.err.println("reordering: "+ shaken.toList())
 
-        }
-        for (i in 0 until dframe[1].size) {
-            System.err.print(""+dframe[1][i]+"|")
-
-        }
+        val pair = shaken α { it: Any? -> "" + it + "____" }
+        pair.toList().forEach{ println(it)  }
+        val map = shaken.map { it: Any? -> "" + it + "____" }
+        map .forEach{ println(it)  }
     }
 }
 
