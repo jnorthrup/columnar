@@ -30,72 +30,58 @@ suspend fun main() {
     }.toVect0r()
 
     val filename = "src/test/resources/caven4.fwf"
-    runBlocking {
-        MappedFile(filename).use { mf ->
-            val columnarArity = Columnar.of(mapping)
+    MappedFile(filename).use { mf ->
+        val columnarArity = Columnar.of(mapping)
+        val nio = NioMMap(mf)
+        nio.drivers = text(*columnarArity.type.toArray())
 
-            val nio = NioMMap(mf)
-            nio.drivers = text(*columnarArity.type.toArray())
+        val defaulteol = { '\n'.toByte() }
+        val mappedByteBuffer = nio.mf.mappedByteBuffer
+        val fixedWidth = FixedWidth(endl = defaulteol, recordLen = defaulteol().let { endl ->
+            mappedByteBuffer.duplicate().clear().run {
+                while (get() != endl);
+                position()
+            }
+        }, coords = coords)
 
-            val fixedWidth = FixedWidth(recordLen = ({
-                nio.mf.mappedByteBuffer.duplicate().clear().run {
-                    run {
-                        while (get() != '\n'.toByte());
-                        position()
-                    }
-                }
-            })(), coords = coords)
-
-            val indexable = Indexable(size = (({ nio.mf.randomAccessFile.length() })() / ({
-                nio.mf.mappedByteBuffer.duplicate().clear().run {
-                    run {
-                        while (get() != '\n'.toByte());
-                        position()
-                    }
-                }
-            })())::toInt) { recordIndex ->
+        val indexable =
+            Indexable(size = (nio.mf.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
                 val lim = { b: ByteBuffer -> fixedWidth.recordLen.let(b::limit) }
                 val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
                 val sl = { b: ByteBuffer -> b.slice() }
-                nio.mf.mappedByteBuffer.`⟲` (lim `●` sl `●` pos)
+                mappedByteBuffer.`⟲`(lim `●` sl `●` pos)
             }
 
-            val fourBy: suspend CoroutineScope.() -> Unit = {
-                System.err.println("" + coroutineContext)
-                val medium = coroutineContext[Medium.mediumKey]
-                val addressable = coroutineContext[Addressable.addressableKey]
-                assert(addressable is Indexable)
-                val nioCursor = nio.values()
-                nioCursor.let { (a, b) ->
-                    System.err.println("" + a.toList())
-                }
-                System.err.println(nioCursor[3, 3].first())
-                System.err.println(nioCursor[0, 0].first())
-                System.err.println(nioCursor[1, 1].first())
-                System.err.println(nioCursor[0, 0].first())
-                System.err.println(nioCursor[0, 1].first())
-                System.err.println(nioCursor[0, 2].first())
+        val fourBy: suspend CoroutineScope.() -> Unit = {
+            System.err.println("" + coroutineContext)
+            val nio = coroutineContext[Medium.mediumKey] as NioMMap
+            val nioCursor = nio.values()
+            nioCursor.let { (a, b) ->
+                System.err.println("" + a.toList())
             }
-            runBlocking {
-                val coroutineScope = CoroutineScope(
-                    columnarArity +
-                            fixedWidth +
-                            indexable +
-                            nio + RowMajor()
-                )
-                coroutineScope.launch(block = fourBy).join()
-            }
-            runBlocking {
-                val coroutineScope = CoroutineScope(
-                    columnarArity +
-                            fixedWidth +
-                            indexable +
-                            nio + ColumnMajor()
-                )
-                coroutineScope.launch(block = fourBy).join()
-            }
-
-
+            System.err.println(nioCursor[3, 3].first())
+            System.err.println(nioCursor[0, 0].first())
+            System.err.println(nioCursor[1, 1].first())
+            System.err.println(nioCursor[0, 0].first())
+            System.err.println(nioCursor[0, 1].first())
+            System.err.println(nioCursor[0, 2].first())
+        }
+        runBlocking(
+            RowMajor() +
+                    fixedWidth +
+                    indexable +
+                    nio +
+                    columnarArity
+        ) {
+            launch(block = fourBy).join()
+        }
+        runBlocking(
+            columnarArity +
+                    fixedWidth +
+                    indexable +
+                    nio + ColumnMajor()
+        ) {
+            launch(block = fourBy).join()
         }
     }
 }
