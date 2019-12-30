@@ -3,11 +3,12 @@ package columnar
 import columnar.IOMemento.*
 import columnar.context.*
 import columnar.context.NioMMap.Companion.text
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 
+typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
 
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
@@ -52,13 +53,7 @@ suspend fun main() {
                 mappedByteBuffer.`⟲`(lim `●` sl `●` pos)
             }
 
-        val fourBy: suspend CoroutineScope.() -> Unit = {
-            System.err.println("" + coroutineContext)
-            val nio = coroutineContext[Medium.mediumKey] as NioMMap
-            val nioCursor = nio.values()
-            nioCursor.let { (a, b) ->
-                System.err.println("" + a.toList())
-            }
+        fun fourBy(nioCursor: NioCursor) = {
             System.err.println(nioCursor[3, 3].first())
             System.err.println(nioCursor[0, 0].first())
             System.err.println(nioCursor[1, 1].first())
@@ -66,23 +61,62 @@ suspend fun main() {
             System.err.println(nioCursor[0, 1].first())
             System.err.println(nioCursor[0, 2].first())
         }
+
+        val rowMajor = RowMajor()
         runBlocking(
-            RowMajor() +
+            rowMajor +
                     fixedWidth +
                     indexable +
                     nio +
                     columnarArity
         ) {
-            launch(block = fourBy).join()
+                val nioCursor = fromFwf(rowMajor, fixedWidth, indexable, nio, columnarArity)
+                System.err.println(nioCursor[3, 3].first())
+                System.err.println(nioCursor[0, 0].first())
+                System.err.println(nioCursor[1, 1].first())
+                System.err.println(nioCursor[0, 0].first())
+                System.err.println(nioCursor[0, 1].first())
+                System.err.println(nioCursor[0, 2].first())
         }
+        val columnMajor = ColumnMajor()
         runBlocking(
-            columnarArity +
+            columnMajor +
                     fixedWidth +
                     indexable +
-                    nio + ColumnMajor()
+                    nio +
+                    columnarArity
         ) {
-            launch(block = fourBy).join()
+                val nioCursor = fromFwf(columnMajor, fixedWidth, indexable, nio, columnarArity)
+                System.err.println(nioCursor[3, 3].first())
+                System.err.println(nioCursor[0, 0].first())
+                System.err.println(nioCursor[1, 1].first())
+                System.err.println(nioCursor[0, 0].first())
+                System.err.println(nioCursor[0, 1].first())
+                System.err.println(nioCursor[0, 2].first())
         }
     }
 }
 
+
+/**
+ * this builds a context and launches a cursor in the given NioMMap frame of reference
+ */
+fun fromFwf(
+    ordering: Ordering,
+    fixedWidth: FixedWidth,
+    indexable: Indexable,
+    nio: NioMMap,
+    columnarArity: Columnar
+): NioCursor {
+    return runBlocking(
+        ordering +
+                fixedWidth +
+                indexable +
+                nio +
+                columnarArity
+    ) {
+        val nio = coroutineContext[Medium.mediumKey] as NioMMap
+        val nioCursor = nio.values()
+        nioCursor
+    }
+}
