@@ -10,7 +10,6 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
-typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
