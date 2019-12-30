@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package columnar
 
 import columnar.IOMemento.*
@@ -6,6 +8,7 @@ import columnar.context.NioMMap.Companion.text
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
+import kotlin.coroutines.CoroutineContext
 
 typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
 
@@ -18,7 +21,7 @@ typealias readfn<M, R> = Function1<M, R>
  *
  * if this is to be a  trait system, the functional objects need to look like a blackboard
  */
-suspend fun main() {
+fun main() {
     val mapping = listOf(
         "date" to IoLocalDate,
         "channel" to IoString,
@@ -35,22 +38,18 @@ suspend fun main() {
         val nio = NioMMap(mf, text(*columnarArity.type.toArray()))
         val fixedWidth = fixedWidthOf(nio, coords)
         val indexable = indexableOf(nio, fixedWidth)
-        fromFwf(RowMajor(), fixedWidth, indexable, nio, columnarArity).also { nioCursor: NioCursor ->
-            fourBy(nioCursor )
 
+        val byRows = fromFwf(RowMajor(), fixedWidth, indexable, nio, columnarArity).let {
+            it.also { fourBy(it) }
         }
 
         fromFwf(ColumnMajor(), fixedWidth, indexable, nio, columnarArity).also { nioCursor ->
             fourBy(nioCursor )
-
         }
-
     }
 }
 
-private fun fourBy(
-    nioCursor: NioCursor
-) {
+private fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->
     System.err.println(nioCursor[3, 3].first())
     System.err.println(nioCursor[0, 0].first())
     System.err.println(nioCursor[1, 1].first())
@@ -59,7 +58,7 @@ private fun fourBy(
     System.err.println(nioCursor[0, 2].first())
 }
 
-private fun fixedWidthOf(
+fun fixedWidthOf(
     nio: NioMMap,
     coords: Vect0r<IntArray>
 ): FixedWidth {
@@ -73,7 +72,7 @@ private fun fixedWidthOf(
     return fixedWidth
 }
 
-private fun indexableOf(
+fun indexableOf(
     nio: NioMMap,
     fixedWidth: FixedWidth,
     mappedByteBuffer: MappedByteBuffer = nio.mf.mappedByteBuffer
@@ -88,6 +87,11 @@ private fun indexableOf(
     return indexable
 }
 
+typealias TableRoot = Triple<NioCursor, Pair<() -> Int, (Int) -> String>, CoroutineContext>
+
+fun TableRoot.name(xy: IntArray) = this.let { (_, names, rootContext) ->
+    (rootContext[Ordering.orderingKey]!! as? ColumnMajor)?.let { names[xy[1]] } ?: names[xy[0]]
+}
 
 /**
  * this builds a context and launches a cursor in the given NioMMap frame of reference
@@ -104,6 +108,9 @@ fun fromFwf(
             indexable +
             nio +
             columnarArity
-) {
+) {(
     nio.values()
+        to columnarArity.names!!
+        by this.coroutineContext
+    ) as TableRoot
 }
