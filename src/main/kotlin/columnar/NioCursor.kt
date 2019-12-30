@@ -3,10 +3,9 @@ package columnar
 import columnar.IOMemento.*
 import columnar.context.*
 import columnar.context.NioMMap.Companion.text
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
+import java.nio.MappedByteBuffer
 
 typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
 
@@ -33,68 +32,60 @@ suspend fun main() {
     val filename = "src/test/resources/caven4.fwf"
     MappedFile(filename).use { mf ->
         val columnarArity = Columnar.of(mapping)
-        val nio = NioMMap(mf)
-        nio.drivers = text(*columnarArity.type.toArray())
+        val nio = NioMMap(mf, text(*columnarArity.type.toArray()))
+        val fixedWidth = fixedWidthOf(nio, coords)
+        val indexable = indexableOf(nio, fixedWidth)
+        fromFwf(RowMajor(), fixedWidth, indexable, nio, columnarArity).also { nioCursor: NioCursor ->
+            fourBy(nioCursor )
 
-        val defaulteol = { '\n'.toByte() }
-        val mappedByteBuffer = nio.mf.mappedByteBuffer
-        val fixedWidth = FixedWidth(endl = defaulteol, recordLen = defaulteol().let { endl ->
-            mappedByteBuffer.duplicate().clear().run {
-                while (get() != endl);
-                position()
-            }
-        }, coords = coords)
-
-        val indexable =
-            Indexable(size = (nio.mf.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
-                val lim = { b: ByteBuffer -> fixedWidth.recordLen.let(b::limit) }
-                val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
-                val sl = { b: ByteBuffer -> b.slice() }
-                mappedByteBuffer.`⟲`(lim `●` sl `●` pos)
-            }
-
-        fun fourBy(nioCursor: NioCursor) = {
-            System.err.println(nioCursor[3, 3].first())
-            System.err.println(nioCursor[0, 0].first())
-            System.err.println(nioCursor[1, 1].first())
-            System.err.println(nioCursor[0, 0].first())
-            System.err.println(nioCursor[0, 1].first())
-            System.err.println(nioCursor[0, 2].first())
         }
 
-        val rowMajor = RowMajor()
-        runBlocking(
-            rowMajor +
-                    fixedWidth +
-                    indexable +
-                    nio +
-                    columnarArity
-        ) {
-                val nioCursor = fromFwf(rowMajor, fixedWidth, indexable, nio, columnarArity)
-                System.err.println(nioCursor[3, 3].first())
-                System.err.println(nioCursor[0, 0].first())
-                System.err.println(nioCursor[1, 1].first())
-                System.err.println(nioCursor[0, 0].first())
-                System.err.println(nioCursor[0, 1].first())
-                System.err.println(nioCursor[0, 2].first())
+        fromFwf(ColumnMajor(), fixedWidth, indexable, nio, columnarArity).also { nioCursor ->
+            fourBy(nioCursor )
+
         }
-        val columnMajor = ColumnMajor()
-        runBlocking(
-            columnMajor +
-                    fixedWidth +
-                    indexable +
-                    nio +
-                    columnarArity
-        ) {
-                val nioCursor = fromFwf(columnMajor, fixedWidth, indexable, nio, columnarArity)
-                System.err.println(nioCursor[3, 3].first())
-                System.err.println(nioCursor[0, 0].first())
-                System.err.println(nioCursor[1, 1].first())
-                System.err.println(nioCursor[0, 0].first())
-                System.err.println(nioCursor[0, 1].first())
-                System.err.println(nioCursor[0, 2].first())
-        }
+
     }
+}
+
+private fun fourBy(
+    nioCursor: NioCursor
+) {
+    System.err.println(nioCursor[3, 3].first())
+    System.err.println(nioCursor[0, 0].first())
+    System.err.println(nioCursor[1, 1].first())
+    System.err.println(nioCursor[0, 0].first())
+    System.err.println(nioCursor[0, 1].first())
+    System.err.println(nioCursor[0, 2].first())
+}
+
+private fun fixedWidthOf(
+    nio: NioMMap,
+    coords: Vect0r<IntArray>
+): FixedWidth {
+    val defaulteol = { '\n'.toByte() }
+    val fixedWidth = FixedWidth(endl = defaulteol, recordLen = defaulteol() `→` { endl: Byte ->
+        nio.mf.mappedByteBuffer.duplicate().clear().run {
+            while (get() != endl);
+            position()
+        }
+    }, coords = coords)
+    return fixedWidth
+}
+
+private fun indexableOf(
+    nio: NioMMap,
+    fixedWidth: FixedWidth,
+    mappedByteBuffer: MappedByteBuffer = nio.mf.mappedByteBuffer
+): Indexable {
+    val indexable =
+        Indexable(size = (nio.mf.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
+            val lim = { b: ByteBuffer -> fixedWidth.recordLen.let(b::limit) }
+            val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
+            val sl = { b: ByteBuffer -> b.slice() }
+            mappedByteBuffer.`⟲`(lim `○` sl `○` pos)
+        }
+    return indexable
 }
 
 
@@ -107,16 +98,12 @@ fun fromFwf(
     indexable: Indexable,
     nio: NioMMap,
     columnarArity: Columnar
-): NioCursor {
-    return runBlocking(
-        ordering +
-                fixedWidth +
-                indexable +
-                nio +
-                columnarArity
-    ) {
-        val nio = coroutineContext[Medium.mediumKey] as NioMMap
-        val nioCursor = nio.values()
-        nioCursor
-    }
+) = runBlocking(
+    ordering +
+            fixedWidth +
+            indexable +
+            nio +
+            columnarArity
+) {
+    nio.values()
 }
