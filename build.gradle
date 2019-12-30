@@ -48,11 +48,11 @@ dependencies {    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
 }
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
     kotlinOptions {
-        freeCompilerArgs = ["-XXLanguage:+InlineClasses"]
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses" ,"-Xnew-inference"]
     }
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
