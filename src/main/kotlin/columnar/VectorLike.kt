@@ -38,8 +38,10 @@ infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = Vect0r({ this.size }) { 
 infix fun <C, B : (Long) -> C> LongArray.α(m: B) = Vect0r({ this.size }) { i -> this.get(i) `→` m }
 
 /**right identity*/
-infix fun <T, R, F : (T) -> R> T.`⟲`(f: F) = { f(this) }
+fun <T : Any?> T.`⟲`() = { this }
 
+/**right identity*/
+infix fun <T, R, F : (T) -> R> T.`⟲`(f: F) = { f(this) }
 
 @JvmName("vlike_Sequence_1")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
@@ -53,8 +55,9 @@ inline operator fun <reified T> Sequence<T>.get(index: IntArray) = this.toList()
 @JvmName("vlike_Flow_1")
 suspend inline fun <reified T> Flow<T>.get(vararg index: Int) = get(index)
 
+@Suppress("USELESS_CAST")
 @JvmName("vlike_Flow_Iterable2")
-suspend inline fun <reified T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray())
+suspend inline fun <reified T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
 
 @JvmName("vlike_Flow_IntArray3")
 suspend inline fun <reified T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()
@@ -96,17 +99,15 @@ fun <T> Vect0r<T>.toList() = this.let { (_, vf) -> List(size) { vf(it) } }
 
 fun <T> Vect0r<T>.toSequence() = this.let { (_, vf) ->
     sequence {
-        for (ix in 0 until size) {
+        for (ix in 0 until size)
             yield(vf(ix))
-        }
     }
 }
 
 fun <T> Vect0r<T>.toFlow() = this.let { (_, vf) ->
     flow {
-        for (ix in 0 until size) {
+        for (ix in 0 until size)
             emit(vf(ix))
-        }
     }
 }
 
@@ -170,25 +171,21 @@ inline fun <reified T> combine(vararg a: List<T>) =
     }
 
 @JvmName("combine_Vect0r")
-inline fun <reified T> combine(vararg a: Vect0r<T>) = a.let {
-    var acc = 0
-    val order = IntArray(a.size) {
-        acc += a[it].size
-        acc
-    }
-
-    Vect0r({ acc }) { ix ->
-        val order1 = order
-        val offset = (order1.binarySearch(ix))
-        val slot = if (offset < 0)
-            0 - (offset + 1)
-        else
-            offset+1
-        val upperBound = order1[slot]
-        val beginRange= if(slot>0) order1[slot-1]else 0;
-        val i =  ix.rem( upperBound)-beginRange
-        val t = a[slot][i]
-        t
+inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→` { vargsIn: Array<out Vect0r<T>> ->
+    vargsIn.asIterable().foldIndexed(0 to IntArray(vargsIn.size)) { vix, (acc, avec), vec ->
+        acc.plus(vec.size) `→` { size -> size to avec.also { avec[vix] = size } }
+    } `→` { (acc: Int, order: IntArray): Pair<Int, IntArray> ->
+        Vect0r(acc.`⟲`()) { ix ->
+            (order.binarySearch(ix)) `→` { offset: Int ->
+                (if (0 > offset) 0 - (offset + 1) else offset + 1) `→` { slot: Int ->
+                    order[slot] `→` { upperBound: Int ->
+                        (if (slot > 0) order[slot - 1] else 0) `→` { beginRange: Int ->
+                            vargsIn[slot][ix.rem(upperBound) - beginRange]
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
