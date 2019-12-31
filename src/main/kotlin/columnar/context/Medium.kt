@@ -49,8 +49,7 @@ class NioMMap(
         val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
         /* val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!! */
         medium.let {
-            val drivers = medium.drivers
-                ?: text(*(arity as Columnar).type.toArray())/*assuming fwf here*/
+            val drivers = medium.drivers ?: text((arity as Columnar).type /*assuming fwf here*/)
             val coords = when (recordBoundary) {
                 is FixedWidth -> recordBoundary.coords
                 is TokenizedRow -> TODO()
@@ -72,7 +71,7 @@ class NioMMap(
                         dfn(
                             row,
                             y,
-                            col,
+                            col as (ByteBuffer) -> Vect0r<Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
                             x,
                             coords
                         )
@@ -87,7 +86,7 @@ class NioMMap(
                     }
                     NioCursor(
                         intArrayOf(row.size, drivers.size)
-                    ) { (y, x) -> dfn(row, y, col, x, coords) }
+                    ) { (y, x) -> dfn(row, y, col as (ByteBuffer) -> Vect0r<Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>, x, coords) }
                 }
 
 
@@ -122,12 +121,9 @@ class NioMMap(
     }
 
     companion object {
-        fun text(vararg m: Vect0r<IOMemento>) =
-            Tokenized.mapped.get(*m) as Array<CellDriver<ByteBuffer, Any?>>
-
-        fun binary(vararg m: IOMemento) =
-            Fixed.mapped.get(*m) as Array<CellDriver<ByteBuffer, Any?>>
-
+        fun text(  m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer,  Any?>> = Tokenized.mapped.get( m) as  Array<CellDriver<ByteBuffer, Any?>>
+        fun binary( m: Vect0r<IOMemento>):Array<CellDriver<ByteBuffer,  Any?>> =
+            Fixed.mapped.get( m) as Array<CellDriver<ByteBuffer, Any?>>
     }
 
     fun asContextVect0r(
