@@ -34,7 +34,7 @@ fun main() {
     val filename = "src/test/resources/caven4.fwf"
     MappedFile(filename).use { mf ->
         val columnarArity = Columnar.of(mapping)
-        val nio = NioMMap(mf, text(*columnarArity.type.toArray()))
+        val nio = NioMMap(mf, text( columnarArity.type ))
         val fixedWidth = fixedWidthOf(nio, coords, '\n'::toByte)
         val indexable = indexableOf(nio, fixedWidth)
         val byRows: TableRoot = fromFwf(RowMajor(), fixedWidth, indexable, nio, columnarArity) `→`
