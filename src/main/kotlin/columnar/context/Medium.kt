@@ -122,7 +122,7 @@ class NioMMap(
     }
 
     companion object {
-        fun text(vararg m: IOMemento) =
+        fun text(vararg m: Vect0r<IOMemento>) =
             Tokenized.mapped.get(*m) as Array<CellDriver<ByteBuffer, Any?>>
 
         fun binary(vararg m: IOMemento) =

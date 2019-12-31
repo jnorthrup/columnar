@@ -97,9 +97,9 @@ inline operator fun <reified T> Vect0r<T>.get(index: IntArray) = this.let { (a, 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
 fun <T> Vect0r<T>.toList() = this.let { (_, vf) -> List(size) { vf(it) } }
 
-fun <T> Vect0r<T>.toSequence() = this.let { (_, vf) ->
+fun <T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
     sequence {
-        for (ix in 0 until size)
+        for (ix in 0 until size())
             yield(vf(ix))
     }
 }
@@ -171,15 +171,15 @@ inline fun <reified T> combine(vararg a: List<T>) =
     }
 
 @JvmName("combine_Vect0r")
-inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→` { vargsIn: Array<out Vect0r<T>> ->
+inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→` { vargsIn ->
     vargsIn.asIterable().foldIndexed(0 to IntArray(vargsIn.size)) { vix, (acc, avec), vec ->
         acc.plus(vec.size) `→` { size -> size to avec.also { avec[vix] = size } }
-    } `→` { (acc: Int, order: IntArray): Pair<Int, IntArray> ->
+    } `→` { (acc, order) ->
         Vect0r(acc.`⟲`()) { ix ->
-            (order.binarySearch(ix)) `→` { offset: Int ->
-                (if (0 > offset) 0 - (offset + 1) else offset + 1) `→` { slot: Int ->
-                    order[slot] `→` { upperBound: Int ->
-                        (if (slot > 0) order[slot - 1] else 0) `→` { beginRange: Int ->
+            order.binarySearch(ix) `→` { offset ->
+                (if (0 > offset) 0 - (offset + 1) else offset + 1) `→` { slot ->
+                    order[slot] `→` { upperBound ->
+                        (if (slot > 0) order[slot - 1] else 0) `→` { beginRange ->
                             vargsIn[slot][ix.rem(upperBound) - beginRange]
                         }
                     }
@@ -203,6 +203,12 @@ inline fun <reified T> combine(vararg a: Array<T>) =
             a[x][y++]
         }
     }
+
+fun vZipWithNext(src: IntArray) = Vect0r({ src.size / 2 }
+) { i: Int ->
+    var c = (i * 2)
+    IntArray(2) { src[c.also { c++ }] }
+}
 
 //array-like mapped map
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>) = this.get(*ks.toList().toTypedArray())

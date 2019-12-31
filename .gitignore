@@ -6,3 +6,4 @@ build
 .idea
 target.idea
 *.iml
+/out/
