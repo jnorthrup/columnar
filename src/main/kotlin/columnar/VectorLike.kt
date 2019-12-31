@@ -171,15 +171,15 @@ inline fun <reified T> combine(vararg a: List<T>) =
     }
 
 @JvmName("combine_Vect0r")
-inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→` { vargsIn: Array<out Vect0r<T>> ->
+inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→` { vargsIn ->
     vargsIn.asIterable().foldIndexed(0 to IntArray(vargsIn.size)) { vix, (acc, avec), vec ->
         acc.plus(vec.size) `→` { size -> size to avec.also { avec[vix] = size } }
-    } `→` { (acc: Int, order: IntArray): Pair<Int, IntArray> ->
+    } `→` { (acc , order ) ->
         Vect0r(acc.`⟲`()) { ix ->
-            (order.binarySearch(ix)) `→` { offset: Int ->
-                (if (0 > offset) 0 - (offset + 1) else offset + 1) `→` { slot: Int ->
-                    order[slot] `→` { upperBound: Int ->
-                        (if (slot > 0) order[slot - 1] else 0) `→` { beginRange: Int ->
+            order.binarySearch(ix) `→` { offset ->
+                (if (0 > offset) 0 - (offset + 1) else offset + 1) `→` { slot ->
+                    order[slot] `→` { upperBound ->
+                        (if (slot > 0) order[slot - 1] else 0) `→` { beginRange ->
                             vargsIn[slot][ix.rem(upperBound) - beginRange]
                         }
                     }
