@@ -26,6 +26,7 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B> G.`⚬`(f: F) = { a: A -> a `→
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
 inline infix fun <reified A, C, B : (A) -> C> Vect0r<A>.α(m: B) = Vect0r(first) { i -> this.second(i) `→` m }
+
 infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) = this.map { it `→` m }
 infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B) = this.map { it `→` m }
 infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B) = this.map { it `→` m }
@@ -38,8 +39,6 @@ infix fun <C, B : (Long) -> C> LongArray.α(m: B) = Vect0r({ this.size }) { i ->
 
 /**right identity*/
 infix fun <T, R, F : (T) -> R> T.`⟲`(f: F) = { f(this) }
-
-
 
 
 @JvmName("vlike_Sequence_1")
@@ -89,7 +88,7 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>) = this[ind
 
 @JvmName("vlike_Vect0r_IntArray3")
 inline operator fun <reified T> Vect0r<T>.get(index: IntArray) = this.let { (a, b) ->
-    {index.size} to { ix: Int -> b(index[ix]) }
+    { index.size } to { ix: Int -> b(index[ix]) }
 }
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
@@ -174,17 +173,21 @@ inline fun <reified T> combine(vararg a: List<T>) =
 inline fun <reified T> combine(vararg a: Vect0r<T>) = a.let {
     var acc = 0
     val order = IntArray(a.size) {
-        val begin = acc
         acc += a[it].size
-        begin
+        acc
     }
 
     Vect0r({ acc }) { ix ->
-        val offset = (order.binarySearch(ix))
-
-        val slot = if (offset < 0) 0 - (offset + 1) else offset
-        val begin = order[slot]
-        val t = a[slot][ix - begin]
+        val order1 = order
+        val offset = (order1.binarySearch(ix))
+        val slot = if (offset < 0)
+            0 - (offset + 1)
+        else
+            offset+1
+        val upperBound = order1[slot]
+        val beginRange= if(slot>0) order1[slot-1]else 0;
+        val i =  ix.rem( upperBound)-beginRange
+        val t = a[slot][i]
         t
     }
 }
