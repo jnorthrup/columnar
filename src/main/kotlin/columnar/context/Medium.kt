@@ -136,7 +136,7 @@ class NioMMap(
                 ), Pair(-1L, -1L)
             )
         }
-    ) = Vect0r(indexable.size, { ix ->
+    ) = Vect0r(indexable.size, { ix:Int ->
         translateMapping(
             ix,
             fixedWidth.recordLen,
