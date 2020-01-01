@@ -8,15 +8,52 @@ import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
+typealias TableRoot = Pair<NioCursor, CoroutineContext>
+typealias ColMeta = Pair<String, IOMemento>
+typealias RowMeta = Vect0r<ColMeta>
+typealias RowVec = Vect0r<Pair</*value*/Any?, /*codexes for origin, metadata and spreadsheet-like functions */ () -> CoroutineContext>>
+typealias Cursor = Vect0r<RowVec>
+
+///**
+// * reorder just the columns
+// */
+//operator fun Cursor.get(vararg reorder: Int):Cursor = let { (a, b: (Int) -> RowVec) ->
+//    a to { iy: Int ->
+//        val before: RowVec = b(iy)
+//        val after: RowVec = before[reorder]
+//        after
+//    }
+//}
+
+
+fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
+    nioc.let { (xy, mapper) ->
+        val columnar = crt[arityKey] as Columnar
+        xy.let { (xsize, ysize) ->
+            /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r({ ysize }) { iy ->
+            Vect0r({ xsize }) { ix ->
+                mapper(intArrayOf(ix, iy)).let { (a) ->
+                    a() to {
+                        val cnar = crt[arityKey] as Columnar
+                        //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
+                        // and call in a cell through here
+                        EmptyCoroutineContext + Scalar(cnar.type[ix], cnar.names!![ix])
+                    }
+                }
+            }
+        }
+        }
+    }
+}
 
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
 
-
 /**
- * the Cursos attributes appear to be interdependent on each other's advantages.
+ * the Cursor attributes appear to be interdependent on each other's advantages.
  *
  * if this is to be a  trait system, the functional objects need to look like a blackboard
  */
@@ -34,7 +71,7 @@ fun main() {
     val filename = "src/test/resources/caven4.fwf"
     MappedFile(filename).use { mf ->
         val columnarArity = Columnar.of(mapping)
-        val nio = NioMMap(mf, text( columnarArity.type ))
+        val nio = NioMMap(mf, text(columnarArity.type))
         val fixedWidth = fixedWidthOf(nio, coords, '\n'::toByte)
         val indexable = indexableOf(nio, fixedWidth)
         val byRows: TableRoot = fromFwf(RowMajor(), fixedWidth, indexable, nio, columnarArity) `→`
@@ -43,8 +80,6 @@ fun main() {
         fromFwf(ColumnMajor(), fixedWidth, indexable, nio, columnarArity).also { nioCursor ->
             fourBy(nioCursor)
         }
-
-
 
         val (a, b) = byRows.first
         val dframe: Vect0r<Vect0r<Any?>> =
@@ -56,13 +91,56 @@ fun main() {
         System.err.println("reordering: " + shaken.toList())
 
         val pair = shaken α { it: Any? -> "" + it + "____" }
-        pair.toSequence().forEach { println(it) }
+        pair.toSequence().forEach { print(it) }
         val map = shaken.map { it: Any? -> "" + it + "____" }
-        map.forEach { println(it) }
+        map.forEach { print(it) }
+        val cursor: Cursor = cursorOf(byRows)
+        println()
+        println("" + cursor[0].toList())
+        println("" + cursor[0][3, 2, 1, 0].toList())
+        println("----")
+        var c = 0
+        val crs11 = cursor
+        println(" 0" + crs11[0..3].map { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }.toList())
+        println(" 1" + cursor[0..3].map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
+        println(" 2" + (cursor[0..3] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 3" + (cursor[0..3] α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 4" + cursor[0..3].map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
+        println(" 5" + (cursor[0..3] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 6" + (cursor[0..3] α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 7" + (cursor[0..3] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 8" + (cursor[3, 2, 1, 0] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
+/*
+        println(" 9" + (cursor.`……debug` { vp: Vect0r<Pair<Any?, () -> CoroutineContext>> ->
+            vp.`…debug` { (first: Any?, _: () -> CoroutineContext) ->
+                first
+            }
+        }.toList()))
+*/
+
+        val narrow: Vect0r<List<Any?>> = narrow(cursor)
+        println("  9" + narrow)
+        val reify: List<List<Any?>> = reify(cursor)
+        println(" 10" + reify)
+
+
     }
 }
 
-private fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->
+private fun reify(cursor: Cursor)  = narrow(cursor).toList()
+
+private fun narrow(cursor: Cursor)  =
+    (cursor[0 until cursor.size] α { vp: Vect0r<Pair<Any?, () -> CoroutineContext>> ->
+        (vp[0 until vp.size] α Pair<Any?, () -> CoroutineContext>::first).toList ()
+    })
+
+inline infix fun <reified O, reified R> Vect0r<R>.`…`(noinline f: (R) -> O) = this[0 until size] α f
+inline infix fun <reified O, reified R> Vect0r<R>.`…debug`(f: (R) -> O) = this[0 until size].map(f)
+inline infix fun <O, reified R : Vect0r<O>> Vect0r<R>.`……`(noinline f: (R) -> O) = this[0 until size] α f
+inline infix fun <O, reified R : Vect0r<O>> Vect0r<R>.`……debug`(noinline f: (R) -> O) =
+    this[0 until size].map(f).toVect0r()/*α(f)*/
+
+fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->
     System.err.println("|" + nioCursor[3, 3].first() + "|")
     System.err.println("|" + nioCursor[0, 0].first() + "|")
     System.err.println("|" + nioCursor[1, 1].first() + "|")
@@ -93,7 +171,6 @@ fun indexableOf(
     mappedByteBuffer `⟲` (lim `⚬` sl `⚬` pos)
 }
 
-typealias TableRoot = Pair<NioCursor, CoroutineContext>
 
 fun TableRoot.name(xy: IntArray) = this.let { (_, rootContext) ->
     (rootContext[arityKey]!! as Columnar).let { cnar ->

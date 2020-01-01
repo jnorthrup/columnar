@@ -95,7 +95,7 @@ inline operator fun <reified T> Vect0r<T>.get(index: IntArray) = this.let { (a, 
 }
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
-fun <T> Vect0r<T>.toList() = this.let { (_, vf) -> List(size) { vf(it) } }
+inline fun <reified T> Vect0r<T>.toList() = this.let { (_, vf) -> List(size) { vf(it) } }
 
 fun <T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
     sequence {
@@ -209,6 +209,10 @@ fun vZipWithNext(src: IntArray) = Vect0r({ src.size / 2 }
     var c = (i * 2)
     IntArray(2) { src[c.also { c++ }] }
 }
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T, reified O, P : Pair<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): R =
+    Vect0r(this.first) { i: Int -> (this[i] to o[i]) as P } as R
 
 //array-like mapped map
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>) = this.get(*ks.toList().toTypedArray())
