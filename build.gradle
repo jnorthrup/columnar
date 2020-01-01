@@ -1,8 +1,5 @@
-
-
-
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version  "1.3.61"
+    id 'org.jetbrains.kotlin.jvm' version "1.3.61"
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.3.61'
 }
 group 'org.example'
@@ -15,7 +12,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     jcenter()
-    maven { url "https://dl.bintray.com/arrow-kt/arrow-kt/" }
+//    maven { url "https://dl.bintray.com/arrow-kt/arrow-kt/" }
     maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local/' } // for SNAPSHOT builds
 }
 test {
@@ -24,18 +21,19 @@ test {
 apply plugin: 'kotlin' // or 'kotlin-multiplatform' for multiplatform projects
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlinx-serialization'
-dependencies {    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0" // JVM dependency
 
     // Use the Kotlin JDK 8 standard library.
 //    implementation "io.arrow-kt:arrow-aql:$arrow_version"
-    implementation "io.arrow-kt:arrow-core-data:$arrow_version"
+//    implementation "io.arrow-kt:arrow-core-data:$arrow_version"
 //    implementation "io.arrow-kt:arrow-free-data:$arrow_version"
 //    implementation "io.arrow-kt:arrow-free:$arrow_version"
 //    implementation "io.arrow-kt:arrow-fx:$arrow_version"
 //    implementation "io.arrow-kt:arrow-mtl:$arrow_version"
 //    implementation "io.arrow-kt:arrow-optics-mtl:$arrow_version"
-    implementation "io.arrow-kt:arrow-optics:$arrow_version"
+//    implementation "io.arrow-kt:arrow-optics:$arrow_version"
 //    implementation "io.arrow-kt:arrow-recursion:$arrow_version"
 //    implementation "io.arrow-kt:arrow-syntax:$arrow_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
@@ -50,7 +48,7 @@ dependencies {    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 compileKotlin {
     kotlinOptions.jvmTarget = "11"
     kotlinOptions {
-        freeCompilerArgs = ["-XXLanguage:+InlineClasses" ,"-Xnew-inference"]
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xnew-inference"]
     }
 }
 compileTestKotlin {
