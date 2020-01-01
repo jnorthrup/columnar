@@ -87,10 +87,10 @@ fun main() {
 
         for (i in 0 until dframe[1].size) System.err.print("" + dframe[1][i] + "|")
         System.err.println()
-        val shaken = dframe[1][0, 1, 0, 0, 0, 1, 0, 0, 1, 3, 3, 3, 3, 3]
-        System.err.println("reordering: " + shaken.toList())
+        val shaken = (dframe[1])[0, 1, 0, 0, 0, 1, 0, 0, 1, 3, 3, 3, 3, 3]
+        System.err.println("reordering: " + shaken.toList() )
 
-        val pair = shaken α { it: Any? -> "" + it + "____" }
+        val pair = shaken.α({ it: Any? -> "" + it + "____" })
         pair.toSequence().forEach { print(it) }
         val map = shaken.map { it: Any? -> "" + it + "____" }
         map.forEach { print(it) }
@@ -100,15 +100,16 @@ fun main() {
         println("" + cursor[0][3, 2, 1, 0].toList())
         println("----")
         var c = 0
-        val crs11 = cursor
+        val crs11: Vect0r<Vect0r<Pair<Any?, () -> CoroutineContext>>> = cursor
         println(" 0" + crs11[0..3].map { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }.toList())
-        println(" 1" + cursor[0..3].map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
-        println(" 2" + (cursor[0..3] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 3" + (cursor[0..3] α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 4" + cursor[0..3].map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
-        println(" 5" + (cursor[0..3] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 6" + (cursor[0..3] α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 7" + (cursor[0..3] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        val pair1 = cursor[0..3]
+        println(" 1" + pair1.map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
+        println(" 2" + (pair1 α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 3" + (pair1 α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 4" + pair1.map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
+        println(" 5" + (pair1 α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 6" + (pair1 α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
+        println(" 7" + (pair1 α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
         println(" 8" + (cursor[3, 2, 1, 0] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
 /*
         println(" 9" + (cursor.`……debug` { vp: Vect0r<Pair<Any?, () -> CoroutineContext>> ->
@@ -127,15 +128,15 @@ fun main() {
     }
 }
 
-private fun reify(cursor: Cursor)  = narrow(cursor).toList()
+private fun reify(cursor: Cursor) = narrow(cursor).toList()
 
-private fun narrow(cursor: Cursor)  =
+private fun narrow(cursor: Cursor) =
     (cursor[0 until cursor.size] α { vp: Vect0r<Pair<Any?, () -> CoroutineContext>> ->
-        (vp[0 until vp.size] α Pair<Any?, () -> CoroutineContext>::first).toList ()
+        (vp[0 until vp.size] α Pair<Any?, () -> CoroutineContext>::first).toList()
     })
 
-inline infix fun <reified O, reified R> Vect0r<R>.`…`(noinline f: (R) -> O) = this[0 until size] α f
-inline infix fun <reified O, reified R> Vect0r<R>.`…debug`(f: (R) -> O) = this[0 until size].map(f)
+inline infix fun <O, reified R> Vect0r<R>.`…`(noinline f: (R) -> O) = this[0 until size] α f
+inline infix fun <O, reified R> Vect0r<R>.`…debug`(noinline f: (R) -> O) = this[0 until size].map(f)
 inline infix fun <O, reified R : Vect0r<O>> Vect0r<R>.`……`(noinline f: (R) -> O) = this[0 until size] α f
 inline infix fun <O, reified R : Vect0r<O>> Vect0r<R>.`……debug`(noinline f: (R) -> O) =
     this[0 until size].map(f).toVect0r()/*α(f)*/

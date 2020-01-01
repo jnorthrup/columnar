@@ -4,7 +4,7 @@ import columnar.context.Arity
 import columnar.context.Columnar
 
 class DataFrame1(val tableroot: TableRoot) {
-    operator fun <T>get(vararg order:Int): Vect0r<Any?> = values[order]
+    operator fun <T>get(vararg order:Int)  = values[order]
     val values get() = vframe
     val nioCursor: NioCursor = tableroot.first
     val shape    = nioCursor.first

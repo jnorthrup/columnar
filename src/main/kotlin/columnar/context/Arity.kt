@@ -19,7 +19,7 @@ class UniMatrix(type: IOMemento, val shape: Vect0r<Int>) : Scalar(type)
 
 class Columnar(val type: Vect0r<IOMemento>, val names: Vect0r<String>? = null) : Arity() {
     companion object {
-        fun of(vararg type: IOMemento) = Columnar(type.toVect0r())
+        fun of(vararg type: IOMemento) = Columnar(type.toVect0r() as Vect0r<IOMemento>)
         fun of(mapping: Iterable<Pair<String, IOMemento>>) =
             Columnar(mapping.map { it.second }.toVect0r(), mapping.map { it.first }.toVect0r())
     }
