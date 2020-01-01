@@ -88,7 +88,7 @@ fun main() {
         for (i in 0 until dframe[1].size) System.err.print("" + dframe[1][i] + "|")
         System.err.println()
         val shaken = (dframe[1])[0, 1, 0, 0, 0, 1, 0, 0, 1, 3, 3, 3, 3, 3]
-        System.err.println("reordering: " + shaken.toList() )
+        System.err.println("reordering: " + shaken.toList())
 
         val pair = shaken.α({ it: Any? -> "" + it + "____" })
         pair.toSequence().forEach { print(it) }
@@ -111,34 +111,22 @@ fun main() {
         println(" 6" + (pair1 α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
         println(" 7" + (pair1 α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
         println(" 8" + (cursor[3, 2, 1, 0] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
-/*
-        println(" 9" + (cursor.`……debug` { vp: Vect0r<Pair<Any?, () -> CoroutineContext>> ->
-            vp.`…debug` { (first: Any?, _: () -> CoroutineContext) ->
-                first
-            }
-        }.toList()))
-*/
-
-        val narrow: Vect0r<List<Any?>> = narrow(cursor)
-        println("  9" + narrow)
-        val reify: List<List<Any?>> = reify(cursor)
-        println(" 10" + reify)
-
+        println("  9" + cursor.narrow())
+        println(" 10" + cursor.reify())
+        println(" 11" +  (cursor.narrow() `…reify` {it}).map { it.`…reify` { it }[0..2] }  )
+        println(" 12" +  (cursor `…reify` {it}).map { (it `…reify` { it })[0..2] }  )
 
     }
 }
 
-private fun reify(cursor: Cursor) = narrow(cursor).toList()
-
-private fun narrow(cursor: Cursor) =
-    (cursor[0 until cursor.size] α { vp: Vect0r<Pair<Any?, () -> CoroutineContext>> ->
-        (vp[0 until vp.size] α Pair<Any?, () -> CoroutineContext>::first).toList()
-    })
-
-inline infix fun <O, reified R> Vect0r<R>.`…`(noinline f: (R) -> O) = this[0 until size] α f
-inline infix fun <O, reified R> Vect0r<R>.`…debug`(noinline f: (R) -> O) = this[0 until size].map(f)
-inline infix fun <O, reified R : Vect0r<O>> Vect0r<R>.`……`(noinline f: (R) -> O) = this[0 until size] α f
-inline infix fun <O, reified R : Vect0r<O>> Vect0r<R>.`……debug`(noinline f: (R) -> O) =
+fun Cursor.reify() = narrow().toList()
+fun Cursor.narrow() = this `…` { it `…reify` Pair<Any?, () -> CoroutineContext>::first }
+inline infix fun <C : List<R>, O, reified R> C.`…`(noinline f: (R) -> O) = this[0 until size] α f
+inline infix fun <C : List<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this[0 until size].map(f)
+inline infix fun <C : Vect0r<R>, O, reified R> C.`…`(noinline f: (R) -> O) = this[0 until size] α f
+inline infix fun <C : Vect0r<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this[0 until size].map(f)
+inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……`(noinline f: (R) -> O) = this[0 until size] α f
+inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……debug`(noinline f: (R) -> O) =
     this[0 until size].map(f).toVect0r()/*α(f)*/
 
 fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->

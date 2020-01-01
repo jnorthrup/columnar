@@ -1,6 +1,5 @@
 package id.rejuve.dayjob
 
-import arrow.core.none
 import columnar.*
 import columnar.IOMemento.*
 import columnar.context.Columnar
@@ -9,9 +8,6 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.serialization.ImplicitReflectionSerializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlin.system.measureTimeMillis
 
 @ImplicitReflectionSerializer
 @ExperimentalCoroutinesApi
@@ -54,6 +50,8 @@ suspend fun main() {
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
+    val cursorOf =     (cursorOf(fromFwf)[0..10])
+    System.err.println(cursorOf.reify())
 
 }
 
