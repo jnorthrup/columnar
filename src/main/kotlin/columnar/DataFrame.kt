@@ -16,7 +16,7 @@ class DataFrame1(val tableroot: TableRoot) {
                 b.let { coroutineContext ->
                     //                            runBlocking(coroutineContext) {
                     val c = coroutineContext[Arity.arityKey] as Columnar
-                    (c.names!!.toList()).zip(c.type)
+                    c.second!!.toList().zip(c.first)
 //                            }
                 }
             }

@@ -1,8 +1,6 @@
 package columnar.context
 
-import columnar.IOMemento
-import columnar.Vect0r
-import columnar.toVect0r
+import columnar.*
 import kotlin.coroutines.CoroutineContext
 
 sealed class Arity : CoroutineContext.Element {
@@ -14,15 +12,18 @@ sealed class Arity : CoroutineContext.Element {
     }
 }
 
-open class Scalar(val type: IOMemento, name: String? = null) : Arity()
+open class Scalar(  type: IOMemento, name: String? = null) :Pai2<IOMemento,String?> by Pai2(type,name), Arity()
 /**Borg reference*/
 class UniMatrix(type: IOMemento, val shape: Vect0r<Int>) : Scalar(type)
 
-class Columnar(val type: Vect0r<IOMemento>, val names: Vect0r<String>? = null) : Arity() {
+class Columnar(  type: Vect0r<IOMemento>,   names: Vect0r<String>? = null) :Pai2<Vect0r<IOMemento>,Vect0r<String>?> by Pai2(type,names),  Arity() {
     companion object {
-        fun of(vararg type: IOMemento) = Columnar(type.toVect0r() as Vect0r<IOMemento>)
-        fun of(mapping: Iterable<Pair<String, IOMemento>>) =
-            Columnar(mapping.map { it.second }.toVect0r(), mapping.map { it.first }.toVect0r())
+        fun of(vararg type: IOMemento): Columnar {
+            val toVect0r: Vect0r< IOMemento> = (type).toVect0r() as Vect0r<IOMemento>
+            return Columnar(toVect0r)
+        }
+        fun of(mapping: Vect0r<Pai2<String, IOMemento>>) =
+            Columnar(mapping.α (Pai2<String, IOMemento>::second) ,mapping.α (Pai2<String, IOMemento>::first)  )
     }
 }
 
