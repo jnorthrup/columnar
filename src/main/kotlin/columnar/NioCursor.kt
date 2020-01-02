@@ -10,11 +10,11 @@ import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-typealias NioCursor = Matrix<Tr1ple<() -> Any?, (Any?) -> Unit, Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
-typealias TableRoot = Pair<NioCursor, CoroutineContext>
-typealias ColMeta = Pair<String, IOMemento>
+typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
+typealias TableRoot = Pai2<NioCursor, CoroutineContext>
+typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
-typealias RowVec = Vect0r<Pair</*value*/Any?, /*codexes for origin, metadata and spreadsheet-like functions */ () -> CoroutineContext>>
+typealias RowVec = Vect0r<Pai2</*value*/Any?, /*codexes for origin, metadata and spreadsheet-like functions */ () -> CoroutineContext>>
 typealias Cursor = Vect0r<RowVec>
 
 ///**
@@ -36,7 +36,7 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
             /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r({ ysize }) { iy ->
             Vect0r({ xsize }) { ix ->
                 mapper(intArrayOf(ix, iy)).let { (a) ->
-                    a() to {
+                    a() t0 {
                         val cnar = crt[arityKey] as Columnar
                         //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
                         // and call in a cell through here
@@ -64,7 +64,7 @@ fun main() {
         "delivered" to IoFloat,
         "ret" to IoFloat
     )
-    val coords = vect0rOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)) α { (a, b): Pair<Int, Int> ->
+    val coords = vect0rOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)) α { (a, b): kotlin.Pair<Int, Int> ->
         intArrayOf(a, b)
     }
 
@@ -107,11 +107,11 @@ fun main() {
     }
 }
 
-private fun Cursor.reify() =
+  fun Cursor.reify() =
     this α RowVec::toList
 
-private fun Cursor.narrow () =
-    (reify()) α {list: List<Pair<*,*>> ->  list.map(Pair<*,*>::first) }
+  fun Cursor.narrow () =
+    (reify()) α {list: List< Pai2<*, *>> ->  list.map(Pai2<*,*>::first) }
 
 inline val <C : Vect0r<R>, reified R> C.`…` get() = this.toList()
 

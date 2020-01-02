@@ -10,8 +10,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
-typealias  MMapWindow = Pa1r<Long, Long>
-typealias  NioCursorState = Pa1r<ByteBuffer, MMapWindow>
+typealias  MMapWindow = Pai2<Long, Long>
+typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
@@ -57,14 +57,14 @@ class NioMMap(
                 is TokenizedRow -> TODO()
             }
 
-            fun NioAbstractionLayer(): Pa1r<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
+            fun NioAbstractionLayer(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
                 medium.asContextVect0r(addressable as Indexable, recordBoundary) t0 { y: ByteBuffer ->
                     Vect0r({ drivers.size }) { x: Int ->
                         drivers[x] t0 (arity as Columnar).type[x] by coords[x].size
                     }
                 }
             when (ordering) {
-                is RowMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pa1r<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
+                is RowMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
                     NioCursor(
                         intArrayOf(drivers.size, row.size())
                     ) { (x: Int, y: Int): IntArray ->
@@ -78,7 +78,7 @@ class NioMMap(
                     }
 
                 }
-                is ColumnMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pa1r<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
+                is ColumnMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
 
                     NioCursor(
                         intArrayOf(row.size(), drivers.size)
@@ -105,7 +105,7 @@ class NioMMap(
     private fun dfn(
         row: Vect0r<NioCursorState>,
         y: Int,
-        col: (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
+        col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
         x: Int,
         coords: Vect0r<IntArray>
     ) = let {

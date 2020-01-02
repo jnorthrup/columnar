@@ -3,7 +3,7 @@ package columnar
 import kotlinx.coroutines.flow.*
 
 /*inheritable version of pair*/
-interface Pa1r<F, S> {
+interface Pai2<F, S> {
     val first: F
     val second: S
     val pair get() = let { (a, b) -> a to b }
@@ -11,17 +11,17 @@ interface Pa1r<F, S> {
     operator fun component2(): S = second
 
     companion object {
-        operator fun <F, S> invoke(f: F, s: S) = object : Pa1r<F, S> {
+        operator fun <F, S> invoke(f: F, s: S) = object : Pai2<F, S> {
             override val first get() = f
             override val second get() = s
         }
 
-        operator fun <F, S, P : Pair<F, S>, R : Pa1r<F, S>> invoke(p: P) = p.let { (f, s) -> Pa1r(f, s) }
+        operator fun <F, S, P : kotlin.Pair<F, S>, R : Pai2<F, S>> invoke(p: P) = p.let { (f, s) -> Pai2(f, s) }
     }
 }
 
 /*inheritable version of triple*/
-interface Tr1ple<F, S, T> {
+interface Tripl3<F, S, T> {
     val first: F
     val second: S
     val third: T
@@ -31,21 +31,21 @@ interface Tr1ple<F, S, T> {
     operator fun component3(): T = third
 
     companion object {
-        operator fun <F, S, T> invoke(f: F, s: S, t: T) = object : Tr1ple<F, S, T> {
+        operator fun <F, S, T> invoke(f: F, s: S, t: T) = object : Tripl3<F, S, T> {
             override val first get() = f
             override val second get() = s
             override val third get() = t
         }
 
-        operator fun <F, S, T> invoke(p: Triple<F, S, T>) = p.let { (f, s, t) -> Tr1ple(f, s, t) }
+        operator fun <F, S, T> invoke(p: kotlin.Triple<F, S, T>) = p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 }
 
-typealias Vect0r<T> = Pa1r<() -> Int, (Int) -> T>
+typealias Vect0r<T> = Pai2<() -> Int, (Int) -> T>
 
-infix fun <F, S> F.t0(s: S) = Pa1r(this, s)
-infix fun <F, S, T, P : Pa1r<F, S>> P.by(t: T) = let { (a, b) -> Tr1ple(a, b, t) }
-infix fun <F, S, T, P : Pair<F, S>> P.by(t: T) = let { (a, b) -> Tr1ple(a, b, t) }
+infix fun <F, S> F.t0(s: S) = Pai2(this, s)
+infix fun <F, S, T, P : Pai2<F, S>> P.by(t: T) = let { (a, b) -> Tripl3(a, b, t) }
+infix fun <F, S, T, P : kotlin.Pair<F, S>> P.by(t: T) = let { (a, b) -> Tripl3(a, b, t) }
 
 val <T>   Vect0r<T>.size get() = first
 /*
@@ -55,7 +55,7 @@ val <T, O : Vect0r<T>>  O.second
     get() = this::get
 */
 
-typealias Matrix<T> = Pa1r<
+typealias Matrix<T> = Pai2<
         /**shape*/
         IntArray,
         /**accessor*/
@@ -178,12 +178,12 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }) { it: Int -> a[it]
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pa1r<T, R>> {
+inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> {
     return zip(other.toArray()) { t1, t2 -> t1 t0 t2 }
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified O, P : Pa1r<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): R =
+inline fun <reified T, reified O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): R =
     Vect0r(this.first) { i: Int -> (this[i] t0 o[i]) as P } as R
 
 fun <T> Array<T>.toVect0r() = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
