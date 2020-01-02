@@ -41,7 +41,7 @@ class NioMMap(
     val mf: MappedFile, var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null
 ) : Medium() {
     @Suppress("UNCHECKED_CAST")
-    suspend fun values() = let {
+    suspend fun values(): NioCursor = let {
         val medium = this
         val ordering = coroutineContext[Ordering.orderingKey]!!
         val arity = coroutineContext[arityKey]!!
@@ -55,38 +55,43 @@ class NioMMap(
                 is TokenizedRow -> TODO()
             }
 
-
-
+            fun NioAbstractionLayer()    = medium.asContextVect0r(addressable as Indexable, recordBoundary)  t0  { y: ByteBuffer ->
+                        Vect0r({ drivers.size }) { x: Int ->
+                            drivers[x] t0 (arity as Columnar).type[x] by coords[x].size
+                        }
+            }
             when (ordering) {
                 is RowMajor -> {
-                    val row = medium.asContextVect0r(addressable as Indexable, recordBoundary)
-                    val col = { y: ByteBuffer ->
-                        Vect0r({ drivers.size }, { x: Int ->
-                            drivers[x] t0 (arity as Columnar).type[x] by coords[x].size
-                        })
-                    }
+                    val( row , col )= NioAbstractionLayer()
+
+
+
                     NioCursor(
                         intArrayOf(drivers.size, row.size())
-                    ) {  (y:Int, x:Int):IntArray ->
+                    ) { (y: Int, x: Int): IntArray ->
                         dfn(
                             row,
                             y,
-                            col as (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
+                            col,
                             x,
                             coords
                         )
                     }
                 }
                 is ColumnMajor -> {
-                    val row = medium.asContextVect0r(addressable as Indexable, recordBoundary)
-                    val col = { y: ByteBuffer ->
-                        Vect0r({ drivers.size }, { x: Int ->
-                            drivers[x] to (arity as Columnar).type[x] by coords[x].size
-                        })
-                    }
+                    val( row , col )= NioAbstractionLayer()
+
                     NioCursor(
                         intArrayOf(row.size(), drivers.size)
-                    ) { (y:Int, x:Int):IntArray -> dfn(row, y, col as (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>, x, coords) }
+                    ) { (y: Int, x: Int): IntArray ->
+                        dfn(
+                            row,
+                            y,
+                            col,
+                            x,
+                            coords
+                        )
+                    }
                 }
 
 
