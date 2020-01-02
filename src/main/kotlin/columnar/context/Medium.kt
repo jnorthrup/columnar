@@ -125,11 +125,15 @@ class NioMMap(
     }
 
     companion object {
-        fun text(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> =
-            Tokenized.mapped.get(m) as Array<CellDriver<ByteBuffer, Any?>>
+        fun text(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> {
+            val arrayOfTokenizeds = Tokenized.mapped[m]
+            return arrayOfTokenizeds as Array<CellDriver<ByteBuffer, Any?>>
+        }
 
-        fun binary(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> =
-            Fixed.mapped.get(m) as Array<CellDriver<ByteBuffer, Any?>>
+        fun binary(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> {
+            val arrayOfCellDrivers = Fixed.mapped[m]
+            return arrayOfCellDrivers as Array<CellDriver<ByteBuffer, Any?>>
+        }
     }
 
     fun asContextVect0r(
@@ -142,13 +146,13 @@ class NioMMap(
                     ) t0 (-1L t0 -1L)
                     )
         }
-    ) = Vect0r(indexable.size, { ix: Int ->
+    ) = Vect0r(indexable.size) { ix: Int ->
         translateMapping(
             ix,
             fixedWidth.recordLen,
             state()
         )
-    })
+    }
 
     suspend fun asSequence(): Sequence<ByteBuffer> {
         val indexable = coroutineContext[Addressable.addressableKey]
