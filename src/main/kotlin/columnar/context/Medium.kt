@@ -66,12 +66,12 @@ class NioMMap(
                         })
                     }
                     NioCursor(
-                        intArrayOf(drivers.size, row.size)
+                        intArrayOf(drivers.size, row.size())
                     ) { (x, y) ->
                         dfn(
                             row,
                             y,
-                            col as (ByteBuffer) -> Vect0r<Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
+                            col,
                             x,
                             coords
                         )
@@ -85,7 +85,7 @@ class NioMMap(
                         })
                     }
                     NioCursor(
-                        intArrayOf(row.size, drivers.size)
+                        intArrayOf(row.size(), drivers.size)
                     ) { (y, x) -> dfn(row, y, col as (ByteBuffer) -> Vect0r<Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>, x, coords) }
                 }
 
@@ -121,9 +121,11 @@ class NioMMap(
     }
 
     companion object {
-        fun text(  m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer,  Any?>> = Tokenized.mapped.get( m) as  Array<CellDriver<ByteBuffer, Any?>>
-        fun binary( m: Vect0r<IOMemento>):Array<CellDriver<ByteBuffer,  Any?>> =
-            Fixed.mapped.get( m) as Array<CellDriver<ByteBuffer, Any?>>
+        fun text(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> =
+            Tokenized.mapped.get(m) as Array<CellDriver<ByteBuffer, Any?>>
+
+        fun binary(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> =
+            Fixed.mapped.get(m) as Array<CellDriver<ByteBuffer, Any?>>
     }
 
     fun asContextVect0r(
@@ -136,7 +138,7 @@ class NioMMap(
                 ), Pair(-1L, -1L)
             )
         }
-    ) = Vect0r(indexable.size, { ix:Int ->
+    ) = Vect0r(indexable.size, { ix: Int ->
         translateMapping(
             ix,
             fixedWidth.recordLen,
@@ -154,7 +156,7 @@ class NioMMap(
             fixedWidth as FixedWidth,
             { -> state })
         return sequence {
-            for (ix in 0 until cvec.size) {
+            for (ix in 0 until cvec.size()) {
                 state = cvec[ix]
                 yield(state.first)
             }
@@ -232,10 +234,10 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
         val mapped = mapOf(
             IOMemento.IoInt to Tokenized(
                 bb2ba `→` btoa `→` trim * String::toInt,
-                { a, b -> a.putInt(b as Int) }),
+                { a, b -> a.putInt(b) }),
             IOMemento.IoLong to Tokenized(
                 (bb2ba `→` btoa `→` trim * String::toLong),
-                { a, b -> a.putLong(b as Long) }),
+                { a, b -> a.putLong(b) }),
             IOMemento.IoFloat to Tokenized(
                 bb2ba `→` btoa `→` trim `→` String::toFloat,
                 { a, b -> a.putFloat(b) }),
@@ -247,7 +249,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
-                dateMapper `⚬`  trim `⚬`  btoa `⚬`  bb2ba,
+                dateMapper `⚬` trim `⚬` btoa `⚬` bb2ba,
                 { a, b -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
                 bb2ba `→` btoa `→` trim `→` instantMapper,
