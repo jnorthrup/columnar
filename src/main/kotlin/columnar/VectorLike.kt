@@ -59,7 +59,7 @@ infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = Vect0r({ this.size }) { 
 infix fun <C, B : (Long) -> C> LongArray.α(m: B) = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
 
 /**right identity*/
-fun <T : Any?> T.`⟲`() = { this }
+val  <T : Any?> T.`⟲` get() = { this }
 
 /**right identity*/
 infix fun <T, R, F : (T) -> R> T.`⟲`(f: F) = { f(this) }
@@ -111,7 +111,7 @@ inline operator fun <reified T> Vect0r<T>.get(vararg index: Int) = get(index)
 inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Vect0r_IntArray3")
-  operator fun <  T > Vect0r<T>.get(index: IntArray)   =Vect0r (index.size.`⟲`(), { ix: Int -> second(index[ix]) })
+  operator fun <  T > Vect0r<T>.get(index: IntArray)   =Vect0r (index.size.`⟲` , { ix: Int -> second(index[ix]) })
  inline fun < reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
  fun < T> Vect0r<T>.toList() = this.let {  List(size) { this[it] } }
 
@@ -196,7 +196,7 @@ inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→`
     vargsIn.asIterable().foldIndexed(0 to IntArray(vargsIn.size)) { vix, (acc, avec), vec ->
         acc.plus(vec.size) `→` { size -> size to avec.also { avec[vix] = size } }
     } `→` { (acc, order) ->
-        Vect0r(acc.`⟲`()) { ix ->
+        Vect0r(acc.`⟲` ) { ix ->
             order.binarySearch(ix) `→` { offset ->
                 (if (0 > offset) 0 - (offset + 1) else offset + 1) `→` { slot ->
                     order[slot] `→` { upperBound ->
