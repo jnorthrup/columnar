@@ -7,9 +7,6 @@ package columnar
 import java.nio.ByteBuffer
 
 
-
-infix fun <A, B, C> Pair<A, B>.by(t: C) = Triple(first, second, t)
-
 infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
 operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }

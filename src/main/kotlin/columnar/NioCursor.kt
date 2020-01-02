@@ -10,7 +10,7 @@ import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-typealias NioCursor = Matrix<Triple<() -> Any?, (Any?) -> Unit, Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
+typealias NioCursor = Matrix<Tr1ple<() -> Any?, (Any?) -> Unit, Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
 typealias TableRoot = Pair<NioCursor, CoroutineContext>
 typealias ColMeta = Pair<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
@@ -180,4 +180,4 @@ fun fromFwf(
             indexable +
             nio +
             columnarArity
-) { nio.values() to this.coroutineContext }
+) { TableRoot(nio.values() ,   this.coroutineContext) }
