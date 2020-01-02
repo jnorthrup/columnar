@@ -68,7 +68,7 @@ class NioMMap(
 
                     NioCursor(
                         intArrayOf(drivers.size, row.size())
-                    ) { (y: Int, x: Int): IntArray ->
+                    ) { (x: Int, y: Int): IntArray ->
                         dfn(
                             row,
                             y,
