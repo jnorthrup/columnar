@@ -62,16 +62,16 @@ class NioMMap(
                     val row = medium.asContextVect0r(addressable as Indexable, recordBoundary)
                     val col = { y: ByteBuffer ->
                         Vect0r({ drivers.size }, { x: Int ->
-                            drivers[x] to (arity as Columnar).type[x] by coords[x].size
+                            drivers[x] t0 (arity as Columnar).type[x] by coords[x].size
                         })
                     }
                     NioCursor(
                         intArrayOf(drivers.size, row.size())
-                    ) { (x, y) ->
+                    ) {  (y:Int, x:Int):IntArray ->
                         dfn(
                             row,
                             y,
-                            col,
+                            col as (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
                             x,
                             coords
                         )
@@ -86,7 +86,7 @@ class NioMMap(
                     }
                     NioCursor(
                         intArrayOf(row.size(), drivers.size)
-                    ) { (y, x) -> dfn(row, y, col as (ByteBuffer) -> Vect0r<Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>, x, coords) }
+                    ) { (y:Int, x:Int):IntArray -> dfn(row, y, col as (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>, x, coords) }
                 }
 
 
@@ -94,14 +94,14 @@ class NioMMap(
                 is Diagonal -> TODO()
                 is RTree -> TODO()
             }
-        }
+        } as NioCursor
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun dfn(
         row: Vect0r<Pair<ByteBuffer, Pair<Long, Long>>>,
         y: Int,
-        col: (ByteBuffer) -> Vect0r<Triple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
+        col: (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
         x: Int,
         coords: Vect0r<IntArray>
     ) = let {
@@ -110,7 +110,7 @@ class NioMMap(
                 col(row1).let { (_, triple) ->
                     triple(x).let { triple1 ->
                         triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
-                            { row1[start, end] `→` driver.read } as () -> Any to
+                            { row1[start, end] `→` driver.read } as () -> Any t0
                                     { v: Any? -> driver.write(row1[start, end], v) } by
                                     triple1
                         }
