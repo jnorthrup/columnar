@@ -113,26 +113,19 @@ fun main() {
         println(" 8" + (cursor[3, 2, 1, 0] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
         println("  9" + cursor.narrow())
         println(" 10" + cursor.reify())
-        println(" 11" + (cursor.narrow() `…` { it }).map { it.`…reify` { it }[0..2] })
-        println(" 12" + cursor.narrow().`…`.map({ it.`…reify`[0..2] }))
-        println(" 13" + cursor.`…`.map({ it.`…reify`[0..2] }))
+        val vect0r1 = cursor.`…`
+
+        println(" 20" + vect0r1)
 
     }
 }
 
 fun Cursor.reify() = narrow().toList()
-fun Cursor.narrow() = this `…` { it `…reify` Pair<Any?, () -> CoroutineContext>::first }
-inline val <C : List<R>, reified R> C.`…` get() = this[0 until size]
-inline val <C : Vect0r<R>, reified R> C.`…` get() = this[0 until size]
-inline val <C : List<R>, reified R> C.`…reify` get() = this[0 until size].map { it }
-inline val <C : Vect0r<R>, reified R> C.`…reify` get() = this[0 until size].toList()
-inline infix fun <C : List<R>, O, reified R> C.`…`(noinline f: (R) -> O) = this[0 until size] α f
-inline infix fun <C : Vect0r<R>, O, reified R> C.`…`(noinline f: (R) -> O) = this[0 until size] α f
-inline infix fun <C : List<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this[0 until size].map(f)
-inline infix fun <C : Vect0r<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this[0 until size].map(f)
-inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……`(noinline f: (R) -> O) = this[0 until size] α f
-inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……debug`(noinline f: (R) -> O) =
-    this[0 until size].map(f).toVect0r()/*α(f)*/
+fun Cursor.narrow() = this . map { it  }.map { it.map{it.first} }
+inline val <C : Vect0r<R>, reified R> C.`…` get() = this.toList()
+inline infix fun <C : List<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this .map(f)
+inline infix fun <C : Vect0r<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this .map(f)
+inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……debug`(noinline f: (R) -> O) = this .map(f).toVect0r()
 
 fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->
     System.err.println("|" + nioCursor[3, 3].first() + "|")
