@@ -18,7 +18,7 @@ interface Pa1r<F, S> {
 
         operator fun <F, S, P : Pair<F, S>, R : Pa1r<F, S>> invoke(p: P) = p.let { (f, s) -> Pa1r(f, s) }
     }
-    }
+}
 
 /*inheritable version of triple*/
 interface Tr1ple<F, S, T> {
@@ -38,11 +38,12 @@ interface Tr1ple<F, S, T> {
         }
 
         operator fun <F, S, T> invoke(p: Triple<F, S, T>) = p.let { (f, s, t) -> Tr1ple(f, s, t) }
-}
+    }
 }
 
 typealias Vect0r<T> = Pa1r<() -> Int, (Int) -> T>
-infix fun<F,S > F.t0( s:S) =Pa1r(this,s)
+
+infix fun <F, S> F.t0(s: S) = Pa1r(this, s)
 infix fun <F, S, T, P : Pa1r<F, S>> P.by(t: T) = let { (a, b) -> Tr1ple(a, b, t) }
 infix fun <F, S, T, P : Pair<F, S>> P.by(t: T) = let { (a, b) -> Tr1ple(a, b, t) }
 

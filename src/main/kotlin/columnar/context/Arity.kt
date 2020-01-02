@@ -13,6 +13,7 @@ sealed class Arity : CoroutineContext.Element {
             CoroutineContext.Key<Arity> {}
     }
 }
+
 open class Scalar(val type: IOMemento, name: String? = null) : Arity()
 /**Borg reference*/
 class UniMatrix(type: IOMemento, val shape: Vect0r<Int>) : Scalar(type)

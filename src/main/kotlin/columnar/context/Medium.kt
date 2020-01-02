@@ -10,6 +10,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
+typealias  MMapWindow = Pa1r<Long, Long>
+typealias  NioCursorState = Pa1r<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
@@ -55,17 +57,14 @@ class NioMMap(
                 is TokenizedRow -> TODO()
             }
 
-            fun NioAbstractionLayer()    = medium.asContextVect0r(addressable as Indexable, recordBoundary)  t0  { y: ByteBuffer ->
-                        Vect0r({ drivers.size }) { x: Int ->
-                            drivers[x] t0 (arity as Columnar).type[x] by coords[x].size
-                        }
-            }
+            fun NioAbstractionLayer(): Pa1r<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
+                medium.asContextVect0r(addressable as Indexable, recordBoundary) t0 { y: ByteBuffer ->
+                    Vect0r({ drivers.size }) { x: Int ->
+                        drivers[x] t0 (arity as Columnar).type[x] by coords[x].size
+                    }
+                }
             when (ordering) {
-                is RowMajor -> {
-                    val( row , col )= NioAbstractionLayer()
-
-
-
+                is RowMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pa1r<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
                     NioCursor(
                         intArrayOf(drivers.size, row.size())
                     ) { (x: Int, y: Int): IntArray ->
@@ -77,9 +76,9 @@ class NioMMap(
                             coords
                         )
                     }
+
                 }
-                is ColumnMajor -> {
-                    val( row , col )= NioAbstractionLayer()
+                is ColumnMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pa1r<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
 
                     NioCursor(
                         intArrayOf(row.size(), drivers.size)
@@ -104,7 +103,7 @@ class NioMMap(
 
     @Suppress("UNCHECKED_CAST")
     private fun dfn(
-        row: Vect0r<Pair<ByteBuffer, Pair<Long, Long>>>,
+        row: Vect0r<NioCursorState>,
         y: Int,
         col: (ByteBuffer) -> Vect0r<Tr1ple<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
         x: Int,
@@ -136,12 +135,12 @@ class NioMMap(
     fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth,
-        state: () -> Pair<ByteBuffer, Pair<Long, Long>> = {
-            Pair(
-                ByteBuffer.allocate(
-                    0
-                ), Pair(-1L, -1L)
-            )
+        state: () -> NioCursorState = {
+            (
+                    ByteBuffer.allocate(
+                        0
+                    ) t0 (-1L t0 -1L)
+                    )
         }
     ) = Vect0r(indexable.size, { ix: Int ->
         translateMapping(
@@ -155,8 +154,8 @@ class NioMMap(
         val indexable = coroutineContext[Addressable.addressableKey]
         val fixedWidth = coroutineContext[RecordBoundary.boundaryKey]
 
-        var state = Pair(ByteBuffer.allocate(0), Pair(-1L, -1L))
-        val cvec = asContextVect0r(
+        var state = (ByteBuffer.allocate(0) t0 (-1L t0 -1L))
+        val cvec: Vect0r<NioCursorState> = asContextVect0r(
             indexable as Indexable,
             fixedWidth as FixedWidth,
             { -> state })
@@ -185,9 +184,8 @@ class NioMMap(
     }
     val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-
     fun remap(
-        rafchannel: FileChannel, window: Pair<Long, Long>
+        rafchannel: FileChannel, window: MMapWindow
     ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
         rafchannel.map(mf.mapMode, offsetToMap, sizeToMap)
     }
@@ -203,18 +201,18 @@ class NioMMap(
     fun translateMapping(
         rowIndex: Int,
         rowsize: Int,
-        state: Pair<ByteBuffer, Pair<Long, Long>>
-    ): Pair<ByteBuffer, Pair<Long, Long>> {
+        state: NioCursorState
+    ): NioCursorState {
         var (buf1, window1) = state
         val lix = rowIndex.toLong()
         val seekTo = rowsize * lix
         if (seekTo >= window1.second) {
             val recordOffset0 = seekTo
-            window1 = recordOffset0 to min(size() - seekTo, windowSize)
+            window1 = recordOffset0 t0 min(size() - seekTo, windowSize)
             buf1 = remap(mf.channel, window1)
         }
         val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
-        return Pair(rowBuf, window1)
+        return (rowBuf t0 window1)
     }
 
 

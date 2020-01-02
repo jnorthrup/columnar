@@ -180,4 +180,4 @@ fun fromFwf(
             indexable +
             nio +
             columnarArity
-) { TableRoot(nio.values() ,   this.coroutineContext) }
+) { TableRoot(nio.values(), this.coroutineContext) }

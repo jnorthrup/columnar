@@ -50,7 +50,7 @@ suspend fun main() {
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
-    val cursorOf =     (cursorOf(fromFwf)[0..10])
+    val cursorOf = (cursorOf(fromFwf)[0..10])
     System.err.println(cursorOf.reify())
 
 }
