@@ -2,7 +2,22 @@ package columnar
 
 import kotlinx.coroutines.flow.*
 
-typealias Vect0r<T> = Pair<() -> Int, (Int) -> T>
+interface Pa1r<F, S> {
+    val first: F
+    val second: S
+    operator fun component1(): F = first
+    operator fun component2(): S = second
+
+    companion object {
+        operator fun <F,S,R:Pa1r<F,S>> invoke(f: F, s: S)  = object :  Pa1r<F, S> {
+            override val first get() = f
+            override val second get() = s
+        }
+        operator fun <F, S, P : Pair<F, S>> invoke(p: P) = p.let { (f, s) -> Pa1r(f, s) }
+    }
+}
+typealias Vect0r<T> = Pa1r<() -> Int, (Int) -> T>
+infix fun<F,S > F.t0( s:S) =Pa1r(this,s)
 
 val <T>   Vect0r<T>.size get() = first
 /*
@@ -143,8 +158,8 @@ inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pair<T, R>> 
 inline fun <reified T, reified O, P : Pair<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): R =
     Vect0r(this.first) { i: Int -> (this[i] to o[i]) as P } as R
 
-fun <T> Array<T>.toVect0r() = Vect0r(   size  .`⟲`  , { ix: Int -> this[ix] })
-fun <T> List<T>.toVect0r() = Vect0r( size  .`⟲`  , { ix: Int -> this[ix] })
+fun <T> Array<T>.toVect0r() = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
+fun <T> List<T>.toVect0r() = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
 suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
