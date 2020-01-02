@@ -85,7 +85,7 @@ fun main() {
         val dframe: Vect0r<Vect0r<Any?>> =
             Vect0r({ a[1] }) { iy -> Vect0r({ a[0] }) { ix -> byRows.first[ix, iy].first() } }
 
-        for (i in 0 until dframe[1].size) System.err.print("" + dframe[1][i] + "|")
+        for (i in 0 until dframe[1].size()) System.err.print("" + dframe[1][i] + "|")
         System.err.println()
         val shaken = (dframe[1])[0, 1, 0, 0, 0, 1, 0, 0, 1, 3, 3, 3, 3, 3]
         System.err.println("reordering: " + shaken.toList())
@@ -121,11 +121,11 @@ fun main() {
 }
 
 fun Cursor.reify() = narrow().toList()
-fun Cursor.narrow() = this . map { it  }.map { it.map{it.first} }
+fun Cursor.narrow() = this.map { it }.map { it.map { it.first } }
 inline val <C : Vect0r<R>, reified R> C.`…` get() = this.toList()
-inline infix fun <C : List<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this .map(f)
-inline infix fun <C : Vect0r<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this .map(f)
-inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……debug`(noinline f: (R) -> O) = this .map(f).toVect0r()
+inline infix fun <C : List<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this.map(f)
+inline infix fun <C : Vect0r<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this.map(f)
+inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……debug`(noinline f: (R) -> O) = this.map(f).toVect0r()
 
 fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->
     System.err.println("|" + nioCursor[3, 3].first() + "|")
