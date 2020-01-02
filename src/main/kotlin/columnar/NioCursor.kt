@@ -92,40 +92,28 @@ fun main() {
 
         val pair = shaken.α({ it: Any? -> "" + it + "____" })
         pair.toSequence().forEach { print(it) }
-        val map = shaken.map { it: Any? -> "" + it + "____" }
-        map.forEach { print(it) }
+
         val cursor: Cursor = cursorOf(byRows)
         println()
         println("" + cursor[0].toList())
         println("" + cursor[0][3, 2, 1, 0].toList())
         println("----")
         var c = 0
-        val crs11: Vect0r<Vect0r<Pair<Any?, () -> CoroutineContext>>> = cursor
-        println(" 0" + crs11[0..3].map { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }.toList())
-        val pair1 = cursor[0..3]
-        println(" 1" + pair1.map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
-        println(" 2" + (pair1 α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 3" + (pair1 α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 4" + pair1.map { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }.toList())
-        println(" 5" + (pair1 α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 6" + (pair1 α { p: RowVec -> p α (Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 7" + (pair1 α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println(" 8" + (cursor[3, 2, 1, 0] α { p: RowVec -> p.map(Pair<Any?, () -> CoroutineContext>::first) }).toList())
-        println("  9" + cursor.narrow())
-        println(" 10" + cursor.reify())
-        val vect0r1 = cursor.`…`
+        val vect0r1 = cursor/*.`…`*/
+        println(" 7" + (vect0r1.reify()).toList())
+        println(" 2" + (vect0r1.narrow()).toList())
 
-        println(" 20" + vect0r1)
 
     }
 }
 
-fun Cursor.reify() = narrow().toList()
-fun Cursor.narrow() = this.map { it }.map { it.map { it.first } }
+private fun Cursor.reify() =
+    this α RowVec::toList
+
+private fun Cursor.narrow () =
+    (reify()) α {list: List<Pair<*,*>> ->  list.map(Pair<*,*>::first) }
+
 inline val <C : Vect0r<R>, reified R> C.`…` get() = this.toList()
-inline infix fun <C : List<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this.map(f)
-inline infix fun <C : Vect0r<R>, O, reified R> C.`…reify`(noinline f: (R) -> O) = this.map(f)
-inline infix fun <C : Vect0r<R>, O, reified R : Vect0r<O>> C.`……debug`(noinline f: (R) -> O) = this.map(f).toVect0r()
 
 fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->
     System.err.println("|" + nioCursor[3, 3].first() + "|")
