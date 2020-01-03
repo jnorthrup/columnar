@@ -51,16 +51,16 @@ class NioMMap(
         val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
         /* val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!! */
         medium.let {
-            val drivers = medium.drivers ?: text((arity as Columnar).type /*assuming fwf here*/)
+            val drivers = medium.drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
             val coords = when (recordBoundary) {
                 is FixedWidth -> recordBoundary.coords
                 is TokenizedRow -> TODO()
             }
 
             fun NioAbstractionLayer(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
-                medium.asContextVect0r(addressable as Indexable, recordBoundary) t0 { y: ByteBuffer ->
+                medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
                     Vect0r({ drivers.size }) { x: Int ->
-                        drivers[x] t0 (arity as Columnar).type[x] by coords[x].size
+                        drivers[x] t2 (arity as Columnar).first[x] by coords[x].size
                     }
                 }
             when (ordering) {
@@ -114,7 +114,7 @@ class NioMMap(
                 col(row1).let { (_, triple) ->
                     triple(x).let { triple1 ->
                         triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
-                            { row1[start, end] `→` driver.read } as () -> Any t0
+                            { row1[start, end] `→` driver.read } as () -> Any t2
                                     { v: Any? -> driver.write(row1[start, end], v) } by
                                     triple1
                         }
@@ -143,7 +143,7 @@ class NioMMap(
             (
                     ByteBuffer.allocate(
                         0
-                    ) t0 (-1L t0 -1L)
+                    ) t2 (-1L t2 -1L)
                     )
         }
     ) = Vect0r(indexable.size) { ix: Int ->
@@ -158,7 +158,7 @@ class NioMMap(
         val indexable = coroutineContext[Addressable.addressableKey]
         val fixedWidth = coroutineContext[RecordBoundary.boundaryKey]
 
-        var state = (ByteBuffer.allocate(0) t0 (-1L t0 -1L))
+        var state = (ByteBuffer.allocate(0) t2 (-1L t2 -1L))
         val cvec: Vect0r<NioCursorState> = asContextVect0r(
             indexable as Indexable,
             fixedWidth as FixedWidth,
@@ -212,11 +212,11 @@ class NioMMap(
         val seekTo = rowsize * lix
         if (seekTo >= window1.second) {
             val recordOffset0 = seekTo
-            window1 = recordOffset0 t0 min(size() - seekTo, windowSize)
+            window1 = recordOffset0 t2 min(size() - seekTo, windowSize)
             buf1 = remap(mf.channel, window1)
         }
         val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
-        return (rowBuf t0 window1)
+        return (rowBuf t2 window1)
     }
 
 

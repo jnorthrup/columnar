@@ -43,7 +43,7 @@ interface Tripl3<F, S, T> {
 
 typealias Vect0r<T> = Pai2<() -> Int, (Int) -> T>
 
-infix fun <F, S> F.t0(s: S) = Pai2(this, s)
+infix fun <F, S> F.t2(s: S) = Pai2(this, s)
 infix fun <F, S, T, P : Pai2<F, S>> P.by(t: T) = let { (a, b) -> Tripl3(a, b, t) }
 infix fun <F, S, T, P : kotlin.Pair<F, S>> P.by(t: T) = let { (a, b) -> Tripl3(a, b, t) }
 
@@ -179,18 +179,18 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }) { it: Int -> a[it]
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
 inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> {
-    return zip(other.toArray()) { t1, t2 -> t1 t0 t2 }
+    return zip(other.toArray()) { t1, t2 -> t1 t2 t2 }
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): R =
-    Vect0r(this.first) { i: Int -> (this[i] t0 o[i]) as P } as R
+inline fun <reified T, reified O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>):  Vect0r<P> =
+    Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) as P } as R
 
-fun <T> Array<T>.toVect0r() = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
-fun <T> List<T>.toVect0r() = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
-suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
-fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
-fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+ fun < T> Array<T>.toVect0r():Vect0r<T> = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
+ fun < T> List<T>.toVect0r():Vect0r <T> = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
+suspend  fun < T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+ fun < T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+ fun < T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
 inline fun <reified T> combine(vararg s: Flow<T>) = flow {

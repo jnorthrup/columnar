@@ -2,12 +2,11 @@ package id.rejuve.dayjob
 
 import columnar.*
 import columnar.IOMemento.*
-import columnar.context.Columnar
-import columnar.context.FixedWidth
-import columnar.context.NioMMap
-import columnar.context.RowMajor
+import columnar.context.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlin.coroutines.CoroutineContext
 
 @ImplicitReflectionSerializer
 @ExperimentalCoroutinesApi
@@ -31,7 +30,7 @@ suspend fun main() {
     )
 
 
-    val drivers = arrayOf(
+    val drivers = vect0rOf(
         IoString,
         IoString,
         IoLocalDate,
@@ -41,18 +40,33 @@ suspend fun main() {
         IoFloat,
         IoString
     )
-    val names = listOf("SalesNo", "SalesAreaID", "date", "PluNo", "ItemName", "Quantity", "Amount", "TransMode")
+    val names = vect0rOf("SalesNo", "SalesAreaID", "date", "PluNo", "ItemName", "Quantity", "Amount", "TransMode")
 
 
-    val columnar = Columnar.of(*drivers)
-    val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.type))
+    val zip  = names.zip(drivers)
+    val columnar = Columnar.of(zip)
+    val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
-    val cursorOf = (cursorOf(fromFwf)[0..10])
-    System.err.println(cursorOf.reify())
 
+    var curs = (cursorOf(fromFwf))
+    curs = curs[2, 1, 3, 5]
+    val scalars = curs[0].toList() α { (_, b): Pai2<Any?, () -> CoroutineContext> ->
+        val context = b()
+        runBlocking<Pai2<String, IOMemento>>(context) {
+            (coroutineContext[Arity.arityKey] as Scalar).let { (a, b): Scalar ->
+                b!! t2 a
+
+            }
+        }
+    }
+    //α ({ it: CoroutineContext -> it[Arity.arityKey] as Scalar } )α { it: Scalar -> it }).toList()
+    val pai2 = scalars α Pai2<String, IOMemento>::pair
+    System.err.println("" + pai2.toList())
+    System.err.println("" + scalars[1].pair)
+    System.err.println("" + curs[0][0].pair)
 }
 
 

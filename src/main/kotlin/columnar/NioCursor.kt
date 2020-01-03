@@ -10,11 +10,13 @@ import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
+typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
+typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
-typealias RowVec = Vect0r<Pai2</*value*/Any?, /*codexes for origin, metadata and spreadsheet-like functions */ () -> CoroutineContext>>
+typealias RowBase = Pai2</*value*/Any?, /*codexes for origin, metadata and spreadsheet-like functions */ () -> CoroutineContext>
+typealias RowVec = Vect0r<RowBase>
 typealias Cursor = Vect0r<RowVec>
 
 ///**
@@ -31,16 +33,17 @@ typealias Cursor = Vect0r<RowVec>
 
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
     nioc.let { (xy, mapper) ->
-        val columnar = crt[arityKey] as Columnar
         xy.let { (xsize, ysize) ->
             /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r({ ysize }) { iy ->
-            Vect0r({ xsize }) { ix ->
+            Vect0r(xsize.`⟲`) { ix ->
                 mapper(intArrayOf(ix, iy)).let { (a) ->
-                    a() t0 {
+                    a() t2 {
                         val cnar = crt[arityKey] as Columnar
                         //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
                         // and call in a cell through here
-                        EmptyCoroutineContext + Scalar(cnar.type[ix], cnar.names!![ix])
+                        val name = cnar.second?.get(ix)?:throw(InstantiationError("Tableroot's Columnar has no names"))
+                        val type = cnar.first[ix]
+                        Scalar(type, name)
                     }
                 }
             }
@@ -58,11 +61,11 @@ typealias readfn<M, R> = Function1<M, R>
  * if this is to be a  trait system, the functional objects need to look like a blackboard
  */
 fun main() {
-    val mapping = listOf(
-        "date" to IoLocalDate,
-        "channel" to IoString,
-        "delivered" to IoFloat,
-        "ret" to IoFloat
+    val mapping = vect0rOf(
+        "date" t2 IoLocalDate,
+        "channel" t2 IoString,
+        "delivered" t2 IoFloat,
+        "ret" t2 IoFloat
     )
     val coords = vect0rOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)) α { (a, b): kotlin.Pair<Int, Int> ->
         intArrayOf(a, b)
@@ -71,7 +74,7 @@ fun main() {
     val filename = "src/test/resources/caven4.fwf"
     MappedFile(filename).use { mf ->
         val columnarArity = Columnar.of(mapping)
-        val nio = NioMMap(mf, text(columnarArity.type))
+        val nio = NioMMap(mf, text(columnarArity.first))
         val fixedWidth = fixedWidthOf(nio, coords, '\n'::toByte)
         val indexable = indexableOf(nio, fixedWidth)
         val byRows: TableRoot = fromFwf(RowMajor(), fixedWidth, indexable, nio, columnarArity) `→`
@@ -107,11 +110,11 @@ fun main() {
     }
 }
 
-  fun Cursor.reify() =
+fun Cursor.reify() =
     this α RowVec::toList
 
-  fun Cursor.narrow () =
-    (reify()) α {list: List< Pai2<*, *>> ->  list.map(Pai2<*,*>::first) }
+fun Cursor.narrow() =
+    (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
 
 inline val <C : Vect0r<R>, reified R> C.`…` get() = this.toList()
 
@@ -149,7 +152,7 @@ fun indexableOf(
 
 fun TableRoot.name(xy: IntArray) = this.let { (_, rootContext) ->
     (rootContext[arityKey]!! as Columnar).let { cnar ->
-        cnar.names!![(rootContext[Ordering.orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
+        cnar.second!![(rootContext[Ordering.orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
     }
 }
 
