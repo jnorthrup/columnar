@@ -53,15 +53,7 @@ suspend fun main() {
 
     var curs = (cursorOf(fromFwf))
     curs = curs[2, 1, 3, 5]
-    val scalars = curs[0].toList() α { (_, b): Pai2<Any?, () -> CoroutineContext> ->
-        val context = b()
-        runBlocking<Pai2<String, IOMemento>>(context) {
-            (coroutineContext[Arity.arityKey] as Scalar).let { (a, b): Scalar ->
-                b!! t2 a
-
-            }
-        }
-    }
+    val scalars = curs.scalars
     //α ({ it: CoroutineContext -> it[Arity.arityKey] as Scalar } )α { it: Scalar -> it }).toList()
     val pai2 = scalars α Pai2<String, IOMemento>::pair
     System.err.println("" + pai2.toList())
