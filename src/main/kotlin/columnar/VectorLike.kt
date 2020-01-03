@@ -144,7 +144,10 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T>
 operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size.`⟲`, { ix: Int -> second(index[ix]) })
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size()) { vf(it) } }
-inline fun <reified T> Vect0r<T>.toList() = this.let { List(size()) { this[it] } }
+inline fun <reified T> Vect0r<T>.toList() = object : AbstractList<T>() {
+        override val size get() = size()
+        override operator fun get(index: Int): T =second(index)
+    }
 
 fun <T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
     sequence {
@@ -183,14 +186,14 @@ inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> 
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>):  Vect0r<P> =
+inline fun <reified T, reified O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): Vect0r<P> =
     Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) as P } as R
 
- fun < T> Array<T>.toVect0r():Vect0r<T> = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
- fun < T> List<T>.toVect0r():Vect0r <T> = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
-suspend  fun < T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
- fun < T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
- fun < T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+fun <T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
+fun <T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`, { ix: Int -> this[ix] })
+suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
 inline fun <reified T> combine(vararg s: Flow<T>) = flow {
