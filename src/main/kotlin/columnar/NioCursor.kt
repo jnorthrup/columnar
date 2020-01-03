@@ -8,27 +8,21 @@ import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
 typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
-typealias RowBase = Pai2</*value*/Any?, /*codexes for origin, metadata and spreadsheet-like functions */ () -> CoroutineContext>
-typealias RowVec = Vect0r<RowBase>
+typealias RowVec = Pai2Vec<Any?, () -> CoroutineContext>
 typealias Cursor = Vect0r<RowVec>
 
-///**
-// * reorder just the columns
-// */
-//operator fun Cursor.get(vararg reorder: Int):Cursor = let { (a, b: (Int) -> RowVec) ->
-//    a to { iy: Int ->
-//        val before: RowVec = b(iy)
-//        val after: RowVec = before[reorder]
-//        after
-//    }
-//}
+
+typealias Pai2Vec<F, S> = Vect0r<Pai2<F, S>>
+
+val <F, S> Pai2Vec<F, S>.left get() = toList().map(Pai2<F, S>::first)
+val <F, S> Pai2Vec<F, S>.right get() = toList().map(Pai2<F, S>::second)
+val <F, S> Pai2Vec<F, S>.reify get() = toList().map(Pai2<F, S>::pair)
 
 
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
@@ -41,7 +35,8 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
                         val cnar = crt[arityKey] as Columnar
                         //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
                         // and call in a cell through here
-                        val name = cnar.second?.get(ix)?:throw(InstantiationError("Tableroot's Columnar has no names"))
+                        val name =
+                            cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
                         val type = cnar.first[ix]
                         Scalar(type, name)
                     }

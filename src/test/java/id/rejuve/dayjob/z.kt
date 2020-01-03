@@ -8,7 +8,6 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.serialization.ImplicitReflectionSerializer
-import kotlin.coroutines.CoroutineContext
 
 @ImplicitReflectionSerializer
 @ExperimentalCoroutinesApi
@@ -54,43 +53,23 @@ suspend fun main() {
     val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
 
     (cursorOf(fromFwf)).let { curs ->
+        System.err.println("record count="+curs.first())
         val scalars = curs.scalars
         val pai2 = scalars α Pai2<String, IOMemento>::pair
         System.err.println("" + pai2.toList())
         System.err.println("" + scalars[1].pair)
-        System.err.println("" + (curs.toList() .first() .toList().map { it: Pai2<Any?, () -> CoroutineContext> -> it.pair }))    }
+        System.err.println("" + curs.toList().first().reify )
+        System.err.println("" + curs.toList().first().left )
+    }
 
     (cursorOf(fromFwf))[2, 1, 3, 5].let { curs ->
         val scalars = curs.scalars
         val pai2 = scalars α Pai2<String, IOMemento>::pair
         System.err.println("" + pai2.toList())
         System.err.println("" + scalars[1].pair)
-        System.err.println("" + (curs.toList() .first() .toList().map { it: Pai2<Any?, () -> CoroutineContext> -> it.pair }
-                ))
+        val rowVec = curs.toList().first()
+        System.err.println("" + rowVec.reify )
+        System.err.println("" + rowVec.left )
     }
 }
-
-/*
-val RowSeq.scalars
-    get() = first() α { (_, b): Pai2<Any?, () -> CoroutineContext> ->
-        val context = b()
-        runBlocking<Pai2<String, IOMemento>>(context) {
-            (coroutineContext[Arity.arityKey] as Scalar).let { (a, b): Scalar ->
-                b!! t2 a
-            }
-        }
-    }
-
-typealias RowSeq = Sequence<RowVec>
-
-@JvmName("vlike_RSequence_1")
-operator fun RowSeq.get(vararg index: Int) = get(index)
-
-@JvmName("vlike_RSequence_Iterable2")
-operator fun RowSeq.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
-
-@JvmName("vlike_RSequence_IntArray3")
-operator fun RowSeq.get(index: IntArray) = this.toList()[index].asSequence()
-
-*/
 
