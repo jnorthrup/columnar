@@ -61,7 +61,16 @@ val Cursor.scalars get() = toSequence().first() α { (_, b): Pai2<Any?, () -> Co
         }
     }
 }
+@JvmName("vlike_RSequence_11")
+operator fun Cursor.get(vararg index: Int) = get(index)
 
+@JvmName("vlike_RSequence_Iterable21")
+operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+
+@JvmName("vlike_RSequence_IntArray31")
+operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
+    a t2 { iy: Int -> fetcher(iy)[index] }
+}
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
 
