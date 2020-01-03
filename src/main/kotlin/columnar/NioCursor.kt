@@ -52,6 +52,16 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
     }
 }
 
+val Cursor.scalars get() = toSequence().first() α { (_, b): Pai2<Any?, () -> CoroutineContext> ->
+    val context = b()
+    runBlocking<Pai2<String, IOMemento>>(context) {
+        (coroutineContext[Arity.arityKey] as Scalar).let { (a, b): Scalar ->
+            b!! t2 a
+
+        }
+    }
+}
+
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
 
