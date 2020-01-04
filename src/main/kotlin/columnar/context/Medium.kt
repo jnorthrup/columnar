@@ -154,23 +154,6 @@ class NioMMap(
         )
     }
 
-    suspend fun asSequence(): Sequence<ByteBuffer> {
-        val indexable = coroutineContext[Addressable.addressableKey]
-        val fixedWidth = coroutineContext[RecordBoundary.boundaryKey]
-
-        var state = (ByteBuffer.allocate(0) t2 (-1L t2 -1L))
-        val cvec: Vect0r<NioCursorState> = asContextVect0r(
-            indexable as Indexable,
-            fixedWidth as FixedWidth,
-            { -> state })
-        return sequence {
-            for (ix in 0 until cvec.size()) {
-                state = cvec[ix]
-                yield(state.first)
-            }
-        }
-    }
-
     /**
      * seek to record offset
      */
