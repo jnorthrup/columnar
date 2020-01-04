@@ -6,11 +6,7 @@ import columnar.context.Columnar
 import columnar.context.FixedWidth
 import columnar.context.NioMMap
 import columnar.context.RowMajor
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.serialization.ImplicitReflectionSerializer
 
-@ImplicitReflectionSerializer
-@ExperimentalCoroutinesApi
 
 suspend fun main() {
     val suffix = "_RD"
@@ -29,8 +25,6 @@ suspend fun main() {
             103, 108
         )
     )
-
-
     val drivers = vect0rOf(
         IoString,
         IoString,
