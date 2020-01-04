@@ -2,6 +2,10 @@ package columnar.context
 
 import columnar.*
 import columnar.context.Arity.Companion.arityKey
+import kotlinx.coroutines.asContextElement
+import kotlinx.coroutines.ensurePresent
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
@@ -39,8 +43,13 @@ class Kxio : Medium() {
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 }
 
+val canary = ByteBuffer.allocate(
+    0
+) t2 (-1L t2 -1L)
+
 class NioMMap(
-    val mf: MappedFile, var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null
+    val mf: MappedFile, var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
+    val state: ThreadLocal<NioCursorState> = ThreadLocal.withInitial { canary }
 ) : Medium() {
     @Suppress("UNCHECKED_CAST")
     suspend fun values(): NioCursor = let {
@@ -138,20 +147,15 @@ class NioMMap(
 
     fun asContextVect0r(
         indexable: Indexable,
-        fixedWidth: FixedWidth,
-        state: () -> NioCursorState = {
-            (
-                    ByteBuffer.allocate(
-                        0
-                    ) t2 (-1L t2 -1L)
-                    )
-        }
+        fixedWidth: FixedWidth
     ) = Vect0r(indexable.size) { ix: Int ->
-        translateMapping(
-            ix,
-            fixedWidth.recordLen,
-            state()
-        )
+        runBlocking {
+
+            translateMapping(
+                ix,
+                fixedWidth.recordLen
+            )
+        }
     }
 
     /**
@@ -174,7 +178,7 @@ class NioMMap(
     fun remap(
         rafchannel: FileChannel, window: MMapWindow
     ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
-        rafchannel.map(mf.mapMode, offsetToMap, sizeToMap)
+        rafchannel.map(mf.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:"+window.pair)  }
     }
 
     /**
@@ -185,24 +189,26 @@ class NioMMap(
      *
      * @return
      */
-    fun translateMapping(
+    suspend fun translateMapping(
         rowIndex: Int,
-        rowsize: Int,
-        state: NioCursorState
-    ): NioCursorState {
-        var (buf1, window1) = state
-        val lix = rowIndex.toLong()
-        val seekTo = rowsize * lix
-        if (seekTo >= window1.second) {
-            val recordOffset0 = seekTo
-            window1 = recordOffset0 t2 min(size() - seekTo, windowSize)
-            buf1 = remap(mf.channel, window1)
+        rowsize: Int
+    ): NioCursorState = withContext(state.asContextElement()){
+          state.ensurePresent()
+        val (orig1,orig2)=state.get()
+        var (buf1, window1) = state.get()
+          val lix = rowIndex.toLong()
+          val seekTo = rowsize * lix
+          if (seekTo >= window1.second) {
+              val recordOffset0 = seekTo
+              window1 = recordOffset0 t2 min(size() - seekTo, windowSize)
+              buf1 = remap(mf.channel, window1)
+          }
+          val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
+        val revisedstate:NioCursorState = (rowBuf t2 window1).also {
+          withContext(state.asContextElement(it)){state.set(it)}
         }
-        val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
-        return (rowBuf t2 window1)
+        revisedstate
     }
-
-
 }
 
 /**
