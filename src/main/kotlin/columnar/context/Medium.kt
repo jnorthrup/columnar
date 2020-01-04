@@ -178,7 +178,7 @@ class NioMMap(
     fun remap(
         rafchannel: FileChannel, window: MMapWindow
     ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
-        rafchannel.map(mf.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:"+window.pair)  }
+        rafchannel.map(mf.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
     }
 
     /**
@@ -192,22 +192,34 @@ class NioMMap(
     suspend fun translateMapping(
         rowIndex: Int,
         rowsize: Int
-    ): NioCursorState = withContext(state.asContextElement()){
-          state.ensurePresent()
-        val (orig1,orig2)=state.get()
-        var (buf1, window1) = state.get()
-          val lix = rowIndex.toLong()
-          val seekTo = rowsize * lix
-          if (seekTo >= window1.second) {
-              val recordOffset0 = seekTo
-              window1 = recordOffset0 t2 min(size() - seekTo, windowSize)
-              buf1 = remap(mf.channel, window1)
-          }
-          val rowBuf = buf1.position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
-        val revisedstate:NioCursorState = (rowBuf t2 window1).also {
-          withContext(state.asContextElement(it)){state.set(it)}
-        }
-        revisedstate
+    ): NioCursorState {
+
+        var reuse = false
+        lateinit var pbuf:ByteBuffer
+        val (memo1,memo2) = state.get()
+        return withContext(state.asContextElement()) {
+            state.ensurePresent()
+            var (buf1, window1) = state.get()
+            val lix = rowIndex.toLong()
+            val seekTo = rowsize * lix
+            if (seekTo in (window1.first .. (window1.second - rowsize)) ) reuse=true
+            else {
+                val recordOffset0 = seekTo
+                window1 = (recordOffset0 t2 min(size() - seekTo, windowSize))
+                buf1 = remap(mf.channel, (window1))
+
+            }
+            pbuf=buf1
+            val rowBuf = buf1./* pbuf should rarely be mutated.  clear().*/position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
+            rowBuf t2 window1
+        }.also {
+            when {
+                reuse -> System.err.println("reuse( $memo1, ${memo2.pair})")
+                else ->it.let{(_,window)->
+                    state.set(pbuf t2 window)
+                }
+            }
+         }
     }
 }
 
