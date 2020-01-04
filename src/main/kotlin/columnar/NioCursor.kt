@@ -68,8 +68,7 @@ operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
 }
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
-
-/**
+ /**
  * the Cursor attributes appear to be interdependent on each other's advantages.
  *
  * if this is to be a  trait system, the functional objects need to look like a blackboard
