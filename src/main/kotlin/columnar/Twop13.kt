@@ -7,7 +7,7 @@ Mathematicians usually write 'tuples' by listing the elements within parentheses
 In computer science, tuples come in many forms. In dynamically typed languages, such as Lisp, lists are commonly used as tuples.[citation needed] Most typed functional programming languages implement tuples directly as product types,[1] tightly associated with algebraic data types, pattern matching, and destructuring assignment.[2] Many programming languages offer an alternative to tuples, known as record types, featuring unordered elements accessed by label.[3] A few programming languages combine ordered tuple product types and unordered record types into a single construct, as in C structs and Haskell records. Relational databases may formally identify their rows (records) as tuples.
 
 Tuples also occur in relational algebra; when programming the semantic web with the Resource Description Framework (RDF); in linguistics;[4] and in philosophy.[5]
-*/
+ */
 
 package columnar
 
@@ -18,7 +18,7 @@ unfortunate overlap with FP "Unit" but nothing else could be perturbed with a 1 
 interface Un1t<F> {
     val first: F
     operator fun component1(): F = first
-
+    operator fun invoke() = this
     companion object {
         operator fun <F> invoke(f: F) = object : Un1t<F> {
             override val first get() = f
@@ -106,14 +106,15 @@ interface Qu4d<F, S, T, Z> : Tripl3<F, S, T> {
         operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) = p.let { (f, s, t, z) ->
             Qu4d(f, s, t, z)
         }
+
         operator fun <F, S, T, Z> invoke(p: Array<*>) = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST")
-            Qu4d(f as F, s as S, t as  T, z as Z)
+            Qu4d(f as F, s as S, t as T, z as Z)
         }
 
         operator fun <F, S, T, Z> invoke(p: List<*>) = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST")
-            Qu4d(f as F, s as S, t as  T, z as Z)
+            Qu4d(f as F, s as S, t as T, z as Z)
         }
     }
 }
@@ -122,18 +123,25 @@ interface Qu4d<F, S, T, Z> : Tripl3<F, S, T> {
 /**
  * short for tuple1
  */
-val  <F> F.t1 get() =   columnar.Un1t(this)
+val <F> F.t1 get() = columnar.Un1t(this)
 
 /**
  * means  either/both  of "tuple2" and  disambiguation of  pair =x "to" y
  */
-infix fun <F, S> F.t2(s: S) =   let { f -> Pai2(f, s) }
-/**
- * means  either/both  of "tuple3" and  progression of  triple =x "to" y "by" z
- */
+infix fun <F, S> F.t2(s: S) = Pai2(this, s)
 
-infix fun <F, S, T, P : Pai2<F, S>> P.t3(t: T) = let { (a, b) -> Tripl3(a, b, t) }
+infix fun <F, S, T> Pai2<F, S>.t3(t: T): Tripl3<F, S, T> = let { (f, s) ->
+    object : Tripl3<F, S, T>, Pai2<F, S> by this {
+        override val third get() = t
+    }
+}
+
 infix fun <F, S, T, P : kotlin.Pair<F, S>> P.t3(t: T) = let { (a, b) -> Tripl3(a, b, t) }
+infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D): Qu4d<A, B, C, D> = let { (a, b, c) ->
+    object : Qu4d<A, B, C, D>, Tripl3<A, B, C> by this {
+        override val fourth: D get() = d
+    }
+}
 
 /**
  * therblig methodology
