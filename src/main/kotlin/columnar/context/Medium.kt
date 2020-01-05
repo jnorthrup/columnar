@@ -69,7 +69,7 @@ class NioMMap(
             fun NioAbstractionLayer(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
                 medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
                     Vect0r({ drivers.size }) { x: Int ->
-                        drivers[x] t2 (arity as Columnar).first[x] by coords[x].size
+                        drivers[x] t2 (arity as Columnar).first[x] t3 coords[x].size
                     }
                 }
             when (ordering) {
@@ -121,7 +121,7 @@ class NioMMap(
                     triple(x).let { triple1 ->
                         triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
                             { row1[start, end] `→` driver.read } as () -> Any t2
-                                    { v: Any? -> driver.write(row1[start, end], v) } by
+                                    { v: Any? -> driver.write(row1[start, end], v) } t3
                                     triple1
                         }
                     }
