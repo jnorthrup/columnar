@@ -71,9 +71,5 @@ class DayJobTest : StringSpec() {
                 System.err.println("" + rowVec.left)
             }
         }
-
-
     }
-
-
 }
