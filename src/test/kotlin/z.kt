@@ -5,9 +5,7 @@ import columnar.context.*
 
 suspend fun main() {
     val suffix = "_RD"
-    val s = "/vol/aux/rejuve/rejuvesinceapril2019" +
-            suffix +
-            ".fwf"
+    val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = vZipWithNext(
         intArrayOf(
             0, 11,
@@ -42,23 +40,23 @@ suspend fun main() {
     val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
 
     (cursorOf(fromFwf)).let { curs ->
-        System.err.println("record count="+curs.first())
+        System.err.println("record count=" + curs.first())
         val scalars = curs.scalars
         val pai2 = scalars α Scalar::pair
         System.err.println("" + pai2.toList())
         System.err.println("" + scalars[1].pair)
-        System.err.println("" + curs.toList().first().reify )
-        System.err.println("" + curs.toList().first().left )
+        System.err.println("" + curs.toList().first().reify)
+        System.err.println("" + curs.toList().first().left)
     }
 
-    (cursorOf(fromFwf))[2, 1, 3, 5].let { curs ->
+    cursorOf(fromFwf)[2, 1, 3, 5].let { curs ->
         val scalars = curs.scalars
         val pai2 = scalars α Scalar::pair
         System.err.println("" + pai2.toList())
         System.err.println("" + scalars[1].pair)
         val rowVec = curs.toList().first()
-        System.err.println("" + rowVec.reify )
-        System.err.println("" + rowVec.left )
+        System.err.println("" + rowVec.reify)
+        System.err.println("" + rowVec.left)
     }
 }
 

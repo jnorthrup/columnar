@@ -6,7 +6,11 @@ import kotlinx.coroutines.flow.*
 interface Pai2<F, S> {
     val first: F
     val second: S
+    /**
+     * for println and serializable usecases, offload that stuff using this method.
+     */
     val pair get() = let { (a, b) -> a to b }
+
     operator fun component1(): F = first
     operator fun component2(): S = second
 
@@ -15,6 +19,7 @@ interface Pai2<F, S> {
             override val first get() = f
             override val second get() = s
         }
+
 
         operator fun <F, S, P : kotlin.Pair<F, S>, R : Pai2<F, S>> invoke(p: P) = p.let { (f, s) -> Pai2(f, s) }
     }
@@ -25,7 +30,11 @@ interface Tripl3<F, S, T> {
     val first: F
     val second: S
     val third: T
+    /**
+     * for println and serializable usecases, offload that stuff using this method.
+     */
     val triple get() = let { (a, b, c) -> Triple(a, b, c) }
+
     operator fun component1(): F = first
     operator fun component2(): S = second
     operator fun component3(): T = third
@@ -145,9 +154,9 @@ operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size.`
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size()) { vf(it) } }
 inline fun <reified T> Vect0r<T>.toList() = object : AbstractList<T>() {
-        override val size get() = size()
-        override operator fun get(index: Int): T =second(index)
-    }
+    override val size get() = size()
+    override operator fun get(index: Int): T = second(index)
+}
 
 fun <T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
     sequence {
@@ -166,7 +175,7 @@ fun <T> Vect0r<T>.toFlow() = this.let { (_, vf) ->
 fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R): Vect0r<R> = Vect0r(size, { ix: Int -> second(ix).let(fn) })
 
 inline fun <reified T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R) = List(size()) { ix -> fn(ix, this[ix]) }
-inline fun <reified T, R> Vect0r<T>.forEach(fn: (T) -> Unit) {
+inline fun <reified T> Vect0r<T>.forEach(fn: (T) -> Unit) {
     for (ix in (0 until size())) fn(this[ix])
 }
 
@@ -174,7 +183,7 @@ inline fun <reified T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
     for (ix in (0 until size())) fn(ix, this[ix])
 }
 
-fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }) { it: Int -> a[it] }
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }, { a.get(it) })
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
  * The returned list has length of the shortest collection.

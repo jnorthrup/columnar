@@ -35,10 +35,8 @@ fun Cursor.resample(indexcol: Int) = let {
         }
     }
     combine(this, cursor)
-
-
 }
 
- fun minMax(seq:Sequence<LocalDate>)= seq.fold(LocalDate.MAX t2 LocalDate.MIN) {(a,b), localDate ->
-     minOf(a, localDate) t2 maxOf (b, localDate)
-    }
+fun minMax(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDate.MIN) { (a, b), localDate ->
+    minOf(a, localDate) t2 maxOf(b, localDate)
+}
