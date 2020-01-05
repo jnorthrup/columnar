@@ -24,7 +24,7 @@ class Columnar(type: Vect0r<IOMemento>, names: Vect0r<String>? = null) :
             return Columnar(toVect0r)
         }
 
-        fun of(mapping: VPai2<String, IOMemento>) =
+        fun of(mapping: Vect02<String, IOMemento>) =
             Columnar(mapping α Pai2<String, IOMemento>::second, mapping α Pai2<String, IOMemento>::first)
     }
 }

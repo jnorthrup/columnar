@@ -15,7 +15,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
-typealias  MMapWindow = Pai2<Long, Long>
+typealias  MMapWindow = Tw1n< Long>
 typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {

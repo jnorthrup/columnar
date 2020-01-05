@@ -16,14 +16,21 @@ typealias NioCursor1 = Matrix<KMutableProperty2<NioMeta, ByteBuffer, Any?>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
-typealias RowVec = VPai2<Any?, () -> CoroutineContext>
+typealias RowVec = Vect02<Any?, () -> CoroutineContext>
 
 
-typealias VPai2<F, S> = Vect0r<Pai2<F, S>>
+typealias   Vect02<F, S> = Vect0r<XY<F, S>>
 
-val <F, S> VPai2<F, S>.left get() = toList().map(Pai2<F, S>::first)
-val <F, S> VPai2<F, S>.right get() = toList().map(Pai2<F, S>::second)
-val <F, S> VPai2<F, S>.reify get() = toList().map(Pai2<F, S>::pair)
+val <F, S> Vect02<F, S>.left        get() = toList().map(Pai2<F, S>::first)
+val <F, S> Vect02<F, S>.right       get() = toList().map(Pai2<F, S>::second)
+val <F, S> Vect02<F, S>.reify get() = toList().map(Pai2<F, S>::pair)
+
+
+typealias  V3ct0r<F, S, T> = Vect0r<XYZ<F, S, T>>
+val <F, S, T> V3ct0r<F, S, T>.x              get() = toList().map(XYZ<F, S, T>::first)
+val <F, S, T> V3ct0r<F, S, T>.y               get() = toList().map(XYZ<F, S, T>::second)
+val <F, S, T> V3ct0r<F, S, T>.z             get() = toList().map(XYZ<F, S, T>::third)
+val <F, S, T> V3ct0r<F, S, T>.r3ify    get() = toList().map(XYZ<F, S, T>::triple)
 
 
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
