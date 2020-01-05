@@ -6,7 +6,6 @@ class VectorLikeKtTest : StringSpec() {
 
     init {
         "combinevec" {
-
             val c: Vect0r<Int> = combine(
                 listOf(0, 1, 2).toVect0r(),
                 listOf(3, 4, 5).toVect0r(),

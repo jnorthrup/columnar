@@ -33,11 +33,6 @@ class CursorKtTest : StringSpec() {
             System.err.println(cursor.narrow().toList())
             val toList = cursor.resample(0).narrow().toList()
             toList.forEach { System.err.println(it) }
-
-
         }
-
-
     }
-
 }
