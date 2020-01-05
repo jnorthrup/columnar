@@ -41,5 +41,6 @@ enum class IOMemento {
     IoDouble,
     IoString,
     IoLocalDate,
-    IoInstant
+    IoInstant,
+    IoNothing
 }

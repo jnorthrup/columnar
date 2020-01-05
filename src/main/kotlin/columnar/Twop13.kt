@@ -19,6 +19,7 @@ interface Un1t<F> {
     val first: F
     operator fun component1(): F = first
     operator fun invoke() = this
+
     companion object {
         operator fun <F> invoke(f: F) = object : Un1t<F> {
             override val first get() = f
@@ -42,10 +43,7 @@ interface Pai2<F, S> : Un1t<F> {
         }
 
         operator fun <F, S, P : kotlin.Pair<F, S>, R : Pai2<F, S>> invoke(p: P) = p.let { (f, s) ->
-            Pai2(
-                f,
-                s
-            )
+            Pai2(f, s)
         }
     }
 }
@@ -63,25 +61,15 @@ interface Tripl3<F, S, T> : Pai2<F, S> {
 
     companion object {
         operator fun <F, S, T> invoke(f: F, s: S, t: T): Tripl3<F, S, T> =
-            object : Tripl3<F, S, T>, Pai2<F, S> by Pai2(
-                f,
-                s
-            ) {
+            object : Tripl3<F, S, T>, Pai2<F, S> by Pai2(f, s) {
                 override val third get() = t
             }
 
-        operator fun <F, S, T> invoke(p: kotlin.Triple<F, S, T>) = p.let { (f, s, t) ->
-            Tripl3(
-                f,
-                s,
-                t
-            )
-        }
+        operator fun <F, S, T> invoke(p: kotlin.Triple<F, S, T>) = p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 }
 
-/**inheritable version of quad that also provides its first three as a triple.
- */
+/**inheritable version of quad that also provides its first three as a triple. */
 interface Qu4d<F, S, T, Z> : Tripl3<F, S, T> {
     val fourth: Z
 
@@ -91,8 +79,8 @@ interface Qu4d<F, S, T, Z> : Tripl3<F, S, T> {
      * for println and serializable usecases, offload that stuff using this method.
      */
     val quad
-        get() = /*let { (a, b, c) -> Triple(a, b, c) }*/{
-            let { (a, b, c, d) -> Quad(a, b, c, d) }
+        get() = let { (a, b, c, d) ->
+            Quad(a, b, c, d)
         }
 
     operator fun component4(): Z = fourth
@@ -118,7 +106,6 @@ interface Qu4d<F, S, T, Z> : Tripl3<F, S, T> {
         }
     }
 }
-
 
 /**
  * short for tuple1
