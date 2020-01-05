@@ -59,7 +59,6 @@ class NioMMap(
         val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-        /* val nioDrivers = coroutineContext[NioMapper.cellmapperKey]!! */
         medium.let {
             val drivers = medium.drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
             val coords = when (recordBoundary) {
@@ -102,10 +101,7 @@ class NioMMap(
                         )
                     }
                 }
-
-
                 is Hilbert -> TODO()
-                is Diagonal -> TODO()
                 is RTree -> TODO()
             }
         } as NioCursor

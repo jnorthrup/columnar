@@ -39,12 +39,7 @@ class ColumnMajor : Ordering()
  */
 class Hilbert : Ordering()
 
-/**
- * [0,0,0]
- * [1,..1,..1]
- * [2,..2,..2]
+/**for seh
+ * Associative||Abstract, Variadic,
  */
-class Diagonal : Ordering()
-
-/**for seh*/
-abstract class RTree : Ordering()
+class RTree : Ordering()

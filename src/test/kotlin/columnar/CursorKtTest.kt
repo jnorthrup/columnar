@@ -32,7 +32,7 @@ class CursorKtTest : StringSpec() {
             val cursor: Cursor = cursorOf(root)
             System.err.println(cursor.narrow().toList())
             val toList = cursor.resample(0).narrow().toList()
-            toList.forEach  {System.err.println(it  )  }
+            toList.forEach { System.err.println(it) }
 
 
         }

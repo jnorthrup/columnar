@@ -20,4 +20,5 @@ class Indexable(
     val size: () -> Int, val seek: (Int) -> Unit
 ) : Addressable()
 
-class Abstract<T, Q>(val size: () -> Q, val seek: (T) -> Unit) : Addressable()
+open class Abstract<T, Q>(val size: () -> Q, val seek: (T) -> Unit) : Addressable()
+class Associative<T>(size: () -> Int, seek: (T) -> Unit) : Abstract<T, Int>(size, seek)

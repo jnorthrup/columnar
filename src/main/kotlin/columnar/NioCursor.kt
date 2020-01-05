@@ -8,7 +8,6 @@ import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 import kotlin.reflect.KMutableProperty2
 
 typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
@@ -17,14 +16,14 @@ typealias NioCursor1 = Matrix<KMutableProperty2<NioMeta, ByteBuffer, Any?>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
-typealias RowVec = Pai2Vec<Any?, () -> CoroutineContext>
+typealias RowVec = VPai2<Any?, () -> CoroutineContext>
 
 
-typealias Pai2Vec<F, S> = Vect0r<Pai2<F, S>>
+typealias VPai2<F, S> = Vect0r<Pai2<F, S>>
 
-val <F, S> Pai2Vec<F, S>.left get() = toList().map(Pai2<F, S>::first)
-val <F, S> Pai2Vec<F, S>.right get() = toList().map(Pai2<F, S>::second)
-val <F, S> Pai2Vec<F, S>.reify get() = toList().map(Pai2<F, S>::pair)
+val <F, S> VPai2<F, S>.left get() = toList().map(Pai2<F, S>::first)
+val <F, S> VPai2<F, S>.right get() = toList().map(Pai2<F, S>::second)
+val <F, S> VPai2<F, S>.reify get() = toList().map(Pai2<F, S>::pair)
 
 
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
@@ -49,7 +48,7 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
     }
 }
 
-val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking  (it()){ coroutineContext[arityKey] as Scalar } }
+val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[arityKey] as Scalar } }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
