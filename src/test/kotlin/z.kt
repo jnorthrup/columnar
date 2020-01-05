@@ -1,11 +1,6 @@
-package id.rejuve.dayjob
-
 import columnar.*
 import columnar.IOMemento.*
-import columnar.context.Columnar
-import columnar.context.FixedWidth
-import columnar.context.NioMMap
-import columnar.context.RowMajor
+import columnar.context.*
 
 
 suspend fun main() {
@@ -49,7 +44,7 @@ suspend fun main() {
     (cursorOf(fromFwf)).let { curs ->
         System.err.println("record count="+curs.first())
         val scalars = curs.scalars
-        val pai2 = scalars α Pai2<String, IOMemento>::pair
+        val pai2 = scalars α Scalar::pair
         System.err.println("" + pai2.toList())
         System.err.println("" + scalars[1].pair)
         System.err.println("" + curs.toList().first().reify )
@@ -58,7 +53,7 @@ suspend fun main() {
 
     (cursorOf(fromFwf))[2, 1, 3, 5].let { curs ->
         val scalars = curs.scalars
-        val pai2 = scalars α Pai2<String, IOMemento>::pair
+        val pai2 = scalars α Scalar::pair
         System.err.println("" + pai2.toList())
         System.err.println("" + scalars[1].pair)
         val rowVec = curs.toList().first()

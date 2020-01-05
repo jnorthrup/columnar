@@ -8,14 +8,16 @@ import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
+import kotlin.reflect.KMutableProperty2
 
 typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
 typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>>
+typealias NioCursor1 = Matrix<KMutableProperty2<NioMeta, ByteBuffer, Any?>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
 typealias RowVec = Pai2Vec<Any?, () -> CoroutineContext>
-typealias Cursor = Vect0r<RowVec>
 
 
 typealias Pai2Vec<F, S> = Vect0r<Pai2<F, S>>
@@ -47,15 +49,8 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
     }
 }
 
-val Cursor.scalars get() = toSequence().first() α { (_, b): Pai2<Any?, () -> CoroutineContext> ->
-    val context = b()
-    runBlocking<Pai2<String, IOMemento>>(context) {
-        (coroutineContext[Arity.arityKey] as Scalar).let { (a, b): Scalar ->
-            b!! t2 a
+val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking  (it()){ coroutineContext[arityKey] as Scalar } }
 
-        }
-    }
-}
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
 
@@ -68,7 +63,8 @@ operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
 }
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
- /**
+
+/**
  * the Cursor attributes appear to be interdependent on each other's advantages.
  *
  * if this is to be a  trait system, the functional objects need to look like a blackboard
@@ -185,3 +181,6 @@ fun fromFwf(
             nio +
             columnarArity
 ) { TableRoot(nio.values(), this.coroutineContext) }
+
+
+
