@@ -6,6 +6,7 @@ import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.ensurePresent
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.lang.System.err
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
@@ -195,31 +196,37 @@ class NioMMap(
     ): NioCursorState {
 
         var reuse = false
-        lateinit var pbuf:ByteBuffer
-        val (memo1,memo2) = state.get()
+        lateinit var pbuf: ByteBuffer
+        val (memo1, memo2) = state.get()
         return withContext(state.asContextElement()) {
             state.ensurePresent()
             var (buf1, window1) = state.get()
             val lix = rowIndex.toLong()
             val seekTo = rowsize * lix
-            if (seekTo in (window1.first .. (window1.second - rowsize)) ) reuse=true
+            if (seekTo in (window1.first..(window1.second - rowsize))) reuse = true
             else {
                 val recordOffset0 = seekTo
                 window1 = (recordOffset0 t2 min(size() - seekTo, windowSize))
                 buf1 = remap(mf.channel, (window1))
 
             }
-            pbuf=buf1
-            val rowBuf = buf1./* pbuf should rarely be mutated.  clear().*/position(seekTo.toInt() - window1.first.toInt()).slice().limit(recordLen())
+            pbuf = buf1
+            val rowBuf =
+                buf1./* pbuf should rarely be mutated.  clear().*/position(seekTo.toInt() - window1.first.toInt())
+                    .slice().limit(recordLen())
             rowBuf t2 window1
         }.also {
             when {
-                reuse -> System.err.println("reuse( $memo1, ${memo2.pair})")
-                else ->it.let{(_,window)->
+                reuse ->
+                    try {
+                        assert(true) { "reuse( $memo1, ${memo2.pair})".also(err::println) }
+                    } catch (a: AssertionError) {
+                    }
+                else -> it.let { (_, window) ->
                     state.set(pbuf t2 window)
                 }
             }
-         }
+        }
     }
 }
 
