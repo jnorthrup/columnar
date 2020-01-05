@@ -2,44 +2,57 @@ package columnar
 
 import kotlinx.coroutines.flow.*
 
-/*inheritable version of pair*/
-interface Pai2<F, S> {
+
+/**
+a singular reference.  front end of Pai2 and Tripl3.
+unfortunate overlap with FP "Unit" but nothing else could be perturbed with a 1 quite as nicely.
+ */
+interface Un1t<F> {
     val first: F
+    operator fun component1(): F = first
+
+    companion object {
+        operator fun <F> invoke(f: F) = object : Un1t<F> {
+            override val first get() = f
+        }
+    }
+}
+
+/**inheritable version of pair that provides it's first compnent as a Un1t*/
+interface Pai2<F, S> : Un1t<F> {
     val second: S
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
     val pair get() = let { (a, b) -> a to b }
 
-    operator fun component1(): F = first
     operator fun component2(): S = second
 
     companion object {
-        operator fun <F, S> invoke(f: F, s: S) = object : Pai2<F, S> {
-            override val first get() = f
+        operator fun <F, S> invoke(f: F, s: S): Pai2<F, S> = object : Pai2<F, S>, Un1t<F> by Un1t.invoke(f) {
             override val second get() = s
         }
-
 
         operator fun <F, S, P : kotlin.Pair<F, S>, R : Pai2<F, S>> invoke(p: P) = p.let { (f, s) -> Pai2(f, s) }
     }
 }
 
-/*inheritable version of triple*/
-interface Tripl3<F, S, T>:Pai2<F,S> {
+/**inheritable version of triple that also provides its first two as a pair.
+ */
+interface Tripl3<F, S, T> : Pai2<F, S> {
     val third: T
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
     val triple get() = let { (a, b, c) -> Triple(a, b, c) }
+
     operator fun component3(): T = third
 
     companion object {
-        operator fun <F, S, T> invoke(f: F, s: S, t: T) = object : Tripl3<F, S, T> {
-            override val first get() = f
-            override val second get() = s
-            override val third get() = t
-        }
+        operator fun <F, S, T> invoke(f: F, s: S, t: T): Tripl3<F, S, T> =
+            object : Tripl3<F, S, T>, Pai2<F, S> by Pai2(f, s) {
+                override val third get() = t
+            }
 
         operator fun <F, S, T> invoke(p: kotlin.Triple<F, S, T>) = p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
@@ -53,13 +66,14 @@ infix fun <F, S, T, P : kotlin.Pair<F, S>> P.by(t: T) = let { (a, b) -> Tripl3(a
 /**
  * homage to eclipse types
  */
-typealias Tw1n<X> = Pai2<X,X>
+typealias Tw1n<X> = Pai2<X, X>
 
 /**
  * obfuscational methodology
  */
-typealias XY<X,Y> = Pai2<X,Y>
-typealias XYZ<X,Y,Z> =Tripl3<X,Y,Z>
+typealias XY<X, Y> = Pai2<X, Y>
+
+typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
 
 val <T>   Vect0r<T>.size get() = first
 /*
