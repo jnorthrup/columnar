@@ -26,17 +26,12 @@ interface Pai2<F, S> {
 }
 
 /*inheritable version of triple*/
-interface Tripl3<F, S, T> {
-    val first: F
-    val second: S
+interface Tripl3<F, S, T>:Pai2<F,S> {
     val third: T
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
     val triple get() = let { (a, b, c) -> Triple(a, b, c) }
-
-    operator fun component1(): F = first
-    operator fun component2(): S = second
     operator fun component3(): T = third
 
     companion object {
@@ -55,6 +50,16 @@ typealias Vect0r<T> = Pai2<() -> Int, (Int) -> T>
 infix fun <F, S> F.t2(s: S) = Pai2(this, s)
 infix fun <F, S, T, P : Pai2<F, S>> P.by(t: T) = let { (a, b) -> Tripl3(a, b, t) }
 infix fun <F, S, T, P : kotlin.Pair<F, S>> P.by(t: T) = let { (a, b) -> Tripl3(a, b, t) }
+/**
+ * homage to eclipse types
+ */
+typealias Tw1n<X> = Pai2<X,X>
+
+/**
+ * obfuscational methodology
+ */
+typealias XY<X,Y> = Pai2<X,Y>
+typealias XYZ<X,Y,Z> =Tripl3<X,Y,Z>
 
 val <T>   Vect0r<T>.size get() = first
 /*
