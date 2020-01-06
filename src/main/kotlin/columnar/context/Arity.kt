@@ -14,7 +14,7 @@ sealed class Arity : CoroutineContext.Element {
 
 open class Scalar(type: IOMemento, name: String? = null) : Pai2<IOMemento, String?> by Pai2(type, name), Arity()
 /**Borg reference*/
-class UniMatrix(type: IOMemento, val shape: Vect0r<Int>) : Scalar(type)
+class UniMatrix(type: IOMemento, val shape: Vect0r<Int>,name:String?=null) : Scalar(type,name)
 
 class Columnar(type: Vect0r<IOMemento>, names: Vect0r<String>? = null) :
     Pai2<Vect0r<IOMemento>, Vect0r<String>?> by Pai2(type, names), Arity() {
