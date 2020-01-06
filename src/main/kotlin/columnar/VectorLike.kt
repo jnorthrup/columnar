@@ -2,7 +2,9 @@ package columnar
 
 import kotlinx.coroutines.flow.*
 
-
+/**
+ * semigroup
+ */
 typealias Vect0r<T> = Pai2<() -> Int, (Int) -> T>
 
 val <T>   Vect0r<T>.size get() = first
@@ -102,7 +104,7 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T>
 operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size.`⟲`, { ix: Int -> second(index[ix]) })
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size()) { vf(it) } }
-inline fun <reified T> Vect0r<T>.toList() = object : AbstractList<T>() {
+inline fun <reified T> Vect0r<T>.toList():List<T> = object : AbstractList<T>() {
     override val size get() = size()
     override operator fun get(index: Int): T = second(index)
 }

@@ -5,9 +5,11 @@ import columnar.context.Columnar
 import columnar.context.Scalar
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
+import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 typealias Cursor = Vect0r<RowVec>
+
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
     nioc.let { (xy, mapper) ->
         xy.let { (xsize, ysize) ->
@@ -36,7 +38,7 @@ fun Cursor.reify() =
 fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
 
-inline val <C : Vect0r<R>, reified R> C.`…`:List<R> get() = this.toList()
+inline val <C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
 
 val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[Arity.arityKey] as Scalar } }
 
@@ -50,6 +52,7 @@ operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArr
 operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
+
 fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
     var cursor = min
     return sequence {
@@ -89,15 +92,71 @@ fun feature_range(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDat
     minOf(a, localDate) t2 maxOf(b, localDate)
 }
 
-fun Cursor.pivot(lhs: IntArray, axis: IntArray, fanOut: IntArray) = let { cursr ->
+/**
+synthesize pivot columns by key(axis) columns present.
+ */
+fun Cursor.pivot(
+    /**
+    lhs columns are unmodified from original index inclusive of
+    axis and fanout columns
+     */
+    lhs: IntArray,
+    /**
+     * these will be used to synthesize columns from values, in order indexed. no dupe limitations apply.
+     * using fanout columns in here is a bad idea.
+     */
+    axis: IntArray,
+    /**
+     * these will be mapped underneath the axis keys of the source column in the order specified. no dupe limitations apply.
+     * using axis columns in here also is a bad idea.
+     */
+    fanOut: IntArray
+): Cursor = let { cursr ->
+    val keys: LinkedHashMap<List<Any?>, Int> =
+        (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left })
+            .toList()
+            .distinct().mapIndexed { xIndex: Int, any: List<Any?> -> any to xIndex }.toMap(linkedMapOf())
 
-    //    val scalars = this.scalars
-//    val targetScalars = this[fanOut].scalars
-//    val passthru = this[lhs].scalars
-    val keyMeta = this[axis].scalars
-    val knames = keyMeta.α { (_, name): Pai2<IOMemento, String?> -> name }
-    val keys = (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left })
-        .toList()
-        .distinct()
-    val hashToIndex = keys.mapIndexed { xIndex, any -> any.hashCode() to xIndex }.toMap()
+    val synthSize: Int = axis.size * fanOut.size
+    val xsize: Int = lhs.size + synthSize
+
+    fun whichKey(ix: Int): Int = (ix - lhs.size) / fanOut.size
+    fun whichFanoutIndex(ix: Int): Int = (ix - lhs.size) % fanOut.size
+    val allscalars: Array<Scalar> = cursr.scalars.toArray()
+
+    val fanoutScalars: Array<Scalar> = fanOut.map { fanoutIx: Int ->
+        allscalars[fanoutIx]
+    }.toTypedArray()
+
+    val synthScalars: List<Scalar> = keys.keys.map { list: List<Any?> ->
+        val synthPrefix: String = list.mapIndexed { index: Int, any: Any? ->
+            "${allscalars[axis[index]].second!!}=$any"
+        }.joinToString(",", "[", "]")
+        fanoutScalars.map({ (ioMemento: IOMemento, s: String?): Scalar ->
+            Scalar(ioMemento, "$synthPrefix:$s")
+        })
+    }.flatten()
+
+    cursr.first t2 { iy: Int ->
+        val theRow: RowVec = cursr.second(iy)
+        theRow.let { (_: () -> Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
+            RowVec(xsize.`⟲`) { ix: Int ->
+                when {
+                    ix < lhs.size -> {
+                        original(lhs[ix])
+                    }
+                    else /*fanout*/ -> {
+                        val theKey: List<Any?> = theRow[axis].left
+                        val keyGate: Int = whichKey(ix)
+
+                        val cellVal: Any? = if (keys[theKey] == keyGate)
+                            original(fanOut[whichFanoutIndex(ix)]).first
+                        else null
+
+                        cellVal t2 synthScalars[ix - lhs.size].`⟲`
+                    }
+                }
+            }
+        }
+    }
 }
