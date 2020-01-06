@@ -33,40 +33,7 @@ val <F, S, T> V3ct0r<F, S, T>.z             get() = toList().map(XYZ<F, S, T>::t
 val <F, S, T> V3ct0r<F, S, T>.r3ify    get() = toList().map(XYZ<F, S, T>::triple)
 
 
-fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
-    nioc.let { (xy, mapper) ->
-        xy.let { (xsize, ysize) ->
-            /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r({ ysize }) { iy ->
-            Vect0r(xsize.`⟲`) { ix ->
-                mapper(intArrayOf(ix, iy)).let { (a) ->
-                    a() t2 {
-                        val cnar = crt[arityKey] as Columnar
-                        //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
-                        // and call in a cell through here
-                        val name =
-                            cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
-                        val type = cnar.first[ix]
-                        Scalar(type, name)
-                    }
-                }
-            }
-        }
-        }
-    }
-}
 
-val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[arityKey] as Scalar } }
-
-@JvmName("vlike_RSequence_11")
-operator fun Cursor.get(vararg index: Int) = get(index)
-
-@JvmName("vlike_RSequence_Iterable21")
-operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
-
-@JvmName("vlike_RSequence_IntArray31")
-operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
-    a t2 { iy: Int -> fetcher(iy)[index] }
-}
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
 
@@ -124,14 +91,6 @@ fun main() {
 
     }
 }
-
-fun Cursor.reify() =
-    this α RowVec::toList
-
-fun Cursor.narrow() =
-    (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
-
-inline val <C : Vect0r<R>, reified R> C.`…` get() = this.toList()
 
 fun fourBy(nioRoot: TableRoot) = nioRoot.let { (nioCursor) ->
     System.err.println("|" + nioCursor[3, 3].first() + "|")

@@ -44,17 +44,7 @@ class CursorKtTest : StringSpec() {
     }
 }
 //
-//fun Cursor.pivot(lhs: IntArray, axis: IntArray, fanOut: IntArray) = let { cursr ->
-//
-//    val scalars = this.scalars
-//    val targetScalars = this[fanOut].scalars
-//    val passthru = this[lhs].scalars
-//    val keyMeta = this[axis].scalars
-//    val knames = keyMeta.α { (_, name): Pai2<IOMemento, String?> -> name }
-//    val keys = (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left })
-//        .toList()
-//        .distinct()
-//    val hashToIndex = keys.mapIndexed { xIndex, any -> any.hashCode() to xIndex }.toMap()
+
 //
 //
 //    val pivotSize = keys.size * fanOut.size
