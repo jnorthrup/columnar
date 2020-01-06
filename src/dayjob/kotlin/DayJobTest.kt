@@ -1,4 +1,5 @@
-import columnar.*
+package columnar
+
 import columnar.IOMemento.*
 import columnar.context.*
 import io.kotlintest.specs.StringSpec
@@ -30,14 +31,14 @@ class DayJobTest : StringSpec() {
         IoString
     )
     val names = vect0rOf(
-        "SalesNo",
-        "SalesAreaID",
-        "date",
-        "PluNo",
-        "ItemName",
-        "Quantity",
-        "Amount",
-        "TransMode"
+        "SalesNo",    //        0
+        "SalesAreaID",    //    1
+        "date",    //           2
+        "PluNo",    //          3
+        "ItemName",    //       4
+        "Quantity",    //       5
+        "Amount",    //         6
+        "TransMode"    //       7
     )
 
 
@@ -48,7 +49,7 @@ class DayJobTest : StringSpec() {
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     init {
-        "resample" {
+/*        "resample" {
             val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
 
             (cursorOf(fromFwf)).let { curs ->
@@ -60,16 +61,19 @@ class DayJobTest : StringSpec() {
                 System.err.println("" + curs.toList().first().reify)
                 System.err.println("" + curs.toList().first().left)
             }
+        }*/
+        "pivot" {
 
-            cursorOf(fromFwf)[2, 1, 3, 5].let { curs ->
+            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
+            curs.let { curs ->
+                System.err.println("record count=" + curs.first())
                 val scalars = curs.scalars
-                val pai2 = scalars α Scalar::pair
-                System.err.println("" + pai2.toList())
-                System.err.println("" + scalars[1].pair)
-                val rowVec = curs.toList().first()
-                System.err.println("" + rowVec.reify)
-                System.err.println("" + rowVec.left)
             }
+            val pivot = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3 ))
+
+            System.err.println("" + pivot.scalars.size()+ " columns ")
+            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
         }
+
     }
 }

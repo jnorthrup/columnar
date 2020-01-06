@@ -70,8 +70,14 @@ class CursorKtTest : StringSpec() {
                 val left = it.left
                 println("" + left)
 
-
             }
+        }
+        "group" {
+            val cursor: Cursor = cursorOf(root)
+            println(cursor.narrow().toList())
+            val piv = cursor.group(intArrayOf(0) )
+
+
         }
     }
 }

@@ -117,7 +117,7 @@ fun Cursor.pivot(
             .toList()
             .distinct().mapIndexed { xIndex: Int, any: List<Any?> -> any to xIndex }.toMap(linkedMapOf())
 
-    val synthSize: Int =  fanOut.size*keys.size
+    val synthSize: Int = fanOut.size * keys.size
     val xsize: Int = lhs.size + synthSize
 
     fun whichKey(ix: Int): Int = (ix - lhs.size) / fanOut.size
@@ -162,3 +162,39 @@ fun Cursor.pivot(
         }
     }
 }
+
+
+fun Cursor.group(
+    /**these columns will be preserved as the cluster key.
+     * the remaining indexes will be aggregate
+     */
+    axis: SortedSet<Int>
+): Cursor = let { cursr ->
+    val masterScalars = cursr.scalars
+    val indices = masterScalars.toArray().indices
+    val axisScalars = cursr[axis].scalars
+    val resultIndices = (indices - axis)
+    val clusters: LinkedHashMap<List<Any?>, MutableList<Int>> = linkedMapOf()
+    cursr.mapIndexed { iy: Int, row: RowVec ->
+        row[axis].left.let { key ->
+            clusters.get(key)
+                .let { clust ->
+                    if (clust != null) clust.add(iy) else clusters[key] = mutableListOf(iy)
+                }
+        }
+    }
+    val clusterVec: Vect0r<MutableMap.MutableEntry<List<Any?>, MutableList<Int>>> = clusters.entries.toVect0r()
+    Cursor(clusterVec.size) { cy: Int ->
+        clusterVec[cy].let { (_, ci) ->
+            RowVec(indices.endInclusive.`⟲`) { ix: Int ->
+                if (ix in axis) {
+                    val pai2 = cursr.second(cy)[ix]
+                    pai2
+                } else Vect0r(ci.size.`⟲`) { ci: Int ->
+                    cursr.second(ci)[ix]
+                } as Any? t2 masterScalars[ix].`⟲`
+            }
+        }
+    }
+}
+
