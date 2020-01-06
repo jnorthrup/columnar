@@ -117,7 +117,7 @@ fun Cursor.pivot(
             .toList()
             .distinct().mapIndexed { xIndex: Int, any: List<Any?> -> any to xIndex }.toMap(linkedMapOf())
 
-    val synthSize: Int = axis.size * fanOut.size
+    val synthSize: Int =  fanOut.size*keys.size
     val xsize: Int = lhs.size + synthSize
 
     fun whichKey(ix: Int): Int = (ix - lhs.size) / fanOut.size
@@ -136,10 +136,10 @@ fun Cursor.pivot(
             Scalar(ioMemento, "$synthPrefix:$s")
         })
     }.flatten()
-
+    System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
         val theRow: RowVec = cursr.second(iy)
-        theRow.let { (_: () -> Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
+        theRow.let { (sz: () -> Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
             RowVec(xsize.`⟲`) { ix: Int ->
                 when {
                     ix < lhs.size -> {
@@ -148,12 +148,14 @@ fun Cursor.pivot(
                     else /*fanout*/ -> {
                         val theKey: List<Any?> = theRow[axis].left
                         val keyGate: Int = whichKey(ix)
-
                         val cellVal: Any? = if (keys[theKey] == keyGate)
-                            original(fanOut[whichFanoutIndex(ix)]).first
+                            original(fanOut[whichFanoutIndex(ix)]).first/*.also {
+                                System.err.println(listOf("+",iy, ix,whichFanoutIndex(ix),fanOut[whichFanoutIndex(ix)]))}*/
                         else null
 
-                        cellVal t2 synthScalars[ix - lhs.size].`⟲`
+                        cellVal t2 synthScalars[ix - lhs.size].`⟲`/*.also {
+                            System.err.println(listOf("++",iy,ix,theKey,keyGate,cellVal))
+                        }*/
                     }
                 }
             }

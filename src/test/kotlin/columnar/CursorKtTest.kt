@@ -58,13 +58,20 @@ class CursorKtTest : StringSpec() {
             whichValue(4) shouldBe 0
             whichValue(0) shouldBe 0
         }
-
-        "pivot"
-        {
+        "pivot" {
             val cursor: Cursor = cursorOf(root)
-            System.err.println(cursor.narrow().toList())
-//            cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3))
+            println(cursor.narrow().toList())
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3))
 
+            val toArray = piv.scalars.toArray()
+            val map = toArray.map { it.second }
+            println(map)
+            piv.forEach { it: RowVec ->
+                val left = it.left
+                println("" + left)
+
+
+            }
         }
     }
 }
