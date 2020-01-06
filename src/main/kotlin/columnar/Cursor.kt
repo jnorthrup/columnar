@@ -191,8 +191,8 @@ fun Cursor.group(
                     val pai2 = cursr.second(cy)[ix]
                     pai2
                 } else Vect0r(ci.size.`⟲`) { ci: Int ->
-                    cursr.second(ci)[ix]
-                } as Any? t2 masterScalars[ix].`⟲`
+                    cursr.second(ci)[ix].first
+                } .toList() as Any? t2 masterScalars[ix].`⟲`
             }
         }
     }

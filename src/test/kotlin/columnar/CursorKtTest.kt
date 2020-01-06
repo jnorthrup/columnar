@@ -75,8 +75,17 @@ class CursorKtTest : StringSpec() {
         "group" {
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(intArrayOf(0) )
+            val piv = cursor.group(sortedSetOf(0))
+            piv.forEach {
 
+                println(it.map { listOf(it.first)  }.toList())
+            }
+
+        }
+        "sum" {
+            val cursor: Cursor = cursorOf(root)
+            println(cursor.narrow().toList())
+            val piv = cursor.group(sortedSetOf(0))
 
         }
     }
