@@ -48,11 +48,20 @@ fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r({ this.size })
 fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
 fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
 
+
+/*
+But as soon as a groupoid has both a left and a right identity, they are necessarily unique and equal. For if e is
+a left identity and f is a right identity, then f=ef=e.
+*/
+/** left identity */
+object `⟳` {
+      operator fun <T> invoke(t: T) = { t: T -> t }
+}
 /**right identity*/
-val <T : Any?> T.`⟲` get() = { this }
+val <T> T.`⟲` get() = { this }
 
 /**right identity*/
-infix fun <T, R, F : (T) -> R> T.`⟲`(f: F) = { f(this) }
+infix fun <T, R> T.`⟲`(f:  (T) -> R) = { f(this) }
 
 @JvmName("vlike_Sequence_1")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
@@ -104,7 +113,7 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T>
 operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size.`⟲`, { ix: Int -> second(index[ix]) })
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size()) { vf(it) } }
-inline fun <reified T> Vect0r<T>.toList():List<T> = object : AbstractList<T>() {
+inline fun <reified T> Vect0r<T>.toList(): List<T> = object : AbstractList<T>() {
     override val size get() = size()
     override operator fun get(index: Int): T = second(index)
 }
