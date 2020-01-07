@@ -62,17 +62,33 @@ class DayJobTest : StringSpec() {
                 System.err.println("" + curs.toList().first().left)
             }
         }*/
-        "pivot" {
+//        "pivot" {
+//
+//            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
+//            curs.let { curs ->
+//                System.err.println("record count=" + curs.first())
+//                val scalars = curs.scalars
+//            }
+//            val pivot = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3))
+//
+//            System.err.println("" + pivot.scalars.size() + " columns ")
+//            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
+//        }
+        "pivot+group" {
 
             val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs ->
                 System.err.println("record count=" + curs.first())
                 val scalars = curs.scalars
             }
-            val pivot = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3 ))
+            val pivot =
+                curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
 
-            System.err.println("" + pivot.scalars.size()+ " columns ")
+            System.err.println("" + pivot.scalars.size() + " columns ")
             System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
+            pivot.toSequence().map { pai2 ->  pai2.map {
+                it.pair
+            } }
         }
 
     }
