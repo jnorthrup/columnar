@@ -1,5 +1,6 @@
-package columnar
+package id.rejuve
 
+import columnar.*
 import columnar.IOMemento.*
 import columnar.context.*
 import io.kotlintest.specs.StringSpec
@@ -9,36 +10,36 @@ class DayJobTest : StringSpec() {
     val suffix = "_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = vZipWithNext(
-        intArrayOf(
-            0, 11,
-            11, 15,
-            15, 25,
-            25, 40,
-            40, 60,
-            60, 82,
-            82, 103,
-            103, 108
-        )
+            intArrayOf(
+                    0, 11,
+                    11, 15,
+                    15, 25,
+                    25, 40,
+                    40, 60,
+                    60, 82,
+                    82, 103,
+                    103, 108
+            )
     )
     val drivers = vect0rOf(
-        IoString,
-        IoString,
-        IoLocalDate,
-        IoString,
-        IoString,
-        IoFloat,
-        IoFloat,
-        IoString
+            IoString,
+            IoString,
+            IoLocalDate,
+            IoString,
+            IoString,
+            IoFloat,
+            IoFloat,
+            IoString
     )
     val names = vect0rOf(
-        "SalesNo",    //        0
-        "SalesAreaID",    //    1
-        "date",    //           2
-        "PluNo",    //          3
-        "ItemName",    //       4
-        "Quantity",    //       5
-        "Amount",    //         6
-        "TransMode"    //       7
+            "SalesNo",    //        0
+            "SalesAreaID",    //    1
+            "date",    //           2
+            "PluNo",    //          3
+            "ItemName",    //       4
+            "Quantity",    //       5
+            "Amount",    //         6
+            "TransMode"    //       7
     )
 
 
