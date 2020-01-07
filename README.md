@@ -1,7 +1,7 @@
 # big dataframes 
 
 Kotlin Blackboard contexts for composable operations on composable data IO features. 
-this is purpose-built early implementations for large scale time series dataprep LSTM workloads
+this is purpose-built early implementations for large scale time series LSTM dataprep  
 
   - [X] read an FWF text and efficiently mmap the row access (becomes a cursors iterator) `*`
   - [X] enable index operations, reordering, expansions, preserving column metadata 
