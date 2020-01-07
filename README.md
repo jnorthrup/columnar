@@ -3,31 +3,22 @@
 Kotlin Blackboard contexts for composable operations on composable data IO features. 
 this is purpose-built early implementations for large scale time series dataprep LSTM workloads
 
- -[X] read an FWF text and efficiently mmap the row access (becomes a cursors iterator) `*`
+  - [X] read an FWF text and efficiently mmap the row access (becomes a cursors iterator) `*`
+  - [X] enable index operations, reordering, expansions, preserving column metadata 
+  - [X] resample timeseries data (jvm LocalDate initially) to fill in series gaps
+  - [X] concatenation of n cursors from disimilar FP projections
+  - [X] pivot n rows by m columns (lazy) preserving l left-hand-side pass-thru columns
+  - [X] groupby n columns
+  - [X] provide a algebraic Vector aggregate operations with lazy runtime execution on contents
+  - [X] orthogonal offheap and indirect IO component taxonomy
+  - [X] nearly 0-copy direct access
+  - [X] nearly 0-heap direct access
+  - [X] large file access: JVM NIO mmap window addressability beyond MAXINT bytes   
  
- -[X] enable index operations, reordering, expansions, preserving column metadata  
  
- -[X] resample timeseries data (jvm LocalDate initially) to fill in series gaps   
- 
- -[X] concatenation of n cursors from disimilar FP projections 
- 
- -[X] pivot n rows by m columns (lazy) preserving l left-hand-side pass-thru columns
- 
- -[X] groupby n columns 
- 
- -[X] provide a algebraic Vector aggregate operations with lazy runtime execution on contents   
- 
- -[X] orthogonal offheap and indirect IO component taxonomy
- 
- -[X] nearly 0-copy direct access  
- 
- -[X] nearly 0-heap direct access  
- 
- -[X] large file access: JVM NIO mmap window addressability beyond MAXINT bytes   
- 
- lower priorities (as-yet unimplemented orthogonals)
- -[X] textual field format IO/mapping
- -[X] binary  field format IO/mapping 
+### lower priorities (as-yet unimplemented orthogonals)
+ - [X] textual field format IO/mapping
+ - [X] binary  field format IO/mapping 
  * json    field format IO/mapping
  * CBOR    field format IO/mapping 
  * csv IO tokenization +- headers
