@@ -36,17 +36,17 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B> G.`⚬`(f: F) = { a: A -> a `→
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-inline infix fun <reified A, C, B : (A) -> C, V : Vect0r<A>, R : Vect0r<C>> V.α(m: B): Vect0r<C> = map(m)
+infix fun <A, C, B : (A) -> C, V : Vect0r<A>, R : Vect0r<C>> V.α(m: B): Vect0r<C> = map(m)
 
-fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) = this.map { it `→` m }
-fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B) = this.map { it `→` m }
-fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B) = this.map { it `→` m }
+infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) = this.map { it `→` m }
+infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B) = this.map { it `→` m }
+infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B) = this.map { it `→` m }
 infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
-fun <A, C, B : (A) -> C> Array<A>.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
-fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
-fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
-fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
-fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <A, C, B : (A) -> C> Array<A>.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
 
 
 /*
@@ -55,13 +55,14 @@ a left identity and f is a right identity, then f=ef=e.
 */
 /** left identity */
 object `⟳` {
-      operator fun <T> invoke(t: T) = { t: T -> t }
+    operator fun <T> invoke(t: T) = { t: T -> t }
 }
+
 /**right identity*/
 val <T> T.`⟲` get() = { this }
 
 /**right identity*/
-infix fun <T, R> T.`⟲`(f:  (T) -> R) = { f(this) }
+infix fun <T, R> T.`⟲`(f: (T) -> R) = { f(this) }
 
 @JvmName("vlike_Sequence_1")
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
