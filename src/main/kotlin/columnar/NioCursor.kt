@@ -21,16 +21,17 @@ typealias RowVec = Vect02<Any?, () -> CoroutineContext>
 
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
 
-val <F, S> Vect02<F, S>.left        get() = toList().map(Pai2<F, S>::first)
-val <F, S> Vect02<F, S>.right       get() = toList().map(Pai2<F, S>::second)
+val <F, S> Vect02<F, S>.left get() = toList().map(Pai2<F, S>::first)
+val <F, S> Vect02<F, S>.right get() = toList().map(Pai2<F, S>::second)
 val <F, S> Vect02<F, S>.reify get() = toList().map(Pai2<F, S>::pair)
 
 
 typealias  V3ct0r<F, S, T> = Vect0r<XYZ<F, S, T>>
-val <F, S, T> V3ct0r<F, S, T>.x              get() = toList().map(XYZ<F, S, T>::first)
-val <F, S, T> V3ct0r<F, S, T>.y               get() = toList().map(XYZ<F, S, T>::second)
-val <F, S, T> V3ct0r<F, S, T>.z             get() = toList().map(XYZ<F, S, T>::third)
-val <F, S, T> V3ct0r<F, S, T>.r3ify    get() = toList().map(XYZ<F, S, T>::triple)
+
+val <F, S, T> V3ct0r<F, S, T>.x get() = toList().map(XYZ<F, S, T>::first)
+val <F, S, T> V3ct0r<F, S, T>.y get() = toList().map(XYZ<F, S, T>::second)
+val <F, S, T> V3ct0r<F, S, T>.z get() = toList().map(XYZ<F, S, T>::third)
+val <F, S, T> V3ct0r<F, S, T>.r3ify get() = toList().map(XYZ<F, S, T>::triple)
 
 
 
@@ -70,7 +71,7 @@ fun main() {
         val dframe: Vect0r<Vect0r<Any?>> =
             Vect0r({ a[1] }) { iy -> Vect0r({ a[0] }) { ix -> byRows.first[ix, iy].first() } }
 
-        for (i in 0 until dframe[1].size()) System.err.print("" + dframe[1][i] + "|")
+        for (i in 0 until dframe[1].size) System.err.print("" + dframe[1][i] + "|")
         System.err.println()
         val shaken = (dframe[1])[0, 1, 0, 0, 0, 1, 0, 0, 1, 3, 3, 3, 3, 3]
         System.err.println("reordering: " + shaken.toList())

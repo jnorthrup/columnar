@@ -71,13 +71,12 @@ fun Cursor.resample(indexcol: Int) = let {
     val (min, max) = feature_range(indexValues)
 
     val scalars = this.scalars
-    val rowVecSize = scalars.size
 
 
     val sequence = daySeq(min, max) - indexValues
     val indexVec = sequence.toVect0r()
     val cursor: Cursor = Cursor(indexVec.first) { iy: Int ->
-        RowVec(rowVecSize) { ix: Int ->
+        RowVec(scalars.first) { ix: Int ->
             val any = when (ix == indexcol) {
                 true -> indexVec[iy]
                 else -> null
@@ -184,7 +183,7 @@ fun Cursor.group(
         }
     }
     val clusterVec: Vect0r<MutableMap.MutableEntry<List<Any?>, MutableList<Int>>> = clusters.entries.toVect0r()
-    Cursor(clusterVec.size) { cy: Int ->
+    Cursor(clusterVec.first) { cy: Int ->
         clusterVec[cy].let { (_, ci) ->
             RowVec(indices.endInclusive.`⟲`) { ix: Int ->
                 if (ix in axis) {
