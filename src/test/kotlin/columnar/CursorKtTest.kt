@@ -6,6 +6,7 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import java.util.*
 
 class CursorKtTest : StringSpec() {
     val coords = vZipWithNext(
@@ -76,9 +77,15 @@ class CursorKtTest : StringSpec() {
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
             val piv = cursor.group(sortedSetOf(0))
+           cursor.forEach {
+                println(it.map { "${it.component1().let { 
+                     (it as? Vect0r<*>)?.toList()?:it
+                }}"  }.toList()  )
+            }
             piv.forEach {
-
-                println(it.map { listOf(it.first)  }.toList())
+                println(it.map { "${it.component1().let { 
+                     (it as? Vect0r<*>)?.toList()?:it
+                }}"  }.toList()  )
             }
 
         }
@@ -90,61 +97,3 @@ class CursorKtTest : StringSpec() {
         }
     }
 }
-//
-
-//
-//
-//    val pivotSize = keys.size * fanOut.size
-//    val xsize = passthru.size + pivotSize
-//    val second1 = cursr.second
-//
-//    lateinit var rv:RowVec
-//
-//
-//
-//    val function: (Int) -> Pai2<() -> Int, (Int) -> Pai2<() -> Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = { ix: Int ->
-//        cursr[ix]
-//    }
-//    function
-//
-//
-//}
-//
-//
-///*
-//    val keys = keyIndex.mapIndexed { index, list -> list to index }.toMap()
-//*/
-///*
-//
-//    val map1 = keys.map { (kee: List<Any?>, ix: Int): Map.Entry<List<Any?>, Int> ->
-//        knames.zip(kee.toVect0r()).α { (n, v): Pai2<String?, Any?> -> "[$n:$v]" }.toList().joinToString(
-//            ",", "(", ")"
-//        ) t2 ix t3 kee
-//    }.toVect0r()
-//    val pivotSize = keys.size * fanOut.size
-//    val xsize = passthru.size + pivotSize
-//    cursr[passthru]
-//*/
-//
-//
-////    val map   =
-////        map1.map{ (prefix,ix,kee)->
-////            targetScalars α { (driver: IOMemento, b: String?): Scalar ->
-////                driver t2 "$prefix:$b" t3 kee t4 ix
-////            }
-////        } .map {(a,q )->
-////
-////            {ix:Int->q(ix).let{(c: IOMemento,d: String,e: List<Any?>,f: Int)->
-////
-////                cursr.let { (a,b)->
-////
-////
-////                }
-////            }
-////
-////        }
-////
-////
-////
-////}
-////

@@ -107,7 +107,7 @@ fun fixedWidthOf(
     coords: Vect0r<IntArray>,
     defaulteol: () -> Byte = '\n'::toByte
 ) = FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
-    nio.mf.mappedByteBuffer.duplicate().clear().run {
+    nio.mf.mappedByteBuffer.get().duplicate().clear().run {
         while (get() != endl);
         position()
     }
@@ -116,7 +116,7 @@ fun fixedWidthOf(
 fun indexableOf(
     nio: NioMMap,
     fixedWidth: FixedWidth,
-    mappedByteBuffer: MappedByteBuffer = nio.mf.mappedByteBuffer
+    mappedByteBuffer: MappedByteBuffer = nio.mf.mappedByteBuffer.get()
 ): Indexable = Indexable(size = (nio.mf.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
     val lim = { b: ByteBuffer -> b.limit(fixedWidth.recordLen) }
     val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }

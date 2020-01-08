@@ -147,11 +147,11 @@ class NioMMap(
      * seek to record offset
      */
     override val seek: (Int) -> Unit = {
-        mf.mappedByteBuffer.position(it * recordLen()).slice().limit(recordLen())
+        mf.mappedByteBuffer.get().position(it * recordLen()).slice().limit(recordLen())
     }
     override val size = { mf.randomAccessFile.length() }
     override val recordLen = {
-        mf.mappedByteBuffer.duplicate().clear().run {
+        mf.mappedByteBuffer.get().duplicate().clear().run {
             run {
                 while (get() != '\n'.toByte());
                 position()

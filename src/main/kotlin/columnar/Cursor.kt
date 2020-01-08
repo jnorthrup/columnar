@@ -169,6 +169,7 @@ fun Cursor.group(
      */
     axis: SortedSet<Int>
 ): Cursor = let { cursr ->
+    System.err.println("--- group")
     val masterScalars = cursr.scalars
     val indices = masterScalars.toArray().indices
     val axisScalars = cursr[axis].scalars
@@ -183,15 +184,15 @@ fun Cursor.group(
         }
     }
     val clusterVec: Vect0r<MutableMap.MutableEntry<List<Any?>, MutableList<Int>>> = clusters.entries.toVect0r()
-    Cursor(clusterVec.first) { cy: Int ->
-        clusterVec[cy].let { (_, ci) ->
+    Cursor(clusterVec.size .`⟲`) { cy: Int ->
+        clusterVec[cy].let { (_, clusterIndices) ->
             RowVec(indices.endInclusive.`⟲`) { ix: Int ->
-                if (ix in axis) {
-                    val pai2 = cursr.second(cy)[ix]
-                    pai2
-                } else Vect0r(ci.size.`⟲`) { ci: Int ->
-                    cursr.second(ci)[ix].first
-                } .toList() as Any? t2 masterScalars[ix].`⟲`
+               val pai21 = if (ix in axis) {
+                   cursr.second(cy)[ix]
+               } else (Vect0r(clusterIndices.size.`⟲`) { clusterOrdinal: Int ->
+                   cursr.second(clusterIndices[clusterOrdinal])[ix].first
+               } t2 { masterScalars[ix] })
+                pai21
             }
         }
     }
