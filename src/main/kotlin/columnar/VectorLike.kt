@@ -113,10 +113,10 @@ inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T>
 operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size.`⟲`, { ix: Int -> second(index[ix]) })
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
-inline fun <reified T> Vect0r<T>.toList(): List<T> =let{v->
+inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
-        override val size :Int  =v.size
-        override operator fun get(index: Int)  = v.second(index)
+        override val size: Int = v.size
+        override operator fun get(index: Int) = v.second(index)
     }
 }
 
@@ -129,20 +129,20 @@ fun <T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
 
 fun <T> Vect0r<T>.toFlow() = this.let { (_, vf) ->
     flow {
-        for (ix in 0 until size )
+        for (ix in 0 until size)
             emit(vf(ix))
     }
 }
 
 fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R): Vect0r<R> = Vect0r(first, { ix: Int -> second(ix).let(fn) })
 
-inline fun <reified T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R) = List(size ) { ix -> fn(ix, this[ix]) }
+inline fun <reified T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R) = List(size) { ix -> fn(ix, this[ix]) }
 inline fun <reified T> Vect0r<T>.forEach(fn: (T) -> Unit) {
-    for (ix in (0 until size )) fn(this[ix])
+    for (ix in (0 until size)) fn(this[ix])
 }
 
 inline fun <reified T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
-    for (ix in (0 until size )) fn(ix, this[ix])
+    for (ix in (0 until size)) fn(ix, this[ix])
 }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }, { a.get(it) })
@@ -201,7 +201,7 @@ inline fun <reified T> combine(vararg a: List<T>) =
 @JvmName("combine_Vect0r")
 inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→` { vargsIn ->
     vargsIn.asIterable().foldIndexed(0 to IntArray(vargsIn.size)) { vix, (acc, avec), vec ->
-        acc.plus(vec.size ) `→` { size -> size to avec.also { avec[vix] = size } }
+        acc.plus(vec.size) `→` { size -> size to avec.also { avec[vix] = size } }
     } `→` { (acc, order) ->
         Vect0r(acc.`⟲`) { ix ->
             order.binarySearch(ix) `→` { offset ->
@@ -239,3 +239,11 @@ inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>) = this.g
 
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>) = this.get(*ks.toList().toTypedArray())
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size) { ix -> ks[ix].let(this::get)!! }
+
+infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
+    (this to last / denominator).let { (intRange, step) ->
+        Vect0r(denominator.`⟲`) { x: Int -> (step * x).let {
+                lower -> lower until Math.min(intRange.last, x + lower) } } }
+fun IntRange.subRanges(chunkSize: Int = this.step) =
+    let { sequence { for (i in it step chunkSize) yield(i until minOf(last, i + chunkSize)) } }
+

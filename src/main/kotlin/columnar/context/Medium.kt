@@ -15,7 +15,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
-typealias  MMapWindow = Tw1n< Long>
+typealias  MMapWindow = Tw1n<Long>
 typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
@@ -68,37 +68,25 @@ class NioMMap(
 
             fun NioAbstractionLayer(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
                 medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
-                    Vect0r( drivers.size .`⟲` ) { x: Int ->
+                    Vect0r(drivers.size.`⟲`) { x: Int ->
                         drivers[x] t2 (arity as Columnar).first[x] t3 coords[x].size
                     }
                 }
             when (ordering) {
-                is RowMajor -> NioAbstractionLayer().let({ (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
+                is RowMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
                     NioCursor(
                         intArrayOf(drivers.size, row.size)
                     ) { (x: Int, y: Int): IntArray ->
-                        dfn(
-                            row,
-                            y,
-                            col,
-                            x,
-                            coords
-                        )
+                        dfn(row, y, col, x, coords)
                     }
 
-                })
+                }
                 is ColumnMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
 
                     NioCursor(
-                        intArrayOf(row.size , drivers.size)
+                        intArrayOf(row.size, drivers.size)
                     ) { (y: Int, x: Int): IntArray ->
-                        dfn(
-                            row,
-                            y,
-                            col,
-                            x,
-                            coords
-                        )
+                        dfn(row, y, col, x, coords)
                     }
                 }
                 is Hilbert -> TODO()
