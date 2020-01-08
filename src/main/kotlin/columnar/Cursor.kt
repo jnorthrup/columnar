@@ -170,6 +170,7 @@ fun Cursor.group(
      */
     axis: SortedSet<Int>
 ): Cursor = let { cursr ->
+    System.err.println("--- group")
     val masterScalars = cursr.scalars
     val indices = masterScalars.toArray().indices
     val axisScalars = cursr[axis].scalars
