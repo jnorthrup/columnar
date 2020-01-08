@@ -6,6 +6,7 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import java.util.*
 
 class CursorKtTest : StringSpec() {
     val coords = vZipWithNext(
@@ -76,9 +77,15 @@ class CursorKtTest : StringSpec() {
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
             val piv = cursor.group(sortedSetOf(0))
+           cursor.forEach {
+                println(it.map { "${it.component1().let { 
+                     (it as? Vect0r<*>)?.toList()?:it
+                }}"  }.toList()  )
+            }
             piv.forEach {
-
-                println(it.map { listOf(it.first)  }.toList())
+                println(it.map { "${it.component1().let { 
+                     (it as? Vect0r<*>)?.toList()?:it
+                }}"  }.toList()  )
             }
 
         }
