@@ -54,7 +54,7 @@ class DayJobTest : StringSpec() {
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     init {
-/*        "resample" {
+        "resample" {
             val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
 
             (cursorOf(fromFwf)).let { curs ->
@@ -66,7 +66,7 @@ class DayJobTest : StringSpec() {
                 System.err.println("" + curs.toList().first().reify)
                 System.err.println("" + curs.toList().first().left)
             }
-        }*/
+        }
 //        "pivot" {
 //
 //            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
@@ -81,14 +81,14 @@ class DayJobTest : StringSpec() {
 //            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
 //        }
         "pivot+group" {
-            System.err.println("try out -XX:MaxDirectMemorySize=${(nioMMap.mf.randomAccessFile.length()+100)/1024/1024}m")
+            logDebug {  ("try out -XX:MaxDirectMemorySize=${(nioMMap.mf.randomAccessFile.length() + 100) / 1024 / 1024}m")}
             val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
             val piv =
                 curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
-logReuseCountdown=2
+            logReuseCountdown = 2
             System.err.println("" + piv.scalars.size + " columns ")
             System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
 
@@ -108,7 +108,7 @@ logReuseCountdown=2
                             for (iy in span) {
                                 yield(
                                     piv.second(iy).left.map {
-                                     (   (it as? Vect0r<*>)?.toList() ?: it).toString().length
+                                        ((it as? Vect0r<*>)?.toList() ?: it).toString().length
                                     }.sum()
                                 )
                             }
@@ -120,3 +120,4 @@ logReuseCountdown=2
         }
     }
 }
+

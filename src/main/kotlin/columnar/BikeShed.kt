@@ -16,9 +16,12 @@ val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) 
 val trim: (String) -> String = String::trim
 fun logDebug(debugTxt: () -> String) {
     try {
-        assert(false) { System.err.println(debugTxt()) }
-    } catch (a: AssertionError) {
+        assert(false) {}
+    } catch (a: AssertionError) { System.err.println(debugTxt())
     }
 }
 
 var logReuseCountdown=0
+fun main() {
+    logDebug { "this ought not be visible" }
+}
