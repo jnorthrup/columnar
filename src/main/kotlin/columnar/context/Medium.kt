@@ -16,7 +16,7 @@ import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
 typealias  MMapWindow = Tw1n<Long>
-typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
+typealias  NioCursorState =  Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
@@ -181,7 +181,7 @@ class NioMMap(
 
         var reuse = false
         lateinit var pbuf: ByteBuffer
-        val (memo1, memo2) = state.get()
+        val (memo1, memo2:MMapWindow) = state.get()
         return withContext(state.asContextElement()) {
             state.ensurePresent()
             var (buf1, window1) = state.get()
@@ -191,7 +191,8 @@ class NioMMap(
             else {
                 val recordOffset0 = seekTo
                 window1 = (recordOffset0 t2 min(size() - seekTo, windowSize))
-                buf1 = remap(mf.channel, (window1))
+                val mappedByteBuffer = remap(mf.channel, (window1))//.also { state.set(Pai2(it,window1)) }
+                buf1 = mappedByteBuffer
 
             }
             pbuf = buf1
@@ -203,7 +204,7 @@ class NioMMap(
             when {
                 reuse ->
                     try {
-                        assert(true) { "reuse( $memo1, ${memo2.pair})".also(err::println) }
+if(logReuseCountdown>0)logDebug {     "reuse( $memo1, ${memo2.pair})"  }.also { logReuseCountdown-- }
                     } catch (a: AssertionError) {
                     }
                 else -> it.let { (_, window) ->

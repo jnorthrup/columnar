@@ -183,6 +183,7 @@ fun Cursor.group(
                 }
         }
     }
+    logDebug{ "keys:${clusters.size to clusters.keys.also{ System.err.println("if this is visible without -ea we have a problem with `⟲`")}}" }
     val clusterVec: Vect0r<MutableMap.MutableEntry<List<Any?>, MutableList<Int>>> = clusters.entries.toVect0r()
     Cursor(clusterVec.size .`⟲`) { cy: Int ->
         clusterVec[cy].let { (_, clusterIndices) ->
@@ -197,4 +198,5 @@ fun Cursor.group(
         }
     }
 }
+
 

@@ -74,6 +74,7 @@ class CursorKtTest : StringSpec() {
             }
         }
         "group" {
+
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
             val piv = cursor.group(sortedSetOf(0))
@@ -87,6 +88,11 @@ class CursorKtTest : StringSpec() {
                      (it as? Vect0r<*>)?.toList()?:it
                 }}"  }.toList()  )
             }
+
+        }
+        "div"{
+            val pai21 = (0..2800000) / Runtime.getRuntime().availableProcessors()
+            System.err.println(pai21.toList().toString())
 
         }
         "sum" {

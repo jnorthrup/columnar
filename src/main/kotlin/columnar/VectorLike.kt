@@ -241,9 +241,9 @@ inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>) = this
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size) { ix -> ks[ix].let(this::get)!! }
 
 infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
-    (this to last / denominator).let { (intRange, step) ->
-        Vect0r(denominator.`⟲`) { x: Int -> (step * x).let {
-                lower -> lower until Math.min(intRange.last, x + lower) } } }
+    (this to last / denominator).let { (intRange, stepp) ->
+        Vect0r(denominator.`⟲`) { x: Int -> (stepp * x).let { lower ->
+            lower until Math.min(intRange.last, stepp + lower) } } }
 fun IntRange.subRanges(chunkSize: Int = this.step) =
     let { sequence { for (i in it step chunkSize) yield(i until minOf(last, i + chunkSize)) } }
 

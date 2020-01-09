@@ -14,3 +14,11 @@ val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 val bb2ba: (ByteBuffer) -> ByteArray = { bb: ByteBuffer -> ByteArray(bb.remaining()).also { bb[it] } }
 val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) }
 val trim: (String) -> String = String::trim
+fun logDebug(debugTxt: () -> String) {
+    try {
+        assert(false) { System.err.println(debugTxt()) }
+    } catch (a: AssertionError) {
+    }
+}
+
+var logReuseCountdown=0
