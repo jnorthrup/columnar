@@ -6,7 +6,6 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
-import java.util.*
 
 class CursorKtTest : StringSpec() {
     val coords = vZipWithNext(

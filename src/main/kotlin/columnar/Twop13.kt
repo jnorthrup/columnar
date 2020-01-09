@@ -18,7 +18,7 @@ unfortunate overlap with FP "Unit" but nothing else could be perturbed with a 1 
 interface Un1t<F> {
     val first: F
     operator fun component1(): F = first
-    operator fun invoke() = this
+    operator fun invoke(function: (RowVec) -> Unit) = this
 
     companion object {
         operator fun <F> invoke(f: F) = object : Un1t<F> {
@@ -140,3 +140,9 @@ typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
  * homage to eclipse types
  */
 typealias Tw1n<X> = XY<X, X>
+
+
+infix fun <X, Y, Z, P : Pai2<X, Y>, U : Un1t<X>, T : Un1t<Y>> U.joinLeft(u: T): P = (first t2 u.first) as P
+infix fun <X, Y, Z, P : Pai2<Y, Z>, U : Un1t<X>, T : Tripl3<X, Y, Z>> U.joinLeft(p: P): T =  ((first t2 p.first) t3 p.second) as T
+infix fun <X, Y, Z, U : Un1t<X>, T : Tripl3<X, Y, Z>> U.joinLeft(t: T) = first t2 t.first t3 t.second t4 t.third
+

@@ -4,14 +4,12 @@ import columnar.*
 import columnar.IOMemento.*
 import columnar.context.*
 import io.kotlintest.specs.StringSpec
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import java.util.concurrent.Executors
 
 class DayJobTest : StringSpec() {
 
-    val suffix = ""//"_RD"
+    val suffix = "_100"//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = vZipWithNext(
         intArrayOf(
@@ -54,8 +52,9 @@ class DayJobTest : StringSpec() {
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     init {
-        "resample" {
-            val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
+/*        "resample" {
+            val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, co
+lumnar)
 
             (cursorOf(fromFwf)).let { curs ->
                 System.err.println("record count=" + curs.first())
@@ -66,7 +65,7 @@ class DayJobTest : StringSpec() {
                 System.err.println("" + curs.toList().first().reify)
                 System.err.println("" + curs.toList().first().left)
             }
-        }
+        }*/
 //        "pivot" {
 //
 //            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
@@ -81,20 +80,26 @@ class DayJobTest : StringSpec() {
 //            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
 //        }
         "pivot+group" {
-            logDebug {  ("try out -XX:MaxDirectMemorySize=${(nioMMap.mf.randomAccessFile.length() + 100) / 1024 / 1024}m")}
+            logDebug { ("try out -XX:MaxDirectMemorySize=${(nioMMap.mf.randomAccessFile.length() + 100) / 1024 / 1024}m") }
             val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
-            val piv =
-                curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
+            val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(
+                sortedSetOf(0),
+                vect0rOf(IoFloat t2 { acc: Any?, lf: Any? ->
+                    (((acc as? Float) ?: 0f) + ((lf as? Float) ?: 0f))
+                } as GroupReducer))
             logReuseCountdown = 2
             System.err.println("" + piv.scalars.size + " columns ")
             System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
 
             //todo: install bytebuffer as threadlocal
             System.err.println("--- insanity follows")
-            launch(Dispatchers.IO) {
+            launch(
+                Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher(),
+                CoroutineStart.ATOMIC
+            ) {
 
                 val intRange = ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList().also {
                     System.err.println("using " + it)
@@ -115,7 +120,6 @@ class DayJobTest : StringSpec() {
                         }.sum().toLong()
                     }
                 }.awaitAll().sum().also { println("+++++ $it") }
-
             }.join()
         }
     }
