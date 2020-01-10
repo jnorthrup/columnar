@@ -12,23 +12,21 @@ Tuples also occur in relational algebra; when programming the semantic web with 
 package columnar
 
 /**
-a singular reference.  front end of Pai2 and Tripl3.
-unfortunate overlap with FP "Unit" but nothing else could be perturbed with a 1 quite as nicely.
- */
-interface Un1t<F> {
+a singular reference.  front end of Pai2 and Tripl3.  */
+interface Hand1l<F> {
     val first: F
     operator fun component1(): F = first
     operator fun invoke(function: (RowVec) -> Unit) = this
 
     companion object {
-        operator fun <F> invoke(f: F) = object : Un1t<F> {
+        operator fun <F> invoke(f: F) = object : Hand1l<F> {
             override val first get() = f
         }
     }
 }
 
 /**inheritable version of pair that provides it's first compnent as a Un1t*/
-interface Pai2<F, S> : Un1t<F> {
+interface Pai2<F, S> : Hand1l<F> {
     val second: S
     /**
      * for println and serializable usecases, offload that stuff using this method.
@@ -38,7 +36,7 @@ interface Pai2<F, S> : Un1t<F> {
     operator fun component2(): S = second
 
     companion object {
-        operator fun <F, S> invoke(f: F, s: S): Pai2<F, S> = object : Pai2<F, S>, Un1t<F> by Un1t.invoke(f) {
+        operator fun <F, S> invoke(f: F, s: S): Pai2<F, S> = object : Pai2<F, S>, Hand1l<F> by Hand1l.invoke(f) {
             override val second get() = s
         }
 
@@ -68,6 +66,35 @@ interface Tripl3<F, S, T> : Pai2<F, S> {
         operator fun <F, S, T> invoke(p: kotlin.Triple<F, S, T>) = p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 }
+
+/**
+ * short for tuple1
+ */
+val <F> F.t1 get() = columnar.Hand1l(this)
+
+/**
+ * means  either/both  of "tuple2" and  disambiguation of  pair =x "to" y
+ */
+
+/**
+ * therblig methodology
+ */
+typealias XY<X, Y> = Pai2<X, Y>
+
+typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
+/**
+ * homage to eclipse types
+ */
+typealias Tw1n<X> = XY<X, X>
+
+infix fun <X, Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.joinLeft(u: T): P = (first t2 u.first) as P
+infix fun <X, Y, Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.joinLeft(p: P): T =  ((first t2 p.first) t3 p.second) as T
+infix fun <X, Y, Z, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.joinLeft(t: T) = first t2 t.first t3 t.second t4 t.third
+infix fun <F, S> F.t2(s: S) = Pai2(this, s)
+infix fun <F, S, T> Pai2<F, S>.t3(t: T): Tripl3<F, S, T> = let { (f, s) -> object : Tripl3<F, S, T>, Pai2<F, S> by this { override val third get() = t } }
+infix fun <F, S, T, P : kotlin.Pair<F, S>> P.t3(t: T) = let { (a, b) -> Tripl3(a, b, t) }
+infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D): Qu4d<A, B, C, D> = let { (a, b, c) -> object : Qu4d<A, B, C, D>, Tripl3<A, B, C> by this { override val fourth: D get() = d } }
+
 
 /**inheritable version of quad that also provides its first three as a triple. */
 interface Qu4d<F, S, T, Z> : Tripl3<F, S, T> {
@@ -106,43 +133,3 @@ interface Qu4d<F, S, T, Z> : Tripl3<F, S, T> {
         }
     }
 }
-
-/**
- * short for tuple1
- */
-val <F> F.t1 get() = columnar.Un1t(this)
-
-/**
- * means  either/both  of "tuple2" and  disambiguation of  pair =x "to" y
- */
-infix fun <F, S> F.t2(s: S) = Pai2(this, s)
-
-infix fun <F, S, T> Pai2<F, S>.t3(t: T): Tripl3<F, S, T> = let { (f, s) ->
-    object : Tripl3<F, S, T>, Pai2<F, S> by this {
-        override val third get() = t
-    }
-}
-
-infix fun <F, S, T, P : kotlin.Pair<F, S>> P.t3(t: T) = let { (a, b) -> Tripl3(a, b, t) }
-infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D): Qu4d<A, B, C, D> = let { (a, b, c) ->
-    object : Qu4d<A, B, C, D>, Tripl3<A, B, C> by this {
-        override val fourth: D get() = d
-    }
-}
-
-/**
- * therblig methodology
- */
-typealias XY<X, Y> = Pai2<X, Y>
-
-typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
-/**
- * homage to eclipse types
- */
-typealias Tw1n<X> = XY<X, X>
-
-
-infix fun <X, Y, Z, P : Pai2<X, Y>, U : Un1t<X>, T : Un1t<Y>> U.joinLeft(u: T): P = (first t2 u.first) as P
-infix fun <X, Y, Z, P : Pai2<Y, Z>, U : Un1t<X>, T : Tripl3<X, Y, Z>> U.joinLeft(p: P): T =  ((first t2 p.first) t3 p.second) as T
-infix fun <X, Y, Z, U : Un1t<X>, T : Tripl3<X, Y, Z>> U.joinLeft(t: T) = first t2 t.first t3 t.second t4 t.third
-

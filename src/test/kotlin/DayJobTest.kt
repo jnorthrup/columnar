@@ -9,7 +9,14 @@ import java.util.concurrent.Executors
 
 class DayJobTest : StringSpec() {
 
-    val suffix = "_100"//"_RD"
+//    val suffix =  "_100"//"_RD"  105340
+    val suffix = "_1000"//"_RD"  3392440
+//val suffix = "_10000"     //"_RD"  139618738
+//    val suffix = "_1000"//"_RD"
+//    val suffix = "_1000"//"_RD"
+//    val suffix = "_1000"//"_RD"
+//    val suffix = "_1000"//"_RD"
+//    val suffix = "_1000"//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = vZipWithNext(
         intArrayOf(
@@ -80,16 +87,13 @@ lumnar)
 //            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
 //        }
         "pivot+group" {
-            logDebug { ("try out -XX:MaxDirectMemorySize=${(nioMMap.mf.randomAccessFile.length() + 100) / 1024 / 1024}m") }
+            logDebug { ("try out -XX:MaxDirectMemorySize=${((nioMMap.mf.randomAccessFile.length()*Runtime.getRuntime().availableProcessors()) ) / 1024 / 1024+ 100}m") }
             val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
             val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(
-                sortedSetOf(0),
-                vect0rOf(IoFloat t2 { acc: Any?, lf: Any? ->
-                    (((acc as? Float) ?: 0f) + ((lf as? Float) ?: 0f))
-                } as GroupReducer))
+                sortedSetOf(0) )
             logReuseCountdown = 2
             System.err.println("" + piv.scalars.size + " columns ")
             System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
