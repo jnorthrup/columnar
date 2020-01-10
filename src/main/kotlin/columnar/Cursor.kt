@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package columnar
 
 import columnar.context.Arity
@@ -163,11 +165,14 @@ fun Cursor.pivot(
 }
 
 
+
+typealias GroupReducer = Pai2<Scalar, (Any?, Any?) -> Any?>
+
 fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-    axis: SortedSet<Int>
+    axis: SortedSet<Int>, reducers: Vect02<IOMemento, GroupReducer>?=null
 ): Cursor = let { cursr ->
     System.err.println("--- group")
     val masterScalars = cursr.scalars
@@ -183,16 +188,16 @@ fun Cursor.group(
                 }
         }
     }
-    logDebug{ "keys:${clusters.size to clusters.keys.also{ System.err.println("if this is visible without -ea we have a problem with `⟲`")}}" }
+    logDebug { "keys:${clusters.size to clusters.keys.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }}" }
     val clusterVec: Vect0r<MutableMap.MutableEntry<List<Any?>, MutableList<Int>>> = clusters.entries.toVect0r()
-    Cursor(clusterVec.size .`⟲`) { cy: Int ->
+    Cursor(clusterVec.size.`⟲`) { cy: Int ->
         clusterVec[cy].let { (_, clusterIndices) ->
             RowVec(indices.endInclusive.`⟲`) { ix: Int ->
-               val pai21 = if (ix in axis) {
-                   cursr.second(cy)[ix]
-               } else (Vect0r(clusterIndices.size.`⟲`) { clusterOrdinal: Int ->
-                   cursr.second(clusterIndices[clusterOrdinal])[ix].first
-               } t2 { masterScalars[ix] })
+                val pai21 = if (ix in axis) {
+                    cursr.second(cy)[ix]
+                } else (Vect0r(clusterIndices.size.`⟲`) { clusterOrdinal: Int ->
+                    cursr.second(clusterIndices[clusterOrdinal])[ix].first
+                } t2 { masterScalars[ix] })
                 pai21
             }
         }
