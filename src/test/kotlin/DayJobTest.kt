@@ -54,6 +54,7 @@ class DayJobTest : StringSpec() {
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     init {
+/*
         "resample" {
             val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar)
 
@@ -67,6 +68,7 @@ class DayJobTest : StringSpec() {
                 System.err.println("" + curs.toList().first().left)
             }
         }
+*/
 //        "pivot" {
 //
 //            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
@@ -81,7 +83,7 @@ class DayJobTest : StringSpec() {
 //            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
 //        }
         "pivot+group" {
-            logDebug {  ("try out -XX:MaxDirectMemorySize=${(nioMMap.mf.randomAccessFile.length() + 100) / 1024 / 1024}m")}
+            logDebug { ("try out -XX:MaxDirectMemorySize=${(nioMMap.mf.randomAccessFile.length()*Runtime.getRuntime().availableProcessors() + 100) / 1024 / 1024}m") }
             val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())

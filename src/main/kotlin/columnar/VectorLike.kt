@@ -100,6 +100,17 @@ inline operator fun <reified T> Array<T>.get(indexes: Iterable<Int>) = this[inde
 
 @JvmName("vlike_Array_IntArray3")
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
+/*
+
+@JvmName("vlike_IntArray_1i")
+operator fun IntArray.get(vararg index: Int) = this.get(index)
+
+@JvmName("vlike_IntArray_Iterable2")
+operator fun IntArray.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray())
+
+@JvmName("vlike_IntArray_IntIntArray3")
+operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> this[index[i]] }
+*/
 
 @JvmName("vlike_Vect0r_get")
 inline operator fun <reified T> Vect0r<T>.get(index: Int): T = second(index)
@@ -200,19 +211,21 @@ inline fun <reified T> combine(vararg a: List<T>) =
     }
 
 @JvmName("combine_Vect0r")
-inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→` { vargsIn ->
-    vargsIn.asIterable().foldIndexed(0 to IntArray(vargsIn.size)) { vix, (acc, avec), vec ->
-        acc.plus(vec.size) `→` { size -> size to avec.also { avec[vix] = size } }
-    } `→` { (acc, order) ->
-        Vect0r(acc.`⟲`) { ix ->
-            (1 + order.binarySearch(ix)).absoluteValue `→` { slot ->
-                order[slot] `→` { upperBound ->
-                    (if (0 < slot) order[slot - 1] else 0) `→` { beginRange ->
-                        vargsIn[slot][ix.rem(upperBound) - beginRange]
-                    }
-                }
-            }
-        }
+inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
+    val (size, order) = vargs.asIterable().foldIndexed(0 to IntArray(vargs.size)) { vix, (acc, avec), vec ->
+        val size = acc.plus(vec.size)
+        size to avec.also { avec[vix] = size }
+    }
+
+    return Vect0r(size.`⟲`) { ix: Int ->
+        val slot = (1 + order.binarySearch(ix)).absoluteValue
+        vargs[slot][if (0 >= slot) ix % order[slot]
+        else {//the usual case
+            var p = slot - 1
+            val prev = order[p++]
+            val lead = order[p]
+            ix % lead - prev
+        }]
     }
 }
 
