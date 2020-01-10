@@ -1,6 +1,7 @@
 package columnar
 
 import kotlinx.coroutines.flow.*
+import kotlin.math.absoluteValue
 
 /**
  * semigroup
@@ -204,12 +205,10 @@ inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> = vargs `→`
         acc.plus(vec.size) `→` { size -> size to avec.also { avec[vix] = size } }
     } `→` { (acc, order) ->
         Vect0r(acc.`⟲`) { ix ->
-            order.binarySearch(ix) `→` { offset ->
-                (if (0 > offset) 0 - (offset + 1) else offset + 1) `→` { slot ->
-                    order[slot] `→` { upperBound ->
-                        (if (slot > 0) order[slot - 1] else 0) `→` { beginRange ->
-                            vargsIn[slot][ix.rem(upperBound) - beginRange]
-                        }
+            (1 + order.binarySearch(ix)).absoluteValue `→` { slot ->
+                order[slot] `→` { upperBound ->
+                    (if (0 < slot) order[slot - 1] else 0) `→` { beginRange ->
+                        vargsIn[slot][ix.rem(upperBound) - beginRange]
                     }
                 }
             }
@@ -242,8 +241,13 @@ inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size) 
 
 infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
     (this to last / denominator).let { (intRange, stepp) ->
-        Vect0r(denominator.`⟲`) { x: Int -> (stepp * x).let { lower ->
-            lower until Math.min(intRange.last, stepp + lower) } } }
+        Vect0r(denominator.`⟲`) { x: Int ->
+            (stepp * x).let { lower ->
+                lower until Math.min(intRange.last, stepp + lower)
+            }
+        }
+    }
+
 fun IntRange.subRanges(chunkSize: Int = this.step) =
     let { sequence { for (i in it step chunkSize) yield(i until minOf(last, i + chunkSize)) } }
 
