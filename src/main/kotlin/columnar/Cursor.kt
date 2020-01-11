@@ -116,7 +116,7 @@ fun Cursor.pivot(
     val keys: LinkedHashMap<List<Any?>, Int> =
         (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left })
             .toList()
-            .distinct().mapIndexed { xIndex: Int, any: List<Any?> -> any to xIndex }.toMap(linkedMapOf())
+            .distinct().mapIndexed { xIndex: Int, any -> any.toList() to xIndex }.toMap(linkedMapOf())
 
     val synthSize: Int = fanOut.size * keys.size
     val xsize: Int = lhs.size + synthSize
@@ -147,7 +147,7 @@ fun Cursor.pivot(
                         original(lhs[ix])
                     }
                     else /*fanout*/ -> {
-                        val theKey: List<Any?> = theRow[axis].left
+                        val theKey: List<Any?> = theRow[axis].left.toList()
                         val keyGate: Int = whichKey(ix)
                         val cellVal: Any? = if (keys[theKey] == keyGate)
                             original(fanOut[whichFanoutIndex(ix)]).first/*.also {
@@ -166,14 +166,33 @@ fun Cursor.pivot(
 
 
 
-typealias GroupReducer = Pai2<Scalar, (Any?, Any?) -> Any?>
+/**
+ * grouped cursor marked for reducer
+ */
+inline class GCursor(val cursor: Cursor) {
+    operator fun component1() = cursor
+    /**
+     * reducer func
+     */
+    operator fun GCursor.invoke(reducer: (Any?, Any?) -> Any?) = let {
+        val s = cursor.scalars
+        for (iy in 0 until cursor.size) {
+            val aggcell: RowVec = cursor.second(iy)
+            val al = aggcell.left
+            RowVec(aggcell.first) { ix: Int ->
+                val ac = al[ix]
+                (ac as? Vect0r<*>)?.toList() ?: (ac as? List<*>)?.reduce(reducer)?:ac t2 aggcell.second
+            }
+        }
+    }
+}
 
 fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-    axis: SortedSet<Int>, reducers: Vect02<IOMemento, GroupReducer>?=null
-): Cursor = let { cursr ->
+    axis: SortedSet<Int>
+): GCursor = let { cursr ->
     System.err.println("--- group")
     val masterScalars = cursr.scalars
     val indices = masterScalars.toArray().indices
@@ -181,8 +200,8 @@ fun Cursor.group(
     val resultIndices = (indices - axis)
     val clusters: LinkedHashMap<List<Any?>, MutableList<Int>> = linkedMapOf()
     cursr.mapIndexed { iy: Int, row: RowVec ->
-        row[axis].left.let { key ->
-            clusters.get(key)
+        row[axis].left.toList().let { key ->
+            clusters.get<Any, MutableList<Int>>(key)
                 .let { clust ->
                     if (clust != null) clust.add(iy) else clusters[key] = mutableListOf(iy)
                 }
@@ -190,7 +209,7 @@ fun Cursor.group(
     }
     logDebug { "keys:${clusters.size to clusters.keys.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }}" }
     val clusterVec: Vect0r<MutableMap.MutableEntry<List<Any?>, MutableList<Int>>> = clusters.entries.toVect0r()
-    Cursor(clusterVec.size.`⟲`) { cy: Int ->
+    GCursor(Cursor(clusterVec.size.`⟲`) { cy: Int ->
         clusterVec[cy].let { (_, clusterIndices) ->
             RowVec(indices.endInclusive.`⟲`) { ix: Int ->
                 val pai21 = if (ix in axis) {
@@ -201,7 +220,7 @@ fun Cursor.group(
                 pai21
             }
         }
-    }
+    })
 }
 
 

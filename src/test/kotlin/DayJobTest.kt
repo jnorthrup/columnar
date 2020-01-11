@@ -4,15 +4,18 @@ import columnar.*
 import columnar.IOMemento.*
 import columnar.context.*
 import io.kotlintest.specs.StringSpec
-import kotlinx.coroutines.*
-import java.util.concurrent.Executors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 
 class DayJobTest : StringSpec() {
 
-//    val suffix =  "_100"//"_RD"  105340
-    val suffix = "_1000"//"_RD"  3392440
+    val suffix = "_100"//"_RD"  105340
+    //    val suffix = "_1000"//"_RD"  3392440
 //val suffix = "_10000"     //"_RD"  139618738
-//    val suffix = "_1000"//"_RD"
+//    val suffix = "_100000"     //"_RD"
+    //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
@@ -87,25 +90,24 @@ lumnar)
 //            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
 //        }
         "pivot+group" {
-            logDebug { ("try out -XX:MaxDirectMemorySize=${((nioMMap.mf.randomAccessFile.length()*Runtime.getRuntime().availableProcessors()) ) / 1024 / 1024+ 100}m") }
+            logDebug { ("try out -XX:MaxDirectMemorySize=${((nioMMap.mf.randomAccessFile.length() * Runtime.getRuntime().availableProcessors())) / 1024 / 1024 + 100}m") }
             val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
             val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(
-                sortedSetOf(0) )
+                sortedSetOf(0)
+            )
+
             logReuseCountdown = 2
-            System.err.println("" + piv.scalars.size + " columns ")
-            System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
+            System.err.println("" + piv.cursor.scalars.size + " columns ")
+            System.err.println("" + piv.cursor.scalars.map { scalar: Scalar -> scalar.second }.toList())
 
             //todo: install bytebuffer as threadlocal
             System.err.println("--- insanity follows")
-            launch(
-                Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher(),
-                CoroutineStart.ATOMIC
-            ) {
+            launch(Dispatchers.IO) {
 
-                val intRange = ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList().also {
+                ((0..piv.cursor.size) / Runtime.getRuntime().availableProcessors()).toList().also {
                     System.err.println("using " + it)
 
                     System.err.println("expecting " + it.map {
@@ -116,7 +118,7 @@ lumnar)
                         sequence {
                             for (iy in span) {
                                 yield(
-                                    piv.second(iy).left.map {
+                                    piv.cursor.second(iy).left.toList().map {
                                         ((it as? Vect0r<*>)?.toList() ?: it).toString().length
                                     }.sum()
                                 )
@@ -125,6 +127,25 @@ lumnar)
                     }
                 }.awaitAll().sum().also { println("+++++ $it") }
             }.join()
+        }
+        "pivot+group+reduce" {
+            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
+            curs.let { curs1 ->
+                System.err.println("record count=" + curs1.first())
+            }
+            val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
+            logReuseCountdown = 2
+//            System.err.println("" + piv.scalars.size + " columns ")
+//            System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
+
+            //todo: install bytebuffer as threadlocal
+            System.err.println("--- insanity follows")
+            piv.cursor.toList().forEach {
+                val left = it.left.toList()
+                val toList = (it.left as? Pai2 )?.pair?:left
+
+                System.err.println(toList)
+            }
         }
     }
 }

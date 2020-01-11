@@ -139,9 +139,9 @@ fun <T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
     }
 }
 
-fun <T> Vect0r<T>.toFlow() = this.let { (_, vf) ->
+fun <T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
     flow {
-        for (ix in 0 until size)
+        for (ix in 0 until size())
             emit(vf(ix))
     }
 }

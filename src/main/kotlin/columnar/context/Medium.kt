@@ -6,7 +6,6 @@ import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.ensurePresent
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.lang.System.err
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
@@ -16,7 +15,7 @@ import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
 typealias  MMapWindow = Tw1n<Long>
-typealias  NioCursorState =  Pai2<ByteBuffer, MMapWindow>
+typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
@@ -69,7 +68,7 @@ class NioMMap(
             fun NioAbstractionLayer(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
                 medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
                     Vect0r(drivers.size.`⟲`) { x: Int ->
-                        drivers[x] t2 (arity as Columnar).first[x] t3 coords[x].size
+                        (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
                     }
                 }
             when (ordering) {
@@ -181,7 +180,7 @@ class NioMMap(
 
         var reuse = false
         lateinit var pbuf: ByteBuffer
-        val (memo1, memo2:MMapWindow) = state.get()
+        val (memo1, memo2: MMapWindow) = state.get()
         return withContext(state.asContextElement()) {
             state.ensurePresent()
             var (buf1, window1) = state.get()
@@ -204,7 +203,7 @@ class NioMMap(
             when {
                 reuse ->
                     try {
-if(logReuseCountdown>0)logDebug {     "reuse( $memo1, ${memo2.pair})"  }.also { logReuseCountdown-- }
+                        if (logReuseCountdown > 0) logDebug { "reuse( $memo1, ${memo2.pair})" }.also { logReuseCountdown-- }
                     } catch (a: AssertionError) {
                     }
                 else -> it.let { (_, window) ->

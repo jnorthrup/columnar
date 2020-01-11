@@ -21,17 +21,17 @@ typealias RowVec = Vect02<Any?, () -> CoroutineContext>
 
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
 
-val <F, S> Vect02<F, S>.left get() = toList().map(Pai2<F, S>::first)
-val <F, S> Vect02<F, S>.right get() = toList().map(Pai2<F, S>::second)
-val <F, S> Vect02<F, S>.reify get() = toList().map(Pai2<F, S>::pair)
+val <F, S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
+val <F, S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
+val <F, S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair
 
 
 typealias  V3ct0r<F, S, T> = Vect0r<XYZ<F, S, T>>
 
-val <F, S, T> V3ct0r<F, S, T>.x get() = toList().map(XYZ<F, S, T>::first)
-val <F, S, T> V3ct0r<F, S, T>.y get() = toList().map(XYZ<F, S, T>::second)
-val <F, S, T> V3ct0r<F, S, T>.z get() = toList().map(XYZ<F, S, T>::third)
-val <F, S, T> V3ct0r<F, S, T>.r3ify get() = toList().map(XYZ<F, S, T>::triple)
+val <F, S, T> V3ct0r<F, S, T>.x get() = this  α (XYZ<F, S, T>::first)
+val <F, S, T> V3ct0r<F, S, T>.y get() = this  α (XYZ<F, S, T>::second)
+val <F, S, T> V3ct0r<F, S, T>.z get() = this  α (XYZ<F, S, T>::third)
+val <F, S, T> V3ct0r<F, S, T>.r3ify get() = this  α (XYZ<F, S, T>::triple)
 
 
 
@@ -50,7 +50,7 @@ fun main() {
         "delivered" t2 IoFloat,
         "ret" t2 IoFloat
     )
-    val coords = vect0rOf((0 to 10), (10 to 84), (84 to 124), (124 to 164)) α { (a, b): kotlin.Pair<Int, Int> ->
+    val coords = vect0rOf((0 t2 10), (10 t2 84), (84 t2 124), (124 t2 164)) α { (a, b): Pai2<Int, Int> ->
         intArrayOf(a, b)
     }
 
