@@ -75,7 +75,7 @@ class CursorKtTest : StringSpec() {
 
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(sortedSetOf(0))
+            val piv = cursor.group(sortedSetOf(0))/*.cursor*/
            cursor.forEach {
                 println(it.map { "${it.component1().let { 
                      (it as? Vect0r<*>)?.toList()?:it
@@ -92,7 +92,7 @@ class CursorKtTest : StringSpec() {
              System.err.println( "pivot+group ")
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(sortedSetOf(0) )
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(sortedSetOf(0) )/*.cursor*/
 
             piv.forEach {
                 println(it.map { "${it.component1().let { 
@@ -105,7 +105,7 @@ class CursorKtTest : StringSpec() {
             System.err.println( "pivot+group+reduce")
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(sortedSetOf(0), sumReducer) /* cursor.pivot().group(sortedSetOf(0))*/
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(sortedSetOf(0))(sumReducer[IoFloat]!! )
 
             piv.forEach {
                 println(it.map { "${it.component1().let { 

@@ -100,14 +100,14 @@ lumnar)
             )
 
             logReuseCountdown = 2
-            System.err.println("" + piv.cursor.scalars.size + " columns ")
-            System.err.println("" + piv.cursor.scalars.map { scalar: Scalar -> scalar.second }.toList())
+            System.err.println("" + piv.scalars.size + " columns ")
+            System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
 
             //todo: install bytebuffer as threadlocal
             System.err.println("--- insanity follows")
             launch(Dispatchers.IO) {
 
-                ((0..piv.cursor.size) / Runtime.getRuntime().availableProcessors()).toList().also {
+                ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList().also {
                     System.err.println("using " + it)
 
                     System.err.println("expecting " + it.map {
@@ -118,7 +118,7 @@ lumnar)
                         sequence {
                             for (iy in span) {
                                 yield(
-                                    piv.cursor.second(iy).left.toList().map {
+                                    piv.second(iy).left.toList().map {
                                         ((it as? Vect0r<*>)?.toList() ?: it).toString().length
                                     }.sum()
                                 )
@@ -133,19 +133,23 @@ lumnar)
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
-            val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
+            val piv =
+                curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
             logReuseCountdown = 2
-//            System.err.println("" + piv.scalars.size + " columns ")
-//            System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
 
             //todo: install bytebuffer as threadlocal
             System.err.println("--- insanity follows")
-            piv.cursor.toList().forEach {
-                val left = it.left.toList()
-                val toList = (it.left as? Pai2 )?.pair?:left
 
-                System.err.println(toList)
-            }
+            val scalars = piv.scalars
+            val function = sumReducer[IoFloat]!!
+            val res = join(piv[0], piv[1 until scalars.size](function))
+
+            /*           res.forEach {
+
+                           System.err.println((it.left.toList()))
+
+                       }*/
+
         }
     }
 }
