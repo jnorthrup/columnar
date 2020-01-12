@@ -16,13 +16,10 @@ open class Scalar(type: IOMemento, name: String? = null) : Pai2<IOMemento, Strin
 /**Borg reference*/
 class UniMatrix(type: IOMemento, val shape: Vect0r<Int>,name:String?=null) : Scalar(type,name)
 
-class Columnar(type: Vect0r<IOMemento>, names: Vect0r<String>? = null) :
+class Columnar(type: Vect0r< IOMemento>, names: Vect0r<String>? = null) :
     Pai2<Vect0r<IOMemento>, Vect0r<String>?> by Pai2(type, names), Arity() {
     companion object {
-        fun of(vararg type: IOMemento): Columnar {
-            val toVect0r: Vect0r<IOMemento> = (type).toVect0r() as Vect0r<IOMemento>
-            return Columnar(toVect0r)
-        }
+        fun of(vararg type: IOMemento): Columnar = Columnar(vect0rOf(*type))
 
         fun of(mapping: Vect02<String, IOMemento>) =
             Columnar(mapping α Pai2<String, IOMemento>::second, mapping α Pai2<String, IOMemento>::first)

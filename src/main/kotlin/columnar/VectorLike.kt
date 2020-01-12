@@ -172,7 +172,7 @@ inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> 
 inline fun <reified T, reified O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): Vect0r<P> =
     Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) as P } as R
 
-inline fun <reified T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
+inline fun <reified T> Array<  T >.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
 inline fun <reified T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
 suspend inline fun <reified T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()

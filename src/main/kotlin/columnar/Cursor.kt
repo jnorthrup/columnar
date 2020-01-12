@@ -180,10 +180,14 @@ operator fun Cursor. invoke(reducer: (Any?, Any?) -> Any?):Cursor =
 
   Cursor( first)  {iy:Int->
         val aggcell: RowVec =  second(iy)
-        val al = aggcell.left
+        val al:Vect0r<*> = aggcell.left
         RowVec(aggcell.first) { ix: Int ->
             val ac = al[ix]
-            val any = (ac as? Vect0r<*>)?.toList() ?: (ac as? List<*>)?.reduce(reducer) ?: ac as Any?
+            val pai2 = ac as? Vect0r<*>
+            val toList = pai2?.toList()
+            val list = toList ?: (ac as? List<*>)
+            val any1 = list?.reduce(reducer)
+            val any = any1 ?: ac as Any?
             any t2 aggcell[ix].second
         }
 

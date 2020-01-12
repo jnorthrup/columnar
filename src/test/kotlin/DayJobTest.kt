@@ -141,14 +141,17 @@ lumnar)
             System.err.println("--- insanity follows")
 
             val scalars = piv.scalars
-            val function = sumReducer[IoFloat]!!
-            val res = join(piv[0], piv[1 until scalars.size](function))
+            val res = join(piv[0], piv[1 until scalars.size](floatSum))
 
-            /*           res.forEach {
 
-                           System.err.println((it.left.toList()))
+            for (i in 0 until res.size)
+            {
+                val second:RowVec = res.second(i)
+                val left = second.left
+                System.err.println(""+left.toList())
+            }
 
-                       }*/
+
 
         }
     }
