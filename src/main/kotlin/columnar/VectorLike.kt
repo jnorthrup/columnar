@@ -232,11 +232,9 @@ inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>) = this.g
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>) = this.get(*ks.toList().toTypedArray())
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size) { ix -> ks[ix].let(this::get)!! }
 
-
-infix operator fun IntRange.div(denominator: Int) =
-    (this t2 ((last - first) / denominator)).let { (intRange, subSize) ->
-
-        Vect0r((subSize+1).`⟲`) { x: Int ->
+infix operator fun IntRange.div(denominator: Int): Pai2<() -> Int, (Int) -> IntRange> =
+    (this t2 ((last-first+(1-first))/ denominator)).let { (_, subSize) ->
+        Vect0r((denominator).`⟲`) { x: Int ->
             (subSize * x).let { lower ->
                 lower..Math.min(last, lower + subSize - 1)
             }

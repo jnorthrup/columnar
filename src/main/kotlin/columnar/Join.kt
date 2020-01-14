@@ -11,7 +11,7 @@ fun join (vararg v:Cursor):Cursor= join( vect0rOf(*v))
 fun join(c: Vect0r<Cursor>):Cursor = run {
 
     val vargs     = c α Cursor::scalars
-    val scalars   = combine(vargs)
+
     val (xsize, order)  = vargs.toSequence().foldIndexed(0 t2 IntArray(vargs.size)) { vix, (acc, avec), vec ->
         val xsize = acc.plus(vec.size)
         xsize t2 avec.also { avec[vix] = xsize }
