@@ -34,8 +34,8 @@ interface Pai2<F, S>/* : Hand1l<F>*/ {
      */
     val pair get() = let { first to second }
 
-    operator fun component2(): S = second
     operator fun component1(): F = first
+    operator fun component2(): S = second
 
     companion object {
         operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =

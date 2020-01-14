@@ -17,6 +17,30 @@ class VectorLikeKtTest : StringSpec() {
             toList.toString() shouldBe "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]"
             System.err.println(toList)
         }
+        "div"{
+
+            val intRange = 0..11
+fun IntRange.split(nSubRanges: Int) = sequence {
+    val subSize = (last - first) / nSubRanges
+    for (i in this@split step subSize) {
+        yield(i..minOf(last, i + subSize - 1))
+    }
+}
+
+
+            System.err.println( intRange.toList())
+            System.err.println(intRange.last)
+            val toList = intRange.split(3).toList()
+            val toList1 = (intRange / 3).toList()
+            System.err.println(toList to toList1)
+
+            toList  shouldBe toList1
+
+
+        }
+        "subranges"{
+
+        }
     }
 
 }

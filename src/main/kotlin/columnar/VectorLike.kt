@@ -1,7 +1,6 @@
 package columnar
 
 import kotlinx.coroutines.flow.*
-import kotlin.math.absoluteValue
 
 /**
  * semigroup
@@ -172,7 +171,7 @@ inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> 
 inline fun <reified T, reified O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): Vect0r<P> =
     Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) as P } as R
 
-inline fun <reified T> Array<  T >.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
+inline fun <reified T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
 inline fun <reified T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
 suspend inline fun <reified T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
@@ -210,25 +209,6 @@ inline fun <reified T> combine(vararg a: List<T>) =
         }
     }
 
-@JvmName("combine_Vect0r")
-inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
-    val (size, order) = vargs.asIterable().foldIndexed(0 to IntArray(vargs.size)) { vix, (acc, avec), vec ->
-        val size = acc.plus(vec.size)
-        size to avec.also { avec[vix] = size }
-    }
-
-    return Vect0r(size.`⟲`) { ix: Int ->
-        val slot = (1 + order.binarySearch(ix)).absoluteValue
-        vargs[slot][if (0 >= slot) ix % order[slot]
-        else {//the usual case
-            var p = slot - 1
-            val prev = order[p++]
-            val lead = order[p]
-            ix % lead - prev
-        }]
-    }
-}
-
 @JvmName("combine_Array")
 inline fun <reified T> combine(vararg a: Array<T>) = a.sumBy { it.size }.let { size ->
     var x = 0
@@ -252,15 +232,13 @@ inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>) = this.g
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>) = this.get(*ks.toList().toTypedArray())
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K) = Array(ks.size) { ix -> ks[ix].let(this::get)!! }
 
-infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
-    (this to last / denominator).let { (intRange, stepp) ->
-        Vect0r(denominator.`⟲`) { x: Int ->
-            (stepp * x).let { lower ->
-                lower until Math.min(intRange.last, stepp + lower)
+
+infix operator fun IntRange.div(denominator: Int) =
+    (this t2 ((last - first) / denominator)).let { (intRange, subSize) ->
+
+        Vect0r((subSize+1).`⟲`) { x: Int ->
+            (subSize * x).let { lower ->
+                lower..Math.min(last, lower + subSize - 1)
             }
         }
     }
-
-fun IntRange.subRanges(chunkSize: Int = this.step) =
-    let { sequence { for (i in it step chunkSize) yield(i until minOf(last, i + chunkSize)) } }
-

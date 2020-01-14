@@ -96,7 +96,7 @@ lumnar)
                 System.err.println("record count=" + curs1.first())
             }
             val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(
-                sortedSetOf(0)
+                /*sortedSetOf*/(0)
             )
 
             logReuseCountdown = 2
@@ -107,13 +107,13 @@ lumnar)
             System.err.println("--- insanity follows")
             launch(Dispatchers.IO) {
 
-                ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList().also {
+                ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList()/*.also {
                     System.err.println("using " + it)
 
                     System.err.println("expecting " + it.map {
                         it.first * fixedWidth.recordLen
                     })
-                }.map { span ->
+                }*/.map { span ->
                     async {
                         sequence {
                             for (iy in span) {
@@ -134,23 +134,29 @@ lumnar)
                 System.err.println("record count=" + curs1.first())
             }
             val piv =
-                curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
+                curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(/*sortedSetOf*/(0))
             logReuseCountdown = 2
 
             //todo: install bytebuffer as threadlocal
             System.err.println("--- insanity follows")
 
             val scalars = piv.scalars
-            val res = join(piv[0], piv[1 until scalars.size](floatSum))
+            val c0: Cursor = piv[0]
+            val pai2 = piv[1 until scalars.size](floatSum)
+            val res = join(c0, pai2)
 
 
-            for (i in 0 until res.size)
-            {
-                val second:RowVec = res.second(i)
+            for (i in 0 until res.size) {
+                val second: RowVec = res.second(i)
                 val left = second.left
-                System.err.println(""+left.toList())
-            }
+                System.err.println         (  sequence {
+                    for (i in 0 until left.size) {
 
+                        val any = left[i]
+                        yield(any)
+                    }
+                }.joinToString(","))
+            }
 
 
         }
