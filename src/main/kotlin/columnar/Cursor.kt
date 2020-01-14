@@ -115,9 +115,9 @@ fun Cursor.pivot(
     fanOut: IntArray
 ): Cursor = let { cursr ->
     val keys: LinkedHashMap<List<Any?>, Int> =
-        (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left })
+        (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left.toList() })
             .toList()
-            .distinct().mapIndexed { xIndex: Int, any -> any.toList() to xIndex }.toMap(linkedMapOf())
+            .distinct().mapIndexed { xIndex: Int, any -> any  to xIndex }.toMap(linkedMapOf())
 
     val synthSize: Int = fanOut.size * keys.size
     val xsize: Int = lhs.size + synthSize

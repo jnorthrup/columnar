@@ -76,54 +76,66 @@ class CursorKtTest : StringSpec() {
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
             val piv = cursor.group(/*sortedSetOf*/(0))/*.cursor*/
-           cursor.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+            cursor.forEach {
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
             piv.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
 
         }
         "pivot+group" {
-             System.err.println( "pivot+group ")
+            System.err.println("pivot+group ")
             val cursor: Cursor = cursorOf(root)
-            println(cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(/*sortedSetOf*/(0) )/*.cursor*/
-
+            println("from:\n" + cursor.narrow().toList())
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(/*sortedSetOf*/(0))/*.cursor*/
+            println()
             piv.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
 
         }
         "pivot+group+reduce" {
-            System.err.println( "pivot+group+reduce")
+            System.err.println("pivot+group+reduce")
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(/*sortedSetOf*/(0))(sumReducer[IoFloat]!! )
+            val piv = cursor.pivot(
+                intArrayOf(0),
+                intArrayOf(1),
+                intArrayOf(2, 3)
+            ).group(/*sortedSetOf*/(0))(sumReducer[IoFloat]!!)
 
             piv.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
 
         }
         "pivot+group+reduce+join" {
-            println( "pivot+group+reduce+join")
+            println("pivot+group+reduce+join")
             val cursor: Cursor = cursorOf(root)
+            println("---")
             println(cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(/*sortedSetOf*/(0))(sumReducer[IoFloat]!! )
-join (piv[0],piv[1,2])
-             .forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+            println("---")
+            val piv = cursor.resample(0).pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(/*sortedSetOf*/(0))
+            val join = join(piv[0], piv[1, 2](sumReducer[IoFloat]!!))
+            join.forEach {row->
+                println(""+ row.left.toList(). map { (it as? Vect0r<*>)?.toList()?:it })
             }
 
         }
