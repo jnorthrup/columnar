@@ -212,7 +212,7 @@ fun Cursor.group(
                 }
         }
     }
-    logDebug { "keys:${clusters.size to clusters.keys.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }}" }
+    logDebug { "keys:${clusters.size to clusters.keys/*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
     val clusterVec = clusters.entries.toList()
     Cursor(clusterVec.size.`⟲`) { cy: Int ->
         clusterVec[cy].let { (_, clusterIndices) ->
