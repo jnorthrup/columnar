@@ -3,8 +3,9 @@ package columnar
 import columnar.IOMemento.*
 import columnar.context.Columnar
 import columnar.context.NioMMap
-import columnar.context.RowMajor
-import io.kotlintest.specs.StringSpec
+import columnar.context.*
+import io.kotlintest.*
+import io.kotlintest.specs.*
 
 class CursorKtTest : StringSpec() {
     val coords = vZipWithNext(
@@ -28,7 +29,7 @@ class CursorKtTest : StringSpec() {
         val nio = NioMMap(mf)
         val fixedWidth = fixedWidthOf(nio, coords)
         val root = fromFwf(RowMajor(), fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
-/*        "div"{
+        "div"{
             val pai21 = (0..2800000) / Runtime.getRuntime().availableProcessors()
             System.err.println(pai21.toList().toString())
 
@@ -36,13 +37,13 @@ class CursorKtTest : StringSpec() {
         "sum" {
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(*//*sortedSetOf*//*(0))
+            val piv = cursor.group(                     (0))
 
         }
         "resample" {
             val cursor: Cursor = cursorOf(root)
             val narrow = cursor.narrow()
-            cursor.toList()[3][2].first shouldBe 820f
+            cursor.toList()[3][2].first                         shouldBe 820f
             System.err.println(narrow.toList())
             val toList = cursor.resample(0).narrow().toList()
             toList[3][2] shouldBe 820f
@@ -68,8 +69,6 @@ class CursorKtTest : StringSpec() {
         "whichKey"{
             val fanOut_size = 2
             val lhs_size = 2
-
-
             fun whichKey(ix: Int) = (ix - lhs_size) / fanOut_size
             whichKey(702) shouldBe 350
             whichKey(700) shouldBe 349
@@ -104,7 +103,7 @@ class CursorKtTest : StringSpec() {
 
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(*//*sortedSetOf*//*(0))*//*.cursor*//*
+            val piv = cursor.group(  (0) )
             cursor.forEach {
                 println(it.map {
                     "${it.component1().let {
@@ -125,7 +124,7 @@ class CursorKtTest : StringSpec() {
             System.err.println("pivot+group ")
             val cursor: Cursor = cursorOf(root)
             println("from:\n" + cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(*//*sortedSetOf*//*(0))*//*.cursor*//*
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group( (0))
             println()
             piv.forEach {
                 println(it.map {
@@ -134,8 +133,8 @@ class CursorKtTest : StringSpec() {
                     }}"
                 }.toList())
             }
-        }*/
-        /*"pivot+group+reduce" {
+        }
+        "pivot+group+reduce" {
             System.err.println("pivot+group+reduce")
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
@@ -143,7 +142,7 @@ class CursorKtTest : StringSpec() {
                 intArrayOf(0),
                 intArrayOf(1),
                 intArrayOf(2, 3)
-            ).group(*//*sortedSetOf*//*(0))(sumReducer[IoFloat]!!)
+            ).group( (0))(sumReducer[IoFloat]!!)
 
             piv.forEach {
                 println(it.map {
@@ -153,7 +152,7 @@ class CursorKtTest : StringSpec() {
                 }.toList())
             }
 
-        }*/
+        }
         "resample+pivot+group+reduce+join" {
             println("resample+group+reduce+join")
             val cursor: Cursor = cursorOf(root)
@@ -178,13 +177,13 @@ class CursorKtTest : StringSpec() {
 
             println("---")
             val join: Cursor = join(grp[0, 1], grp[2, 3](floatSum))
-//            join.forEach {
-//                println(it.map {
-//                    "${it.component1().let {
-//                        (it as? Vect0r<*>)?.toList() ?: it
-//                    }}"
-//                }.toList())
-//            }
+            join.forEach {
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
+            }
 
         }
 
