@@ -17,7 +17,7 @@ typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
 typealias RowVec = Vect02<Any?, () -> CoroutineContext>
-fun RowVec.toString()=left.toList().map {( it as? Vect0r<*>)?.toList().toString()?:it }.toString()
+fun  stringOf(it:RowVec)=it.left.toList().map {( it as? Vect0r<*>)?.toList().toString()?:it }.toString()
 
 
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>

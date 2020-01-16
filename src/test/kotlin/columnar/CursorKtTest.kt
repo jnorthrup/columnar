@@ -135,7 +135,6 @@ class CursorKtTest : StringSpec() {
                     }}"
                 }.toList())
             }
-
         }
         "pivot+group+reduce" {
             System.err.println("pivot+group+reduce")
@@ -168,16 +167,22 @@ class CursorKtTest : StringSpec() {
                 }.toList())
             }
             println("---")
-            val piv = resample.group(1)
-            piv.forEach {
+            val grp = resample.group(1)
+            grp.forEach {
                 println(it.map {
                     "${it.component1().let {
                         (it as? Vect0r<*>)?.toList() ?: it
                     }}"
                 }.toList())
             }
+
+            val any: RowVec = grp.second(3)
+            val anyx = grp.second(3).left.toList().toString()
+//            fun stringOf(it: RowVec) = it.left.toList().map { (it as? Vect0r<*>)?.toList() ?: it }.toString()
+            val value = stringOf(any)
+            //value shouldBe  (null) the damn thing works.
             println("---")
-            val join = join(piv[0,1], piv[  2,3](floatSum))
+            val join = join(grp[0, 1], grp[2, 3](floatSum))
             join.forEach {
                 println(it.map {
                     "${it.component1().let {
