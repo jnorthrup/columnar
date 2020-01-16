@@ -9,8 +9,10 @@ import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.util.*
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.absoluteValue
 
+object DebugMe{
+    var trigger=false;
+}
 typealias Cursor = Vect0r<RowVec>
 
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
@@ -167,14 +169,6 @@ fun Cursor.pivot(
 
 
 /**
- * grouped cursor marked for reducer
- */
-inline class GCursor(val cursor: Cursor) {
-    operator fun component1() = cursor
-
-}
-
-/**
  * reducer func
  */
 operator fun Cursor.invoke(reducer: (Any?, Any?) -> Any?): Cursor =
@@ -192,7 +186,6 @@ operator fun Cursor.invoke(reducer: (Any?, Any?) -> Any?): Cursor =
         }
 
     }
-
 fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
@@ -200,8 +193,6 @@ fun Cursor.group(
    vararg axis: Int
 ): Cursor = let { cursr ->
     System.err.println("--- group")
-    val masterScalars = cursr.scalars
-    val indices = masterScalars.toArray().indices
 
     val clusters: LinkedHashMap<List<Any?>, MutableList<Int>> = linkedMapOf()
     cursr.mapIndexed { iy: Int, row: RowVec ->
@@ -214,17 +205,20 @@ fun Cursor.group(
     }
     logDebug { "keys:${clusters.size to clusters.keys/*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
     val clusterVec = clusters.entries.toList()
+    val masterScalars = cursr.scalars
+    val indices = 0 until masterScalars.size
     Cursor(clusterVec.size.`⟲`) { cy: Int ->
         clusterVec[cy].let { (_, clusterIndices) ->
             RowVec(indices.endInclusive.`⟲`) { ix: Int ->
-                val pai21 = if (ix in axis) {
-                    cursr.second(cy)[ix]
-                } else (Vect0r(clusterIndices.size.`⟲`) { clusterOrdinal: Int ->
-                    val iy = clusterIndices[clusterOrdinal]
-                    val second1:RowVec = cursr.second(iy)
-                    val pai2: Pai2<Any?, () -> CoroutineContext> = second1[ix]
-                    pai2.first
-                } t2 { masterScalars[ix] })
+
+                val pai21 = when (ix) {
+                    in axis -> {
+                        cursr.second(clusterIndices.first())[ix]
+                    }
+                    else -> (Vect0r(clusterIndices.size.`⟲`) { clusterOrdinal: Int ->
+                        cursr.second(clusterIndices[clusterOrdinal])[ix].first
+                    } t2 { masterScalars[ix] })
+                }
                 pai21
             }
         }

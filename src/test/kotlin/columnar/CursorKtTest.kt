@@ -4,7 +4,6 @@ import columnar.IOMemento.*
 import columnar.context.Columnar
 import columnar.context.NioMMap
 import columnar.context.RowMajor
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 
 class CursorKtTest : StringSpec() {
@@ -29,7 +28,7 @@ class CursorKtTest : StringSpec() {
         val nio = NioMMap(mf)
         val fixedWidth = fixedWidthOf(nio, coords)
         val root = fromFwf(RowMajor(), fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
-        "div"{
+/*        "div"{
             val pai21 = (0..2800000) / Runtime.getRuntime().availableProcessors()
             System.err.println(pai21.toList().toString())
 
@@ -37,7 +36,7 @@ class CursorKtTest : StringSpec() {
         "sum" {
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(/*sortedSetOf*/(0))
+            val piv = cursor.group(*//*sortedSetOf*//*(0))
 
         }
         "resample" {
@@ -105,7 +104,7 @@ class CursorKtTest : StringSpec() {
 
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(/*sortedSetOf*/(0))/*.cursor*/
+            val piv = cursor.group(*//*sortedSetOf*//*(0))*//*.cursor*//*
             cursor.forEach {
                 println(it.map {
                     "${it.component1().let {
@@ -126,7 +125,7 @@ class CursorKtTest : StringSpec() {
             System.err.println("pivot+group ")
             val cursor: Cursor = cursorOf(root)
             println("from:\n" + cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(/*sortedSetOf*/(0))/*.cursor*/
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(*//*sortedSetOf*//*(0))*//*.cursor*//*
             println()
             piv.forEach {
                 println(it.map {
@@ -135,8 +134,8 @@ class CursorKtTest : StringSpec() {
                     }}"
                 }.toList())
             }
-        }
-        "pivot+group+reduce" {
+        }*/
+        /*"pivot+group+reduce" {
             System.err.println("pivot+group+reduce")
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
@@ -144,7 +143,7 @@ class CursorKtTest : StringSpec() {
                 intArrayOf(0),
                 intArrayOf(1),
                 intArrayOf(2, 3)
-            ).group(/*sortedSetOf*/(0))(sumReducer[IoFloat]!!)
+            ).group(*//*sortedSetOf*//*(0))(sumReducer[IoFloat]!!)
 
             piv.forEach {
                 println(it.map {
@@ -154,7 +153,7 @@ class CursorKtTest : StringSpec() {
                 }.toList())
             }
 
-        }
+        }*/
         "resample+pivot+group+reduce+join" {
             println("resample+group+reduce+join")
             val cursor: Cursor = cursorOf(root)
@@ -176,22 +175,19 @@ class CursorKtTest : StringSpec() {
                 }.toList())
             }
 
-            val any: RowVec = grp.second(3)
-            val anyx = grp.second(3).left.toList().toString()
-//            fun stringOf(it: RowVec) = it.left.toList().map { (it as? Vect0r<*>)?.toList() ?: it }.toString()
-            val value = stringOf(any)
-            //value shouldBe  (null) the damn thing works.
+
             println("---")
-            val join = join(grp[0, 1], grp[2, 3](floatSum))
-            join.forEach {
-                println(it.map {
-                    "${it.component1().let {
-                        (it as? Vect0r<*>)?.toList() ?: it
-                    }}"
-                }.toList())
-            }
+            val join: Cursor = join(grp[0, 1], grp[2, 3](floatSum))
+//            join.forEach {
+//                println(it.map {
+//                    "${it.component1().let {
+//                        (it as? Vect0r<*>)?.toList() ?: it
+//                    }}"
+//                }.toList())
+//            }
 
         }
 
     }
 }
+
