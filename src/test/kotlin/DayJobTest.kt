@@ -87,7 +87,23 @@ lumnar)
 //            val pivot = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3))
 //
 //            System.err.println("" + pivot.scalars.size() + " columns ")
-//            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
+//            System.err.println("" + pivot.scalars.mapfloatSum { scalar: Scalar -> scalar.second }.toList())
+//        }
+//        "reducer on [null]"{
+//
+//            val listOf:List<*> = listOf(null)
+//            val fill = 0f
+//            val reduced = listOf.reduceRight  { pfft, theList ->
+//                val retval = theList.let {
+//                    when (it) {
+//                        null, Float.NaN, Double.NaN -> fill
+//                        else -> (it as? Float)
+//                    }
+//                } ?: fill
+//                retval
+//            }
+//            listOf.fol
+//            reduced shouldBe 0f
 //        }
         "pivot+group" {
             logDebug { ("try out -XX:MaxDirectMemorySize=${((nioMMap.mf.randomAccessFile.length() * Runtime.getRuntime().availableProcessors())) / 1024 / 1024 + 100}m") }
@@ -96,24 +112,16 @@ lumnar)
                 System.err.println("record count=" + curs1.first())
             }
             val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(
-                /*sortedSetOf*/(0)
+                (0)
             )
 
             logReuseCountdown = 2
             System.err.println("" + piv.scalars.size + " columns ")
             System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
 
-            //todo: install bytebuffer as threadlocal
             System.err.println("--- insanity follows")
             launch(Dispatchers.IO) {
-
-                ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList()/*.also {
-                    System.err.println("using " + it)
-
-                    System.err.println("expecting " + it.map {
-                        it.first * fixedWidth.recordLen
-                    })
-                }*/.map { span ->
+                ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList().map { span ->
                     async {
                         sequence {
                             for (iy in span) {
@@ -133,32 +141,18 @@ lumnar)
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
-            val piv =
-                curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(/*sortedSetOf*/(0))
-            logReuseCountdown = 2
-
-            //todo: install bytebuffer as threadlocal
-            System.err.println("--- insanity follows")
-
-            val scalars = piv.scalars
-            val c0: Cursor = piv[0]
-            val pai2 = piv[1 until scalars.size](floatSum)
-            val res = join(c0, pai2)
-
-
-            for (i in 0 until res.size) {
-                val second: RowVec = res.second(i)
-                val left = second.left
-                System.err.println         (  sequence {
-                    for (i in 0 until left.size) {
-
-                        val any = left[i]
-                        yield(any)
-                    }
-                }.joinToString(","))
+            val piv: Cursor = curs[2, 1, 3, 5].resample(0)(floatSum).pivot(
+                intArrayOf(0),
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            ).group(0)
+            val pai21 = piv[1 until piv.scalars.size]
+            val v = (pai21(floatSum) α floatFillNa(0f))
+            val filtered = join(piv[0], v)
+            filtered.toList().forEach {
+                println(stringOf(it))
             }
-
-
+            filtered.second(47).let { stringOf(it) }
         }
     }
 }

@@ -10,9 +10,6 @@ import java.time.LocalDate
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
-object DebugMe{
-    var trigger=false;
-}
 typealias Cursor = Vect0r<RowVec>
 
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
@@ -119,7 +116,7 @@ fun Cursor.pivot(
     val keys: LinkedHashMap<List<Any?>, Int> =
         (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left.toList() })
             .toList()
-            .distinct().mapIndexed { xIndex: Int, any -> any  to xIndex }.toMap(linkedMapOf())
+            .distinct().mapIndexed { xIndex: Int, any -> any to xIndex }.toMap(linkedMapOf())
 
     val synthSize: Int = fanOut.size * keys.size
     val xsize: Int = lhs.size + synthSize
@@ -179,18 +176,28 @@ operator fun Cursor.invoke(reducer: (Any?, Any?) -> Any?): Cursor =
         RowVec(aggcell.first) { ix: Int ->
             val ac = al[ix]
             val toList = (ac as? Vect0r<*>)?.toList()
-            val list = toList ?: (ac as? List<*>)
-            val any1 = list?.reduce(reducer)
+            val iterable = toList ?: (ac as? Iterable<*>)
+            val any1 = iterable?.reduce(reducer)
             val any = any1 ?: ac
             any t2 aggcell[ix].second
         }
 
     }
+
+/**
+ * reducer func
+ */
+infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor =
+    Cursor(first) { iy: Int ->
+        val aggcell: RowVec = second(iy)
+        (aggcell.left α unaryFunctor).zip( aggcell.right)
+    }
+
 fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-   vararg axis: Int
+    vararg axis: Int
 ): Cursor = let { cursr ->
     System.err.println("--- group")
 

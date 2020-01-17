@@ -39,7 +39,7 @@ interface Pai2<F, S>/* : Hand1l<F>*/ {
 
     companion object {
         operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
-            object : Pai2<F, S>/*, Hand1l<F> by Hand1l.invoke(f)*/ {
+            object : Pai2<F, S> {
                 override val first get() = first
                 override val second get() = second
             }
