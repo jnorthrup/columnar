@@ -9,6 +9,7 @@ this is purpose-built early implementations for large scale time series LSTM dat
   - [X] concatenation of n cursors from disimilar FP projections
   - [X] pivot n rows by m columns (lazy) preserving l left-hand-side pass-thru columns
   - [X] groupby n columns
+  - [X] cursor.group(n..){reducer} 
   - [ ] One-hot Encodings 
   - [ ] min/max scaling (same premise as resampling above)
   - [ ] support Numerics, Linear Algebra libraries
@@ -22,7 +23,7 @@ this is purpose-built early implementations for large scale time series LSTM dat
  
 ### lower priorities (as-yet unimplemented orthogonals)
  - [X] textual field format IO/mapping
- - [X] binary  field format IO/mapping 
+ - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
  - [ ] json    field format IO/mapping
  - [ ] CBOR    field format IO/mapping
  - [ ] csv IO tokenization +- headers
