@@ -8,15 +8,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import kotlin.system.measureTimeMillis
 
 class DayJobTest : StringSpec() {
 
-    val suffix = "_100"//"_RD"  105340
+//    val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
 //val suffix = "_10000"     //"_RD"  139618738
 //    val suffix = "_100000"     //"_RD"
     //    val suffix = "_1000"//"_RD"
-//    val suffix = "_1000"//"_RD"
+    val suffix =  "_RD"
 //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
@@ -62,80 +63,7 @@ class DayJobTest : StringSpec() {
     val indexable = indexableOf(nioMMap, fixedWidth)
 
     init {
-/*        "resample" {
-            val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, co
-lumnar)
 
-            (cursorOf(fromFwf)).let { curs ->
-                System.err.println("record count=" + curs.first())
-                val scalars = curs.scalars
-                val pai2 = scalars α Scalar::pair
-                System.err.println("" + pai2.toList())
-                System.err.println("" + scalars[1].pair)
-                System.err.println("" + curs.toList().first().reify)
-                System.err.println("" + curs.toList().first().left)
-            }
-        }*/
-//        "pivot" {
-//
-//            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
-//            curs.let { curs ->
-//                System.err.println("record count=" + curs.first())
-//                val sc
-//                alars = curs.scalars
-//            }
-//            val pivot = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3))
-//
-//            System.err.println("" + pivot.scalars.size() + " columns ")
-//            System.err.println("" + pivot.scalars.mapfloatSum { scalar: Scalar -> scalar.second }.toList())
-//        }
-//        "reducer on [null]"{
-//
-//            val listOf:List<*> = listOf(null)
-//            val fill = 0f
-//            val reduced = listOf.reduceRight  { pfft, theList ->
-//                val retval = theList.let {
-//                    when (it) {
-//                        null, Float.NaN, Double.NaN -> fill
-//                        else -> (it as? Float)
-//                    }
-//                } ?: fill
-//                retval
-//            }
-//            listOf.fol
-//            reduced shouldBe 0f
-//        }
-        "pivot+group" {
-            logDebug { ("try out -XX:MaxDirectMemorySize=${((nioMMap.mf.randomAccessFile.length() * Runtime.getRuntime().availableProcessors())) / 1024 / 1024 + 100}m") }
-            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
-            curs.let { curs1 ->
-                System.err.println("record count=" + curs1.first())
-            }
-            val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(
-                (0)
-            )
-
-            logReuseCountdown = 2
-            System.err.println("" + piv.scalars.size + " columns ")
-            System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
-
-            System.err.println("--- insanity follows")
-            launch(Dispatchers.IO) {
-                ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList().map { span ->
-                    async {
-                        sequence {
-                            for (iy in span) {
-                                yield(
-                                    piv.second(iy).left.toList().map {
-                                        ((it as? Vect0r<*>)?.toList() ?: it).toString().length
-                                    }.sum()
-                                )
-                            }
-                        }.sum().toLong()
-                    }
-                }.awaitAll().sum().also { println("+++++ $it") }
-            }.join()
-        }
         "pivot+group+reduce" {
             val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs1 ->
@@ -147,10 +75,26 @@ lumnar)
                 intArrayOf(3)
             ).group(0)
             val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f))(floatSum))
+            lateinit var second:RowVec
+            println(
+                "row 47 seektime: "+
+                        measureTimeMillis {
+                    second                     = filtered.second(47)
+
+                }+" ms @ "+            second.size +" columns"
+
+
+            )
+            println("row 47 took "+ measureTimeMillis {
+
+                second.let {
+                            println("row 47 is:")
+                            println(stringOf(it))
+                        }
+                    }+"ms")
             filtered.toList().forEach {
                 println(stringOf(it))
             }
-            filtered.second(47).let { stringOf(it) }
         }
     }
 }
