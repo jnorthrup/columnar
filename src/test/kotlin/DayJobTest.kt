@@ -146,9 +146,7 @@ lumnar)
                 intArrayOf(1, 2),
                 intArrayOf(3)
             ).group(0)
-            val pai21 = piv[1 until piv.scalars.size]
-            val v = (pai21(floatSum) α floatFillNa(0f))
-            val filtered = join(piv[0], v)
+            val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f))(floatSum))
             filtered.toList().forEach {
                 println(stringOf(it))
             }

@@ -47,11 +47,16 @@ enum class IOMemento {
 
 val lofnull = listOf(null)
 
-fun floatFillNa(fill: Float): (Any?) -> Any? = { it: Any? ->
-    when (it) {
-        lofnull, Float.NaN, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, Double.NaN,Double.NEGATIVE_INFINITY,Double.POSITIVE_INFINITY,null -> fill
-        else -> it
+fun floatFillNa(fill: Float):(Any?) -> Any? {
+    lateinit var x:(Any?) -> Any?
+    @Suppress("UNCHECKED_CAST") val bound: (Any?) -> Any? = { testMe: Any? ->
+        (testMe as? Vect0r<*>)?.α(x)?:(testMe as? Iterable<*>)?.α(x)?:(testMe as? Array<*>)?.α(x)?:when (testMe) {
+            Float.NaN, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, null -> fill
+            else -> testMe
+        }
     }
+    x=bound
+    return bound
 }
 
 

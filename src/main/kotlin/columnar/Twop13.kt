@@ -16,7 +16,7 @@ a singular reference.  front end of Pai2 and Tripl3.  */
 interface Hand1l<F> {
     val first: F
     operator fun component1(): F = first
-    operator fun invoke(function: (RowVec) -> Unit) = this
+    operator fun invoke( ) =first
 
     companion object {
         operator fun <F> invoke(first: F) = object : Hand1l<F> {
@@ -26,7 +26,7 @@ interface Hand1l<F> {
 }
 
 /**inheritable version of pair that provides it's first compnent as a Un1t*/
-interface Pai2<F, S>/* : Hand1l<F>*/ {
+interface Pai2<   F,   S>/* : Hand1l<F>*/ {
     val first: F
     val second: S
     /**
