@@ -11,6 +11,7 @@ infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() 
 operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
 val Pair<Int, Int>.size: Int get() = let { (a, b) -> b - a }
 
+fun Int.toArray(): IntArray = intArrayOf(this)
 val bb2ba: (ByteBuffer) -> ByteArray = { bb: ByteBuffer -> ByteArray(bb.remaining()).also { bb[it] } }
 val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) }
 val trim: (String) -> String = String::trim

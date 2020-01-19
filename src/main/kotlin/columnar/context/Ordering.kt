@@ -16,8 +16,14 @@ import kotlin.coroutines.CoroutineContext
  */
 sealed class Ordering : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Ordering> get() = orderingKey
+    abstract fun driverMapping(
+        nioMMap: NioMMap,
+        drivers: Array<CellDriver<ByteBuffer, Any?>>,
+        coords: Vect0r<IntArray>
+    ): NioCursor
+
     companion object {
-        val orderingKey= object : CoroutineContext.Key<Ordering> {}
+        val orderingKey = object : CoroutineContext.Key<Ordering> {}
     }
 }
 
@@ -25,8 +31,8 @@ sealed class Ordering : CoroutineContext.Element {
  * [x++,y,z]
  * [x,y++,z]
  */
-class RowMajor : Ordering(){
-    companion object{
+class RowMajor : Ordering() {
+    companion object {
 
         //todo: move to rowMajor
         fun fixedWidthOf(
@@ -46,12 +52,13 @@ class RowMajor : Ordering(){
             nio: NioMMap,
             fixedWidth: FixedWidth,
             mappedByteBuffer: MappedByteBuffer = nio.mf.mappedByteBuffer.get()
-        ): Indexable = Indexable(size = (nio.mf.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
-            val lim = { b: ByteBuffer -> b.limit(fixedWidth.recordLen) }
-            val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
-            val sl = { b: ByteBuffer -> b.slice() }
-            mappedByteBuffer `⟲` (lim `⚬` sl `⚬` pos)
-        }
+        ): Indexable =
+            Indexable(size = (nio.mf.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
+                val lim = { b: ByteBuffer -> b.limit(fixedWidth.recordLen) }
+                val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
+                val sl = { b: ByteBuffer -> b.slice() }
+                mappedByteBuffer `⟲` (lim `⚬` sl `⚬` pos)
+            }
 
 //todo: move to rowMajor
 
@@ -60,41 +67,63 @@ class RowMajor : Ordering(){
                 cnar.second!![(rootContext[Ordering.orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
             }
         }
-
-
-        //todo: move to rowMajor
-        /**
-         * this builds a context and launches a cursor in the given NioMMap frame of reference
-         */
-        fun fromFwf(
-            ordering: Ordering,
-            fixedWidth: FixedWidth,
-            indexable: Indexable,
-            nio: NioMMap,
-            columnarArity: Columnar
-        ): TableRoot = runBlocking(
-            ordering +
-                    fixedWidth +
-                    indexable +
-                    nio +
-                    columnarArity
-        ) { Pai2(nio.values(), this.coroutineContext) }
     }
-}
 
+    //todo: move to rowMajor
+    /**
+     * this builds a context and launches a cursor in the given NioMMap frame of reference
+     */
+    fun fromFwf(
+        fixedWidth: FixedWidth,
+        indexable: Indexable,
+        nio: NioMMap,
+        columnarArity: Columnar
+    ): TableRoot = runBlocking(
+        this +
+                fixedWidth +
+                indexable +
+                nio +
+                columnarArity
+    ) { Pai2(nio.values(), this.coroutineContext) }
+
+    override fun driverMapping(
+        nioMMap: NioMMap,
+        drivers: Array<CellDriver<ByteBuffer, Any?>>,
+        coords: Vect0r<IntArray>
+    ): NioCursor =
+        (nioMMap.contextDriver)().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>) ->
+            NioCursor(intArrayOf(drivers.size, row.size)) { (x: Int, y: Int): IntArray ->
+                nioMMap.mappedDriver(row, y, col, x, coords)
+            } as NioCursor
+        }
+}
 
 /**
  * [x,y++]
  * [x++,y]
  */
-class ColumnMajor : Ordering()
+class ColumnMajor : Ordering() {
+    override fun driverMapping(
+        nioMMap: NioMMap,
+        drivers: Array<CellDriver<ByteBuffer, Any?>>,
+        coords: Vect0r<IntArray>
+    ) =
+        nioMMap.contextDriver().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
+
+            NioCursor(
+                intArrayOf(row.size, drivers.size)
+            ) { (y: Int, x: Int): IntArray ->
+                nioMMap.mappedDriver(row, y, col, x, coords)
+            } as NioCursor
+        }
+}
 
 /**
  * {x,y,z}+-(1|n|n^?)]
  */
-class Hilbert : Ordering()
+abstract class Hilbert : Ordering()
 
 /**for seh
  * Associative||Abstract, Variadic,
  */
-class RTree : Ordering()
+abstract class RTree : Ordering()

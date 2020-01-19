@@ -4,8 +4,7 @@ import columnar.*
 import columnar.IOMemento.*
 import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
-import columnar.context.RowMajor.Companion.fromFwf
-import columnar.context.RowMajor.Companion.indexableOf
+ import columnar.context.RowMajor.Companion.indexableOf
 import io.kotlintest.specs.StringSpec
 import java.io.File
 import java.nio.ByteBuffer
@@ -34,7 +33,7 @@ class NinetyDegreeTest : StringSpec() {
     val fixedWidth = fixedWidthOf(nio, coords)
     val indexable = indexableOf(nio, fixedWidth)
     val columnarArity = Columnar(drivers, names)
-    val root = fromFwf(readOrdering, fixedWidth, indexable, nio, columnarArity)
+    val root = RowMajor().fromFwf(fixedWidth, indexable, nio, columnarArity)
 
     init {
 
@@ -56,4 +55,3 @@ class NinetyDegreeTest : StringSpec() {
     }
 }
 
-fun Int.toArray(): IntArray = intArrayOf(this)

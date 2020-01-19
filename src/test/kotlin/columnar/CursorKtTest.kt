@@ -5,7 +5,6 @@ import columnar.context.Columnar
 import columnar.context.NioMMap
 import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
-import columnar.context.RowMajor.Companion.fromFwf
 import columnar.context.RowMajor.Companion.indexableOf
 import io.kotlintest.*
 import io.kotlintest.specs.*
@@ -30,7 +29,7 @@ class CursorKtTest : StringSpec() {
     val nio = NioMMap(mf)
     val fixedWidth: FixedWidth
         get() = fixedWidthOf(nio = nio, coords = coords)
-    val root = fromFwf(RowMajor(), fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
+    val root = RowMajor().fromFwf(fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
 
     init {
         "div"{

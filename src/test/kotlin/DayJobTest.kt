@@ -2,22 +2,24 @@ package id.rejuve
 
 import columnar.*
 import columnar.IOMemento.*
-import columnar.context.*
+import columnar.context.Columnar
+import columnar.context.FixedWidth
+import columnar.context.NioMMap
+import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
-import columnar.context.RowMajor.Companion.fromFwf
 import columnar.context.RowMajor.Companion.indexableOf
 import io.kotlintest.specs.StringSpec
 import kotlin.system.measureTimeMillis
 
 class DayJobTest : StringSpec() {
 
-//    val suffix = "_100"//"_RD"  105340
+    //    val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
 //val suffix = "_10000"     //"_RD"  139618738
 //    val suffix = "_100000"     //"_RD"
     //    val suffix = "_1000"//"_RD"
-    val suffix =  "_RD"
-//    val suffix = "_1000"//"_RD"
+    val suffix = "_RD"
+    //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
@@ -63,7 +65,7 @@ class DayJobTest : StringSpec() {
     init {
 
         "pivot+group+reduce" {
-            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
+            val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar))
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
@@ -73,23 +75,23 @@ class DayJobTest : StringSpec() {
                 intArrayOf(3)
             ).group(0)
             val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f)).`∑`(floatSum))
-            lateinit var second:RowVec
+            lateinit var second: RowVec
             println(
-                "row 47 seektime: "+
+                "row 47 seektime: " +
                         measureTimeMillis {
-                    second                     = filtered.second(47)
+                            second = filtered.second(47)
 
-                }+" ms @ "+            second.size +" columns"
+                        } + " ms @ " + second.size + " columns"
 
 
             )
-            println("row 47 took "+ measureTimeMillis {
+            println("row 47 took " + measureTimeMillis {
 
                 second.let {
-                            println("row 47 is:")
-                            println(stringOf(it))
-                        }
-                    }+"ms")
+                    println("row 47 is:")
+                    println(stringOf(it))
+                }
+            } + "ms")
             filtered.toList().forEach {
                 println(stringOf(it))
             }
