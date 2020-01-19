@@ -25,12 +25,13 @@ dependencies {
 compileKotlin {
     kotlinOptions.jvmTarget = "11"
     kotlinOptions {
-        freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xnew-inference"]
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xnew-inference" , "-XXLanguage:+NewInference","-Xuse-experimental=kotlin.Experimental"  ]
+
     }
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "11"
     kotlinOptions {
-        freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xnew-inference"]
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses", "-Xnew-inference" , "-XXLanguage:+NewInference", "-Xuse-experimental=kotlin.Experimental"  ]
     }
 }

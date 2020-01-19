@@ -166,9 +166,9 @@ fun Cursor.pivot(
 
 
 /**
- * reducer func
+ * reducer func -- operator for sum/avg/mean etc. would be nice, but we have to play nice in a type-safe language so  ∑'s just a hint  of a reducer semantic
  */
-operator fun Cursor.invoke(reducer: (Any?, Any?) -> Any?): Cursor =
+fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor =
 
     Cursor(first) { iy: Int ->
         val aggcell: RowVec = second(iy)

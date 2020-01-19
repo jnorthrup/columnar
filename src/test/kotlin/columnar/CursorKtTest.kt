@@ -4,6 +4,9 @@ import columnar.IOMemento.*
 import columnar.context.Columnar
 import columnar.context.NioMMap
 import columnar.context.*
+import columnar.context.RowMajor.Companion.fixedWidthOf
+import columnar.context.RowMajor.Companion.fromFwf
+import columnar.context.RowMajor.Companion.indexableOf
 import io.kotlintest.*
 import io.kotlintest.specs.*
 
@@ -22,22 +25,17 @@ class CursorKtTest : StringSpec() {
         IoFloat,
         IoFloat
     )
+    val names = vect0rOf("date", "channel", "delivered", "ret")
+    val mf = MappedFile("src/test/resources/caven4.fwf")
+    val nio = NioMMap(mf)
+    val fixedWidth: FixedWidth
+        get() = fixedWidthOf(nio = nio, coords = coords)
+    val root = fromFwf(RowMajor(), fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
 
     init {
-        val names = vect0rOf("date", "channel", "delivered", "ret")
-        val mf = MappedFile("src/test/resources/caven4.fwf")
-        val nio = NioMMap(mf)
-        val fixedWidth = fixedWidthOf(nio, coords)
-        val root = fromFwf(RowMajor(), fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
         "div"{
             val pai21 = (0..2800000) / Runtime.getRuntime().availableProcessors()
             System.err.println(pai21.toList().toString())
-
-        }
-        "sum" {
-            val cursor: Cursor = cursorOf(root)
-            println(cursor.narrow().toList())
-            val piv = cursor.group(                     (0))
 
         }
         "resample" {
@@ -118,7 +116,6 @@ class CursorKtTest : StringSpec() {
                     }}"
                 }.toList())
             }
-
         }
         "pivot+group" {
             System.err.println("pivot+group ")
@@ -142,7 +139,7 @@ class CursorKtTest : StringSpec() {
                 intArrayOf(0),
                 intArrayOf(1),
                 intArrayOf(2, 3)
-            ).group( (0))(sumReducer[IoFloat]!!)
+            ).group((0)).`∑`(sumReducer[IoFloat]!!)
 
             piv.forEach {
                 println(it.map {
@@ -176,7 +173,8 @@ class CursorKtTest : StringSpec() {
 
 
             println("---")
-            val join: Cursor = join(grp[0, 1], grp[2, 3](floatSum))
+            val pai2 = grp[2, 3]
+            val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
             join.forEach {
                 println(it.map {
                     "${it.component1().let {

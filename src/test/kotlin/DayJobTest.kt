@@ -3,11 +3,10 @@ package id.rejuve
 import columnar.*
 import columnar.IOMemento.*
 import columnar.context.*
+import columnar.context.RowMajor.Companion.fixedWidthOf
+import columnar.context.RowMajor.Companion.fromFwf
+import columnar.context.RowMajor.Companion.indexableOf
 import io.kotlintest.specs.StringSpec
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
 import kotlin.system.measureTimeMillis
 
 class DayJobTest : StringSpec() {
@@ -55,7 +54,6 @@ class DayJobTest : StringSpec() {
         "TransMode"    //       7
     )
 
-
     val zip = names.zip(drivers)
     val columnar = Columnar.of(zip)
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
@@ -69,12 +67,12 @@ class DayJobTest : StringSpec() {
             curs.let { curs1 ->
                 System.err.println("record count=" + curs1.first())
             }
-            val piv: Cursor = curs[2, 1, 3, 5].resample(0)(floatSum).pivot(
+            val piv: Cursor = curs[2, 1, 3, 5].resample(0).`∑`(floatSum).pivot(
                 intArrayOf(0),
                 intArrayOf(1, 2),
                 intArrayOf(3)
             ).group(0)
-            val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f))(floatSum))
+            val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f)).`∑`(floatSum))
             lateinit var second:RowVec
             println(
                 "row 47 seektime: "+
