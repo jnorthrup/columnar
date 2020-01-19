@@ -27,8 +27,7 @@ sealed class Medium : CoroutineContext.Element {
     abstract val recordLen: () -> Int
 
     companion object {
-        val mediumKey = object :
-            CoroutineContext.Key<Medium> {}
+        val mediumKey = object :  CoroutineContext.Key<Medium> {}
     }
 
 
@@ -63,14 +62,16 @@ class NioMMap(
             is TokenizedRow -> TODO()
         }
 
-        this.contextDriver =
-            fun(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
-                medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
-                    Vect0r(drivers.size.`⟲`) { x: Int ->
-                        (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
-                    }
+        (fun(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
+            medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
+                Vect0r(drivers.size.`⟲`) { x: Int ->
+                    (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
                 }
-          (ordering).driverMapping(this , drivers, coords)  as NioCursor
+            })().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>) ->
+            NioCursor(intArrayOf(drivers.size, row.size)) { (x: Int, y: Int): IntArray ->
+                this.mappedDriver(row, y, col, x, coords)
+            } as NioCursor
+        } as NioCursor
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -121,7 +122,6 @@ class NioMMap(
         }
     }
 
-    lateinit var contextDriver: () -> Pai2<Pai2<() -> Int, (Int) -> Pai2<ByteBuffer, Pai2<Long, Long>>>, (ByteBuffer) -> Pai2<() -> Int, (Int) -> Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>>
     /**
      * seek to record offset
      */

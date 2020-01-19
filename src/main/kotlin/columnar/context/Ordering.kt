@@ -16,11 +16,6 @@ import kotlin.coroutines.CoroutineContext
  */
 sealed class Ordering : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Ordering> get() = orderingKey
-    abstract fun driverMapping(
-        nioMMap: NioMMap,
-        drivers: Array<CellDriver<ByteBuffer, Any?>>,
-        coords: Vect0r<IntArray>
-    ): NioCursor
 
     companion object {
         val orderingKey = object : CoroutineContext.Key<Ordering> {}
@@ -86,38 +81,14 @@ class RowMajor : Ordering() {
                 columnarArity
     ) { Pai2(nio.values(), this.coroutineContext) }
 
-    override fun driverMapping(
-        nioMMap: NioMMap,
-        drivers: Array<CellDriver<ByteBuffer, Any?>>,
-        coords: Vect0r<IntArray>
-    ): NioCursor =
-        (nioMMap.contextDriver)().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>) ->
-            NioCursor(intArrayOf(drivers.size, row.size)) { (x: Int, y: Int): IntArray ->
-                nioMMap.mappedDriver(row, y, col, x, coords)
-            } as NioCursor
-        }
+
 }
 
 /**
  * [x,y++]
  * [x++,y]
  */
-class ColumnMajor : Ordering() {
-    override fun driverMapping(
-        nioMMap: NioMMap,
-        drivers: Array<CellDriver<ByteBuffer, Any?>>,
-        coords: Vect0r<IntArray>
-    ) =
-        nioMMap.contextDriver().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
-
-            NioCursor(
-                intArrayOf(row.size, drivers.size)
-            ) { (y: Int, x: Int): IntArray ->
-                nioMMap.mappedDriver(row, y, col, x, coords)
-            } as NioCursor
-        }
-}
-
+abstract class ColumnMajor : Ordering()
 /**
  * {x,y,z}+-(1|n|n^?)]
  */

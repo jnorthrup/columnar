@@ -49,7 +49,7 @@ class NinetyDegreeTest : StringSpec() {
             val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
                 Fixed.mapped[columnar.first] as Array<CellDriver<ByteBuffer, Any?>>
             val wnio = NioMMap(mappedFile, drivers1)
-            val writeOrdering = ColumnMajor()
+//            val writeOrdering = ColumnMajor()
 
         }
     }
