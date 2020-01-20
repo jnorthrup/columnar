@@ -81,7 +81,7 @@ class DayJobTest : StringSpec() {
                 intArrayOf(0),
                 intArrayOf(1, 2),
                 intArrayOf(3)
-            ).group(0)
+            ).group(intArrayOf( 0) )
             val filtered = join(piv[0], (piv[1 until piv.scalars.size] /*α floatFillNa(0f)*/).`∑`(floatSum))
 
             lateinit var second: RowVec
@@ -112,7 +112,7 @@ class DayJobTest : StringSpec() {
                 intArrayOf(0),
                 intArrayOf(1, 2),
                 intArrayOf(3)
-            ).pgroup(intArrayOf(0), floatSum)
+            ). group(intArrayOf(0), floatSum)
             val filtered = piv
             lateinit var second: RowVec
             println(
