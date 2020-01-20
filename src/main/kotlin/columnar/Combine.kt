@@ -4,7 +4,7 @@ import kotlin.math.absoluteValue
 
 
 @JvmName("combine_Vect0r")
-inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
+  fun <  T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
     val (size, order) = vargs.asIterable().foldIndexed(0 t2 IntArray(vargs.size)) { vix, (acc, avec), vec ->
         val size = acc.plus(vec.size)
         avec[vix] = size
@@ -13,8 +13,6 @@ inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
 
     return Vect0r(size.`⟲`) { ix: Int ->
         val slot = (1 + order.binarySearch(ix)).absoluteValue
-
-
         vargs[slot].second(
             if (0 == slot)
                 ix % order[slot]

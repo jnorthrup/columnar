@@ -9,19 +9,17 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
-import io.kotlintest.matchers.reflection.beLateInit
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import kotlin.system.measureTimeMillis
 
 class DayJobTest : StringSpec() {
 
-        val suffix = "_100"//"_RD"  105340
+//        val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
     //    val suffix = "_10000"     //"_RD"  139618738
     //    val suffix = "_100000"     //"_RD"
-//    val suffix = "_1000000"     //"_RD"
-    //    val suffix = "_500000"     //"_RD"
+//      val suffix = "_1000000"     //"_RD"
+        val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
@@ -75,6 +73,32 @@ class DayJobTest : StringSpec() {
 
     init {
           var lastmessage:String?=null
+        "pivot+pgroup+reduce" {
+            val resample = curs[2, 1, 3, 5].resample(0)
+            val pivot = resample.pivot(
+                intArrayOf(0),
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            )
+            val filtered = pivot. group(intArrayOf(0), floatSum)
+            lateinit var second: RowVec
+            println(
+                "row 2 seektime: " +
+                        measureTimeMillis {
+                            second = filtered.second(2)
+                        } + " ms @ " + second.size + " columns"
+            )
+            lateinit var message: String
+            println("row 2 took " + measureTimeMillis {
+                second.let {
+                    println("row 2 is:")
+                    message = stringOf(it)
+                }
+            } + "ms")
+            println(message)
+//            lastmessage?.shouldBe(  message )
+//            lastmessage=message
+        }
 
         "pivot+group+reduce" {
             val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
@@ -102,35 +126,10 @@ class DayJobTest : StringSpec() {
                 }
             } + "ms")
             println(message)
-            lastmessage?.shouldBe(message)
-            lastmessage=message
+//            lastmessage?.shouldBe(message)
+//            lastmessage=message
 
 
-        }
-        "pivot+pgroup+reduce" {
-            val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
-                intArrayOf(0),
-                intArrayOf(1, 2),
-                intArrayOf(3)
-            ). group(intArrayOf(0), floatSum)
-            val filtered = piv
-            lateinit var second: RowVec
-            println(
-                "row 2 seektime: " +
-                        measureTimeMillis {
-                            second = filtered.second(2)
-                        } + " ms @ " + second.size + " columns"
-            )
-            lateinit var message: String
-            println("row 2 took " + measureTimeMillis {
-                second.let {
-                    println("row 2 is:")
-                    message = stringOf(it)
-                }
-            } + "ms")
-            println(message)
-            lastmessage?.shouldBe(  message )
-            lastmessage=message
         }
     }
 }

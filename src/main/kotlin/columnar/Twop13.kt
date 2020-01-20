@@ -40,8 +40,8 @@ interface Pai2<F, S>/* : Hand1l<F>*/ {
     companion object {
         operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
             object : Pai2<F, S> {
-                inline override val first get() = first
-                inline override val second get() = second
+                 override val first get() = first
+                 override val second get() = second
             }
 
         operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P) =
@@ -68,9 +68,9 @@ interface Tripl3<F, S, T>/* : Pai2<F, S> */ {
     companion object {
         operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
             object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
-                inline override val first get() = first
-                inline override val second get() = second
-                inline override val third get() = third
+                 override val first get() = first
+                 override val second get() = second
+                 override val third get() = third
             }
 
         operator fun <F, S, T> invoke(p: Triple<F, S, T>) =
@@ -95,7 +95,7 @@ typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
  */
 typealias Tw1n<X> = XY<X, X>
 
-inline infix fun <reified X, reified Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
+  infix fun < X,  Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
     (first t2 u.first) as P
 
 infix fun <X, Y, Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(
@@ -105,12 +105,12 @@ infix fun <X, Y, Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft
 infix fun <X, Y, Z, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(t: T) =
     Qu4d(first, t.first, t.second, t.third)
 
-inline infix fun <reified F, reified S> F.t2(s: S) = Pai2(this, s)
-inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
-inline infix fun <reified F, reified S, reified T, reified P : Pair<F, S>> P.t3(t: T) =
+  infix fun < F,  S> F.t2(s: S) = Pai2(this, s)
+  infix fun < F,  S,  T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
+  infix fun < F,  S,  T,  P : Pair<F, S>> P.t3(t: T) =
     let { (a, b) -> Tripl3(a, b, t) }
 
-inline infix fun <reified A, reified B, reified C, reified D> Tripl3<A, B, C>.t4(d: D) =
+  infix fun < A,  B,  C,  D> Tripl3<A, B, C>.t4(d: D) =
     let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
 
 
@@ -139,10 +139,10 @@ interface Qu4d<F, S, T, Z>/* : Tripl3<F, S, T>*/ {
     companion object {
         operator fun <F, S, T, Z> invoke(first: F, second: S, third: T, fourth: Z): Qu4d<F, S, T, Z> =
             object : Qu4d<F, S, T, Z>/*, Tripl3<F, S, T> by Tripl3(f, s, t)*/ {
-                inline override val first: F get() = first
-                inline override val second: S get() = second
-                inline override val third: T get() = third
-                inline override val fourth: Z get() = fourth
+            override val first: F get() = first
+            override val second: S get() = second
+            override val third: T get() = third
+            override val fourth: Z get() = fourth
             }
 
         operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) = p.let { (f, s, t, z) ->
