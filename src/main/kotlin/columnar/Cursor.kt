@@ -205,15 +205,18 @@ fun Cursor.group(
     val masterScalars = cursr.scalars
     val indices = 0 until masterScalars.size
     Cursor(clusters.first) { cy: Int ->
-        clusters[cy].let { clusterIndices ->
-            RowVec(indices.endInclusive.`⟲`) { ix: Int ->
-                when (ix) {
-                    in axis -> cursr.second(clusterIndices.first())[ix]
-                    else -> {
-                        fun accessor(clusterOrdinal: Int) = cursr.second(clusterIndices[clusterOrdinal])[ix].first
-                        Vect0r(clusterIndices.size.`⟲`, ::accessor) t2 masterScalars[ix].`⟲`
-                    }
+        val clusterIndices = clusters[cy]
+        val keyRowVec: RowVec = cursr.second(clusterIndices.first())
+
+        RowVec(indices.endInclusive.`⟲`) { ix: Int ->
+            when (ix) {
+                in axis -> {
+                    keyRowVec[ix]
                 }
+                else -> Vect0r(clusterIndices.size.`⟲`, fun(clusterOrdinal: Int): Any? {
+                    val iy = clusterIndices[clusterOrdinal]
+                    return cursr.second(iy)[ix].first
+                }) t2 masterScalars[ix].`⟲`
             }
         }
     }
@@ -228,11 +231,11 @@ fun Cursor.pgroup(
     val clusters = groupClusters(cursr, axis)
     val masterScalars = cursr.scalars
     Cursor(clusters.first) { cy: Int ->
-        val keyRowVec: RowVec = cursr.second(cy)//first cluster index is itself
+        val cluster = clusters[cy]
+        val keyRowVec: RowVec = cursr.second(cluster.first())//first cluster index is itself
         val acc = arrayOfNulls<Any?>(masterScalars.size)
         val valueIndices = acc.indices - axis.toTypedArray()
 
-        val cluster = clusters[cy]
         for (i in cluster) {
             val value: RowVec = cursr.second(i)
             for (valueIndex in valueIndices)

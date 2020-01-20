@@ -8,14 +8,16 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
+import io.kotlintest.matchers.reflection.beLateInit
+import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 import kotlin.system.measureTimeMillis
 
 class DayJobTest : StringSpec() {
 
     //    val suffix = "_100"//"_RD"  105340
-    val suffix = "_1000"//"_RD"  3392440
-    //val suffix = "_10000"     //"_RD"  139618738
+//    val suffix = "_1000"//"_RD"  3392440
+    val suffix = "_10000"     //"_RD"  139618738
 //    val suffix = "_100000"     //"_RD"
 //    val suffix = "_500000"     //"_RD"
 //    val suffix = "_300000"     //"_RD"
@@ -70,6 +72,7 @@ class DayJobTest : StringSpec() {
     }
 
     init {
+          var lastmessage:String?=null
 
         "pivot+group+reduce" {
             val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
@@ -89,15 +92,20 @@ class DayJobTest : StringSpec() {
 
 
             )
+          lateinit  var message: String
             println("row 2 took " + measureTimeMillis {
                 second.let {
                     println("row 2 is:")
-                    println(stringOf(it))
+                    message = stringOf(it)
                 }
             } + "ms")
+            println(message)
+            lastmessage?.shouldBe(message)
+            lastmessage=message
 
 
         }
+
         "pivot+pgroup+reduce" {
             val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
                 intArrayOf(0),
@@ -115,13 +123,18 @@ class DayJobTest : StringSpec() {
 
 
             )
+            lateinit var message: String
             println("row 2 took " + measureTimeMillis {
                 second.let {
                     println("row 2 is:")
-                    println(stringOf(it))
+                    message = stringOf(it)
                 }
             } + "ms")
+            println(message)
 
+            lastmessage?.shouldBe(message)
+
+            lastmessage=message
 
         }
     }
