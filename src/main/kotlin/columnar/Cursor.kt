@@ -68,13 +68,8 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
 fun Cursor.resample(indexcol: Int) = let {
     val curs = this[indexcol]
     val indexValues = curs.narrow().map { it: List<Any?> -> it.first() as LocalDate }.toSequence()
-
-
     val (min, max) = feature_range(indexValues)
-
     val scalars = this.scalars
-
-
     val sequence = daySeq(min, max) - indexValues
     val indexVec = sequence.toVect0r()
     val cursor: Cursor = Cursor(indexVec.first) { iy: Int ->
@@ -89,7 +84,7 @@ fun Cursor.resample(indexcol: Int) = let {
     combine(this, cursor)
 }
 
-inline fun feature_range(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDate.MIN) { (a, b), localDate ->
+  fun feature_range(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDate.MIN) { (a, b), localDate ->
     minOf(a, localDate) t2 maxOf(b, localDate)
 }
 
@@ -203,16 +198,13 @@ fun Cursor.group(
 ): Cursor = let { cursr ->
     val clusters = groupClusters(cursr, axis)
     val masterScalars = cursr.scalars
-    val indices = 0 until masterScalars.size
     Cursor(clusters.first) { cy: Int ->
         val clusterIndices = clusters[cy]
         val keyRowVec: RowVec = cursr.second(clusterIndices.first())
 
-        RowVec(indices.endInclusive.`⟲`) { ix: Int ->
+        RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
-                in axis -> {
-                    keyRowVec[ix]
-                }
+                in axis -> keyRowVec[ix]
                 else -> Vect0r(clusterIndices.size.`⟲`, fun(clusterOrdinal: Int): Any? {
                     val iy = clusterIndices[clusterOrdinal]
                     return cursr.second(iy)[ix].first
@@ -237,9 +229,13 @@ fun Cursor.pgroup(
         val valueIndices = acc.indices - axis.toTypedArray()
 
         for (i in cluster) {
-            val value: RowVec = cursr.second(i)
-            for (valueIndex in valueIndices)
-                acc[valueIndex] = reducer(acc[valueIndex], value[valueIndex])
+            val value  = cursr.second(i).left
+            for (valueIndex in valueIndices) {
+                val any = acc[valueIndex]
+                val pai2 = value[valueIndex]
+                val reduced = reducer(any, pai2)
+                acc[valueIndex] = reduced
+            }
         }
         RowVec(masterScalars.first) { ix: Int ->
             when (ix) {

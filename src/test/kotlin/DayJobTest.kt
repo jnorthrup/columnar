@@ -1,5 +1,6 @@
 package id.rejuve
 
+
 import columnar.*
 import columnar.IOMemento.*
 import columnar.context.Columnar
@@ -15,19 +16,20 @@ import kotlin.system.measureTimeMillis
 
 class DayJobTest : StringSpec() {
 
-    //    val suffix = "_100"//"_RD"  105340
-//    val suffix = "_1000"//"_RD"  3392440
-    val suffix = "_10000"     //"_RD"  139618738
-//    val suffix = "_100000"     //"_RD"
-//    val suffix = "_500000"     //"_RD"
-//    val suffix = "_300000"     //"_RD"
-//    val suffix = "_400000"     //"_RD"
+        val suffix = "_100"//"_RD"  105340
+    //    val suffix = "_1000"//"_RD"  3392440
+    //    val suffix = "_10000"     //"_RD"  139618738
+    //    val suffix = "_100000"     //"_RD"
 //    val suffix = "_1000000"     //"_RD"
+    //    val suffix = "_500000"     //"_RD"
+    //    val suffix = "_300000"     //"_RD"
+    //    val suffix = "_400000"     //"_RD"
+
     //    val suffix = "_1000"//"_RD"
-//    val suffix = "_RD"
+    //    val suffix = "_RD"
     //    val suffix = "_1000"//"_RD"
-//    val suffix = "_1000"//"_RD"
-//    val suffix = "_1000"//"_RD"
+    //    val suffix = "_1000"//"_RD"
+    //    val suffix = "_1000"//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = vZipWithNext(
         intArrayOf(
@@ -80,7 +82,7 @@ class DayJobTest : StringSpec() {
                 intArrayOf(1, 2),
                 intArrayOf(3)
             ).group(0)
-            val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f)).`∑`(floatSum))
+            val filtered = join(piv[0], (piv[1 until piv.scalars.size] /*α floatFillNa(0f)*/).`∑`(floatSum))
 
             lateinit var second: RowVec
             println(
@@ -105,7 +107,6 @@ class DayJobTest : StringSpec() {
 
 
         }
-
         "pivot+pgroup+reduce" {
             val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
                 intArrayOf(0),
@@ -113,15 +114,12 @@ class DayJobTest : StringSpec() {
                 intArrayOf(3)
             ).pgroup(intArrayOf(0), floatSum)
             val filtered = piv
-
             lateinit var second: RowVec
             println(
                 "row 2 seektime: " +
                         measureTimeMillis {
                             second = filtered.second(2)
                         } + " ms @ " + second.size + " columns"
-
-
             )
             lateinit var message: String
             println("row 2 took " + measureTimeMillis {
@@ -131,11 +129,8 @@ class DayJobTest : StringSpec() {
                 }
             } + "ms")
             println(message)
-
-            lastmessage?.shouldBe(message)
-
+            lastmessage?.shouldBe(  message )
             lastmessage=message
-
         }
     }
 }
