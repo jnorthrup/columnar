@@ -57,7 +57,6 @@ class CursorKtTest : StringSpec() {
                 resample.second(i).left.toList() shouldBe join.second(i).left.toList()
                 println(
                     resample.second(i).left.toList() to join.second(i).left.toList()
-
                 )
             }
 
