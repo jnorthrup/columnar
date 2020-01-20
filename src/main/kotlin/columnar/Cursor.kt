@@ -223,27 +223,33 @@ fun Cursor.pgroup(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-    vararg axis: Int, reducer: Function2<Any?, Any?, Any?>
-) = let { cursr ->
+    axis: IntArray, reducer: (Any?, Any?) -> Any?
+): Cursor = let { cursr ->
     val clusters = groupClusters(cursr, axis)
     val masterScalars = cursr.scalars
-    val indices = 0 until masterScalars.size
     Cursor(clusters.first) { cy: Int ->
+        val keyRowVec:RowVec = cursr.second(cy)//first cluster index is itself
         val acc = arrayOfNulls<Any?>(masterScalars.size)
         val valueIndices = acc.indices - axis.toTypedArray()
+
         val cluster = clusters[cy]
         for (i in cluster) {
             val value: RowVec = cursr.second(i)
-            for (valueIndex in valueIndices) acc[valueIndex] = reducer(acc[valueIndex], value[valueIndex])
+            for (valueIndex in valueIndices)
+                acc[valueIndex] = reducer(acc[valueIndex], value[valueIndex])
         }
-        RowVec(indices.endInclusive.`⟲`) { ix: Int ->
+        RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
-                in axis -> cursr.second(cy)[ix]
-                else -> acc[ix] t2 masterScalars[ix].`⟲`
-            }
+                in axis -> {
+                    val pai2 = keyRowVec[ix]
+                    pai2.first
+                }
+                else -> acc[ix]
+            } t2 masterScalars[ix].`⟲`
         }
     }
 }
+
 fun groupClusters(
     cursr: Cursor,
     axis: IntArray
@@ -253,11 +259,10 @@ fun groupClusters(
     val clusters: Map<List<Any?>, List<Int>> = linkedMapOf()
     cursr.mapIndexed { iy: Int, row: RowVec ->
         row[axis].left.toList().let { key ->
-            clusters.get(key)
-                .let { clust ->
-                    if (clust != null) (clust as MutableList).add(iy) else (clusters as MutableMap)[key] =
-                        mutableListOf(iy)
-                }
+            clusters.get(key).let { clust ->
+                if (clust != null) (clust as MutableList).add(iy) else (clusters as MutableMap)[key] =
+                    mutableListOf(iy)
+            }
         }
     }
     logDebug { "keys:${clusters.size to clusters.keys/*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }

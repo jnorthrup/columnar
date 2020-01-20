@@ -196,7 +196,7 @@ operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size.`
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
 inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
-        override val size: Int = v.size
+        override val size: Int = v.first()
         override operator fun get(index: Int) = v.second(index)
     }
 }
