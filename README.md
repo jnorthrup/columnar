@@ -13,7 +13,7 @@ this is purpose-built early implementations for large scale time series LSTM dat
   - [ ] One-hot Encodings 
   - [ ] min/max scaling (same premise as resampling above)
   - [ ] support Numerics, Linear Algebra libraries
-  - [ ] support for Calendar, Time and Units conversion libraries
+  - [X] support for (resampling) Calendar, Time and Units conversion libraries
   - [X] orthogonal offheap and indirect IO component taxonomy
   - [X] nearly 0-copy direct access
   - [X] nearly 0-heap direct access
