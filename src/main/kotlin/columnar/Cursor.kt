@@ -228,7 +228,7 @@ fun Cursor.pgroup(
     val clusters = groupClusters(cursr, axis)
     val masterScalars = cursr.scalars
     Cursor(clusters.first) { cy: Int ->
-        val keyRowVec:RowVec = cursr.second(cy)//first cluster index is itself
+        val keyRowVec: RowVec = cursr.second(cy)//first cluster index is itself
         val acc = arrayOfNulls<Any?>(masterScalars.size)
         val valueIndices = acc.indices - axis.toTypedArray()
 

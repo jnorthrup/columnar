@@ -27,7 +27,7 @@ sealed class Medium : CoroutineContext.Element {
     abstract val recordLen: () -> Int
 
     companion object {
-        val mediumKey = object :  CoroutineContext.Key<Medium> {}
+        val mediumKey = object : CoroutineContext.Key<Medium> {}
     }
 
 
@@ -193,7 +193,6 @@ class NioMMap(
         }
     }
 }
-
 
 
 /**

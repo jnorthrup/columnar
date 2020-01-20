@@ -14,8 +14,8 @@ import kotlin.system.measureTimeMillis
 class DayJobTest : StringSpec() {
 
     //    val suffix = "_100"//"_RD"  105340
-        val suffix = "_1000"//"_RD"  3392440
-//val suffix = "_10000"     //"_RD"  139618738
+    val suffix = "_1000"//"_RD"  3392440
+    //val suffix = "_10000"     //"_RD"  139618738
 //    val suffix = "_100000"     //"_RD"
 //    val suffix = "_500000"     //"_RD"
 //    val suffix = "_300000"     //"_RD"
@@ -65,13 +65,14 @@ class DayJobTest : StringSpec() {
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
-    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also{
+    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
         System.err.println("record count=" + it.first())
     }
-        init {
+
+    init {
 
         "pivot+group+reduce" {
-            val piv: Cursor = curs[2, 1, 3, 5].resample(0) .pivot(
+            val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
                 intArrayOf(0),
                 intArrayOf(1, 2),
                 intArrayOf(3)
@@ -96,14 +97,13 @@ class DayJobTest : StringSpec() {
             } + "ms")
 
 
-
         }
         "pivot+pgroup+reduce" {
-            val piv: Cursor = curs[2, 1, 3, 5].resample(0) .pivot(
+            val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
                 intArrayOf(0),
                 intArrayOf(1, 2),
                 intArrayOf(3)
-            ).pgroup(intArrayOf( 0),  floatSum)
+            ).pgroup(intArrayOf(0), floatSum)
             val filtered = piv
 
             lateinit var second: RowVec
@@ -121,7 +121,6 @@ class DayJobTest : StringSpec() {
                     println(stringOf(it))
                 }
             } + "ms")
-
 
 
         }

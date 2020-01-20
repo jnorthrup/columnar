@@ -4,7 +4,7 @@ import columnar.*
 import columnar.IOMemento.*
 import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
- import columnar.context.RowMajor.Companion.indexableOf
+import columnar.context.RowMajor.Companion.indexableOf
 import io.kotlintest.specs.StringSpec
 import java.io.File
 import java.nio.ByteBuffer

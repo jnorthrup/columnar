@@ -87,6 +87,7 @@ class RowMajor : Ordering() {
  * [x++,y]
  */
 abstract class ColumnMajor : Ordering()
+
 /**
  * {x,y,z}+-(1|n|n^?)]
  */

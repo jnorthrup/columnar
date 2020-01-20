@@ -34,28 +34,28 @@ val instantMapper = { s: String ->
     } ?: Instant.EPOCH
 }
 
-enum class IOMemento(networkSize: Int=-1) {
+enum class IOMemento(networkSize: Int = -1) {
     IoInt(4),
     IoLong(8),
     IoFloat(4),
     IoDouble(8),
-    IoString( ),
+    IoString(),
     IoLocalDate(8),
     IoInstant(8),
-    IoNothing( )
+    IoNothing()
 }
 
 val lofnull = listOf(null)
 
-fun floatFillNa(fill: Float):(Any?) -> Any? {
-    lateinit var x:(Any?) -> Any?
+fun floatFillNa(fill: Float): (Any?) -> Any? {
+    lateinit var x: (Any?) -> Any?
     @Suppress("UNCHECKED_CAST") val bound: (Any?) -> Any? = { testMe: Any? ->
-        (testMe as? Vect0r<*>)?.α(x)?:(testMe as? Iterable<*>)?.α(x)?:(testMe as? Array<*>)?.α(x)?:when (testMe) {
+        (testMe as? Vect0r<*>)?.α(x) ?: (testMe as? Iterable<*>)?.α(x) ?: (testMe as? Array<*>)?.α(x) ?: when (testMe) {
             Float.NaN, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, null -> fill
             else -> testMe
         }
     }
-    x=bound
+    x = bound
     return bound
 }
 
@@ -65,7 +65,6 @@ val floatSum: (Any?, Any?) -> Any? = { acc: Any?, any2: Any? ->
     val fl1 = (any2 as? Float) ?: 0.toFloat()
     fl + fl1
 }
-
 
 
 val sumReducer: Map<IOMemento, (Any?, Any?) -> Any?> = mapOf(

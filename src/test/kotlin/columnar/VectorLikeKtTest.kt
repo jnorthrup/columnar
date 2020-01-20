@@ -19,7 +19,7 @@ class VectorLikeKtTest : StringSpec() {
         "div"{
             val intRange = 0..11
             fun IntRange.split(nSubRanges: Int) = run {
-                val subSize = (last - first +(1- first)) / nSubRanges
+                val subSize = (last - first + (1 - first)) / nSubRanges
                 sequence {
                     for (i in this@split step subSize) {
                         yield(i..minOf(last, i + subSize - 1))

@@ -2,12 +2,13 @@ package columnar
 
 import columnar.IOMemento.*
 import columnar.context.Columnar
+import columnar.context.FixedWidth
 import columnar.context.NioMMap
-import columnar.context.*
+import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
-import io.kotlintest.*
-import io.kotlintest.specs.*
+import io.kotlintest.shouldBe
+import io.kotlintest.specs.StringSpec
 
 class CursorKtTest : StringSpec() {
     val coords = vZipWithNext(
@@ -40,7 +41,7 @@ class CursorKtTest : StringSpec() {
         "resample" {
             val cursor: Cursor = cursorOf(root)
             val narrow = cursor.narrow()
-            cursor.toList()[3][2].first                         shouldBe 820f
+            cursor.toList()[3][2].first shouldBe 820f
             System.err.println(narrow.toList())
             val toList = cursor.resample(0).narrow().toList()
             toList[3][2] shouldBe 820f
@@ -100,7 +101,7 @@ class CursorKtTest : StringSpec() {
 
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(  (0) )
+            val piv = cursor.group((0))
             cursor.forEach {
                 println(it.map {
                     "${it.component1().let {
@@ -120,7 +121,7 @@ class CursorKtTest : StringSpec() {
             System.err.println("pivot+group ")
             val cursor: Cursor = cursorOf(root)
             println("from:\n" + cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group( (0))
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group((0))
             println()
             piv.forEach {
                 println(it.map {
