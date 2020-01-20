@@ -189,44 +189,77 @@ fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor =
 inline infix fun Cursor.α(noinline unaryFunctor: (Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
         val aggcell: RowVec = second(iy)
-        (aggcell.left α unaryFunctor).zip( aggcell.right)
+        (aggcell.left α unaryFunctor).zip(aggcell.right)
     }
 
+/**
+ * laziest possible groupby
+ */
 fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-    vararg axis: Int,reducer: Function2<*,*,*>?=null
+    vararg axis: Int
 ): Cursor = let { cursr ->
-    System.err.println("--- group")
-
-    val clusters:  Map<List<Any?>, List<Int>> = linkedMapOf()
-    cursr.mapIndexed { iy: Int, row: RowVec ->
-        row[axis].left.toList().let { key ->
-            clusters.get(key)
-                .let { clust ->
-                    if (clust != null) (clust as MutableList).add(iy) else (clusters as MutableMap)[key] = mutableListOf(iy)
-                }
-        }
-    }
-    logDebug { "keys:${clusters.size to clusters.keys/*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
+    val clusters = groupClusters(cursr, axis)
     val masterScalars = cursr.scalars
-    val clusterVec = clusters.entries.toList()
     val indices = 0 until masterScalars.size
-    Cursor(clusterVec.size.`⟲`) { cy: Int ->
-        clusterVec[cy].let { (_, clusterIndices) ->
+    Cursor(clusters.first) { cy: Int ->
+        clusters[cy].let { clusterIndices ->
             RowVec(indices.endInclusive.`⟲`) { ix: Int ->
-
                 when (ix) {
-                    in axis -> {
-                        cursr.second(clusterIndices.first())[ix]
-                    }
+                    in axis -> cursr.second(clusterIndices.first())[ix]
                     else -> {
-                        fun accessor   (clusterOrdinal: Int )= cursr.second(clusterIndices[clusterOrdinal])[ix].first
-                         Vect0r(clusterIndices.size.`⟲`, ::accessor) t2   masterScalars[ix].`⟲`
+                        fun accessor(clusterOrdinal: Int) = cursr.second(clusterIndices[clusterOrdinal])[ix].first
+                        Vect0r(clusterIndices.size.`⟲`, ::accessor) t2 masterScalars[ix].`⟲`
                     }
                 }
             }
         }
     }
+}
+
+fun Cursor.pgroup(
+    /**these columns will be preserved as the cluster key.
+     * the remaining indexes will be aggregate
+     */
+    vararg axis: Int, reducer: Function2<Any?, Any?, Any?>
+) = let { cursr ->
+    val clusters = groupClusters(cursr, axis)
+    val masterScalars = cursr.scalars
+    val indices = 0 until masterScalars.size
+    Cursor(clusters.first) { cy: Int ->
+        val acc = arrayOfNulls<Any?>(masterScalars.size)
+        val valueIndices = acc.indices - axis.toTypedArray()
+        val cluster = clusters[cy]
+        for (i in cluster) {
+            val value: RowVec = cursr.second(i)
+            for (valueIndex in valueIndices) acc[valueIndex] = reducer(acc[valueIndex], value[valueIndex])
+        }
+        RowVec(indices.endInclusive.`⟲`) { ix: Int ->
+            when (ix) {
+                in axis -> cursr.second(cy)[ix]
+                else -> acc[ix] t2 masterScalars[ix].`⟲`
+            }
+        }
+    }
+}
+fun groupClusters(
+    cursr: Cursor,
+    axis: IntArray
+): Vect0r<List<Int>> {
+    System.err.println("--- group")
+
+    val clusters: Map<List<Any?>, List<Int>> = linkedMapOf()
+    cursr.mapIndexed { iy: Int, row: RowVec ->
+        row[axis].left.toList().let { key ->
+            clusters.get(key)
+                .let { clust ->
+                    if (clust != null) (clust as MutableList).add(iy) else (clusters as MutableMap)[key] =
+                        mutableListOf(iy)
+                }
+        }
+    }
+    logDebug { "keys:${clusters.size to clusters.keys/*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
+    return clusters.values.toVect0r()
 }
