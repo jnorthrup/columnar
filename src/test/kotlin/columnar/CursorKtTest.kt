@@ -2,8 +2,11 @@ package columnar
 
 import columnar.IOMemento.*
 import columnar.context.Columnar
+import columnar.context.FixedWidth
 import columnar.context.NioMMap
 import columnar.context.RowMajor
+import columnar.context.RowMajor.Companion.fixedWidthOf
+import columnar.context.RowMajor.Companion.indexableOf
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 
@@ -22,25 +25,48 @@ class CursorKtTest : StringSpec() {
         IoFloat,
         IoFloat
     )
+    val names = vect0rOf("date", "channel", "delivered", "ret")
+    val mf = MappedFile("src/test/resources/caven4.fwf")
+    val nio = NioMMap(mf)
+    val fixedWidth: FixedWidth
+        get() = fixedWidthOf(nio = nio, coords = coords)
+    val root = RowMajor().fromFwf(fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
 
     init {
-        val names = vect0rOf("date", "channel", "delivered", "ret")
-        val mf = MappedFile("src/test/resources/caven4.fwf")
-        val nio = NioMMap(mf)
-        val fixedWidth = fixedWidthOf(nio, coords)
-        val root = fromFwf(RowMajor(), fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
+        "div"{
+            val pai21 = (0..2800000) / Runtime.getRuntime().availableProcessors()
+            System.err.println(pai21.toList().toString())
+
+        }
         "resample" {
             val cursor: Cursor = cursorOf(root)
-            System.err.println(cursor.narrow().toList())
+            val narrow = cursor.narrow()
+            cursor.toList()[3][2].first shouldBe 820f
+            System.err.println(narrow.toList())
             val toList = cursor.resample(0).narrow().toList()
+            toList[3][2] shouldBe 820f
             toList.forEach { System.err.println(it) }
+        }
+        "resample+join" {
+            val cursor: Cursor = cursorOf(root)
+
+
+            val resample = cursor.resample(0)
+            val join = join(resample[0, 1], resample[2, 3])
+            for (i in 0 until resample.size) {
+                resample.second(i).left.toList() shouldBe join.second(i).left.toList()
+                println(
+                    resample.second(i).left.toList() to join.second(i).left.toList()
+
+                )
+            }
+
+
         }
 
         "whichKey"{
             val fanOut_size = 2
             val lhs_size = 2
-
-
             fun whichKey(ix: Int) = (ix - lhs_size) / fanOut_size
             whichKey(702) shouldBe 350
             whichKey(700) shouldBe 349
@@ -75,55 +101,90 @@ class CursorKtTest : StringSpec() {
 
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(sortedSetOf(0))/*.cursor*/
-           cursor.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+            val piv = cursor.group((0))
+            cursor.forEach {
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
             piv.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
-
         }
         "pivot+group" {
-             System.err.println( "pivot+group ")
+            System.err.println("pivot+group ")
             val cursor: Cursor = cursorOf(root)
-            println(cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(sortedSetOf(0) )/*.cursor*/
-
+            println("from:\n" + cursor.narrow().toList())
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group((0))
+            println()
             piv.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
-
         }
         "pivot+group+reduce" {
-            System.err.println( "pivot+group+reduce")
+            System.err.println("pivot+group+reduce")
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(sortedSetOf(0))(sumReducer[IoFloat]!! )
+            val piv = cursor.pivot(
+                intArrayOf(0),
+                intArrayOf(1),
+                intArrayOf(2, 3)
+            ).group((0)).`∑`(sumReducer[IoFloat]!!)
 
             piv.forEach {
-                println(it.map { "${it.component1().let { 
-                     (it as? Vect0r<*>)?.toList()?:it
-                }}"  }.toList()  )
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
             }
 
         }
-        "div"{
-            val pai21 = (0..2800000) / Runtime.getRuntime().availableProcessors()
-            System.err.println(pai21.toList().toString())
-
-        }
-        "sum" {
+        "resample+pivot+group+reduce+join" {
+            println("resample+group+reduce+join")
             val cursor: Cursor = cursorOf(root)
-            println(cursor.narrow().toList())
-            val piv = cursor.group(sortedSetOf(0))
+            val resample = cursor.resample(0)
+            resample.forEach {
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
+            }
+            println("---")
+            val grp = resample.group(1)
+            grp.forEach {
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
+            }
+
+
+            println("---")
+            val pai2 = grp[2, 3]
+            val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
+            join.forEach {
+                println(it.map {
+                    "${it.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }}"
+                }.toList())
+            }
 
         }
+
     }
 }
+

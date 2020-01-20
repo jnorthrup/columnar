@@ -2,22 +2,30 @@ package id.rejuve
 
 import columnar.*
 import columnar.IOMemento.*
-import columnar.context.*
+import columnar.context.Columnar
+import columnar.context.FixedWidth
+import columnar.context.NioMMap
+import columnar.context.RowMajor
+import columnar.context.RowMajor.Companion.fixedWidthOf
+import columnar.context.RowMajor.Companion.indexableOf
+import io.kotlintest.matchers.reflection.beLateInit
+import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
+import kotlin.system.measureTimeMillis
 
 class DayJobTest : StringSpec() {
 
-    val suffix = "_100"//"_RD"  105340
-    //    val suffix = "_1000"//"_RD"  3392440
-//val suffix = "_10000"     //"_RD"  139618738
+    //    val suffix = "_100"//"_RD"  105340
+//    val suffix = "_1000"//"_RD"  3392440
+    val suffix = "_10000"     //"_RD"  139618738
 //    val suffix = "_100000"     //"_RD"
+//    val suffix = "_500000"     //"_RD"
+//    val suffix = "_300000"     //"_RD"
+//    val suffix = "_400000"     //"_RD"
+//    val suffix = "_1000000"     //"_RD"
     //    val suffix = "_1000"//"_RD"
-//    val suffix = "_1000"//"_RD"
-//    val suffix = "_1000"//"_RD"
+//    val suffix = "_RD"
+    //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
@@ -54,104 +62,79 @@ class DayJobTest : StringSpec() {
         "TransMode"    //       7
     )
 
-
     val zip = names.zip(drivers)
     val columnar = Columnar.of(zip)
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
+    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
+        System.err.println("record count=" + it.first())
+    }
 
     init {
-/*        "resample" {
-            val fromFwf = fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, co
-lumnar)
+          var lastmessage:String?=null
 
-            (cursorOf(fromFwf)).let { curs ->
-                System.err.println("record count=" + curs.first())
-                val scalars = curs.scalars
-                val pai2 = scalars α Scalar::pair
-                System.err.println("" + pai2.toList())
-                System.err.println("" + scalars[1].pair)
-                System.err.println("" + curs.toList().first().reify)
-                System.err.println("" + curs.toList().first().left)
-            }
-        }*/
-//        "pivot" {
-//
-//            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
-//            curs.let { curs ->
-//                System.err.println("record count=" + curs.first())
-//                val sc
-//                alars = curs.scalars
-//            }
-//            val pivot = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3))
-//
-//            System.err.println("" + pivot.scalars.size() + " columns ")
-//            System.err.println("" + pivot.scalars.map { scalar: Scalar -> scalar.second }.toList())
-//        }
-        "pivot+group" {
-            logDebug { ("try out -XX:MaxDirectMemorySize=${((nioMMap.mf.randomAccessFile.length() * Runtime.getRuntime().availableProcessors())) / 1024 / 1024 + 100}m") }
-            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
-            curs.let { curs1 ->
-                System.err.println("record count=" + curs1.first())
-            }
-            val piv = curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(
-                sortedSetOf(0)
-            )
-
-            logReuseCountdown = 2
-            System.err.println("" + piv.scalars.size + " columns ")
-            System.err.println("" + piv.scalars.map { scalar: Scalar -> scalar.second }.toList())
-
-            //todo: install bytebuffer as threadlocal
-            System.err.println("--- insanity follows")
-            launch(Dispatchers.IO) {
-
-                ((0..piv.size) / Runtime.getRuntime().availableProcessors()).toList().also {
-                    System.err.println("using " + it)
-
-                    System.err.println("expecting " + it.map {
-                        it.first * fixedWidth.recordLen
-                    })
-                }.map { span ->
-                    async {
-                        sequence {
-                            for (iy in span) {
-                                yield(
-                                    piv.second(iy).left.toList().map {
-                                        ((it as? Vect0r<*>)?.toList() ?: it).toString().length
-                                    }.sum()
-                                )
-                            }
-                        }.sum().toLong()
-                    }
-                }.awaitAll().sum().also { println("+++++ $it") }
-            }.join()
-        }
         "pivot+group+reduce" {
-            val curs = cursorOf(fromFwf(RowMajor(), fixedWidth, indexable, nioMMap, columnar))
-            curs.let { curs1 ->
-                System.err.println("record count=" + curs1.first())
-            }
-            val piv =
-                curs[2, 1, 3, 5].resample(0).pivot(intArrayOf(0), intArrayOf(1, 2), intArrayOf(3)).group(sortedSetOf(0))
-            logReuseCountdown = 2
+            val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
+                intArrayOf(0),
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            ).group(0)
+            val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f)).`∑`(floatSum))
 
-            //todo: install bytebuffer as threadlocal
-            System.err.println("--- insanity follows")
+            lateinit var second: RowVec
+            println(
+                "row 2 seektime: " +
+                        measureTimeMillis {
+                            second = filtered.second(2)
 
-            val scalars = piv.scalars
-            val res = join(piv[0], piv[1 until scalars.size](floatSum))
-
-
-            for (i in 0 until res.size)
-            {
-                val second:RowVec = res.second(i)
-                val left = second.left
-                System.err.println(""+left.toList())
-            }
+                        } + " ms @ " + second.size + " columns"
 
 
+            )
+          lateinit  var message: String
+            println("row 2 took " + measureTimeMillis {
+                second.let {
+                    println("row 2 is:")
+                    message = stringOf(it)
+                }
+            } + "ms")
+            println(message)
+            lastmessage?.shouldBe(message)
+            lastmessage=message
+
+
+        }
+
+        "pivot+pgroup+reduce" {
+            val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
+                intArrayOf(0),
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            ).pgroup(intArrayOf(0), floatSum)
+            val filtered = piv
+
+            lateinit var second: RowVec
+            println(
+                "row 2 seektime: " +
+                        measureTimeMillis {
+                            second = filtered.second(2)
+                        } + " ms @ " + second.size + " columns"
+
+
+            )
+            lateinit var message: String
+            println("row 2 took " + measureTimeMillis {
+                second.let {
+                    println("row 2 is:")
+                    message = stringOf(it)
+                }
+            } + "ms")
+            println(message)
+
+            lastmessage?.shouldBe(message)
+
+            lastmessage=message
 
         }
     }

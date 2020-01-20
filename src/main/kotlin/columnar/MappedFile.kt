@@ -23,5 +23,11 @@ open class MappedFile(
     ),
     val channel: FileChannel = randomAccessFile.channel,
     val length: Long = randomAccessFile.length(),
-    val mappedByteBuffer:ThreadLocal< MappedByteBuffer> = ThreadLocal.withInitial { channel.map(mapMode, 0, min(Int.MAX_VALUE.toLong(), length)) }
+    val mappedByteBuffer: ThreadLocal<MappedByteBuffer> = ThreadLocal.withInitial {
+        channel.map(
+            mapMode,
+            0,
+            min(Int.MAX_VALUE.toLong(), length)
+        )
+    }
 ) : FileAccess(filename), Closeable by randomAccessFile

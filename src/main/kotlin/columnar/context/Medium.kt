@@ -27,8 +27,7 @@ sealed class Medium : CoroutineContext.Element {
     abstract val recordLen: () -> Int
 
     companion object {
-        val mediumKey = object :
-            CoroutineContext.Key<Medium> {}
+        val mediumKey = object : CoroutineContext.Key<Medium> {}
     }
 
 
@@ -52,50 +51,31 @@ class NioMMap(
     val state: ThreadLocal<NioCursorState> = ThreadLocal.withInitial { canary }
 ) : Medium() {
     @Suppress("UNCHECKED_CAST")
-    suspend fun values(): NioCursor = let {
-        val medium = this
+    suspend fun values(): NioCursor = let { medium ->
         val ordering = coroutineContext[Ordering.orderingKey]!!
         val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-        medium.let {
-            val drivers = medium.drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
-            val coords = when (recordBoundary) {
-                is FixedWidth -> recordBoundary.coords
-                is TokenizedRow -> TODO()
-            }
+        val drivers = medium.drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
+        val coords = when (recordBoundary) {
+            is FixedWidth -> recordBoundary.coords
+            is TokenizedRow -> TODO()
+        }
 
-            fun NioAbstractionLayer(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
-                medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
-                    Vect0r(drivers.size.`⟲`) { x: Int ->
-                        (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
-                    }
+        (fun(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
+            medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
+                Vect0r(drivers.size.`⟲`) { x: Int ->
+                    (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
                 }
-            when (ordering) {
-                is RowMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
-                    NioCursor(
-                        intArrayOf(drivers.size, row.size)
-                    ) { (x: Int, y: Int): IntArray ->
-                        dfn(row, y, col, x, coords)
-                    }
-
-                }
-                is ColumnMajor -> NioAbstractionLayer().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> ->
-
-                    NioCursor(
-                        intArrayOf(row.size, drivers.size)
-                    ) { (y: Int, x: Int): IntArray ->
-                        dfn(row, y, col, x, coords)
-                    }
-                }
-                is Hilbert -> TODO()
-                is RTree -> TODO()
-            }
+            })().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>) ->
+            NioCursor(intArrayOf(drivers.size, row.size)) { (x: Int, y: Int): IntArray ->
+                this.mappedDriver(row, y, col, x, coords)
+            } as NioCursor
         } as NioCursor
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun dfn(
+    fun mappedDriver(
         row: Vect0r<NioCursorState>,
         y: Int,
         col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
@@ -213,6 +193,7 @@ class NioMMap(
         }
     }
 }
+
 
 /**
  * CellDriver functions to read and write primitive  state instances to more persistent tiers.
