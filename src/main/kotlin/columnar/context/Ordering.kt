@@ -80,8 +80,6 @@ class RowMajor : Ordering() {
                 nio +
                 columnarArity
     ) { Pai2(nio.values(), this.coroutineContext) }
-
-
 }
 
 /**

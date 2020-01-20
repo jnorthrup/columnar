@@ -17,8 +17,12 @@ class DayJobTest : StringSpec() {
     //    val suffix = "_1000"//"_RD"  3392440
 //val suffix = "_10000"     //"_RD"  139618738
 //    val suffix = "_100000"     //"_RD"
+//    val suffix = "_500000"     //"_RD"
+    val suffix = "_300000"     //"_RD"
+//    val suffix = "_400000"     //"_RD"
+//    val suffix = "_1000000"     //"_RD"
     //    val suffix = "_1000"//"_RD"
-    val suffix = "_RD"
+//    val suffix = "_RD"
     //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
 //    val suffix = "_1000"//"_RD"
@@ -61,40 +65,41 @@ class DayJobTest : StringSpec() {
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
-
+    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also{
+        System.err.println("record count=" + it.first())
+    }
+    val piv: Cursor = curs[2, 1, 3, 5].resample(0).`∑`(floatSum).pivot(
+        intArrayOf(0),
+        intArrayOf(1, 2),
+        intArrayOf(3)
+    ).group(0)
+    val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f)).`∑`(floatSum))
     init {
 
         "pivot+group+reduce" {
-            val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar))
-            curs.let { curs1 ->
-                System.err.println("record count=" + curs1.first())
-            }
-            val piv: Cursor = curs[2, 1, 3, 5].resample(0).`∑`(floatSum).pivot(
-                intArrayOf(0),
-                intArrayOf(1, 2),
-                intArrayOf(3)
-            ).group(0)
-            val filtered = join(piv[0], (piv[1 until piv.scalars.size] α floatFillNa(0f)).`∑`(floatSum))
+
             lateinit var second: RowVec
             println(
-                "row 47 seektime: " +
+                "row 2 seektime: " +
                         measureTimeMillis {
-                            second = filtered.second(47)
+                            second = filtered.second(2)
 
                         } + " ms @ " + second.size + " columns"
 
 
             )
-            println("row 47 took " + measureTimeMillis {
-
+            println("row 2 took " + measureTimeMillis {
                 second.let {
-                    println("row 47 is:")
+                    println("row 2 is:")
                     println(stringOf(it))
                 }
             } + "ms")
+
+/*
             filtered.toList().forEach {
                 println(stringOf(it))
             }
+*/
         }
     }
 }

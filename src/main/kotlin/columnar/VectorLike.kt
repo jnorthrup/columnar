@@ -233,7 +233,7 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }, { a.get(it) })
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> {
+inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> {
     return zip(other.toArray()) { a, b -> a t2 b }
 }
 

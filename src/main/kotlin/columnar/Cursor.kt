@@ -34,10 +34,10 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
     }
 }
 
-fun Cursor.reify() =
+inline fun Cursor.reify() =
     this α RowVec::toList
 
-fun Cursor.narrow() =
+inline fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
 
 inline val <C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
@@ -45,13 +45,13 @@ inline val <C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
 val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[Arity.arityKey] as Scalar } }
 
 @JvmName("vlike_RSequence_11")
-operator fun Cursor.get(vararg index: Int) = get(index)
+inline operator fun Cursor.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_RSequence_Iterable21")
-operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+inline operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_RSequence_IntArray31")
-operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
+inline operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
 
@@ -89,7 +89,7 @@ fun Cursor.resample(indexcol: Int) = let {
     combine(this, cursor)
 }
 
-fun feature_range(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDate.MIN) { (a, b), localDate ->
+inline fun feature_range(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDate.MIN) { (a, b), localDate ->
     minOf(a, localDate) t2 maxOf(b, localDate)
 }
 
@@ -169,7 +169,6 @@ fun Cursor.pivot(
  * reducer func -- operator for sum/avg/mean etc. would be nice, but we have to play nice in a type-safe language so  ∑'s just a hint  of a reducer semantic
  */
 fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor =
-
     Cursor(first) { iy: Int ->
         val aggcell: RowVec = second(iy)
         val al: Vect0r<*> = aggcell.left
@@ -187,7 +186,7 @@ fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor =
 /**
  * reducer func
  */
-infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor =
+inline infix fun Cursor.α(noinline unaryFunctor: (Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
         val aggcell: RowVec = second(iy)
         (aggcell.left α unaryFunctor).zip( aggcell.right)
@@ -197,36 +196,36 @@ fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-    vararg axis: Int
+    vararg axis: Int,reducer: Function2<*,*,*>?=null
 ): Cursor = let { cursr ->
     System.err.println("--- group")
 
-    val clusters: LinkedHashMap<List<Any?>, MutableList<Int>> = linkedMapOf()
+    val clusters:  Map<List<Any?>, List<Int>> = linkedMapOf()
     cursr.mapIndexed { iy: Int, row: RowVec ->
         row[axis].left.toList().let { key ->
-            clusters.get<Any, MutableList<Int>>(key)
+            clusters.get(key)
                 .let { clust ->
-                    if (clust != null) clust.add(iy) else clusters[key] = mutableListOf(iy)
+                    if (clust != null) (clust as MutableList).add(iy) else (clusters as MutableMap)[key] = mutableListOf(iy)
                 }
         }
     }
     logDebug { "keys:${clusters.size to clusters.keys/*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
-    val clusterVec = clusters.entries.toList()
     val masterScalars = cursr.scalars
+    val clusterVec = clusters.entries.toList()
     val indices = 0 until masterScalars.size
     Cursor(clusterVec.size.`⟲`) { cy: Int ->
         clusterVec[cy].let { (_, clusterIndices) ->
             RowVec(indices.endInclusive.`⟲`) { ix: Int ->
 
-                val pai21 = when (ix) {
+                when (ix) {
                     in axis -> {
                         cursr.second(clusterIndices.first())[ix]
                     }
-                    else -> (Vect0r(clusterIndices.size.`⟲`) { clusterOrdinal: Int ->
-                        cursr.second(clusterIndices[clusterOrdinal])[ix].first
-                    } t2 { masterScalars[ix] })
+                    else -> {
+                        fun accessor   (clusterOrdinal: Int )= cursr.second(clusterIndices[clusterOrdinal])[ix].first
+                         Vect0r(clusterIndices.size.`⟲`, ::accessor) t2   masterScalars[ix].`⟲`
+                    }
                 }
-                pai21
             }
         }
     }
