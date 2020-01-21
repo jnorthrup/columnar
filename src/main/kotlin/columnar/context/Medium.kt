@@ -64,11 +64,11 @@ class NioMMap(
 
         (fun(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
             medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
-                Vect0r(drivers.size.`⟲`) { x: Int ->
+                Vect0r(drivers.size ) { x: Int ->
                     (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
                 }
             })().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>) ->
-            NioCursor(intArrayOf(drivers.size, row.size)) { (x: Int, y: Int): IntArray ->
+            NioCursor(intArrayOf(drivers.size, row.first)) { (x: Int, y: Int): IntArray ->
                 this.mappedDriver(row, y, col, x, coords)
             } as NioCursor
         } as NioCursor
@@ -81,7 +81,7 @@ class NioMMap(
         col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
         x: Int,
         coords: Vect0r<IntArray>
-    ) = let {
+    ): Tripl3<() -> Any, (Any?) -> Unit, Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>> = let {
         coords[x].let { (start, end) ->
             row[y].let { (row1) ->
                 col(row1).let { (_, triple) ->
@@ -112,7 +112,7 @@ class NioMMap(
     fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth
-    ) = Vect0r(indexable.size) { ix: Int ->
+    ): Vect02<ByteBuffer, Pai2<Long, Long>>  = Vect0r(indexable.size()) { ix: Int ->
         runBlocking {
 
             translateMapping(

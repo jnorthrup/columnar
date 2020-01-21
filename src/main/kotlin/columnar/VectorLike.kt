@@ -6,9 +6,8 @@ import kotlin.experimental.ExperimentalTypeInference
 /**
  * semigroup
  */
-typealias Vect0r<T> = Pai2<() -> Int, (Int) -> T>
+typealias Vect0r<T> = Pai2<Int, (Int) -> T>
 
-val <T>   Vect0r<T>.size get() = first()
 /*
 val <T, O : Vect0r<T>>  O.first
     get() = this::size
@@ -65,27 +64,27 @@ infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B) = this.map { it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r( this.size ) { i: Int -> this.get(i) `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <A, C, B : (A) -> C> Array<A>.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <A, C, B : (A) -> C> Array<A>.α(m: B): Vect0r<C> = Vect0r( this.size ) { i: Int -> this.get(i) `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r( this.size ) { i: Int -> this.get(i) `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r( this.size ) { i: Int -> this.get(i) `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r( this.size ) { i: Int -> this.get(i) `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r({ this.size }) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r( this.size ) { i: Int -> this.get(i) `→` m }
 
 /*
 But as soon as a groupoid has both a left and a right identity, they are necessarily unique and equal. For if e is
@@ -191,42 +190,42 @@ operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> th
  operator fun < T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T> = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Vect0r_IntArray3")
-operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size.`⟲`, { ix: Int -> second(index[ix]) })
+operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size , { ix: Int -> second(index[ix]) })
 
- inline fun < reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(size) { vf(it) } }
+ inline fun < reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
  fun < T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
-        override val size: Int = v.first()
+        override val size: Int = v.first 
         override operator fun get(index: Int) = v.second(index)
     }
 }
 
 fun <T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
     sequence {
-        for (ix in 0 until size())
+        for (ix in 0 until size )
             yield(vf(ix))
     }
 }
 
 fun <T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
     flow {
-        for (ix in 0 until size())
+        for (ix in 0 until size )
             emit(vf(ix))
     }
 }
 
 fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R): Vect0r<R> = Vect0r(first, { ix: Int -> second(ix).let(fn) })
 
- fun < T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R) = List(size) { ix -> fn(ix, this[ix]) }
+ fun < T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R) = List(first) { ix -> fn(ix, this[ix]) }
  fun < T> Vect0r<T>.forEach(fn: (T) -> Unit) {
-    for (ix in (0 until size)) fn(this[ix])
+    for (ix in (0 until first)) fn(this[ix])
 }
 
  fun < T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
-    for (ix in (0 until size)) fn(ix, this[ix])
+    for (ix in (0 until first)) fn(ix, this[ix])
 }
 
-fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }, { a.get(it) })
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(  a.size , { a.get(it) })
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
  * The returned list has length of the shortest collection.
@@ -243,11 +242,11 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r({ a.size }, { a.get(it) })
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
- fun < T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
+ fun < T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size ) { ix: Int -> this[ix] }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
- fun < T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size.`⟲`) { ix: Int -> this[ix] }
+ fun < T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size ) { ix: Int -> this[ix] }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
@@ -309,7 +308,7 @@ inline fun < reified T> combine(vararg a: Array<T>) = a.sumBy { it.size }.let { 
 }
 }
 
-fun vZipWithNext(src: IntArray) = Vect0r({ src.size / 2 }
+fun vZipWithNext(src: IntArray) = Vect0r(  src.size / 2
 ) { i: Int ->
     var c = (i * 2)
     IntArray(2) { src[c.also { c++ }] }
@@ -334,9 +333,9 @@ inline operator fun <K,  reified V> Map<K, V>.get(@BuilderInference() vararg ks:
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix operator fun IntRange.div(@BuilderInference() denominator: Int): Pai2<() -> Int, (Int) -> IntRange> =
+infix operator fun IntRange.div(@BuilderInference() denominator: Int): Vect0r<IntRange> =
     (this t2 ((last - first + (1 - first)) / denominator)).let { (_, subSize) ->
-        Vect0r((denominator).`⟲`) { x: Int ->
+        Vect0r((denominator) ) { x: Int ->
             (subSize * x).let { lower ->
                 lower..last.coerceAtMost(lower + subSize - 1)
             }

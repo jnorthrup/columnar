@@ -17,8 +17,8 @@ typealias Cursor = Vect0r<RowVec>
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
     nioc.let { (xy, mapper) ->
         xy.let { (xsize, ysize) ->
-            /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r({ ysize }) { iy ->
-            Vect0r(xsize.`⟲`) { ix ->
+            /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r(  ysize ) { iy ->
+            Vect0r(xsize ) { ix ->
                 mapper(intArrayOf(ix, iy)).let { (a) ->
                     a() t2 {
                         val cnar = crt[Arity.arityKey] as Columnar
@@ -138,8 +138,8 @@ fun Cursor.pivot(
     System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
         val theRow: RowVec = cursr.second(iy)
-        theRow.let { (_: () -> Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
-            RowVec(xsize.`⟲`) { ix: Int ->
+        theRow.let { (_:   Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
+            RowVec(xsize ) { ix: Int ->
                 when {
                     ix < lhs.size -> {
                         original(lhs[ix])
@@ -196,21 +196,21 @@ fun Cursor.group(
     val clusters = cursr.groupClusters(axis)
     val masterScalars = cursr.scalars
     when {
-        reducer == null -> Cursor(clusters.size.`⟲`) { cy: Int ->
+        reducer == null -> Cursor(clusters.size ) { cy: Int ->
             val cluster = clusters[cy]
             RowVec(masterScalars.first) { ix: Int ->
                 when (ix) {
                     in axis -> {
                         cursr.second(cluster.first())[ix]
                     }
-                    else -> Vect0r(cluster.size.`⟲`) { iy: Int ->
+                    else -> Vect0r(cluster.size ) { iy: Int ->
                         cursr.second(cluster[iy])[ix].first
-                    } t2 masterScalars[ix].`⟲`
+                    } t2 masterScalars[ix] .`⟲`
                 }
             }
         }
-        else -> Cursor(clusters.size.`⟲`) { cy: Int ->
-            val acc1 = arrayOfNulls<Any?>(masterScalars.size)
+        else -> Cursor(clusters.size ) { cy: Int ->
+            val acc1 = arrayOfNulls<Any?>(masterScalars.first)
             val cluster = clusters[cy]
             val keyRow: RowVec = cursr.second(cluster.first())
             try {
@@ -242,7 +242,7 @@ fun Cursor.groupClusters(
     return try {
         System.err.println("--- group")
         clusters/*: MutableMap<List<Any?>, MutableList<Int>> */ = linkedMapOf()
-        val cap = Math.max(8, (sqrt(size.toDouble()).toInt()))
+        val cap = Math.max(8, (sqrt(first.toDouble()).toInt()))
         mapIndexed { iy: Int, row: RowVec ->
             row[axis].left.toList().let { key ->
                 clusters.get(key).let { clust ->

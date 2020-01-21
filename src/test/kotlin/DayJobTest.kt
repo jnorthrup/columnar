@@ -68,7 +68,7 @@ class DayJobTest : StringSpec() {
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
     val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
-        System.err.println("record count=" + it.first())
+        System.err.println("record count=" + it.first )
     }
 
     init {
@@ -86,7 +86,7 @@ class DayJobTest : StringSpec() {
                 "row 2 seektime: " +
                         measureTimeMillis {
                             second = filtered.second(2)
-                        } + " ms @ " + second.size + " columns"
+                        } + " ms @ " + second.first + " columns"
             )
             lateinit var message: String
             println("row 2 took " + measureTimeMillis {
@@ -106,7 +106,7 @@ class DayJobTest : StringSpec() {
                 intArrayOf(1, 2),
                 intArrayOf(3)
             ).group(intArrayOf( 0) )
-            val filtered = join(piv[0], (piv[1 until piv.scalars.size] /*α floatFillNa(0f)*/).`∑`(floatSum))
+            val filtered = join(piv[0], (piv[1 until piv.scalars.first] /*α floatFillNa(0f)*/).`∑`(floatSum))
 
             lateinit var second: RowVec
             println(
@@ -114,7 +114,7 @@ class DayJobTest : StringSpec() {
                         measureTimeMillis {
                             second = filtered.second(2)
 
-                        } + " ms @ " + second.size + " columns"
+                        } + " ms @ " + second.first + " columns"
 
 
             )

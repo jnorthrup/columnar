@@ -13,12 +13,12 @@ fun join(c: Vect0r<Cursor>): Cursor = run {
 
     val vargs = c α Cursor::scalars
 
-    val (xsize, order) = vargs.toSequence().foldIndexed(0 t2 IntArray(vargs.size)) { vix, (acc, avec), vec ->
-        val xsize = acc.plus(vec.size)
+    val (xsize, order) = vargs.toSequence().foldIndexed(0 t2 IntArray(vargs.first)) { vix, (acc, avec), vec ->
+        val xsize = acc.plus(vec.first)
         xsize t2 avec.also { avec[vix] = xsize }
     }
     Cursor(c[0].first) { iy: Int ->
-        RowVec(xsize.`⟲`) { ix: Int ->
+        RowVec(xsize ) { ix: Int ->
             val slot = (1 + order.binarySearch(ix)).absoluteValue
             val cursor: Cursor = c[slot]
             val rowVec: RowVec = cursor.second(iy)
