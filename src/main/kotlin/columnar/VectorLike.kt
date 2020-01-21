@@ -7,13 +7,8 @@ import kotlin.experimental.ExperimentalTypeInference
  * semigroup
  */
 typealias Vect0r<T> = Pai2<Int, (Int) -> T>
+inline val <T>Vect0r<T>.size: Int get() =  first
 
-/*
-val <T, O : Vect0r<T>>  O.first
-    get() = this::size
-val <T, O : Vect0r<T>>  O.second
-    get() = this::get
-*/
 
 typealias Matrix<T> = Pai2<
         /**shape*/

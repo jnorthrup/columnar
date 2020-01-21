@@ -17,8 +17,8 @@ typealias Cursor = Vect0r<RowVec>
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
     nioc.let { (xy, mapper) ->
         xy.let { (xsize, ysize) ->
-            /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r(  ysize ) { iy ->
-            Vect0r(xsize ) { ix ->
+            /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r(ysize) { iy ->
+            Vect0r(xsize) { ix ->
                 mapper(intArrayOf(ix, iy)).let { (a) ->
                     a() t2 {
                         val cnar = crt[Arity.arityKey] as Columnar
@@ -138,8 +138,8 @@ fun Cursor.pivot(
     System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
         val theRow: RowVec = cursr.second(iy)
-        theRow.let { (_:   Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
-            RowVec(xsize ) { ix: Int ->
+        theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
+            RowVec(xsize) { ix: Int ->
                 when {
                     ix < lhs.size -> {
                         original(lhs[ix])
@@ -195,42 +195,61 @@ fun Cursor.group(
 ): Cursor = let { cursr ->
     val clusters = cursr.groupClusters(axis)
     val masterScalars = cursr.scalars
-    when {
-        reducer == null -> Cursor(clusters.size ) { cy: Int ->
-            val cluster = clusters[cy]
-            RowVec(masterScalars.first) { ix: Int ->
-                when (ix) {
-                    in axis -> {
-                        cursr.second(cluster.first())[ix]
-                    }
-                    else -> Vect0r(cluster.size ) { iy: Int ->
-                        cursr.second(cluster[iy])[ix].first
-                    } t2 masterScalars[ix] .`⟲`
-                }
+    Cursor(
+        clusters.size, when {
+            reducer != null -> {
+                groupReducer(masterScalars, clusters, cursr, axis, reducer)
+            }
+            else -> groupNoReduce(clusters, masterScalars, axis, cursr)
+        }
+    )
+}
+
+private fun groupNoReduce(
+    clusters: List<IntArray>,
+    masterScalars: Vect0r<Scalar>,
+    axis: IntArray,
+    cursr: Cursor
+): (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>> = { cy: Int ->
+    val cluster = clusters[cy]
+    RowVec(masterScalars.first) { ix: Int ->
+        when (ix) {
+            in axis -> {
+                cursr.second(cluster.first())[ix]
+            }
+            else -> Vect0r(cluster.size) { iy: Int ->
+                cursr.second(cluster[iy])[ix].first
+            } t2 masterScalars[ix].`⟲`
+        }
+    }
+}
+
+private fun groupReducer(
+    masterScalars: Vect0r<Scalar>,
+    clusters: List<IntArray>,
+    cursr: Cursor,
+    axis: IntArray,
+    reducer: (Any?, Any?) -> Any?
+): (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>> = { cy: Int ->
+    val acc1 = arrayOfNulls<Any?>(masterScalars.first)
+    val cluster = clusters[cy]
+    val keyRow: RowVec = cursr.second(cluster.first())
+    try {
+        val valueIndices = acc1.indices - axis.toTypedArray()
+        for (i in cluster) {
+            val value = cursr.second(i).left
+            for (valueIndex in valueIndices) {
+                acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
             }
         }
-        else -> Cursor(clusters.size ) { cy: Int ->
-            val acc1 = arrayOfNulls<Any?>(masterScalars.first)
-            val cluster = clusters[cy]
-            val keyRow: RowVec = cursr.second(cluster.first())
-            try {
-                val valueIndices = acc1.indices - axis.toTypedArray()
-                for (i in cluster) {
-                    val value = cursr.second(i).left
-                    for (valueIndex in valueIndices) {
-                        acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
-                    }
-                }
-            } finally {
+    } finally {
+    }
+    RowVec(masterScalars.first) { ix: Int ->
+        when (ix) {
+            in axis -> {
+                keyRow[ix]
             }
-            RowVec(masterScalars.first) { ix: Int ->
-                when (ix) {
-                    in axis -> {
-                        keyRow[ix]
-                    }
-                    else -> acc1[ix] t2 masterScalars[ix].`⟲`
-                }
-            }
+            else -> acc1[ix] t2 masterScalars[ix].`⟲`
         }
     }
 }

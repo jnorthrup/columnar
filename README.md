@@ -19,9 +19,10 @@ this is purpose-built early implementations for large scale time series LSTM dat
   - [X] nearly 0-heap direct access
   - [X] large file access: JVM NIO mmap window addressability beyond MAXINT bytes   
   - [X] Algebraic Vector aggregate operations with lazy runtime execution on contents
- 
+  - [ ] Mapper Buffer pools 
  
 ### lower priorities (as-yet unimplemented orthogonals)
+ - [X] a token amount of jvm switch testing.
  - [X] textual field format IO/mapping
  - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
  - [ ] json    field format IO/mapping
@@ -51,3 +52,21 @@ These are easy to think of as hierarchical threadlocals to achieve IOBound stora
 ![image](https://user-images.githubusercontent.com/73514/71553240-7a838500-2a3e-11ea-8e3e-b85c0602873f.png)
 
 inspired by the [STXXL](https://stxxl.org)  project
+
+
+## jvm switches
+
+this code is extremly tuning sensitive to jvm opts.
+
+running multiple threads might make sense on multiple storage volumes but is not showing immediate gains in mappping in FWF mmap content of sub-MAXINT bytes. presumably, one IO thread is adequate to keep the other CPU cores buysy collecting the currently un-pooled garbage.
+.
+
+so far for single-threaded benchmarking of 500k records in 225MB fwf/text file the basic parameters each seem to lead toward a better thruput
+
+`-Xms24G -Xmx24G -XX:MaxDirectMemorySize=1G -XX:-PrintCompilation -XX:+UseTransparentHugePages -XX:MaxBCEAEstimateSize=2m`
+
+  * `-Xms24G -Xmx24G` large heap and preallocatation is simply a linear increase in gc headroom. 
+  *  `-XX:MaxDirectMemorySize=1G` Directmemory should be in the ballpark of large files if convenient.     
+  *  `-XX:+UseTransparentHugePages ` tends to add allocator options helpful for larger memory tasks.   
+  *  `-XX:MaxBCEAEstimateSize=2m` influences the choice of escape analysis to increase the available cycles for IO/FWF
+   mapping that is dominated by excessive GC.  kotlin by itself has coroutine methods as large as 380 bytes in this codebase
