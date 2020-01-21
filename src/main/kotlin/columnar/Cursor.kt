@@ -36,25 +36,25 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
     }
 }
 
- fun Cursor.reify() =
+fun Cursor.reify() =
     this α RowVec::toList
 
- fun Cursor.narrow() =
+fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
 
 val accnil = Array<Any?>(0) {}
- val <C : Vect0r<R>,  R> C.`…`: List<R> get() = this.toList()
+val <C : Vect0r<R>, R> C.`…`: List<R> get() = this.toList()
 
 val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[Arity.arityKey] as Scalar } }
 
 @JvmName("vlike_RSequence_11")
- operator fun Cursor.get(vararg index: Int) = get(index)
+operator fun Cursor.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_RSequence_Iterable21")
- operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_RSequence_IntArray31")
- operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
+operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
 
@@ -127,7 +127,7 @@ fun Cursor.pivot(
         allscalars[fanoutIx]
     }.toTypedArray()
 
-    val synthScalars  = keys.keys.map { list: List<Any?> ->
+    val synthScalars = keys.keys.map { list: List<Any?> ->
         val synthPrefix: String = list.mapIndexed { index: Int, any: Any? ->
             "${allscalars[axis[index]].second!!}=$any"
         }.joinToString(",", "[", "]")
@@ -146,8 +146,8 @@ fun Cursor.pivot(
                     }
                     else /*fanout*/ -> {
                         val theKey: List<Any?> = theRow[axis].left.toList()
-                        val keyGate  = whichKey(ix)
-                        val cellVal  = if (keys[theKey] == keyGate)
+                        val keyGate = whichKey(ix)
+                        val cellVal = if (keys[theKey] == keyGate)
                             original(fanOut[whichFanoutIndex(ix)]).first
                         else null
 
@@ -181,7 +181,7 @@ fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor =
 /**
  * reducer func
  */
- infix fun Cursor.α(  unaryFunctor: (Any?) -> Any?): Cursor =
+infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
         val aggcell: RowVec = second(iy)
         (aggcell.left α unaryFunctor).zip(aggcell.right)
@@ -210,23 +210,24 @@ fun Cursor.group(
             }
         }
         else -> Cursor(clusters.size.`⟲`) { cy: Int ->
+            val acc1 = arrayOfNulls<Any?>(masterScalars.size)
             val cluster = clusters[cy]
             val keyRow: RowVec = cursr.second(cluster.first())
-            val acc1 = arrayOfNulls<Any?>(masterScalars.size)
-            val valueIndices = acc1.indices - axis.toTypedArray()
-            for (i in cluster) {
-                val value = cursr.second(i).left
-                for (valueIndex in valueIndices) {
-                    val any = acc1[valueIndex]
-                    val pai2 = value[valueIndex]
-                    val reduced = reducer(any, pai2)
-                    acc1[valueIndex] = reduced
+            try {
+                val valueIndices = acc1.indices - axis.toTypedArray()
+                for (i in cluster) {
+                    val value = cursr.second(i).left
+                    for (valueIndex in valueIndices) {
+                        acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
+                    }
                 }
+            } finally {
             }
-
             RowVec(masterScalars.first) { ix: Int ->
                 when (ix) {
-                    in axis -> keyRow[ix]
+                    in axis -> {
+                        keyRow[ix]
+                    }
                     else -> acc1[ix] t2 masterScalars[ix].`⟲`
                 }
             }
@@ -236,20 +237,25 @@ fun Cursor.group(
 
 fun Cursor.groupClusters(
     axis: IntArray
-) = let {
-    System.err.println("--- group")
-    val clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf()
-    val cap = Math.max(8, (sqrt(size.toDouble()).toInt()))
-    mapIndexed { iy: Int, row: RowVec ->
-        row[axis].left.toList().let { key ->
-            clusters.get(key).let { clust ->
-                if (clust != null) clust.add(iy) else clusters[key] =
+): List<IntArray> {
+    lateinit var clusters: Map<List<Any?>, MutableList<Int>>
+    return try {
+        System.err.println("--- group")
+        clusters/*: MutableMap<List<Any?>, MutableList<Int>> */ = linkedMapOf()
+        val cap = Math.max(8, (sqrt(size.toDouble()).toInt()))
+        mapIndexed { iy: Int, row: RowVec ->
+            row[axis].left.toList().let { key ->
+                clusters.get(key).let { clust ->
+                    if (clust != null) clust.add(iy) else clusters[key] =
 //                    arrayListOf(iy)/*.also { it.ensureCapacity(cap) }*/
-                    ArrayList<Int>(cap).also { it.add(iy) }
+                        ArrayList<Int>(cap).also { it.add(iy) }
+                }
             }
         }
-    }
-    logDebug { "cap: $cap keys:${clusters.size to clusters.keys /*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
+        logDebug { "cap: $cap keys:${clusters.size to clusters.keys /*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
 
-    clusters.values.map(MutableList<Int>::toIntArray)
+        clusters.values.map(MutableList<Int>::toIntArray)
+    } finally {
+        clusters.values.map(MutableList<Int>::toIntArray)
+    }
 }
