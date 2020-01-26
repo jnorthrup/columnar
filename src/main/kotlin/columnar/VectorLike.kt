@@ -9,6 +9,11 @@ import kotlin.experimental.ExperimentalTypeInference
 typealias Vect0r<T> = Pai2<Int, (Int) -> T>
 inline val <T>Vect0r<T>.size: Int get() =  first
 
+@Suppress("NonAsciiCharacters")
+object Ω 
+operator  fun<T> Ω.get(vararg t:T): List<T> = t.map { it  }
+val strings=Ω["abc","dfe","fge"]
+
 
 typealias Matrix<T> = Pai2<
         /**shape*/

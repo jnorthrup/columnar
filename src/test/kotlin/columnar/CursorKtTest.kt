@@ -100,7 +100,7 @@ class CursorKtTest : StringSpec() {
 
             val cursor: Cursor = cursorOf(root)
             println(cursor.narrow().toList())
-            val piv = cursor.group(intArrayOf(0))
+            val piv = cursor.group( (0))
             cursor.forEach {
                 println(it.map {
                     "${it.component1().let {
@@ -120,7 +120,7 @@ class CursorKtTest : StringSpec() {
             System.err.println("pivot+group ")
             val cursor: Cursor = cursorOf(root)
             println("from:\n" + cursor.narrow().toList())
-            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group(intArrayOf(0))
+            val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group( (0))
             println()
             piv.forEach {
                 println(it.map {
@@ -138,7 +138,7 @@ class CursorKtTest : StringSpec() {
                 intArrayOf(0),
                 intArrayOf(1),
                 intArrayOf(2, 3)
-            ).group(intArrayOf(0)).`∑`(sumReducer[IoFloat]!!)
+            ).group( (0)).`∑`(sumReducer[IoFloat]!!)
 
             piv.forEach {
                 println(it.map {
@@ -161,7 +161,7 @@ class CursorKtTest : StringSpec() {
                 }.toList())
             }
             println("---")
-            val grp = resample.group(intArrayOf(1))
+            val grp = resample.group( (1))
             grp.forEach {
                 println(it.map {
                     "${it.component1().let {

@@ -186,95 +186,70 @@ infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor =
         val aggcell: RowVec = second(iy)
         (aggcell.left α unaryFunctor).zip(aggcell.right)
     }
+fun Cursor.group(
+    /**these columns will be preserved as the cluster key.
+     * the remaining indexes will be aggregate
+     */
+    vararg axis: Int
+): Cursor = let { orig ->
+    val clusters = orig.groupClusters(axis)
+    val masterScalars = orig.scalars
+    Cursor(clusters.size) { cy ->
+        val cluster = clusters[cy]
+        RowVec(masterScalars.first) { ix: Int ->
+            when (ix) {
+                in axis -> orig.second(
+                    cluster.first())[ix]
+                else -> Vect0r(cluster.size) { iy: Int ->
+                    orig.second(cluster[iy])[ix].first
+                } t2 masterScalars[ix].`⟲`
+            }
+        }
+    }
+}
 
 fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-    axis: IntArray, reducer: ((Any?, Any?) -> Any?)? = null
-): Cursor = let { cursr ->
-    val clusters = cursr.groupClusters(axis)
-    val masterScalars = cursr.scalars
+    axis: IntArray, reducer: ((Any?, Any?) -> Any?)
+): Cursor = run {
+    val clusters = groupClusters(axis)
+    val masterScalars = scalars
     Cursor(
-        clusters.size, when {
-            reducer != null -> {
-                groupReducer(masterScalars, clusters, cursr, axis, reducer)
-            }
-            else -> groupNoReduce(clusters, masterScalars, axis, cursr)
-        }
-    )
-}
-
-private fun groupNoReduce(
-    clusters: List<IntArray>,
-    masterScalars: Vect0r<Scalar>,
-    axis: IntArray,
-    cursr: Cursor
-): (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>> = { cy: Int ->
-    val cluster = clusters[cy]
-    RowVec(masterScalars.first) { ix: Int ->
-        when (ix) {
-            in axis -> {
-                cursr.second(cluster.first())[ix]
-            }
-            else -> Vect0r(cluster.size) { iy: Int ->
-                cursr.second(cluster[iy])[ix].first
-            } t2 masterScalars[ix].`⟲`
-        }
-    }
-}
-
-private fun groupReducer(
-    masterScalars: Vect0r<Scalar>,
-    clusters: List<IntArray>,
-    cursr: Cursor,
-    axis: IntArray,
-    reducer: (Any?, Any?) -> Any?
-): (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>> = { cy: Int ->
-    val acc1 = arrayOfNulls<Any?>(masterScalars.first)
-    val cluster = clusters[cy]
-    val keyRow: RowVec = cursr.second(cluster.first())
-    try {
+        clusters.size
+    ) { cy ->
+        val acc1 = arrayOfNulls<Any?>(masterScalars.first)
+        val cluster = clusters[cy]
         val valueIndices = acc1.indices - axis.toTypedArray()
         for (i in cluster) {
-            val value = cursr.second(i).left
-            for (valueIndex in valueIndices) {
+            val value = this.second(i).left
+            for (valueIndex in valueIndices)
                 acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
-            }
         }
-    } finally {
-    }
-    RowVec(masterScalars.first) { ix: Int ->
-        when (ix) {
-            in axis -> {
-                keyRow[ix]
+        RowVec(masterScalars.first) { ix: Int ->
+            when (ix) {
+                in axis -> this.second(cluster.first())[ix]
+                else -> acc1[ix] t2 masterScalars[ix].`⟲`
             }
-            else -> acc1[ix] t2 masterScalars[ix].`⟲`
         }
     }
 }
 
 fun Cursor.groupClusters(
     axis: IntArray
-): List<IntArray> {
-    lateinit var clusters: Map<List<Any?>, MutableList<Int>>
-    return try {
-        System.err.println("--- group")
-        clusters/*: MutableMap<List<Any?>, MutableList<Int>> */ = linkedMapOf()
-        val cap = Math.max(8, (sqrt(first.toDouble()).toInt()))
-        mapIndexed { iy: Int, row: RowVec ->
-            row[axis].left.toList().let { key ->
-                clusters.get(key).let { clust ->
-                    if (clust != null) clust.add(iy) else clusters[key] =
-//                    arrayListOf(iy)/*.also { it.ensureCapacity(cap) }*/
-                        ArrayList<Int>(cap).also { it.add(iy) }
-                }
+) = run {
+    val clusters: Map<List<Any?>, MutableList<Int>>
+    System.err.println("--- group")
+    clusters = linkedMapOf()
+    val cap = Math.max(8, (sqrt(first.toDouble()).toInt()))
+    mapIndexed { iy: Int, row: RowVec ->
+        row[axis].left.toList().let {
+            clusters.get(it).let { clust ->
+                if (clust != null) clust.add(iy) else clusters[it] = ArrayList<Int>(cap).apply { add(iy) }
             }
         }
-        logDebug { "cap: $cap keys:${clusters.size to clusters.keys /*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
-
-        clusters.values.map(MutableList<Int>::toIntArray)
-    } finally {
-        clusters.values.map(MutableList<Int>::toIntArray)
     }
+    logDebug { "cap: $cap keys:${clusters.size to clusters.keys /*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
+    clusters.values.map(MutableList<Int>::toIntArray)
 }
