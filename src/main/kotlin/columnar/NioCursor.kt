@@ -21,7 +21,6 @@ fun stringOf(it: RowVec) = it.left.toList().map { any ->
 
 
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
-
 val <F, S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
 val <F, S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
 val <F, S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair

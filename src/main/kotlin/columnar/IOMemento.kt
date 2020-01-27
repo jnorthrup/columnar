@@ -34,7 +34,7 @@ val instantMapper = { s: String ->
     } ?: Instant.EPOCH
 }
 
-enum class IOMemento(networkSize: Int = -1) {
+enum class IOMemento(val networkSize: Int? =null) {
     IoInt(4),
     IoLong(8),
     IoFloat(4),

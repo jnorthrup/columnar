@@ -56,17 +56,6 @@ inspired by the [STXXL](https://stxxl.org)  project
 
 ## jvm switches
 
-this code is extremly tuning sensitive to jvm opts.
-
-running multiple threads might make sense on multiple storage volumes but is not showing immediate gains in mappping in FWF mmap content of sub-MAXINT bytes. presumably, one IO thread is adequate to keep the other CPU cores buysy collecting the currently un-pooled garbage.
-.
-
-so far for single-threaded benchmarking of 500k records in 225MB fwf/text file the basic parameters each seem to lead toward a better thruput
-
-`-Xms24G -Xmx24G -XX:MaxDirectMemorySize=1G -XX:-PrintCompilation -XX:+UseTransparentHugePages -XX:MaxBCEAEstimateSize=2m`
-
-  * `-Xms24G -Xmx24G` large heap and preallocatation is simply a linear increase in gc headroom. 
-  *  `-XX:MaxDirectMemorySize=1G` Directmemory should be in the ballpark of large files if convenient.     
-  *  `-XX:+UseTransparentHugePages ` tends to add allocator options helpful for larger memory tasks.   
-  *  `-XX:MaxBCEAEstimateSize=2m` influences the choice of escape analysis to increase the available cycles for IO/FWF
-   mapping that is dominated by excessive GC.  kotlin by itself has coroutine methods as large as 380 bytes in this codebase
+ using  `-server -Xmx24g -XX:MaxDirectMemorySize=1G` outperforms everything I've tried to hand-tune  before adding `-server`
+ 
+ the directmemory ought to approximate the mmap in use by groupby thrashing.  
