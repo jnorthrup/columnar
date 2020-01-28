@@ -19,12 +19,12 @@ typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
-    @Deprecated("These should be vastly more local in the Indexable ")
+    @Deprecated("These should be  local in the Indexable ")
     abstract val seek: (Int) -> Unit
-    @Deprecated("These should be vastly more local in the Indexable ")
+    @Deprecated("These should be  local in the Indexable ")
     abstract val size: () -> Long
-    @Deprecated("These should be vastly more local in the FixedWidth ")
-    abstract val recordLen: () -> Int
+    @Deprecated("These should be  local in the FixedWidth ")
+    abstract var recordLen: () -> Int
 
     companion object {
         val mediumKey = object : CoroutineContext.Key<Medium> {}
@@ -33,13 +33,12 @@ sealed class Medium : CoroutineContext.Element {
 
 }
 
-class Kxio : Medium() {
+class Kxio(override var recordLen: () -> Int) : Medium() {
     override val seek: (Int) -> Unit
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val size: () -> Long
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    override val recordLen: () -> Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+
 }
 
 val canary = ByteBuffer.allocate(
@@ -50,27 +49,28 @@ class NioMMap(
     val mf: MappedFile, var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
     val state: ThreadLocal<NioCursorState> = ThreadLocal.withInitial { canary }
 ) : Medium() {
+
     @Suppress("UNCHECKED_CAST")
-    suspend fun values(): NioCursor = let { medium ->
+    suspend fun values(): NioCursor = this.run {
         val ordering = coroutineContext[Ordering.orderingKey]!!
         val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-        val drivers = medium.drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
+        val drivers = drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
         val coords = when (recordBoundary) {
             is FixedWidth -> recordBoundary.coords
             is TokenizedRow -> TODO()
         }
 
         (fun(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
-            medium.asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
-                Vect0r(drivers.size ) { x: Int ->
+            asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
+                Vect0r(drivers.size) { x: Int ->
                     (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
                 }
             })().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>) ->
             NioCursor(intArrayOf(drivers.size, row.first)) { (x: Int, y: Int): IntArray ->
-                this.mappedDriver(row, y, col, x, coords)
-            } as NioCursor
+                mappedDriver(row, y, col, x, coords)
+            }
         } as NioCursor
     }
 
@@ -88,13 +88,30 @@ class NioMMap(
                     triple(x).let { triple1 ->
                         triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
                             { row1[start, end] `→` driver.read } as () -> Any t2
-                                    { v: Any? -> driver.write(row1[start, end], v) } t3
+                                    {
+                                            v: Any? ->
+                                        writeDebug(driver, row1, start, end, v)
+
+                                    } t3
                                     triple1
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun writeDebug(
+        driver: CellDriver<ByteBuffer, Any?>,
+        row1: ByteBuffer,
+        start: Int,
+        end: Int,
+        v: Any?
+    ) {
+        val byteBuffer = row1[start, end]
+        val (a,b )=driver
+        driver.write(byteBuffer.duplicate(), v)
+        Unit
     }
 
     companion object {
@@ -112,7 +129,7 @@ class NioMMap(
     fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth
-    ): Vect02<ByteBuffer, Pai2<Long, Long>>  = Vect0r(indexable.size()) { ix: Int ->
+    ): Vect02<ByteBuffer, Pai2<Long, Long>> = Vect0r(indexable.size()) { ix: Int ->
         runBlocking {
 
             translateMapping(
@@ -129,12 +146,13 @@ class NioMMap(
         mf.mappedByteBuffer.get().position(it * recordLen()).slice().limit(recordLen())
     }
     override val size = { mf.randomAccessFile.length() }
-    override val recordLen = {
-        mf.mappedByteBuffer.get().duplicate().clear().run {
-            run {
-                while (get() != '\n'.toByte());
-                position()
-            }
+    @Suppress("ControlFlowWithEmptyBody")
+    override var recordLen = {
+        mf.mappedByteBuffer.get().duplicate().clear().let {
+
+            while (it.get() != '\n'.toByte());
+            it.position()
+
         }
     }
     val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
@@ -204,8 +222,10 @@ class NioMMap(
 open class CellDriver<B, R>(
     open val read: readfn<B, R>,
     open val write: writefn<B, R>
-)
-
+){
+operator fun component1   ()=  read
+operator fun component2   ()=  write
+}
 class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
     companion object {
         /**coroutineContext derived map of Medium access drivers

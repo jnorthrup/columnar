@@ -18,7 +18,7 @@ class CursorKtTest : StringSpec() {
             84, 124,
             124, 164
         )
-    )
+    ) α ::Tw1nt
     val drivers = vect0rOf(
         IoLocalDate,
         IoString,

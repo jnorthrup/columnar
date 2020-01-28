@@ -7,7 +7,6 @@ import kotlin.reflect.KMutableProperty2
 
 typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
 typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>>
-typealias NioCursor1 = Matrix<KMutableProperty2<NioMeta, ByteBuffer, Any?>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>

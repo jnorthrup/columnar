@@ -32,14 +32,22 @@ class RowMajor : Ordering() {
         //todo: move to rowMajor
         fun fixedWidthOf(
             nio: NioMMap,
-            coords: Vect0r<IntArray>,
+            coords: Vect0r<Tw1nt>,
             defaulteol: () -> Byte = '\n'::toByte
-        ) = FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
-            nio.mf.mappedByteBuffer.get().duplicate().clear().run {
-                while (get() != endl);
-                position()
-            }
-        }, coords = coords)
+        ) = fixedWidth(defaulteol, nio, coords.α(Tw1nt::ia))
+
+        private fun fixedWidth(
+            defaulteol: () -> Byte,
+            nio: NioMMap,
+            coords: Vect0r<IntArray>
+        ): FixedWidth {
+            return FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
+                nio.mf.mappedByteBuffer.get().duplicate().clear().run {
+                    while (get() != endl);
+                    position()
+                }
+            }, coords = coords)
+        }
 
 
         //todo: move to rowMajor

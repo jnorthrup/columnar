@@ -10,28 +10,28 @@ import java.time.LocalDate
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.math.sqrt
 
 typealias Cursor = Vect0r<RowVec>
 
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
-    nioc.let { (xy, mapper) ->
-        xy.let { (xsize, ysize) ->
-            /*val rowVect0r: Vect0r<Vect0r<Any?>> =*/ Vect0r(ysize) { iy ->
-            Vect0r(xsize) { ix ->
-                mapper(intArrayOf(ix, iy)).let { (a) ->
-                    a() t2 {
-                        val cnar = crt[Arity.arityKey] as Columnar
-                        //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
-                        // and call in a cell through here
-                        val name =
-                            cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
-                        val type = cnar.first[ix]
-                        Scalar(type, name)
+    nioc.let { (xy: IntArray, mapper: (IntArray) -> Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>): NioCursor ->
+        xy.let { (xsize: Int, ysize: Int): IntArray ->
+            Vect0r(ysize) { iy ->
+                Vect0r(xsize) { ix ->
+                    mapper(intArrayOf(ix, iy)).let { (a: () -> Any?): Tripl3<() -> Any?, (Any?) -> Unit, NioMeta> ->
+                        a() t2 {
+                            val cnar: Columnar = crt[Arity.arityKey] as Columnar
+                            //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
+                            // and call in a cell through here
+                            val name = cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
+                            val type: IOMemento = cnar.first[ix]
+                            Scalar(type, name)
+                        }
                     }
                 }
             }
-        }
         }
     }
 }
@@ -186,6 +186,7 @@ infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor =
         val aggcell: RowVec = second(iy)
         (aggcell.left α unaryFunctor).zip(aggcell.right)
     }
+
 fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
@@ -199,7 +200,8 @@ fun Cursor.group(
         RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
                 in axis -> orig.second(
-                    cluster.first())[ix]
+                    cluster.first()
+                )[ix]
                 else -> Vect0r(cluster.size) { iy: Int ->
                     orig.second(cluster[iy])[ix].first
                 } t2 masterScalars[ix].`⟲`

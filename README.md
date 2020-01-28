@@ -58,4 +58,3 @@ inspired by the [STXXL](https://stxxl.org)  project
 
  using  `-server -Xmx24g -XX:MaxDirectMemorySize=1G` outperforms everything I've tried to hand-tune  before adding `-server`
  
- the directmemory ought to approximate the mmap in use by groupby thrashing.  

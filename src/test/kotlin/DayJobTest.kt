@@ -40,7 +40,7 @@ class DayJobTest : StringSpec() {
             82, 103,
             103, 108
         )
-    )
+    ) α ::Tw1nt
     val drivers = vect0rOf(
         IoString,
         IoString,
@@ -126,8 +126,6 @@ class DayJobTest : StringSpec() {
                 }
             } + "ms")
             println(message)
-//            lastmessage?.shouldBe(message)
-//            lastmessage=message
 
 
         }

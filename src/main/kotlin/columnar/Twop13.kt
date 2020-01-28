@@ -47,6 +47,7 @@ interface Pai2<F, S> {
                 override   val second get() = second
             }
 
+
         inline operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P) =
             p.let { (f, s) ->
                 Pai2(f, s)
@@ -97,6 +98,19 @@ typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
  * homage to eclipse types
  */
 typealias Tw1n<X> = XY<X, X>
+
+inline fun <reified T>Tw1n(first:T, second:T):Tw1n<T> = arrayOf(first,second).let { ar->
+    object : Pai2<T,T> {
+        override   val first get() = ar[0]
+        override   val second get() = ar[1]
+    }}
+
+inline class Tw1nt(val ia:IntArray) : Tw1n<Int > {
+    override val first get()=ia[0]
+    override val second get()=ia[1]
+}
+@JvmName("twinint")
+ fun Tw1n(first:Int, second:Int):Tw1n<Int> = Tw1nt(intArrayOf(first,second))
 
 infix fun <X, Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
     (first t2 u.first) as P
