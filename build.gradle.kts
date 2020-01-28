@@ -8,7 +8,9 @@ version = "1.0-SNAPSHOT"
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
-    testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.1.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.1.0")
+
 }
 repositories {
     maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
@@ -16,16 +18,17 @@ repositories {
 }
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "13"
 }
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-tasks.withType<Test> {
-    useJUnitPlatform()
+    jvmTarget = "13"
 }
 tasks.withType(KotlinCompile::class)
-        .forEach {
-            it.kotlinOptions { freeCompilerArgs = listOf("-Xnew-inference") }
-        }
+    .forEach {
+        it.kotlinOptions { freeCompilerArgs = listOf("-Xnew-inference") }
+    }
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+}
