@@ -26,7 +26,7 @@ compileTestKotlin.kotlinOptions {
 }
 tasks.withType(KotlinCompile::class)
     .forEach {
-        it.kotlinOptions { freeCompilerArgs = listOf("-Xnew-inference") }
+        it.kotlinOptions { freeCompilerArgs = listOf("-Xnew-inference","-Xinline-classes") }
     }
 
 tasks.named<Test>("test") {
