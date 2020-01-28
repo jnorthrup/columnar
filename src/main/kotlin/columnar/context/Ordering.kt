@@ -51,7 +51,8 @@ class RowMajor : Ordering() {
 
 
         //todo: move to rowMajor
-        fun indexableOf(nio: NioMMap, fixedWidth: FixedWidth,
+        fun indexableOf(
+            nio: NioMMap, fixedWidth: FixedWidth,
             mappedByteBuffer: MappedByteBuffer = nio.mf.mappedByteBuffer.get()
         ): Indexable =
             Indexable(size = (nio.mf.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->

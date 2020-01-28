@@ -19,10 +19,13 @@ typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Medium> get() = mediumKey
+
     @Deprecated("These should be  local in the Indexable ")
     abstract val seek: (Int) -> Unit
+
     @Deprecated("These should be  local in the Indexable ")
     abstract val size: () -> Long
+
     @Deprecated("These should be  local in the FixedWidth ")
     abstract var recordLen: () -> Int
 
@@ -88,8 +91,7 @@ class NioMMap(
                     triple(x).let { triple1 ->
                         triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
                             { row1[start, end] `→` driver.read } as () -> Any t2
-                                    {
-                                            v: Any? ->
+                                    { v: Any? ->
                                         writeDebug(driver, row1, start, end, v)
 
                                     } t3
@@ -109,7 +111,7 @@ class NioMMap(
         v: Any?
     ) {
         val byteBuffer = row1[start, end]
-        val (a,b )=driver
+        val (a, b) = driver
         driver.write(byteBuffer.duplicate(), v)
         Unit
     }
@@ -146,6 +148,7 @@ class NioMMap(
         mf.mappedByteBuffer.get().position(it * recordLen()).slice().limit(recordLen())
     }
     override val size = { mf.randomAccessFile.length() }
+
     @Suppress("ControlFlowWithEmptyBody")
     override var recordLen = {
         mf.mappedByteBuffer.get().duplicate().clear().let {
@@ -222,10 +225,11 @@ class NioMMap(
 open class CellDriver<B, R>(
     open val read: readfn<B, R>,
     open val write: writefn<B, R>
-){
-operator fun component1   ()=  read
-operator fun component2   ()=  write
+) {
+    operator fun component1() = read
+    operator fun component2() = write
 }
+
 class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
     companion object {
         /**coroutineContext derived map of Medium access drivers

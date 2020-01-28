@@ -223,6 +223,7 @@ fun <T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
 }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size, { a.get(it) })
+
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
  * The returned list has length of the shortest collection.

@@ -3,7 +3,6 @@ package columnar
 import columnar.context.CellDriver
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
-import kotlin.reflect.KMutableProperty2
 
 typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>
 typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>>
@@ -20,6 +19,7 @@ fun stringOf(it: RowVec) = it.left.toList().map { any ->
 
 
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
+
 val <F, S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
 val <F, S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
 val <F, S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair

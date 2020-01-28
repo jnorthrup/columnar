@@ -31,6 +31,7 @@ interface Hand1l<F> {
 interface Pai2<F, S> {
     val first: F
     val second: S
+
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
@@ -41,10 +42,10 @@ interface Pai2<F, S> {
 
     @Suppress("OVERRIDE_BY_INLINE")
     companion object {
-          operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
+        operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
             object : Pai2<F, S> {
-                override   val first get() = first
-                override   val second get() = second
+                override val first get() = first
+                override val second get() = second
             }
 
 
@@ -64,6 +65,7 @@ interface Tripl3<F, S, T>/* : Pai2<F, S> */ {
     operator fun component1(): F = first
     operator fun component2(): S = second
     operator fun component3(): T = third
+
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
@@ -99,18 +101,20 @@ typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
  */
 typealias Tw1n<X> = XY<X, X>
 
-inline fun <reified T>Tw1n(first:T, second:T):Tw1n<T> = arrayOf(first,second).let { ar->
-    object : Pai2<T,T> {
-        override   val first get() = ar[0]
-        override   val second get() = ar[1]
-    }}
-
-inline class Tw1nt(val ia:IntArray) : Tw1n<Int > {
-    override val first get()=ia[0]
-    override val second get()=ia[1]
+inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
+    object : Pai2<T, T> {
+        override val first get() = ar[0]
+        override val second get() = ar[1]
+    }
 }
+
+inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
+    override val first get() = ia[0]
+    override val second get() = ia[1]
+}
+
 @JvmName("twinint")
- fun Tw1n(first:Int, second:Int):Tw1n<Int> = Tw1nt(intArrayOf(first,second))
+fun Tw1n(first: Int, second: Int): Tw1n<Int> = Tw1nt(intArrayOf(first, second))
 
 infix fun <X, Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
     (first t2 u.first) as P

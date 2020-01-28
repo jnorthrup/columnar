@@ -18,7 +18,7 @@ val btoa: (ByteArray) -> String = { ba: ByteArray -> String(ba, Charsets.UTF_8) 
 val trim: (String) -> String = String::trim
 fun logDebug(debugTxt: () -> String) {
     try {
-        assert(false,  debugTxt )
+        assert(false, debugTxt)
     } catch (a: AssertionError) {
         System.err.println(debugTxt())
     }

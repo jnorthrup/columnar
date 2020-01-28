@@ -6,6 +6,7 @@ import shouldBe
 //import io\.kotlintest\.specs\.StringSpec\n
 
 class VectorLikeKtTest/* : StringSpec()*/ {
+    @org.junit.jupiter.api.Test
     fun `combinevec`() {
         val c: Vect0r<Int> = combine(
             (0..2).toVect0r(),
@@ -17,6 +18,7 @@ class VectorLikeKtTest/* : StringSpec()*/ {
         System.err.println(toList)
     }
 
+    @org.junit.jupiter.api.Test
     fun `div`() {
         val intRange = 0..11
         fun IntRange.split(nSubRanges: Int) = run {
@@ -35,6 +37,7 @@ class VectorLikeKtTest/* : StringSpec()*/ {
         toList shouldBe toList1
     }
 
+    @org.junit.jupiter.api.Test
     fun `subranges`() {
 
     }

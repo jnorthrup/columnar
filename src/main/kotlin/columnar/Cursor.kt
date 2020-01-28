@@ -10,7 +10,6 @@ import java.time.LocalDate
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 import kotlin.math.sqrt
 
 typealias Cursor = Vect0r<RowVec>
@@ -25,7 +24,8 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
                             val cnar: Columnar = crt[Arity.arityKey] as Columnar
                             //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
                             // and call in a cell through here
-                            val name = cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
+                            val name =
+                                cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
                             val type: IOMemento = cnar.first[ix]
                             Scalar(type, name)
                         }
@@ -45,7 +45,9 @@ fun Cursor.narrow() =
 val accnil = Array<Any?>(0) {}
 val <C : Vect0r<R>, R> C.`…`: List<R> get() = this.toList()
 
-val Cursor.scalars get() = toSequence().first().right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[Arity.arityKey] as Scalar } }
+val Cursor.scalars
+    get() = toSequence().first()
+        .right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[Arity.arityKey] as Scalar } }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
