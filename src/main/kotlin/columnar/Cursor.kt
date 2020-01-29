@@ -247,7 +247,7 @@ fun Cursor.groupClusters(
     System.err.println("--- group")
     clusters = linkedMapOf()
     val cap = Math.max(8, (sqrt(first.toDouble()).toInt()))
-    mapIndexed { iy: Int, row: RowVec ->
+    val mapIndexed = mapIndexedToList { iy: Int, row: RowVec ->
         row[axis].left.toList().let {
             clusters.get(it).let { clust ->
                 if (clust != null) clust.add(iy) else clusters[it] = ArrayList<Int>(cap).apply { add(iy) }
@@ -255,5 +255,6 @@ fun Cursor.groupClusters(
         }
     }
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys /*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
-    clusters.values.map(MutableList<Int>::toIntArray)
+    val list = clusters.values α MutableList<Int>::toIntArray
+    list
 }

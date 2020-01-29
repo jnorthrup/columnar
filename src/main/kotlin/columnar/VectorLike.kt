@@ -211,18 +211,15 @@ fun <T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
     }
 }
 
-fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R): Vect0r<R> = Vect0r(first, { ix: Int -> second(ix).let(fn) })
+fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R): Vect0r<R> = Vect0r(first) { it `→` (fn `⚬` second) }
+fun <T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R): Vect0r<R> = Vect0r(first) { fn(it, it `→` second) }
+fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R) = List(first) { fn(it, it `→` second) }
+fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) { for (ix in (0 until first)) ix `→` (fn `⚬` second) }
 
-fun <T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R) = List(first) { ix -> fn(ix, this[ix]) }
-fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
-    for (ix in (0 until first)) fn(this[ix])
-}
 
-fun <T, R> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
-    for (ix in (0 until first)) fn(ix, this[ix])
-}
+fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) { for (ix in (0 until first)) fn(ix, ix `→` second) }
 
-fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size, { a.get(it) })
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { it `→` a::get }
 
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
@@ -230,13 +227,12 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size, { a.get(it) })
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> {
-    return zip(other.toArray()) { a, b -> a t2 b }
-}
+inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
+    zip(other.toList()) { a, b -> a t2 b }
 
 @Suppress("UNCHECKED_CAST")
-fun <T, O, P : Pai2<T, O>, R : Vect0r<P>> Vect0r<T>.zip(o: Vect0r<O>): Vect0r<P> =
-    Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) as P } as R
+fun <T, O> Vect0r<T>.zip(o: Vect0r<O>):Vect02<T,O> =
+    Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
