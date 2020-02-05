@@ -102,7 +102,7 @@ class NioMMap(
     }
 
     companion object {
-        fun text(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> {
+        fun text(m: Vect0r<TypeMemento>): Array<CellDriver<ByteBuffer, Any?>> {
             val arrayOfTokenizeds = Tokenized.mapped[m]
             return arrayOfTokenizeds as Array<CellDriver<ByteBuffer, Any?>>
         }
@@ -221,7 +221,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
          */
 
         val mapped = mapOf(
-            IOMemento.IoInt to Tokenized(
+            IOMemento.IoInt as  TypeMemento to Tokenized(
                 bb2ba `→` btoa `→` trim * String::toInt,
                 { a, b -> a.putInt(b) }),
             IOMemento.IoLong to Tokenized(
@@ -253,7 +253,7 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
          *
          */
         val mapped = mapOf(
-            IOMemento.IoInt to Fixed(
+            IOMemento.IoInt as TypeMemento to Fixed(
                 4,
                 ByteBuffer::getInt,
                 { a, b -> a.putInt(b);Unit }),

@@ -21,7 +21,7 @@ class CursorKtTest/* : StringSpec()*/ {
     ) α { ints: IntArray -> Tw1nt(ints)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
 
     val drivers = vect0rOf(
-        IoLocalDate,
+        IoLocalDate as TypeMemento,
         IoString,
         IoFloat,
         IoFloat

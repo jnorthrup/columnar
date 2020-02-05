@@ -26,7 +26,7 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
                             // and call in a cell through here
                             val name =
                                 cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
-                            val type: IOMemento = cnar.first[ix]
+                            val type  = cnar.first[ix]
                             Scalar(type, name)
                         }
                     }
@@ -133,7 +133,7 @@ fun Cursor.pivot(
         val synthPrefix: String = list.mapIndexed { index: Int, any: Any? ->
             "${allscalars[axis[index]].second!!}=$any"
         }.joinToString(",", "[", "]")
-        fanoutScalars.map({ (ioMemento: IOMemento, s: String?): Scalar ->
+        fanoutScalars.map({ (ioMemento , s: String?): Scalar ->
             Scalar(ioMemento, "$synthPrefix:$s")
         })
     }.flatten().toTypedArray()

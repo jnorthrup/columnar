@@ -32,34 +32,48 @@ class NinetyDegreeTest/* : StringSpec()*/ {
      */
     @org.junit.jupiter.api.Test
     fun rewriteBinFwfRowMajor() {
-
         //we resample and pivot a source cursor
         val piv: Cursor = cursorOf(
             RowMajor().fromFwf(
                 fixedWidth, indexable as Indexable, nio, Columnar(
-                    vect0rOf(
-                        IoLocalDate,
+                     vect0rOf(
+                        IoLocalDate as TypeMemento,
                         IoString,
                         IoFloat,
                         IoFloat
-                    ), vect0rOf("date", "channel", "delivered", "ret")
+                    ),
+                    vect0rOf<String>("date", "channel", "delivered", "ret")
                 )
             )
         ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3)) α floatFillNa(0f)
+        val defaultVarcharSize = 64
+
+        /**
+         * open destination file
+         */
+        val createTempFile = File.createTempFile("ninetyDegreesTest1", ".fwf")
+        System.err.println("tmpfile is " + createTempFile.toPath())
 
 
+        toBinary(piv, createTempFile, /*second, */defaultVarcharSize)
+    }
+
+      fun toBinary(
+        piv: Cursor,
+        createTempFile: File,
+//        second: Cursor,
+        defaultVarcharSize: Int=128
+    ) {
         /** create context columns
          *
          */
-        val (wcolumnar: Arity, ioMemos: Vect0r<IOMemento>) = piv.scalars `→` { scalars: Vect0r<Scalar> ->
+        val (wcolumnar: Arity, ioMemos: Vect0r<TypeMemento>) = piv.scalars `→` { scalars: Vect0r<Scalar> ->
             Columnar.of(
                 scalars
             ) t2 (scalars α Scalar::first)
         }
-        val defaultVarcharSize = 64
-
-        val sizes = ioMemos α { ioMemento: IOMemento ->
-            ioMemento.networkSize ?: defaultVarcharSize
+        val sizes = ioMemos α { memento: TypeMemento ->
+            memento.networkSize ?: defaultVarcharSize
         }
         //todo: make IntArray Tw1nt Matrix
         var wrecordlen = 0
@@ -69,18 +83,10 @@ class NinetyDegreeTest/* : StringSpec()*/ {
             Tw1n(wrecordlen, (wrecordlen + size).also { wrecordlen = it })
         }
         System.err.println("wcoords:" + wcoords.toList().map { (a, b) -> a to b })
-        /**
-         * open destination file
-         */
-        val createTempFile = File.createTempFile("ninetyDegreesTest1", ".fwf")
-        System.err.println("tmpfile is " + createTempFile.toPath())
-        /**
-         * a stutter for now, resize the fil;e, close, and then come back to it again
-         */
+
+
         MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
             mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * piv.size)
-        }
-        MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE) .use{mappedFile->
 
             /**
              * preallocate the mmap file

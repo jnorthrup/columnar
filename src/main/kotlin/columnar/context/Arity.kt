@@ -12,24 +12,24 @@ sealed class Arity : CoroutineContext.Element {
     }
 }
 
-open class Scalar(type: IOMemento, name: String? = null) : Pai2<IOMemento, String?> by Pai2(type, name), Arity()
+open class Scalar(type: TypeMemento, name: String? = null) : Pai2<TypeMemento, String?> by Pai2(type, name), Arity()
 
 /**Borg reference*/
-class UniMatrix(type: IOMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar(type, name)
+class UniMatrix(type: TypeMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar(type, name)
 
-class Columnar(type: Vect0r<IOMemento>, names: Vect0r<String>? = null) :
-    Pai2<Vect0r<IOMemento>, Vect0r<String>?> by Pai2(type, names), Arity() {
+class Columnar(type: Vect0r<TypeMemento>, names: Vect0r<String>? = null) :
+    Pai2<Vect0r<TypeMemento>, Vect0r<String>?> by Pai2(type, names), Arity() {
     companion object {
-        fun of(vararg type: IOMemento): Columnar = Columnar(vect0rOf(*type))
+        fun of(vararg type: TypeMemento): Columnar = Columnar(vect0rOf(*type))
 
         @JvmName("fact1")
-        fun of(mapping: Vect02<String, IOMemento>) =
-            Columnar(mapping α Pai2<String, IOMemento>::second, mapping α Pai2<String, IOMemento>::first)
+        fun of(mapping: Vect02<String, TypeMemento>) =
+            Columnar(mapping α Pai2<String, TypeMemento>::second, mapping α Pai2<String, TypeMemento>::first)
 
         @JvmName("fact2")
         fun of(scalars: Vect0r<Scalar>): Columnar {
             var c = 0
-            val mapping: Vect02<String, IOMemento> = scalars α { (memento: IOMemento, name: String?): Scalar ->
+            val mapping: Vect02<String, TypeMemento> = scalars α { (memento: TypeMemento, name: String?): Scalar ->
                 val padStart = (c++).toString().padStart(6, '0')
                 (name ?: "col$padStart") t2 memento
             }
@@ -38,4 +38,4 @@ class Columnar(type: Vect0r<IOMemento>, names: Vect0r<String>? = null) :
     }
 }
 
-class Variadic(val types: () -> Vect0r<IOMemento>) : Arity()
+class Variadic(val types: () -> Vect0r<TypeMemento>) : Arity()
