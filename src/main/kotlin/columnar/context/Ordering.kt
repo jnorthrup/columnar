@@ -29,17 +29,16 @@ sealed class Ordering : CoroutineContext.Element {
 class RowMajor : Ordering() {
     companion object {
 
-        //todo: move to rowMajor
         fun fixedWidthOf(
             nio: NioMMap,
             coords: Vect0r<Tw1nt>,
             defaulteol: () -> Byte = '\n'::toByte
-        ) = fixedWidth(defaulteol, nio, coords.α(Tw1nt::ia))
+        ) = fixedWidth(defaulteol, nio, coords )
 
         private fun fixedWidth(
             defaulteol: () -> Byte,
             nio: NioMMap,
-            coords: Vect0r<IntArray>
+            coords: Vect0r<Tw1nt>
         ): FixedWidth {
             return FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
                 nio.mf.mappedByteBuffer.get().duplicate().clear().run {
@@ -50,7 +49,6 @@ class RowMajor : Ordering() {
         }
 
 
-        //todo: move to rowMajor
         fun indexableOf(
             nio: NioMMap, fixedWidth: FixedWidth,
             mappedByteBuffer: MappedByteBuffer = nio.mf.mappedByteBuffer.get()
@@ -86,7 +84,7 @@ class RowMajor : Ordering() {
                 indexable +
                 nio +
                 columnarArity
-    ) { Pai2(nio.values(), this.coroutineContext) }
+    ) { nio.values() as NioCursor t2 this.coroutineContext }
 }
 
 /**

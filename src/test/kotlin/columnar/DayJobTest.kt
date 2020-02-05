@@ -75,13 +75,11 @@ class DayJobTest/* : StringSpec()*/ {
 
     @org.junit.jupiter.api.Test
     fun `pivot+pgroup+reduce`() {
-        val resample = curs[2, 1, 3, 5].resample(0)
-        val pivot = resample.pivot(
+        val filtered = curs[2, 1, 3, 5].resample(0).pivot(
             intArrayOf(0),
             intArrayOf(1, 2),
             intArrayOf(3)
-        )
-        val filtered = pivot.group(intArrayOf(0), floatSum)
+        ).group(intArrayOf(0), floatSum)
         lateinit var second: RowVec
         println(
             "row 2 seektime: " +

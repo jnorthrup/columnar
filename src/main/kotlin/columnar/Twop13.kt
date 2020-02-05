@@ -116,6 +116,11 @@ inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
 @JvmName("twinint")
 fun <T:Int>Tw1n(first:T, second: T) = Tw1nt(intArrayOf(first, second))
 
+fun <T:Long>Tw1n(first:T, second: T) = Twln (longArrayOf (first, second))
+inline class Twln (val ia: LongArray) : Tw1n<Long> {
+    override val first get() = ia[0]
+    override val second get() = ia[1]
+}
 infix fun <X, Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
     (first t2 u.first) as P
 

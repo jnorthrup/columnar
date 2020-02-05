@@ -1,5 +1,6 @@
 package columnar.context
 
+import columnar.Tw1nt
 import columnar.Vect0r
 import kotlin.coroutines.CoroutineContext
 
@@ -31,7 +32,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
 
 class FixedWidth(
     val recordLen: Int,
-    val coords: Vect0r<IntArray>,
+    val coords: Vect0r<Tw1nt>,
     val endl: () -> Byte? = '\n'::toByte,
     val pad: () -> Byte? = ' '::toByte
 ) : RecordBoundary()

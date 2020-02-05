@@ -19,7 +19,7 @@ class NinetyDegreeTest/* : StringSpec()*/ {
             84, 124,
             124, 164
         )
-    ) α { ints: IntArray -> Tw1nt(ints)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
+    ) α { ints: IntArray -> Tw1nt(ints)  }
     val mf = MappedFile("src/test/resources/caven20.fwf")
     val nio = NioMMap(mf)
 
@@ -45,7 +45,8 @@ class NinetyDegreeTest/* : StringSpec()*/ {
                     ), vect0rOf("date", "channel", "delivered", "ret")
                 )
             )
-        ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3))
+        ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3)) α floatFillNa(0f)
+
 
         /** create context columns
          *
@@ -79,54 +80,55 @@ class NinetyDegreeTest/* : StringSpec()*/ {
         MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
             mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * piv.size)
         }
-        val mappedFile = MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE)
+        MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE) .use{mappedFile->
 
-        /**
-         * preallocate the mmap file
-         */
+            /**
+             * preallocate the mmap file
+             */
 
-        val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
-            Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
-        val wfixedWidth: RecordBoundary = FixedWidth(
-            wrecordlen, wcoords α { tw1nt: Tw1nt -> tw1nt.ia }, null.`⟲`, null.`⟲`
-        )
+            val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
+                Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
+            val wfixedWidth: RecordBoundary = FixedWidth(
+                wrecordlen, wcoords α { tw1nt: Tw1nt -> tw1nt }, null.`⟲`, null.`⟲`
+            )
 
-        /**
-         * nio object
-         */
-        val wnio: Medium = NioMMap(mappedFile, drivers1)
-        wnio.recordLen = wrecordlen.`⟲`
-        val windex: Addressable = indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
+            /**
+             * nio object
+             */
+            val wnio: Medium = NioMMap(mappedFile, drivers1)
+            wnio.recordLen = wrecordlen.`⟲`
+            val windex: Addressable = indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
 
 
-        //val wnioCursor:             NioCursor
+            //val wnioCursor:             NioCursor
 
-        val wtable: TableRoot = runBlocking(
-            windex +
-                    wcolumnar +
-                    wfixedWidth +
-                    wnio +
-                    RowMajor()
-        ) {
-            val wniocursor = wnio.values()
-            val coroutineContext1 = this.coroutineContext
-            val arity = coroutineContext1[Arity.arityKey] as Columnar
-            val first = System.err.println("columnar memento: " + arity.first.toList())
-            wniocursor t2 coroutineContext1
-        }
+            val wtable: TableRoot = runBlocking(
+                windex +
+                        wcolumnar +
+                        wfixedWidth +
+                        wnio +
+                        RowMajor()
+            ) {
+                val wniocursor = wnio.values()
+                val coroutineContext1 = this.coroutineContext
+                val arity = coroutineContext1[Arity.arityKey] as Columnar
+                val first = System.err.println("columnar memento: " + arity.first.toList())
+                wniocursor t2 coroutineContext1
+            }
 
-        val scalars = piv.scalars
-        val xsize = scalars.size
-        val ysize = piv.size
+            val scalars = piv.scalars
+            val xsize = scalars.size
+            val ysize = piv.size
 
-        for (y in 0 until ysize) {
-            val rowVals = piv.second(y).left
-            for (x in 0 until xsize) {
-                val tripl3 = wtable.first[x, y]
-                val writefN = tripl3.second
-                val any = rowVals[x]
-                System.err.println("wfn: ($y,$x)")
-                writefN(any)
+            for (y in 0 until ysize) {
+                val rowVals = piv.second(y).left
+                for (x in 0 until xsize) {
+                    val tripl3 = wtable.first[x, y]
+                    val writefN = tripl3.second
+                    val any = rowVals[x]
+                    System.err.println("wfn: ($y,$x)=$any")
+                    writefN(any)
+                }
             }
         }
     }

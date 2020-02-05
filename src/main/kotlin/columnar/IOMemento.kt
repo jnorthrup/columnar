@@ -45,7 +45,6 @@ enum class IOMemento(val networkSize: Int? = null) {
     IoNothing()
 }
 
-val lofnull = listOf(null)
 
 fun floatFillNa(fill: Float): (Any?) -> Any? {
     lateinit var x: (Any?) -> Any?

@@ -65,12 +65,12 @@ class NioMMap(
             is TokenizedRow -> TODO()
         }
 
-        (fun(): Pai2<Vect0r<NioCursorState>, (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>> =
-            asContextVect0r(addressable as Indexable, recordBoundary) t2 { y: ByteBuffer ->
-                Vect0r(drivers.size) { x: Int ->
-                    (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
-                }
-            })().let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>) ->
+        val asContextVect0r = asContextVect0r(addressable as Indexable, recordBoundary)
+        (asContextVect0r t2 { y: ByteBuffer ->
+            Vect0r(drivers.size) { x: Int ->
+                (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
+            }
+        }).let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<NioMeta>) ->
             NioCursor(intArrayOf(drivers.size, row.first)) { (x: Int, y: Int): IntArray ->
                 mappedDriver(row, y, col, x, coords)
             }
@@ -81,13 +81,13 @@ class NioMMap(
     fun mappedDriver(
         row: Vect0r<NioCursorState>,
         y: Int,
-        col: (ByteBuffer) -> Vect0r<Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>>,
+        col: (ByteBuffer) -> Vect0r<NioMeta>,
         x: Int,
-        coords: Vect0r<IntArray>
-    ): Tripl3<() -> Any, (Any?) -> Unit, Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>> = let {
-        val (start, end) = coords[x]
-        val (outbuff) = row[y]
-        val (_, triple) = col(outbuff)
+        coords: Vect0r<Tw1nt>
+    ): Tripl3<() -> Any, (Any?) -> Unit, NioMeta> = let {
+        val (start: Int, end: Int) = coords[x]
+        val (outbuff: ByteBuffer) = row[y]
+        val (_: Int, triple: Function<NioMeta>) = col(outbuff)
 
         val triple1 = triple(x)
         val (driver: CellDriver<ByteBuffer, Any?>) = triple1
@@ -98,7 +98,7 @@ class NioMMap(
                         val (a, b) = driver
                         b(byteBuffer.duplicate(), v)
                     }
-                } t3  triple1
+                } t3 triple1
     }
 
     companion object {
@@ -116,7 +116,7 @@ class NioMMap(
     fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth
-    ): Vect02<ByteBuffer, Pai2<Long, Long>> = Vect0r(indexable.size()) { ix: Int ->
+    ): Vect02<ByteBuffer, MMapWindow> = Vect0r(indexable.size()) { ix: Int ->
         runBlocking {
 
             translateMapping(
@@ -234,7 +234,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 bb2ba `→` btoa `→` trim `→` String::toDouble,
                 { a, b -> a.putDouble(b) }),
             IOMemento.IoString to Tokenized(
-                bb2ba `→` btoa `→` trim,   xInsertString
+                bb2ba `→` btoa `→` trim, xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
                 dateMapper `⚬` trim `⚬` btoa `⚬` bb2ba,
