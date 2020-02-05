@@ -20,20 +20,11 @@ class NinetyDegreeTest/* : StringSpec()*/ {
             124, 164
         )
     ) α { ints: IntArray -> Tw1nt(ints)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
-    val drivers = vect0rOf(
-        IoLocalDate,
-        IoString,
-        IoFloat,
-        IoFloat
-    )
-    val names = vect0rOf("date", "channel", "delivered", "ret")
     val mf = MappedFile("src/test/resources/caven20.fwf")
     val nio = NioMMap(mf)
 
     val fixedWidth = fixedWidthOf(nio, coords)
     val indexable: Addressable = indexableOf(nio, fixedWidth)
-    val columnarArity = Columnar(drivers, names)
-    val root = RowMajor().fromFwf(fixedWidth, indexable as Indexable, nio, columnarArity)
 
 
     /**
@@ -43,36 +34,39 @@ class NinetyDegreeTest/* : StringSpec()*/ {
     fun rewriteBinFwfRowMajor() {
 
         //we resample and pivot a source cursor
-        val cursor: Cursor = cursorOf(root).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3))
+        val piv: Cursor = cursorOf(
+            RowMajor().fromFwf(
+                fixedWidth, indexable as Indexable, nio, Columnar(
+                    vect0rOf(
+                        IoLocalDate,
+                        IoString,
+                        IoFloat,
+                        IoFloat
+                    ), vect0rOf("date", "channel", "delivered", "ret")
+                )
+            )
+        ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3))
 
         /** create context columns
          *
          */
-        val (wcolumnar: Arity, ioMemos: Vect0r<IOMemento>) = cursor.scalars `→` { scalars: Vect0r<Scalar> ->
+        val (wcolumnar: Arity, ioMemos: Vect0r<IOMemento>) = piv.scalars `→` { scalars: Vect0r<Scalar> ->
             Columnar.of(
                 scalars
             ) t2 (scalars α Scalar::first)
         }
+        val defaultVarcharSize = 64
 
+        val sizes = ioMemos α { ioMemento: IOMemento ->
+            ioMemento.networkSize ?: defaultVarcharSize
+        }
+        //todo: make IntArray Tw1nt Matrix
+        var wrecordlen = 0
 
-        /** fabricate  binary sized coords */
-        val (wcoords: Vect0r<IntArray>, wrecordlen: Int) =
-            ioMemos.toList().mapIndexed { i, ioMemento ->
-                val pai2 = coords[i]
-                ioMemento.networkSize ?: pai2.size
-            }.let { wsizes ->
-                val x: MutableList<Tw1n<Int>> = mutableListOf()
-                wsizes.fold(Tw1n(0, 0)) { (s, e), wsz: Int ->
-                    (e t2 (e + wsz)).also { x.add(it) }
-                }
-
-                wsizes.mapIndexed { index: Int, size: Int ->
-                    val start = if (index == 0) 0 else wsizes[index - 1]
-                    intArrayOf(start, start + size)
-                }.toVect0r() t2 wsizes.also { System.err.println("sizes: ${it.toList()}") }.sum()
-
-
-            }
+        val wcoords = Array(sizes.size) {
+            val size = sizes[it]
+            Tw1n(wrecordlen, (wrecordlen + size).also { wrecordlen = it })
+        }
         System.err.println("wcoords:" + wcoords.toList().map { (a, b) -> a to b })
         /**
          * open destination file
@@ -83,9 +77,9 @@ class NinetyDegreeTest/* : StringSpec()*/ {
          * a stutter for now, resize the fil;e, close, and then come back to it again
          */
         MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
-            mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * cursor.size)
+            mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * piv.size)
         }
-        var mappedFile = MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE)
+        val mappedFile = MappedFile(createTempFile.absolutePath, "rw", FileChannel.MapMode.READ_WRITE)
 
         /**
          * preallocate the mmap file
@@ -94,7 +88,7 @@ class NinetyDegreeTest/* : StringSpec()*/ {
         val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
             Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
         val wfixedWidth: RecordBoundary = FixedWidth(
-            wrecordlen, wcoords, null.`⟲`, null.`⟲`
+            wrecordlen, wcoords α { tw1nt: Tw1nt -> tw1nt.ia }, null.`⟲`, null.`⟲`
         )
 
         /**
@@ -116,17 +110,23 @@ class NinetyDegreeTest/* : StringSpec()*/ {
         ) {
             val wniocursor = wnio.values()
             val coroutineContext1 = this.coroutineContext
+            val arity = coroutineContext1[Arity.arityKey] as Columnar
+            val first = System.err.println("columnar memento: " + arity.first.toList())
             wniocursor t2 coroutineContext1
         }
 
-        val xsize = cursor.scalars.size
-        val ysize = cursor.size
+        val scalars = piv.scalars
+        val xsize = scalars.size
+        val ysize = piv.size
 
         for (y in 0 until ysize) {
-            val rowVals = cursor.second(y).left
+            val rowVals = piv.second(y).left
             for (x in 0 until xsize) {
-                val wfn = wtable.first[y, x].second
-                wfn(rowVals[x])
+                val tripl3 = wtable.first[x, y]
+                val writefN = tripl3.second
+                val any = rowVals[x]
+                System.err.println("wfn: ($y,$x)")
+                writefN(any)
             }
         }
     }

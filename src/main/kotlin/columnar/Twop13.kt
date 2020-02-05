@@ -114,7 +114,7 @@ inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
 }
 
 @JvmName("twinint")
-fun Tw1n(first: Int, second: Int): Tw1n<Int> = Tw1nt(intArrayOf(first, second))
+fun <T:Int>Tw1n(first:T, second: T) = Tw1nt(intArrayOf(first, second))
 
 infix fun <X, Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
     (first t2 u.first) as P

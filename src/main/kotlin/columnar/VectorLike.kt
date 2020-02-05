@@ -219,7 +219,7 @@ fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) { for (ix in (0 until first)) ix `→
 
 fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) { for (ix in (0 until first)) fn(ix, ix `→` second) }
 
-fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { it `→` a::get }
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) {   a[it] }
 
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.

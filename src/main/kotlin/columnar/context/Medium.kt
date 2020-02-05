@@ -85,35 +85,20 @@ class NioMMap(
         x: Int,
         coords: Vect0r<IntArray>
     ): Tripl3<() -> Any, (Any?) -> Unit, Tripl3<CellDriver<ByteBuffer, Any?>, IOMemento, Int>> = let {
-        coords[x].let { (start, end) ->
-            row[y].let { (row1) ->
-                col(row1).let { (_, triple) ->
-                    triple(x).let { triple1 ->
-                        triple1.let { (driver: CellDriver<ByteBuffer, Any?>) ->
-                            { row1[start, end] `→` driver.read } as () -> Any t2
-                                    { v: Any? ->
-                                        writeDebug(driver, row1, start, end, v)
+        val (start, end) = coords[x]
+        val (outbuff) = row[y]
+        val (_, triple) = col(outbuff)
 
-                                    } t3
-                                    triple1
-                        }
+        val triple1 = triple(x)
+        val (driver: CellDriver<ByteBuffer, Any?>) = triple1
+        { outbuff[start, end] `→` driver.read } as () -> Any t2
+                { v: Any? ->
+                    val byteBuffer = outbuff[start, end]
+                    byteBuffer.let {
+                        val (a, b) = driver
+                        b(byteBuffer.duplicate(), v)
                     }
-                }
-            }
-        }
-    }
-
-    private fun writeDebug(
-        driver: CellDriver<ByteBuffer, Any?>,
-        row1: ByteBuffer,
-        start: Int,
-        end: Int,
-        v: Any?
-    ) {
-        val byteBuffer = row1[start, end]
-        val (a, b) = driver
-        driver.write(byteBuffer.duplicate(), v)
-        Unit
+                } t3  triple1
     }
 
     companion object {
@@ -249,8 +234,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 bb2ba `→` btoa `→` trim `→` String::toDouble,
                 { a, b -> a.putDouble(b) }),
             IOMemento.IoString to Tokenized(
-                bb2ba `→` btoa `→` trim,
-                xInsertString
+                bb2ba `→` btoa `→` trim,   xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
                 dateMapper `⚬` trim `⚬` btoa `⚬` bb2ba,
