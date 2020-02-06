@@ -2,10 +2,11 @@
 
 package columnar
 
-import columnar.context.Arity
-import columnar.context.Columnar
-import columnar.context.Scalar
+import columnar.context.*
 import kotlinx.coroutines.runBlocking
+import java.io.FileWriter
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 import java.time.LocalDate
 import java.util.*
 import kotlin.collections.ArrayList
@@ -257,4 +258,94 @@ fun Cursor.groupClusters(
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys /*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
     val list = clusters.values α MutableList<Int>::toIntArray
     list
+}
+
+
+
+
+fun Cursor.writeBinary(
+    pathname: String,
+    defaultVarcharSize: Int = 128
+) {
+    /** create context columns
+     *
+     */
+    val (wcolumnar: Arity, ioMemos: Vect0r<TypeMemento>) = scalars `→` { scalars: Vect0r<Scalar> ->
+        Columnar.of(
+            scalars
+        ) t2 (scalars α Scalar::first)
+    }
+    val sizes = ioMemos α { memento: TypeMemento ->
+        memento.networkSize ?: defaultVarcharSize
+    }
+    //todo: make IntArray Tw1nt Matrix
+    var wrecordlen = 0
+
+    val wcoords = Array(sizes.size) {
+        val size = sizes[it]
+        Tw1n(wrecordlen, (wrecordlen + size).also { wrecordlen = it })
+    }
+    System.err.println("wcoords:" + wcoords.toList().map { (a, b) -> a to b })
+
+
+    MappedFile(pathname, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
+        mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * size)
+
+        /**
+         * preallocate the mmap file
+         */
+
+        val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
+            Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
+        val wfixedWidth: RecordBoundary = FixedWidth(
+            wrecordlen, wcoords α { tw1nt: Tw1nt -> tw1nt }, null.`⟲`, null.`⟲`
+        )
+         FileWriter(pathname + ".meta").use {fileWriter->
+             fileWriter.appendln("# format: recordlen EOL coords WS .. EOL names WS .. EOL TypeMememento WS ..")
+             fileWriter.appendln("$wrecordlen")
+             val flatten = wcoords.toList().map { listOf(it.first, it.second) }.flatten().joinToString(" ")
+             fileWriter.appendln("" + flatten)
+             fileWriter.appendln("" +              scalars.toList().map { scalar: Scalar -> scalar.second }.joinToString(" "))
+             fileWriter.appendln("" +              scalars.toList().map { scalar: Scalar -> scalar.first}.joinToString(" "))
+
+         }
+        /**
+         * nio object
+         */
+        val wnio: Medium = NioMMap(mappedFile, drivers1)
+        wnio.recordLen = wrecordlen.`⟲`
+        val windex: Addressable = RowMajor.indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
+
+
+        val wtable: TableRoot = runBlocking(
+            windex +
+                    wcolumnar +
+                    wfixedWidth +
+                    wnio +
+                    RowMajor()
+        ) {
+            val wniocursor:NioCursor = wnio.values()
+            val coroutineContext1 =  coroutineContext
+            val arity = coroutineContext1[Arity.arityKey] as Columnar
+            val first = System.err.println("columnar memento: " + arity.first.toList())
+            wniocursor t2 coroutineContext1
+
+
+        }
+
+        val scalars = scalars
+        val xsize = scalars.size
+        val ysize = size
+
+        for (y in 0 until ysize) {
+            val rowVals = this.second(y).left
+            for (x in 0 until xsize) {
+                val tripl3 = wtable.first[x, y]
+                val writefN = tripl3.second
+                val any = rowVals[x]
+//                System.err.println("wfn: ($y,$x)=$any")
+                writefN(any)
+            }
+        }
+    }
 }

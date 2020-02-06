@@ -137,7 +137,6 @@ class NioMMap(
     @Suppress("ControlFlowWithEmptyBody")
     override var recordLen = {
         mf.mappedByteBuffer.get().duplicate().clear().let {
-
             while (it.get() != '\n'.toByte());
             it.position()
 
@@ -145,9 +144,7 @@ class NioMMap(
     }
     val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-    fun remap(
-        rafchannel: FileChannel, window: MMapWindow
-    ) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
+    fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
         rafchannel.map(mf.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
     }
 
@@ -176,7 +173,7 @@ class NioMMap(
             else {
                 val recordOffset0 = seekTo
                 window1 = (recordOffset0 t2 min(size() - seekTo, windowSize))
-                val mappedByteBuffer = remap(mf.channel, (window1))//.also { state.set(Pai2(it,window1)) }
+                val mappedByteBuffer = remap(mf.channel, window1)//.also { state.set(Pai2(it,window1)) }
                 buf1 = mappedByteBuffer
 
             }
@@ -189,7 +186,8 @@ class NioMMap(
             when {
                 reuse ->
                     try {
-                        if (logReuseCountdown > 0) logDebug { "reuse( $memo1, ${memo2.pair})" }.also { logReuseCountdown-- }
+                        if (logReuseCountdown > 0)
+                            logDebug { "reuse( $memo1, ${memo2.pair})" }.also { logReuseCountdown-- }
                     } catch (a: AssertionError) {
                     }
                 else -> it.let { (_, window) ->
@@ -221,7 +219,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
          */
 
         val mapped = mapOf(
-            IOMemento.IoInt as  TypeMemento to Tokenized(
+            IOMemento.IoInt as TypeMemento to Tokenized(
                 bb2ba `→` btoa `→` trim * String::toInt,
                 { a, b -> a.putInt(b) }),
             IOMemento.IoLong to Tokenized(
