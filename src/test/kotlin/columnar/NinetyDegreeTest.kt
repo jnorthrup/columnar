@@ -8,6 +8,7 @@ import columnar.context.RowMajor.Companion.indexableOf
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
 
@@ -18,18 +19,17 @@ class NinetyDegreeTest/* : StringSpec()*/ {
      * wrtie a fixed length networkendian binary fwf of a cursor.
      */
     @org.junit.jupiter.api.Test
-    fun rewriteBinFwfRowMajor() {   val coords = intArrayOf(
-        0, 10,
-        10, 84,
-        84, 124,
-        124, 164
-    ).zipWithNext()
+    fun rewriteBinFwfRowMajor() {
+        val coords = intArrayOf(
+            0, 10,
+            10, 84,
+            84, 124,
+            124, 164
+        ).zipWithNext()
         val mf = MappedFile("src/test/resources/caven20.fwf")
         val nio = NioMMap(mf)
-
         val fixedWidth = fixedWidthOf(nio, coords)
         val indexable: Addressable = indexableOf(nio, fixedWidth)
-
         //we resample and pivot a source cursor
         val piv: Cursor = cursorOf(
             RowMajor().fromFwf(
@@ -52,8 +52,6 @@ class NinetyDegreeTest/* : StringSpec()*/ {
         val createTempFile = File.createTempFile("ninetyDegreesTest1", ".bin")
         System.err.println("tmpfile is " + createTempFile.toPath())
         piv.writeBinary(createTempFile.absolutePath, defaultVarcharSize)
-
-
     }
 
     @Test
@@ -71,38 +69,41 @@ class NinetyDegreeTest/* : StringSpec()*/ {
             "resources", s2
         )
 
-        val metapath1 = metapath
+        val cursr = binaryCursor(binpath, metapath)
 
-        val lines = Files.readAllLines(metapath1)
+        System.err.println(cursr.second(0).left.toList())
+        System.err.println(cursr.second(1).left.toList())
+        System.err.println(cursr.second(2).left.toList())
+        System.err.println(cursr.second(3).left.toList())
+    }
+
+    @Suppress("USELESS_CAST")
+    fun binaryCursor(
+        binpath: Path,
+        metapath: Path = Paths.get(binpath.toUri().toASCIIString() + ".meta")
+    ) = MappedFile(binpath.toString()).use { mf ->
+        val lines = Files.readAllLines(metapath)
         lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
-        val lineOfNames = lines[1].split("\\s+".toRegex()).toVect0r()
-        val typeVec = lines[2].split("\\s+".toRegex()) α IOMemento::valueOf
-
-        val coords: Vect02<Int, Int> = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
-        val recordlen = coords.last().second
-
-        MappedFile(binpath.toString()).use { mf ->
-            val drivers = NioMMap.binary(typeVec as Vect0r<IOMemento>)
-            val nio = NioMMap(mf, drivers)
-            val  fixedWidth  = FixedWidth(
-                 recordlen,  coords, null.`⟲`, null.`⟲`
-            )
-            val indexable: Addressable = indexableOf(nio, fixedWidth)
-            val cursr = cursorOf(
-                RowMajor().fromFwf(
-                    fixedWidth, indexable as Indexable, nio, Columnar(
-                        typeVec as Vect0r<TypeMemento>,
-                        lineOfNames
-                    )
+        val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
+        val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
+        val rcoords: Vect02<Int, Int> = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
+        val recordlen = rcoords.last().second
+        val drivers = NioMMap.binary(typeVec)
+        val nio = NioMMap(mf, drivers)
+        val fixedWidth = FixedWidth(
+            recordlen, rcoords, null.`⟲`, null.`⟲`
+        )
+        val indexable: Addressable = indexableOf(nio, fixedWidth)
+        cursorOf(
+            RowMajor().fromFwf(
+                fixedWidth,
+                indexable as Indexable,
+                nio,
+                Columnar(
+                    typeVec.map {it as TypeMemento }.toArray().toVect0r(),/*solidify the parse*/ rnames
                 )
             )
-    System.err.println(         cursr.second(0).left.toList())
-    System.err.println(         cursr.second(1).left.toList())
-    System.err.println(         cursr.second(2).left.toList())
-    System.err.println(         cursr.second(3).left.toList() )
-
-        }
-
+        )
     }
 }
 

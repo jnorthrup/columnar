@@ -261,6 +261,19 @@ fun Cursor.groupClusters(
 }
 
 
+/**
+ * this writes a cursor values to a single Network-endian ByteBuffer translation and writes an additional filename+".meta"
+ * file containing commented meta description strings
+ *
+ * this is a tempfile format until further notice, changes and fixes should be aggressively developed, there is no
+ * RFC other than this comment to go by
+ *
+ * For Strings, the #columnar.TypeMemento in the #columnar.Cursor::scalars must be customized at creationtime or the
+ * default size must be used.  this breaking change has not been made yet.
+ *
+ * #IOMemento.IoString accompanies varchar coords, so custom TypeMemento is not a requirment in the meta file format as of this comment.
+ *
+ */
 fun Cursor.writeBinary(
     pathname: String,
     defaultVarcharSize: Int = 128
@@ -356,7 +369,6 @@ private fun networkCoords(
             Tw1n(ia[i], ia[i1])
         }
     }
-
 }
 
 private fun networkSizes(

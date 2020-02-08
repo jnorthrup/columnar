@@ -14,14 +14,14 @@ with fundamaental operations:
  * slice and join columns 
  * random access across combined rows from different sources
  * Simplified one-hot encoding 
- * Julian, Lunar, and Islamic Calendar Tim-Series support 
+ * Julian, Lunar, and Islamic Calendar Time-Series support 
  
  
  ##   runtime objects
  
  The familiar dataset abstractions are as follows:
  
- **Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by column (x).  Future implementations will include more complex arrangements of x,y,z and beyond, to support locality and access optimizations.
+ **Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by Vector of column pairs (value,type) on x axis.  This Row is a typealias called RowVec.  Future implementations will include more complex arrangements of x,y,z and more, as described in the CoroutineContext at creationtme.
  
  **Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and heterogenous backing stores.  
  
@@ -32,7 +32,7 @@ with fundamaental operations:
 ## architecture 
 
 The initial focus of the implementation rests on the fixed-width file format obtainable via the companion project 
-[flatsql, part of json2jdbc](https://github.com/jnorthrup/jdbc2json#flatsqlsh)
+[flatsql, part of json2jdbc](https://github.com/jnorthrup/jdbc2json#flatsqlsh).  
 the library is designed to levereage the ISAM properties of FWF and to extend toward reading and creation of other data formats such as Binary rowsets and Scalar Column index volumes 
 
  ###   implementation distinctions from other implementations

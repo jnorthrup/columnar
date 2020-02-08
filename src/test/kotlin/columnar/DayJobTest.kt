@@ -13,19 +13,20 @@ import kotlin.system.measureTimeMillis
 class DayJobTest/* : StringSpec()*/ {
 
     //        val suffix = "_100"//"_RD"  105340
-    //    val suffix = "_1000"//"_RD"  3392440
-    //    val suffix = "_10000"     //"_RD"  139618738
+//        val suffix = "_1000"//"_RD"  3392440
+//        val suffix = "_10000"     //"_RD"  139618738 writeop took 231874ms
+
     //    val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
-    val suffix = "_500000"     //"_RD"
+//    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
-
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
+        val suffix = ""
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
         0, 11,
@@ -78,21 +79,26 @@ class DayJobTest/* : StringSpec()*/ {
             intArrayOf(1, 2),
             intArrayOf(3)
         ).group(intArrayOf(0), floatSum)
+/*
         lateinit var second: RowVec
-        println(
+*/
+/*        println(
             "row 2 seektime: " +
                     measureTimeMillis {
                         second = filtered.second(2)
                     } + " ms @ " + second.first + " columns"
-        )
+        )*/
         lateinit var message: String
-        println("row 2 took " + measureTimeMillis {
-            second.let {
-                println("row 2 is:")
-                message = stringOf(it)
-            }
+        val createTempFile = createTempFile("dayjob",".bin")
+        System.err.println("writing bin to "+createTempFile.toURI())
+        println("writeop took " + measureTimeMillis {
+            filtered.writeBinary(createTempFile.absolutePath)
+//            second.let {
+//                println("row 2 is:")
+//                message = stringOf(it)
+//            }
         } + "ms")
-        println(message)
+//        println(message)
 //            lastmessage?.shouldBe(  message )
 //            lastmessage=message
     }
@@ -113,7 +119,6 @@ class DayJobTest/* : StringSpec()*/ {
                         second = filtered.second(2)
 
                     } + " ms @ " + second.first + " columns"
-
 
         )
         lateinit var message: String
