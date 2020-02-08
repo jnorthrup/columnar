@@ -20,6 +20,7 @@ this is purpose-built early implementations for large scale time series LSTM dat
   - [X] large file access: JVM NIO mmap window addressability beyond MAXINT bytes   
   - [X] Algebraic Vector aggregate operations with lazy runtime execution on contents
   - [ ] Mapper Buffer pools 
+  - [ ] Access (named) Columns by name 
  
 ### lower priorities (as-yet unimplemented orthogonals)
  - [X] a token amount of jvm switch testing.

@@ -117,10 +117,15 @@ inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
 fun <T:Int>Tw1n(first:T, second: T) = Tw1nt(intArrayOf(first, second))
 
 fun <T:Long>Tw1n(first:T, second: T) = Twln (longArrayOf (first, second))
+
+
+
 inline class Twln (val ia: LongArray) : Tw1n<Long> {
     override val first get() = ia[0]
     override val second get() = ia[1]
 }
+
+
 infix fun <X, Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
     (first t2 u.first) as P
 
@@ -136,8 +141,7 @@ infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
 infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T) =
     let { (a, b) -> Tripl3(a, b, t) }
 
-infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D) =
-    let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
+infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D)=let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
 
 
 /**inheritable version of quad that also provides its first three as a triple. */

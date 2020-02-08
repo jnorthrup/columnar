@@ -27,18 +27,16 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
-    val coords = vZipWithNext(
-        intArrayOf(
-            0, 11,
-            11, 15,
-            15, 25,
-            25, 40,
-            40, 60,
-            60, 82,
-            82, 103,
-            103, 108
-        )
-    ) α { ints: IntArray -> Tw1nt(ints)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
+    val coords = intArrayOf(
+        0, 11,
+        11, 15,
+        15, 25,
+        25, 40,
+        40, 60,
+        60, 82,
+        82, 103,
+        103, 108
+    ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
 
     val drivers = vect0rOf(
         IoString as TypeMemento,
@@ -64,7 +62,7 @@ class DayJobTest/* : StringSpec()*/ {
     val zip = names.zip(drivers)
     val columnar = Columnar.of(zip)
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
-    val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
+    val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords as Vect02<Int, Int>)
     val indexable = indexableOf(nioMMap, fixedWidth)
     val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
         System.err.println("record count=" + it.first)

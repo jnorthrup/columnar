@@ -20,7 +20,7 @@ typealias Matrix<T> = Pai2<
 operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 
 @UseExperimental(ExperimentalTypeInference::class)
-@BuilderInference()
+@BuilderInference
 infix fun <O, R, F : (O) -> R> O.`→`(f: F) = this.let(f)
 
 @BuilderInference
@@ -214,12 +214,16 @@ fun <T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
 fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R): Vect0r<R> = Vect0r(first) { it `→` (fn `⚬` second) }
 fun <T, R> Vect0r<T>.mapIndexed(fn: (Int, T) -> R): Vect0r<R> = Vect0r(first) { fn(it, it `→` second) }
 fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R) = List(first) { fn(it, it `→` second) }
-fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) { for (ix in (0 until first)) ix `→` (fn `⚬` second) }
+fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
+    for (ix in (0 until first)) ix `→` (fn `⚬` second)
+}
 
 
-fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) { for (ix in (0 until first)) fn(ix, ix `→` second) }
+fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
+    for (ix in (0 until first)) fn(ix, ix `→` second)
+}
 
-fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) {   a[it] }
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
 
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
@@ -231,7 +235,7 @@ inline infix fun <T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> 
     zip(other.toList()) { a, b -> a t2 b }
 
 @Suppress("UNCHECKED_CAST")
-fun <T, O> Vect0r<T>.zip(o: Vect0r<O>):Vect02<T,O> =
+fun <T, O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =
     Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) }
 
 @BuilderInference
@@ -298,41 +302,51 @@ inline fun <reified T> combine(vararg a: Array<T>) = a.sumBy { it.size }.let { s
     var y = 0; Array<T>(size) { i ->
     if (y >= a[x].size) {
         ++x; y = 0
-    }; a[x][y++]
+    };
+    a[x][y++]
 }
 }
 
-fun vZipWithNext(src: IntArray) = Vect0r(
-    src.size / 2
+fun IntArray.zipWithNext(): Vect02<Int, Int> = Vect0r(
+    size / 2
 ) { i: Int ->
-    var c = (i * 2)
-    IntArray(2) { src[c.also { c++ }] }
+    val c = i * 2
+    Tw1n(this[c], this[c + 1])
+}
+
+fun Vect0r<Int>.zipWithNext(): Vect02<Int, Int> = Vect0r(
+    size / 2
+) { i: Int ->
+    val c = i * 2
+    Tw1n(this[c], this[c + 1])
 }
 
 
 //array-like mapped map
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <reified K, reified V> Map<K, V>.get(@BuilderInference() ks: Vect0r<K>) =
+inline operator fun <  reified K,   reified V> Map <K, V>.get(@BuilderInference ks: Vect0r<K>) =
     this.get(*ks.toList().toTypedArray())
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <reified K, reified V> Map<K, V>.get(@BuilderInference() ks: Iterable<K>) =
+inline operator fun <reified K, reified V> Map<K, V>.get(@BuilderInference ks: Iterable<K>) =
     this.get(*ks.toList().toTypedArray())
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <K, reified V> Map<K, V>.get(@BuilderInference() vararg ks: K) =
+inline operator fun <K, reified V> Map<K, V>.get(@BuilderInference vararg ks: K) =
     Array(ks.size) { ix -> ks[ix].let(this::get)!! }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix operator fun IntRange.div(@BuilderInference() denominator: Int): Vect0r<IntRange> =
-    (this t2 ((last - first + (1 - first)) / denominator)).let { (_, subSize) ->
+infix operator fun IntRange.div(@BuilderInference denominator: Int): Vect0r<IntRange> =
+    (this t2 (last - first + (1 - first)) / denominator).let { (_: IntRange, subSize: Int): Pai2<IntRange, Int> ->
         Vect0r((denominator)) { x: Int ->
             (subSize * x).let { lower ->
                 lower..last.coerceAtMost(lower + subSize - 1)
             }
         }
     }
+
+fun <T> Vect0r<T>.last() = get(size - 1)

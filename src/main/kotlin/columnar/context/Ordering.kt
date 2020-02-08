@@ -31,14 +31,14 @@ class RowMajor : Ordering() {
 
         fun fixedWidthOf(
             nio: NioMMap,
-            coords: Vect0r<Tw1nt>,
+            coords: Vect02<Int,Int>,
             defaulteol: () -> Byte = '\n'::toByte
-        ) = fixedWidth(defaulteol, nio, coords )
+        ) = fixedWidth(nio, coords, defaulteol)
 
         private fun fixedWidth(
-            defaulteol: () -> Byte,
             nio: NioMMap,
-            coords: Vect0r<Tw1nt>
+            coords: Vect02<Int, Int>,
+            defaulteol: () -> Byte
         ): FixedWidth {
             return FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
                 nio.mf.mappedByteBuffer.get().duplicate().clear().run {
@@ -74,6 +74,21 @@ class RowMajor : Ordering() {
      * this builds a context and launches a cursor in the given NioMMap frame of reference
      */
     fun fromFwf(
+        fixedWidth: FixedWidth,
+        indexable: Indexable,
+        nio: NioMMap,
+        columnarArity: Columnar
+    ): TableRoot = runBlocking(
+        this +
+                fixedWidth +
+                indexable +
+                nio +
+                columnarArity
+    ) { nio.values() as NioCursor t2 this.coroutineContext }
+    /**
+     * this builds a context and launches a cursor in the given NioMMap frame of reference
+     */
+    fun fromBinary(
         fixedWidth: FixedWidth,
         indexable: Indexable,
         nio: NioMMap,

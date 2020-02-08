@@ -49,7 +49,8 @@ val canary = ByteBuffer.allocate(
 ) t2 (-1L t2 -1L)
 
 class NioMMap(
-    val mf: MappedFile, var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
+    val mf: MappedFile, /**by default this will fetch text but other Mementos can be passed in as non-default
+*/var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
     val state: ThreadLocal<NioCursorState> = ThreadLocal.withInitial { canary }
 ) : Medium() {
 
@@ -83,7 +84,7 @@ class NioMMap(
         y: Int,
         col: (ByteBuffer) -> Vect0r<NioMeta>,
         x: Int,
-        coords: Vect0r<Tw1nt>
+        coords: Vect02<Int, Int>
     ): Tripl3<() -> Any, (Any?) -> Unit, NioMeta> = let {
         val (start: Int, end: Int) = coords[x]
         val (outbuff: ByteBuffer) = row[y]
@@ -102,15 +103,10 @@ class NioMMap(
     }
 
     companion object {
-        fun text(m: Vect0r<TypeMemento>): Array<CellDriver<ByteBuffer, Any?>> {
-            val arrayOfTokenizeds = Tokenized.mapped[m]
-            return arrayOfTokenizeds as Array<CellDriver<ByteBuffer, Any?>>
-        }
+        fun text(m: Vect0r<TypeMemento>): Array<CellDriver<ByteBuffer, Any?>> = Tokenized.mapped[m] as Array<CellDriver<ByteBuffer, Any?>>
 
-        fun binary(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> {
-            val arrayOfCellDrivers = Fixed.mapped[m]
-            return arrayOfCellDrivers as Array<CellDriver<ByteBuffer, Any?>>
-        }
+        fun binary(m: Vect0r<IOMemento>) : Array<CellDriver<ByteBuffer, Any?>> =
+            m.toList().map { it: IOMemento -> Fixed.mapped!![it ] }.toTypedArray()  as Array<CellDriver<ByteBuffer, Any?>>
     }
 
     fun asContextVect0r(

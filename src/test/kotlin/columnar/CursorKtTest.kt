@@ -11,14 +11,12 @@ import org.junit.jupiter.api.Test
 import shouldBe
 
 class CursorKtTest/* : StringSpec()*/ {
-    val coords = vZipWithNext(
-        intArrayOf(
-            0, 10,
-            10, 84,
-            84, 124,
-            124, 164
-        )
-    ) α { ints: IntArray -> Tw1nt(ints)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
+    val coords = intArrayOf(
+        0, 10,
+        10, 84,
+        84, 124,
+        124, 164
+    ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
 
     val drivers = vect0rOf(
         IoLocalDate as TypeMemento,
@@ -30,7 +28,7 @@ class CursorKtTest/* : StringSpec()*/ {
     val mf = MappedFile("src/test/resources/caven4.fwf")
     val nio = NioMMap(mf)
     val fixedWidth: FixedWidth
-        get() = fixedWidthOf(nio = nio, coords = coords)
+        get() = fixedWidthOf(nio = nio, coords = coords as Vect02<Int, Int>)
     val root = RowMajor().fromFwf(fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers, names))
 
 
@@ -164,7 +162,6 @@ class CursorKtTest/* : StringSpec()*/ {
                 }}"
             }.toList())
         }
-
     }
 
     @Test
@@ -188,8 +185,6 @@ class CursorKtTest/* : StringSpec()*/ {
                 }}"
             }.toList())
         }
-
-
         println("---")
         val pai2 = grp[2, 3]
         val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
@@ -198,9 +193,4 @@ class CursorKtTest/* : StringSpec()*/ {
                 "${it.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
-            }.toList())
-        }
-
-    }
-
-}
+            }.toList())}}}
