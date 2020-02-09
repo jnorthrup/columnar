@@ -32,8 +32,6 @@ sealed class Medium : CoroutineContext.Element {
     companion object {
         val mediumKey = object : CoroutineContext.Key<Medium> {}
     }
-
-
 }
 
 class Kxio(override var recordLen: () -> Int) : Medium() {

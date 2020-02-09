@@ -74,7 +74,7 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
     }
 }
 
-fun Cursor.resample(indexcol: Int):Cursor = let {
+fun Cursor.resample(indexcol: Int): Cursor = let {
     val curs = this[indexcol]
     val indexValues = curs.narrow().map { it: List<Any?> -> it.first() as LocalDate }.toSequence()
     val (min, max) = feature_range(indexValues)
@@ -279,7 +279,13 @@ fun Cursor.groupClusters(
  */
 fun Cursor.writeBinary(
     pathname: String,
-    defaultVarcharSize: Int = 128
+    defaultVarcharSize: Int = 128,
+    varcharSizes: Map<
+            /**
+            column*/
+            Int,
+            /**length*/
+            Int>?=null
 ) {
     val mementos = scalars α Scalar::first
 
@@ -296,10 +302,8 @@ fun Cursor.writeBinary(
      *
      */
     val (_: Arity, ioMemos: Vect0r<TypeMemento>) = pai2
-    val wcoords = networkCoords(ioMemos, defaultVarcharSize)
+    val wcoords = networkCoords(ioMemos, defaultVarcharSize,varcharSizes)
     val wrecordlen: Int = wcoords.right.last()
-
-
     MappedFile(pathname, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
         mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * size)
 
@@ -309,9 +313,8 @@ fun Cursor.writeBinary(
 
         val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
             Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
-        val wfixedWidth: RecordBoundary = FixedWidth(
-            wrecordlen, wcoords, null.`⟲`, null.`⟲`
-        )
+        val wfixedWidth: RecordBoundary = FixedWidth(wrecordlen, wcoords, null.`⟲`, null.`⟲`)
+
         writeMeta(pathname, wcoords)
         /**
          * nio object
@@ -355,9 +358,10 @@ fun Cursor.writeBinary(
 
 private fun networkCoords(
     ioMemos: Vect0r<TypeMemento>,
-    defaultVarcharSize: Int
+    defaultVarcharSize: Int,
+    varcharSizes: Map<Int, Int>?
 ): Vect02<Int, Int> = Unit.let {
-    val sizes1 = networkSizes(ioMemos, defaultVarcharSize)
+    val sizes1 = networkSizes(ioMemos, defaultVarcharSize,varcharSizes)
     //todo: make IntArray Tw1nt Matrix
     var wrecordlen = 0
     val wcoords = Array(sizes1.size) {
@@ -376,11 +380,14 @@ private fun networkCoords(
 
 private fun networkSizes(
     ioMemos: Vect0r<TypeMemento>,
-    defaultVarcharSize: Int
+    defaultVarcharSize: Int,
+    varcharSizes: Map<Int, Int>?
 ): Vect0r<Int> {
-    return ioMemos α { memento: TypeMemento ->
-        memento.networkSize ?: defaultVarcharSize
+    val mapIndexed: Vect0r<Int>  = ioMemos.mapIndexed { ix, memento: TypeMemento ->
+        val get = varcharSizes?.get(ix)
+        memento.networkSize ?:( get ?: defaultVarcharSize)
     }
+    return mapIndexed
 }
 
 private fun Cursor.writeMeta(
