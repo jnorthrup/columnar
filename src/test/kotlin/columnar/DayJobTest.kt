@@ -61,7 +61,7 @@ class DayJobTest/* : StringSpec()*/ {
 
     val zip = names.zip(drivers)
     val columnar = Columnar.of(zip)
-    val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
+    val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
     val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {

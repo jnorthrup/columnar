@@ -29,8 +29,8 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
                             //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
                             // and call in a cell through here
                             val name =
-                                cnar.second?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
-                            val type = cnar.first[ix]
+                                cnar.right?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
+                            val type = cnar.left[ix]
                             Scalar(type, name)
                         }
                     }
@@ -334,7 +334,7 @@ fun Cursor.writeBinary(
             val wniocursor: NioCursor = wnio.values()
             val coroutineContext1 = coroutineContext
             val arity = coroutineContext1[Arity.arityKey] as Columnar
-            val first = System.err.println("columnar memento: " + arity.first.toList())
+            val first = System.err.println("columnar memento: " + arity.left.toList())
             wniocursor t2 coroutineContext1
         }
 
@@ -445,7 +445,7 @@ fun binaryCursor(
             indexable as Indexable,
             nio,
             Columnar(
-                typeVec.map { it as TypeMemento }.toArray().toVect0r(),/*solidify the parse*/ rnames
+                typeVec.zip( rnames ) as Vect02<TypeMemento, String?>
             )
         )
     )

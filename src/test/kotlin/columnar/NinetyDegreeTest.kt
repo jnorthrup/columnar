@@ -37,8 +37,8 @@ class NinetyDegreeTest/* : StringSpec()*/ {
                         IoString,
                         IoFloat,
                         IoFloat
-                    ),
-                    vect0rOf<String>("date", "channel", "delivered", "ret")
+                    ).zip(
+                    vect0rOf<String?>("date", "channel", "delivered", "ret") )
                 )
             )
         ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3)) α floatFillNa(0f)

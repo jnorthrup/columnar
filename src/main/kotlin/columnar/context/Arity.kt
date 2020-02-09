@@ -17,14 +17,14 @@ open class Scalar(type: TypeMemento, name: String? = null) : Pai2<TypeMemento, S
 /**Borg reference*/
 class UniMatrix(type: TypeMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar(type, name)
 
-class Columnar(type: Vect0r<TypeMemento>, names: Vect0r<String>? = null) :
-    Pai2<Vect0r<TypeMemento>, Vect0r<String>?> by Pai2(type, names), Arity() {
+class Columnar(cols: Vect02<TypeMemento,String?>) :
+     Vect02<TypeMemento , String ?> by cols, Arity() {
     companion object {
-        fun of(vararg type: TypeMemento): Columnar = Columnar(vect0rOf(*type))
+        fun of(vararg type: TypeMemento): Columnar = Columnar( type α  {t:TypeMemento->t t2 null as String? })
 
         @JvmName("fact1")
         fun of(mapping: Vect02<String, TypeMemento>) =
-            Columnar(mapping α Pai2<String, TypeMemento>::second, mapping α Pai2<String, TypeMemento>::first)
+            Columnar(mapping .map {(a,b)->b t2 a   })
 
         @JvmName("fact2")
         fun of(scalars: Vect0r<Scalar>): Columnar {

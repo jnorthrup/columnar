@@ -71,14 +71,14 @@ class NioMMap(
             fixedWidth = it as? FixedWidth
         }
 
-        val drivers = drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
+        val drivers = drivers ?: text((arity as Columnar).left /*assuming fwf here*/)
         val coords = fixedWidth?.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to propogate the null as a hard error for now. */
 
 
         val asContextVect0r = asContextVect0r(addressable as Indexable, fixedWidth!!)
         (asContextVect0r t2 { y: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
-                (drivers[x] t2 (arity as Columnar).first[x]) t3 coords!![x].size
+                (drivers[x] t2 (arity as Columnar).left[x]) t3 coords!![x].size
             }
         }).let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<NioMeta>) ->
             NioCursor(intArrayOf(drivers.size, row.first)) { (x: Int, y: Int): IntArray ->

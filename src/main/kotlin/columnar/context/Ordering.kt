@@ -64,7 +64,9 @@ class RowMajor : Ordering() {
 
         fun TableRoot.name(xy: IntArray) = this.let { (_, rootContext) ->
             (rootContext[Arity.arityKey]!! as Columnar).let { cnar ->
-                cnar.second!![(rootContext[Ordering.orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
+
+
+                cnar.right!![(rootContext[Ordering.orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
             }
         }
     }
