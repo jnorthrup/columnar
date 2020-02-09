@@ -120,7 +120,8 @@ class NioMMap(
         indexable: Indexable,
         fixedWidth: FixedWidth
     ): Vect02<ByteBuffer, MMapWindow> = Vect0r(indexable.size()) { ix: Int ->
-        runBlocking {
+        run {
+        //runBlocking {
             translateMapping(
                 ix,
                 fixedWidth.recordLen

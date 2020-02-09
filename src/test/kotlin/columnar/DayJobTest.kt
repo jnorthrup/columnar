@@ -73,7 +73,7 @@ class DayJobTest/* : StringSpec()*/ {
 
     var lastmessage: String? = null
 
-    inline fun measureNanoTimeStr(block: () -> Unit): String {
+    private inline fun measureNanoTimeStr(block: () -> Unit): String {
         return Duration.ofNanos(measureNanoTime(block)).toString()
     }
 

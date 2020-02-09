@@ -5,30 +5,32 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+const val SPACE: Byte = ' '.toByte()
+const val ZERO: Float = 0.toFloat()
+
 val xInsertString = { a: ByteBuffer, b: String? ->
     a.put(b?.toByteArray(Charsets.UTF_8))
-    while (a.hasRemaining()) a.put(' '.toByte())
+    while (a.hasRemaining()) {
+        a.put(SPACE)
+    }
 }
 val dateMapper = { s: String ->
     s.let {
-        var res: LocalDate?
+        val res: LocalDate?
         res = try {
             LocalDate.parse(it)
         } catch (e: Exception) {
-            val parseBest = DateTimeFormatter.ISO_DATE.parseBest(it)
-            LocalDate.from(parseBest)
+            LocalDate.from(DateTimeFormatter.ISO_DATE.parseBest(it))
         }
         res
     } ?: LocalDate.EPOCH
 }
 val instantMapper = { s: String ->
     s.let {
-        var res: Instant?
-        res = try {
+        val res: Instant? = try {
             Instant.parse(it)
         } catch (e: Exception) {
-            val parseBest = DateTimeFormatter.ISO_DATE_TIME.parseBest(it)
-            Instant.from(parseBest)
+            Instant.from(DateTimeFormatter.ISO_DATE_TIME.parseBest(it))
         }
         res
     } ?: Instant.EPOCH
@@ -59,9 +61,11 @@ fun floatFillNa(fill: Float): (Any?) -> Any? {
 }
 
 
+
+
 val floatSum: (Any?, Any?) -> Any? = { acc: Any?, any2: Any? ->
-    val fl = (acc as? Float) ?: 0.toFloat()
-    val fl1 = (any2 as? Float) ?: 0.toFloat()
+    val fl = (acc as? Float) ?: ZERO
+    val fl1 = (any2 as? Float) ?: ZERO
     fl + fl1
 }
 
