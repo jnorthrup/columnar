@@ -14,9 +14,9 @@ class DayJobTest/* : StringSpec()*/ {
     //        val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
     //    val suffix = "_10000"     //"_RD"  139618738
-    //    val suffix = "_100000"     //"_RD"
+//        val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
-//    val suffix = "_500000"     //"_RD"
+    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
@@ -25,7 +25,7 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
-        val suffix = ""//"_RD"
+//        val suffix = ""//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
         0, 11,
@@ -59,8 +59,8 @@ class DayJobTest/* : StringSpec()*/ {
         "TransMode"    //       7
     )
 
-    val zip = names.zip(drivers)
-    val columnar = Columnar.of(zip)
+    val zip = drivers.zip(names)
+    val columnar = Columnar(zip   as Vect02<TypeMemento, String?>)
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)

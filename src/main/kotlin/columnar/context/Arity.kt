@@ -22,10 +22,6 @@ class Columnar(cols: Vect02<TypeMemento,String?>) :
     companion object {
         fun of(vararg type: TypeMemento): Columnar = Columnar( type α  {t:TypeMemento->t t2 null as String? })
 
-        @JvmName("fact1")
-        fun of(mapping: Vect02<String, TypeMemento>) =
-            Columnar(mapping .map {(a,b)->b t2 a   })
-
         @JvmName("fact2")
         fun of(scalars: Vect0r<Scalar>): Columnar {
             var c = 0
@@ -33,7 +29,7 @@ class Columnar(cols: Vect02<TypeMemento,String?>) :
                 val padStart = (c++).toString().padStart(6, '0')
                 (name ?: "col$padStart") t2 memento
             }
-            return of(mapping)
+            return Columnar(mapping.map { (a,b)->b t2 a   })
         }
     }
 }
