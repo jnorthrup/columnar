@@ -49,31 +49,42 @@ val canary = ByteBuffer.allocate(
 ) t2 (-1L t2 -1L)
 
 class NioMMap(
-    val mf: MappedFile, /**by default this will fetch text but other Mementos can be passed in as non-default
-*/var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
+    val mf: MappedFile,
+    /**by default this will fetch text but other Mementos can be passed in as non-default
+     */
+    var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
     val state: ThreadLocal<NioCursorState> = ThreadLocal.withInitial { canary }
 ) : Medium() {
 
+
+    /**
+     * right now this is  a canary in the coal mine to make sure its safe to do Fixedwidth.
+     * RecordBoundary could change but would it make sense in this class?
+     */
+    var fixedWidth: FixedWidth? = null
+
     @Suppress("UNCHECKED_CAST")
     suspend fun values(): NioCursor = this.run {
-        val ordering = coroutineContext[Ordering.orderingKey]!!
+        val ordering = coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
         val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
-        val recordBoundary = coroutineContext[RecordBoundary.boundaryKey]!!
-        val drivers = drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
-        val coords = when (recordBoundary) {
-            is FixedWidth -> recordBoundary.coords
-            is TokenizedRow -> TODO()
+        val recordBoundary/*:FixedWidth */ = coroutineContext[RecordBoundary.boundaryKey]!!
+            .also {
+            fixedWidth = it as? FixedWidth
         }
 
-        val asContextVect0r = asContextVect0r(addressable as Indexable, recordBoundary)
+        val drivers = drivers ?: text((arity as Columnar).first /*assuming fwf here*/)
+        val coords = fixedWidth?.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to propogate the null as a hard error for now. */
+
+
+        val asContextVect0r = asContextVect0r(addressable as Indexable, fixedWidth!!)
         (asContextVect0r t2 { y: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
-                (drivers[x] t2 (arity as Columnar).first[x]) t3 coords[x].size
+                (drivers[x] t2 (arity as Columnar).first[x]) t3 coords!![x].size
             }
         }).let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<NioMeta>) ->
             NioCursor(intArrayOf(drivers.size, row.first)) { (x: Int, y: Int): IntArray ->
-                mappedDriver(row, y, col, x, coords)
+                mappedDriver(row, y, col, x, coords!!)
             }
         } as NioCursor
     }
@@ -103,10 +114,11 @@ class NioMMap(
     }
 
     companion object {
-        fun text(m: Vect0r<TypeMemento>): Array<CellDriver<ByteBuffer, Any?>> = Tokenized.mapped[m] as Array<CellDriver<ByteBuffer, Any?>>
+        fun text(m: Vect0r<TypeMemento>): Array<CellDriver<ByteBuffer, Any?>> =
+            Tokenized.mapped[m] as Array<CellDriver<ByteBuffer, Any?>>
 
-        fun binary(m: Vect0r<IOMemento>) : Array<CellDriver<ByteBuffer, Any?>> =
-            m.toList().map { it: IOMemento -> Fixed.mapped!![it ] }.toTypedArray()  as Array<CellDriver<ByteBuffer, Any?>>
+        fun binary(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> =
+            m.toList().map { it: IOMemento -> Fixed.mapped[it] }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
     }
 
     fun asContextVect0r(
@@ -132,11 +144,14 @@ class NioMMap(
 
     @Suppress("ControlFlowWithEmptyBody")
     override var recordLen = {
-        mf.mappedByteBuffer.get().duplicate().clear().let {
-            while (it.get() != '\n'.toByte());
-            it.position()
 
-        }
+        fixedWidth?.recordLen?:(fixedWidth?.endl()?.let { endl->
+            mf.mappedByteBuffer.get().duplicate().clear().let {
+                while (it.get() != endl);
+                it.position()
+
+            }
+        } )?: TODO("recordlen missing from context creation!!")
     }
     val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 

@@ -8,25 +8,25 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
+import java.io.File
 import kotlin.system.measureTimeMillis
 
 class DayJobTest/* : StringSpec()*/ {
 
     //        val suffix = "_100"//"_RD"  105340
-//        val suffix = "_1000"//"_RD"  3392440
-//        val suffix = "_10000"     //"_RD"  139618738 writeop took 231874ms
-
+    //    val suffix = "_1000"//"_RD"  3392440
+    //    val suffix = "_10000"     //"_RD"  139618738
     //    val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
-//    val suffix = "_500000"     //"_RD"
+    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
+
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
-        val suffix = ""
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
         0, 11,
@@ -63,7 +63,7 @@ class DayJobTest/* : StringSpec()*/ {
     val zip = names.zip(drivers)
     val columnar = Columnar.of(zip)
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.first))
-    val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords as Vect02<Int, Int>)
+    val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
     val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
         System.err.println("record count=" + it.first)
@@ -73,34 +73,39 @@ class DayJobTest/* : StringSpec()*/ {
     var lastmessage: String? = null
 
     @org.junit.jupiter.api.Test
-    fun `pivot+pgroup+reduce`() {
-        val filtered = curs[2, 1, 3, 5].resample(0).pivot(
-            intArrayOf(0),
-            intArrayOf(1, 2),
-            intArrayOf(3)
-        ).group(intArrayOf(0), floatSum)
-/*
-        lateinit var second: RowVec
-*/
-/*        println(
-            "row 2 seektime: " +
-                    measureTimeMillis {
-                        second = filtered.second(2)
-                    } + " ms @ " + second.first + " columns"
-        )*/
+    fun `rewrite+pivot+pgroup+reduce`() {
         lateinit var message: String
-        val createTempFile = createTempFile("dayjob",".bin")
-        System.err.println("writing bin to "+createTempFile.toURI())
-        println("writeop took " + measureTimeMillis {
-            filtered.writeBinary(createTempFile.absolutePath)
-//            second.let {
-//                println("row 2 is:")
-//                message = stringOf(it)
-//            }
-        } + "ms")
-//        println(message)
-//            lastmessage?.shouldBe(  message )
-//            lastmessage=message
+        val pathname = File.createTempFile("dayjob", ".bin").toPath()
+        val millis = measureTimeMillis {
+
+            System.err.println("using filename: " + pathname.toString())
+            (curs[2, 1, 3, 5] α floatFillNa(0f)).writeBinary(pathname.toString())
+        }
+
+        System.err.println("transcription took: " + millis)
+        MappedFile(pathname.toString()).use { mf ->
+            val binaryCursor = binaryCursor(pathname, mappedFile = mf)
+            val filtered = binaryCursor.resample(0).pivot(
+                intArrayOf(0),
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            ).group(intArrayOf(0), floatSum)
+
+            lateinit var second: RowVec
+            println(
+                "row 2 seektime: " +
+                        measureTimeMillis {
+                            second = filtered.second(2)
+                        } + " ms @ " + second.first + " columns"
+            )
+            println("row 2 took " + measureTimeMillis {
+                second.let {
+                    println("row 2 is:")
+                    message = stringOf(it)
+                }
+            } + "ms")
+            println(message)
+        }
     }
 
     @org.junit.jupiter.api.Test
@@ -117,8 +122,8 @@ class DayJobTest/* : StringSpec()*/ {
             "row 2 seektime: " +
                     measureTimeMillis {
                         second = filtered.second(2)
-
                     } + " ms @ " + second.first + " columns"
+
 
         )
         lateinit var message: String

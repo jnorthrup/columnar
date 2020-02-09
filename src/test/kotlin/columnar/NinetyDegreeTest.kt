@@ -7,8 +7,6 @@ import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
 import org.junit.jupiter.api.Test
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
 
@@ -68,42 +66,15 @@ class NinetyDegreeTest/* : StringSpec()*/ {
             "test",
             "resources", s2
         )
+        MappedFile(binpath.toString()).use {mf->
+            val cursr = binaryCursor(binpath, mf, metapath)
 
-        val cursr = binaryCursor(binpath, metapath)
-
-        System.err.println(cursr.second(0).left.toList())
-        System.err.println(cursr.second(1).left.toList())
-        System.err.println(cursr.second(2).left.toList())
-        System.err.println(cursr.second(3).left.toList())
+            System.err.println(cursr.second(0).left.toList())
+            System.err.println(cursr.second(1).left.toList())
+            System.err.println(cursr.second(2).left.toList())
+            System.err.println(cursr.second(3).left.toList())
+        }
     }
 
-    @Suppress("USELESS_CAST")
-    fun binaryCursor(
-        binpath: Path,
-        metapath: Path = Paths.get(binpath.toUri().toASCIIString() + ".meta")
-    ) = MappedFile(binpath.toString()).use { mf ->
-        val lines = Files.readAllLines(metapath)
-        lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
-        val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
-        val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
-        val rcoords: Vect02<Int, Int> = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
-        val recordlen = rcoords.last().second
-        val drivers = NioMMap.binary(typeVec)
-        val nio = NioMMap(mf, drivers)
-        val fixedWidth = FixedWidth(
-            recordlen, rcoords, null.`⟲`, null.`⟲`
-        )
-        val indexable: Addressable = indexableOf(nio, fixedWidth)
-        cursorOf(
-            RowMajor().fromFwf(
-                fixedWidth,
-                indexable as Indexable,
-                nio,
-                Columnar(
-                    typeVec.map {it as TypeMemento }.toArray().toVect0r(),/*solidify the parse*/ rnames
-                )
-            )
-        )
-    }
 }
 

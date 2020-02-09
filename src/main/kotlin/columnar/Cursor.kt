@@ -3,10 +3,13 @@
 package columnar
 
 import columnar.context.*
+import columnar.context.RowMajor.Companion.indexableOf
 import kotlinx.coroutines.runBlocking
-import java.io.FileWriter
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.LocalDate
 import java.util.*
 import kotlin.collections.ArrayList
@@ -71,7 +74,7 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
     }
 }
 
-fun Cursor.resample(indexcol: Int) = let {
+fun Cursor.resample(indexcol: Int):Cursor = let {
     val curs = this[indexcol]
     val indexValues = curs.narrow().map { it: List<Any?> -> it.first() as LocalDate }.toSequence()
     val (min, max) = feature_range(indexValues)
@@ -385,17 +388,58 @@ private fun Cursor.writeMeta(
 //    wrecordlen: Int,
     wcoords: Vect02<Int, Int>
 ) {
-    FileWriter(pathname + ".meta").use { fileWriter ->
-        fileWriter.appendln("# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..")
-        fileWriter.appendln("# last coord is the recordlen")
-        fileWriter.appendln("" + wcoords.toList().map { it -> listOf(it.first, it.second) }.flatten().joinToString(" "))
+    Files.newOutputStream(
+        Paths.get(pathname + ".meta")
+    ).bufferedWriter().use {
 
-        val s:Vect02<TypeMemento, String?> = scalars as Vect02<TypeMemento, String?>
+            fileWriter ->
 
-        fileWriter.appendln("" + s.left.mapIndexed { ix, it ->
+        val s: Vect02<TypeMemento, String?> = scalars as Vect02<TypeMemento, String?>
+
+        fileWriter.write("# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..")
+        fileWriter.write("\n")
+        fileWriter.write("# last coord is the recordlen")
+        fileWriter.write("\n")
+        fileWriter.write(wcoords.toList().map { it -> listOf(it.first, it.second) }.flatten().joinToString(" "))
+        fileWriter.write("\n")
+        fileWriter.write(s.right.map { s: String? -> s!!.replace(' ', '_') }.toList().joinToString(" "))
+        fileWriter.write("\n")
+        fileWriter.write(s.left.mapIndexed<TypeMemento, Any> { ix, it ->
             if (it is IOMemento) it.name
             else wcoords[ix].size
         }.toList().joinToString(" "))
-        fileWriter.appendln("" + s.right.map { s: String? -> s!!.replace(' ', '_') }.toList().joinToString(" "))
+        fileWriter.write("\n")
+
     }
+}
+
+
+@Suppress("USELESS_CAST")
+fun binaryCursor(
+    binpath: Path,
+    mappedFile: MappedFile,
+    metapath: Path = Paths.get(binpath.toString() + ".meta")
+) = mappedFile.let { mf ->
+    val lines = Files.readAllLines(metapath)
+    lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
+    val rcoords: Vect02<Int, Int> = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
+    val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
+    val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
+    val recordlen = rcoords.last().second
+    val drivers = NioMMap.binary(typeVec)
+    val nio = NioMMap(mf, drivers)
+    val fixedWidth = FixedWidth(
+        recordlen, rcoords, null.`⟲`, null.`⟲`
+    )
+    val indexable: Addressable = indexableOf(nio, fixedWidth)
+    cursorOf(
+        RowMajor().fromFwf(
+            fixedWidth,
+            indexable as Indexable,
+            nio,
+            Columnar(
+                typeVec.map { it as TypeMemento }.toArray().toVect0r(),/*solidify the parse*/ rnames
+            )
+        )
+    )
 }
