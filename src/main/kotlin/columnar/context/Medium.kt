@@ -2,11 +2,7 @@ package columnar.context
 
 import columnar.*
 import columnar.context.Arity.Companion.arityKey
-import kotlinx.coroutines.asContextElement
-import kotlinx.coroutines.ensurePresent
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import java.lang.ref.Reference
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
@@ -51,8 +47,8 @@ class NioMMap(
     val mf: MappedFile,
     /**by default this will fetch text but other Mementos can be passed in as non-default
      */
-    var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
-    var state: Pai2<ByteBuffer, Pai2<Long, Long>> = canary
+    private var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
+    private var state: Pai2<ByteBuffer, Pai2<Long, Long>> = canary
 ) : Medium() {
 
 
@@ -60,7 +56,7 @@ class NioMMap(
      * right now this is  a canary in the coal mine to make sure its safe to do Fixedwidth.
      * RecordBoundary could change but would it make sense in this class?
      */
-    var fixedWidth: FixedWidth? = null
+    private var fixedWidth: FixedWidth? = null
 
     @Suppress("UNCHECKED_CAST")
     suspend fun values(): NioCursor = this.run {
@@ -120,7 +116,7 @@ class NioMMap(
                 Fixed.mapped[it] }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
     }
 
-    fun asContextVect0r(
+    private fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth
     ): Vect02<ByteBuffer, MMapWindow> = Vect0r(indexable.size()) { ix: Int ->
@@ -165,7 +161,7 @@ class NioMMap(
      *
      * @return
      */
-    suspend fun translateMapping(
+    private fun translateMapping(
         rowIndex: Int,
         rowsize: Int
     ): NioCursorState {
@@ -180,8 +176,7 @@ class NioMMap(
             val seekTo = rowsize * lix
             if (seekTo in (window1.first..(window1.second - rowsize))) reuse = true
             else {
-                val recordOffset0 = seekTo
-                window1 = (recordOffset0 t2 min(size() - seekTo, windowSize))
+                window1 = (seekTo t2 min(size() - seekTo, windowSize))
                 val mappedByteBuffer = remap(mf.channel, window1)//.also { state.set(Pai2(it,window1)) }
                 buf1 = mappedByteBuffer
 
@@ -262,20 +257,20 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
         val mapped = mapOf(
             IOMemento.IoInt as TypeMemento to Fixed(
                 4,
-                ByteBuffer::getInt,
-                { a, b -> a.putInt(b);Unit }),
+                ByteBuffer::getInt
+            ) { a, b -> a.putInt(b);Unit },
             IOMemento.IoLong to Fixed(
                 8,
-                ByteBuffer::getLong,
-                { a, b -> a.putLong(b);Unit }),
+                ByteBuffer::getLong
+            ) { a, b -> a.putLong(b);Unit },
             IOMemento.IoFloat to Fixed(
                 4,
-                ByteBuffer::getFloat,
-                { a, b -> a.putFloat(b);Unit }),
+                ByteBuffer::getFloat
+            ) { a, b -> a.putFloat(b);Unit },
             IOMemento.IoDouble to Fixed(
                 8,
-                ByteBuffer::getDouble,
-                { a, b -> a.putDouble(b);Unit }),
+                ByteBuffer::getDouble
+            ) { a, b -> a.putDouble(b);Unit },
             IOMemento.IoLocalDate to Fixed(
                 8,
                 { it.long `→` LocalDate::ofEpochDay },

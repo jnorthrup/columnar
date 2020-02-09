@@ -39,10 +39,10 @@ enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
     IoLong(8),
     IoFloat(4),
     IoDouble(8),
-    IoString(),
+    IoString,
     IoLocalDate(8),
     IoInstant(8),
-    IoNothing()
+    IoNothing
 }
 
 

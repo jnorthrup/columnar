@@ -26,8 +26,9 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
 //        val suffix = ""//"_RD"
-    val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
-    val coords = intArrayOf(
+    private val s = //"/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
+            "/home/me/Descargas/rejuvesinceapril2019_100000.fwf"
+    private val coords = intArrayOf(
         0, 11,
         11, 15,
         15, 25,
@@ -38,7 +39,7 @@ class DayJobTest/* : StringSpec()*/ {
         103, 108
     ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
 
-    val drivers = vect0rOf(
+    private val drivers = vect0rOf(
         IoString as TypeMemento,
         IoString,
         IoLocalDate,
@@ -48,7 +49,7 @@ class DayJobTest/* : StringSpec()*/ {
         IoFloat,
         IoString
     )
-    val names = vect0rOf(
+    private val names = vect0rOf(
         "SalesNo",    //        0
         "SalesAreaID",    //    1
         "date",    //           2
@@ -59,12 +60,12 @@ class DayJobTest/* : StringSpec()*/ {
         "TransMode"    //       7
     )
 
-    val zip = drivers.zip(names)
-    val columnar = Columnar(zip   as Vect02<TypeMemento, String?>)
-    val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
-    val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
-    val indexable = indexableOf(nioMMap, fixedWidth)
-    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
+    private val zip = drivers.zip(names)
+    private val columnar = Columnar(zip   as Vect02<TypeMemento, String?>)
+    private val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
+    private val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
+    private val indexable = indexableOf(nioMMap, fixedWidth)
+    private val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
         System.err.println("record count=" + it.first)
     }
 

@@ -66,7 +66,7 @@ class RowMajor : Ordering() {
             (rootContext[Arity.arityKey]!! as Columnar).let { cnar ->
 
 
-                cnar.right!![(rootContext[Ordering.orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
+                cnar.right[(rootContext[orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
             }
         }
     }
@@ -86,7 +86,7 @@ class RowMajor : Ordering() {
                 indexable +
                 nio +
                 columnarArity
-    ) { nio.values() as NioCursor t2 this.coroutineContext }
+    ) { nio.values() t2 this.coroutineContext }
     /**
      * this builds a context and launches a cursor in the given NioMMap frame of reference
      */
@@ -101,7 +101,7 @@ class RowMajor : Ordering() {
                 indexable +
                 nio +
                 columnarArity
-    ) { nio.values() as NioCursor t2 this.coroutineContext }
+    ) { nio.values() t2 this.coroutineContext }
 }
 
 /**
