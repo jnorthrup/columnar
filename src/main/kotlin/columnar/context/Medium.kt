@@ -147,9 +147,9 @@ class NioMMap(
             }
         } )?: TODO("recordlen missing from context creation!!")
     }
-    val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
+    private val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-    fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
+    private fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
         rafchannel.map(mf.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
     }
 

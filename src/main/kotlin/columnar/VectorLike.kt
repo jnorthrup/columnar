@@ -103,7 +103,7 @@ val <T> T.`⟲`
 /**right identity*/
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <T, R> T.`⟲`(f: (T) -> R) = { f(this) }
+infix fun <T, R> T.`⟲`(f: (T) -> R) = run { f(this) }
 
 @JvmName("vlike_Sequence_1")
 @BuilderInference

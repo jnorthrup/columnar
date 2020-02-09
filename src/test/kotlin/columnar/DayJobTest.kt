@@ -6,8 +6,9 @@ import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
 import java.io.File
+import java.time.Duration
 import kotlin.coroutines.CoroutineContext
-import kotlin.system.measureTimeMillis
+import kotlin.system.measureNanoTime
 
 class DayJobTest/* : StringSpec()*/ {
 
@@ -72,11 +73,15 @@ class DayJobTest/* : StringSpec()*/ {
 
     var lastmessage: String? = null
 
+    inline fun measureNanoTimeStr(block: () -> Unit): String {
+        return Duration.ofNanos(measureNanoTime(block)).toString()
+    }
+
     @org.junit.jupiter.api.Test
     fun `rewrite+pivot+pgroup+reduce`() {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
-        val millis = measureTimeMillis {
+        val nanos = measureNanoTimeStr {
 
             System.err.println("using filename: " + pathname.toString())
             val reorder = intArrayOf(2, 1, 3, 5)
@@ -85,8 +90,8 @@ class DayJobTest/* : StringSpec()*/ {
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(),24, varcharSizes)
         }
+        System.err.println("transcription took: " + nanos)
 
-        System.err.println("transcription took: " + millis)
         MappedFile(pathname.toString()).use { mf ->
             val binaryCursor = binaryCursor(pathname, mappedFile = mf)
             val filtered = binaryCursor.resample(0).pivot(
@@ -98,11 +103,11 @@ class DayJobTest/* : StringSpec()*/ {
             lateinit var second: RowVec
             println(
                 "row 2 seektime: " +
-                        measureTimeMillis {
+                        measureNanoTimeStr {
                             second = filtered.second(2)
                         } + " ms @ " + second.first + " columns"
             )
-            println("row 2 took " + measureTimeMillis {
+            println("row 2 took " + measureNanoTimeStr {
                 second.let {
                     println("row 2 is:")
                     message = stringOf(it)
@@ -133,14 +138,14 @@ class DayJobTest/* : StringSpec()*/ {
         lateinit var second: RowVec
         println(
             "row 2 seektime: " +
-                    measureTimeMillis {
+                    measureNanoTimeStr {
                         second = filtered.second(2)
                     } + " ms @ " + second.first + " columns"
 
 
         )
         lateinit var message: String
-        println("row 2 took " + measureTimeMillis {
+        println("row 2 took " + measureNanoTimeStr {
             second.let {
                 println("row 2 is:")
                 message = stringOf(it)

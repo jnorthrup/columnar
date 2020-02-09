@@ -12,11 +12,11 @@ val xInsertString = { a: ByteBuffer, b: String? ->
 val dateMapper = { s: String ->
     s.let {
         var res: LocalDate?
-        try {
-            res = LocalDate.parse(it)
+        res = try {
+            LocalDate.parse(it)
         } catch (e: Exception) {
             val parseBest = DateTimeFormatter.ISO_DATE.parseBest(it)
-            res = LocalDate.from(parseBest)
+            LocalDate.from(parseBest)
         }
         res
     } ?: LocalDate.EPOCH
@@ -24,11 +24,11 @@ val dateMapper = { s: String ->
 val instantMapper = { s: String ->
     s.let {
         var res: Instant?
-        try {
-            res = Instant.parse(it)
+        res = try {
+            Instant.parse(it)
         } catch (e: Exception) {
             val parseBest = DateTimeFormatter.ISO_DATE_TIME.parseBest(it)
-            res = Instant.from(parseBest)
+            Instant.from(parseBest)
         }
         res
     } ?: Instant.EPOCH
