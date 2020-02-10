@@ -46,8 +46,8 @@ class NioMMap(
     val mf: MappedFile,
     /**by default this will fetch text but other Mementos can be passed in as non-default
      */
-    private var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
-    private var state: Pai2<ByteBuffer, Pai2<Long, Long>> = canary
+     var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
+     var state: Pai2<ByteBuffer, Pai2<Long, Long>> = canary
 ) : Medium() {
 
 
@@ -55,7 +55,7 @@ class NioMMap(
      * right now this is  a canary in the coal mine to make sure its safe to do Fixedwidth.
      * RecordBoundary could change but would it make sense in this class?
      */
-    private var fixedWidth: FixedWidth? = null
+     var fixedWidth: FixedWidth? = null
 
     @Suppress("UNCHECKED_CAST")
             /*suspend*/ fun values(coroutineContext: CoroutineContext): NioCursor = this.run {
@@ -118,7 +118,7 @@ class NioMMap(
             }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
     }
 
-    private fun asContextVect0r(
+     fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth
     ): Vect02<ByteBuffer, MMapWindow> = Vect0r(indexable.size()) { ix: Int ->
@@ -150,9 +150,9 @@ class NioMMap(
             }
         }) ?: TODO("recordlen missing from context creation!!")
     }
-    private val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
+     val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-    private fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
+     fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
         rafchannel.map(mf.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
     }
 

@@ -1,6 +1,7 @@
 package columnar
 
 import kotlinx.coroutines.flow.*
+import java.util.*
 import kotlin.experimental.ExperimentalTypeInference
 
 /**
@@ -242,6 +243,10 @@ fun <T, O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =
 @UseExperimental(ExperimentalTypeInference::class)
 fun <T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -> this[ix] }
 
+@UseExperimental(ExperimentalTypeInference::class)
+@BuilderInference
+fun IntArray.toVect0r() :Vect0r<Int> =Vect0r( size)  { ix: Int -> get(ix) }
+
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
 fun <T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -> this[ix] }
@@ -301,7 +306,7 @@ fun <T> combine(vararg a: List<T>): List<T> =
 @JvmName("combine_Array")
 inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumBy(Array<T>::size).let { size: Int ->
     var x = 0
-    var y = 0;
+    var y = 0
     Array(size) { i: Int ->
         if (y >= a[x].size) {
             ++x; y = 0

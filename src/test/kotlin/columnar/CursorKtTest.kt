@@ -11,14 +11,14 @@ import org.junit.jupiter.api.Test
 import shouldBe
 
 class CursorKtTest/* : StringSpec()*/ {
-    private val coords = intArrayOf(
+     val coords = intArrayOf(
         0, 10,
         10, 84,
         84, 124,
         124, 164
     ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
 
-    private val drivers = vect0rOf(
+     val drivers = vect0rOf(
         IoLocalDate as TypeMemento,
         IoString,
         IoFloat,
@@ -56,6 +56,33 @@ class CursorKtTest/* : StringSpec()*/ {
         val toList = cursor.resample(0).narrow().toList()
         toList[3][2] shouldBe 820f
         toList.forEach { System.err.println(it) }
+    }
+
+    @Test
+    fun `resample+ordered`() {
+        val cursor: Cursor = cursorOf(root)
+run        {
+    System.err.println("unordered\n\n")
+
+            val resample = cursor.resample(0)
+                 val toList = resample
+                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
+                .toList()
+            resample.toList()[3][2].first shouldBe 820f
+            toList.forEach { System.err.println(it) }
+        }
+        System.err.println("ordered\n\n")
+        run{
+            val ordered = cursor.resample(0)
+                .ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })
+
+            val toList = ordered.narrow()
+                .toList()
+
+            toList.forEach { System.err.println(it) }
+            ordered.toList()[9][1].first shouldBe "0102211/0101010212/13-14/01"
+            ordered.toList()[10][1].first shouldBe "0500020/0101010106/13-14/05"
+        }
     }
 
     @Test

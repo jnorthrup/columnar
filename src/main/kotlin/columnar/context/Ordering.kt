@@ -33,7 +33,7 @@ class RowMajor : Ordering() {
             defaulteol: () -> Byte = '\n'::toByte
         ) = fixedWidth(nio, coords, defaulteol)
 
-        private fun fixedWidth(
+         fun fixedWidth(
             nio: NioMMap,
             coords: Vect02<Int, Int>,
             defaulteol: () -> Byte

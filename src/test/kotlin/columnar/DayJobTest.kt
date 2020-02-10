@@ -44,7 +44,7 @@ class DayJobTest/* : StringSpec()*/ {
         103, 108
     ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
 
-    private val drivers = vect0rOf(
+     val drivers = vect0rOf(
         IoString as TypeMemento,
         IoString,
         IoLocalDate,
@@ -54,7 +54,7 @@ class DayJobTest/* : StringSpec()*/ {
         IoFloat,
         IoString
     )
-    private val names = vect0rOf(
+     val names = vect0rOf(
         "SalesNo",    //        0
         "SalesAreaID",    //    1
         "date",    //           2
@@ -79,7 +79,7 @@ class DayJobTest/* : StringSpec()*/ {
 
     var lastmessage: String? = null
 
-    private inline fun measureNanoTimeStr(block: () -> Unit): String {
+     inline fun measureNanoTimeStr(block: () -> Unit): String {
         return Duration.ofNanos(measureNanoTime(block)).toString()
     }
 
@@ -123,7 +123,7 @@ class DayJobTest/* : StringSpec()*/ {
         }
     }
 
-    private fun varcharMappings(
+     fun varcharMappings(
         theCursor: Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>,
         theCoords: Vect0r<Pai2<Int, Int>>
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
@@ -158,8 +158,6 @@ class DayJobTest/* : StringSpec()*/ {
             }
         } + "ms")
         println(message)
-
-
     }
 }
 

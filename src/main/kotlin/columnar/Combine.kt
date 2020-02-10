@@ -2,6 +2,8 @@ package columnar
 
 import kotlin.math.absoluteValue
 
+@JvmName("combine_VecVec")
+fun <T> combine(vargs:  Vect0r<Vect0r<T>>): Vect0r<T> = combine( *vargs.toArray() )
 
 @JvmName("combine_Vect0r")
 fun <T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
