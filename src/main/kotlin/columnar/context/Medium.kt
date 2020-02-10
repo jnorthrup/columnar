@@ -2,13 +2,12 @@ package columnar.context
 
 import columnar.*
 import columnar.context.Arity.Companion.arityKey
-import kotlinx.coroutines.runBlocking
+
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
 typealias  MMapWindow = Tw1n<Long>
@@ -59,17 +58,19 @@ class NioMMap(
     private var fixedWidth: FixedWidth? = null
 
     @Suppress("UNCHECKED_CAST")
-    suspend fun values(): NioCursor = this.run {
-        val ordering = coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
+            /*suspend*/ fun values(coroutineContext: CoroutineContext): NioCursor = this.run {
+        val ordering =
+            coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
         val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         val recordBoundary/*:FixedWidth */ = coroutineContext[RecordBoundary.boundaryKey]!!
             .also {
-            fixedWidth = it as? FixedWidth
-        }
+                fixedWidth = it as? FixedWidth
+            }
 
         val drivers = drivers ?: text((arity as Columnar).left /*assuming fwf here*/)
-        val coords = fixedWidth?.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to propogate the null as a hard error for now. */
+        val coords =
+            fixedWidth?.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to propogate the null as a hard error for now. */
 
         val asContextVect0r = asContextVect0r(addressable as Indexable, fixedWidth!!)
         (asContextVect0r t2 { y: ByteBuffer ->
@@ -113,20 +114,21 @@ class NioMMap(
 
         fun binary(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> =
             m.toList().map {
-                Fixed.mapped[it] }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
+                Fixed.mapped[it]
+            }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
     }
 
     private fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth
     ): Vect02<ByteBuffer, MMapWindow> = Vect0r(indexable.size()) { ix: Int ->
-        run {
-        //runBlocking {
-            translateMapping(
-                ix,
-                fixedWidth.recordLen
-            )
-        }
+
+        /*runBlocking*/let {
+        translateMapping(
+            ix,
+            fixedWidth.recordLen
+        )
+    }
     }
 
     /**
@@ -140,13 +142,13 @@ class NioMMap(
     @Suppress("ControlFlowWithEmptyBody")
     override var recordLen = {
 
-        fixedWidth?.recordLen?:(fixedWidth?.endl()?.let { endl->
+        fixedWidth?.recordLen ?: (fixedWidth?.endl()?.let { endl ->
             mf.mappedByteBuffer.get().duplicate().clear().let {
                 while (it.get() != endl);
                 it.position()
 
             }
-        } )?: TODO("recordlen missing from context creation!!")
+        }) ?: TODO("recordlen missing from context creation!!")
     }
     private val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
@@ -162,7 +164,9 @@ class NioMMap(
      *
      * @return
      */
-    private fun translateMapping(
+
+    /*suspend*/ fun translateMapping(
+
         rowIndex: Int,
         rowsize: Int
     ): NioCursorState {
@@ -170,7 +174,7 @@ class NioMMap(
         var reuse = false
         lateinit var pbuf: ByteBuffer
         val (memo1, memo2: MMapWindow) = state/*.get()*/
-        return  /*withContext(state*//*.asContextElement()*//*)*/ let{
+        return  /*withContext(state*//*.asContextElement()*//*)*/ let {
             state/*.ensurePresent()*/
             var (buf1, window1) = state/*.get()*/
             val lix = rowIndex.toLong()
@@ -196,7 +200,7 @@ class NioMMap(
                     } catch (a: AssertionError) {
                     }
                 else -> it.let { (_, window) ->
-                    state/*.set*/=(pbuf t2 window)
+                    state/*.set*/ = (pbuf t2 window)
                 }
             }
         }

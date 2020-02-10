@@ -2,7 +2,10 @@ package columnar
 
 
 import columnar.IOMemento.*
-import columnar.context.*
+import columnar.context.Columnar
+import columnar.context.FixedWidth
+import columnar.context.NioMMap
+import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
 import java.io.File
@@ -17,7 +20,7 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_10000"     //"_RD"  139618738
 //        val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
-    val suffix = "_500000"     //"_RD"
+//    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
@@ -26,10 +29,11 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
-//        val suffix = ""//"_RD"
-    private val s = //"/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
-            "/home/me/Descargas/rejuvesinceapril2019_100000.fwf"
-    private val coords = intArrayOf(
+
+    val suffix = ""//"_RD"
+    val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
+    val coords = intArrayOf(
+
         0, 11,
         11, 15,
         15, 25,
@@ -61,12 +65,14 @@ class DayJobTest/* : StringSpec()*/ {
         "TransMode"    //       7
     )
 
-    private val zip = drivers.zip(names)
-    private val columnar = Columnar(zip   as Vect02<TypeMemento, String?>)
-    private val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
-    private val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
-    private val indexable = indexableOf(nioMMap, fixedWidth)
-    private val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
+
+    val zip = drivers.zip(names)
+    val columnar = Columnar(zip as Vect02<TypeMemento, String?>)
+    val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
+    val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
+    val indexable = indexableOf(nioMMap, fixedWidth)
+    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
+
         System.err.println("record count=" + it.first)
     }
 
@@ -86,9 +92,9 @@ class DayJobTest/* : StringSpec()*/ {
             System.err.println("using filename: " + pathname.toString())
             val reorder = intArrayOf(2, 1, 3, 5)
             val theCursor = curs[reorder]
-            val theCoords=coords[reorder]
+            val theCoords = coords[reorder]
             val varcharSizes = varcharMappings(theCursor, theCoords)
-            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(),24, varcharSizes)
+            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: " + nanos)
 
@@ -120,11 +126,11 @@ class DayJobTest/* : StringSpec()*/ {
     private fun varcharMappings(
         theCursor: Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>,
         theCoords: Vect0r<Pai2<Int, Int>>
-    )  = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
-         index t2 typeMemento
-     }.filter { (_, b) -> b == IoString }.map { (a, _) ->
-         a to theCoords[a].size
-     }.toMap()
+    ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
+        index t2 typeMemento
+    }.filter { (_, b) -> b == IoString }.map { (a, _) ->
+        a to theCoords[a].size
+    }.toMap()
 
     @org.junit.jupiter.api.Test
     fun `pivot+group+reduce`() {

@@ -4,7 +4,6 @@ package columnar
 
 import columnar.context.*
 import columnar.context.RowMajor.Companion.indexableOf
-import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -30,7 +29,7 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
                             //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
                             // and call in a cell through here
                             val name =
-                                cnar.right?.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
+                                cnar.right.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
                             val type = cnar.left[ix]
                             Scalar(type, name)
                         }
@@ -50,9 +49,9 @@ fun Cursor.narrow() =
 val accnil = Array<Any?>(0) {}
 val <C : Vect0r<R>, R> C.`…`: List<R> get() = this.toList()
 
-val Cursor.scalars
+val Cursor.scalars: Vect0r<Scalar>
     get() = toSequence().first()
-        .right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[Arity.arityKey] as Scalar } }
+        .right α { it: () -> CoroutineContext -> /*runBlocking*/(it()).let { it: CoroutineContext -> it[Arity.arityKey] as Scalar } }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -278,7 +277,8 @@ fun Cursor.groupClusters(
  * For Strings, the #columnar.TypeMemento in the #columnar.Cursor::scalars must be customized at creationtime or the
  * default size must be used.  this breaking change has not been made yet.
  *
- * #IOMemento.IoString accompanies varchar coords, so custom TypeMemento is not a requirment in the meta file format as of this comment.
+ * #IOMemento.IoString accompanies varchar coords, so custom TypeMemento is not a requirement in the meta file format
+ * as of this comment.
  *
  */
 fun Cursor.writeBinary(
@@ -289,24 +289,20 @@ fun Cursor.writeBinary(
             column*/
             Int,
             /**length*/
-            Int>?=null
+            Int>? = null
 ) {
     val mementos = scalars α Scalar::first
 
-    val pai2 = scalars `→` { scalars: Vect0r<Scalar> ->
+    val vec = scalars `→` { scalars: Vect0r<Scalar> ->
         Columnar.of(
             scalars
         ) t2 mementos
     }
-    /** create context columns
-     *
-     */
-    val (wcolumnar: Arity, _: Vect0r<TypeMemento>) = pai2
-    /** create context columns
-     *
-     */
-    val (_: Arity, ioMemos: Vect0r<TypeMemento>) = pai2
-    val wcoords = networkCoords(ioMemos, defaultVarcharSize,varcharSizes)
+    /** create context columns */
+    val (wcolumnar: Arity, _: Vect0r<TypeMemento>) = vec
+    /** create context columns */
+    val (_: Arity, ioMemos: Vect0r<TypeMemento>) = vec
+    val wcoords = networkCoords(ioMemos, defaultVarcharSize, varcharSizes)
     val wrecordlen: Int = wcoords.right.last()
     MappedFile(pathname, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
         mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * size)
@@ -329,18 +325,17 @@ fun Cursor.writeBinary(
         val windex: Addressable = indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
 
 
-        val wtable: TableRoot = runBlocking(
-            windex +
-                    wcolumnar +
-                    wfixedWidth +
-                    wnio +
-                    RowMajor()
-        ) {
-            val wniocursor: NioCursor = wnio.values()
-            val coroutineContext1 = coroutineContext
-            val arity = coroutineContext1[Arity.arityKey] as Columnar
-            val first = System.err.println("columnar memento: " + arity.left.toList())
-            wniocursor t2 coroutineContext1
+        val wtable: TableRoot = /*runBlocking*/(
+                windex +
+                        wcolumnar +
+                        wfixedWidth +
+                        wnio +
+                        RowMajor()
+                ).let { coroutineContext ->
+            val wniocursor: NioCursor = wnio.values(coroutineContext)
+            val arity = coroutineContext[Arity.arityKey] as Columnar
+            System.err.println("columnar memento: " + arity.left.toList())
+            wniocursor t2 coroutineContext
         }
 
         val scalars = scalars
@@ -366,7 +361,7 @@ private fun networkCoords(
     defaultVarcharSize: Int,
     varcharSizes: Map<Int, Int>?
 ): Vect02<Int, Int> = Unit.let {
-    val sizes1 = networkSizes(ioMemos, defaultVarcharSize,varcharSizes)
+    val sizes1 = networkSizes(ioMemos, defaultVarcharSize, varcharSizes)
     //todo: make IntArray Tw1nt Matrix
     var wrecordlen = 0
     val wcoords = Array(sizes1.size) { it ->
@@ -388,9 +383,11 @@ private fun networkSizes(
     defaultVarcharSize: Int,
     varcharSizes: Map<Int, Int>?
 ): Vect0r<Int> {
-    return ioMemos.mapIndexed { ix, memento: TypeMemento ->
+
+    val mapIndexed: Vect0r<Int> = ioMemos.mapIndexed { ix, memento: TypeMemento ->
+
         val get = varcharSizes?.get(ix)
-        memento.networkSize ?:( get ?: defaultVarcharSize)
+        memento.networkSize ?: (get ?: defaultVarcharSize)
     }
 }
 
@@ -449,7 +446,7 @@ fun binaryCursor(
             indexable as Indexable,
             nio,
             Columnar(
-                typeVec.zip( rnames ) as Vect02<TypeMemento, String?>
+                typeVec.zip(rnames) as Vect02<TypeMemento, String?>
             )
         )
     )

@@ -325,7 +325,7 @@ fun Vect0r<Int>.zipWithNext(): Vect02<Int, Int> = Vect0r(
 //array-like mapped map
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <  reified K,   reified V> Map <K, V>.get(@BuilderInference ks: Vect0r<K>) =
+inline operator fun <reified K, reified V> Map<K, V>.get(@BuilderInference ks: Vect0r<K>) =
     this.get(*ks.toList().toTypedArray())
 
 @BuilderInference

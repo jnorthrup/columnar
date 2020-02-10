@@ -4,7 +4,7 @@ import columnar.context.CellDriver
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 
-typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>,TypeMemento, Int>
+typealias NioMeta = Tripl3<CellDriver<ByteBuffer, Any?>, TypeMemento, Int>
 typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>

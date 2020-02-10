@@ -24,13 +24,20 @@ class CursorKtTest/* : StringSpec()*/ {
         IoFloat,
         IoFloat
     )
-    private val names = vect0rOf("date", "channel", "delivered", "ret")
-    private val mf = MappedFile("src/test/resources/caven4.fwf")
-    private val nio = NioMMap(mf)
-    private val fixedWidth: FixedWidth
-        get() = fixedWidthOf(nio = nio, coords = coords)
+
+    val names = vect0rOf("date", "channel", "delivered", "ret")
+    val mf = MappedFile("src/test/resources/caven4.fwf")
+    val nio = NioMMap(mf)
+    val fixedWidth: FixedWidth
+        get() = fixedWidthOf(nio = nio, coords = coords as Vect02<Int, Int>)
+
     @Suppress("UNCHECKED_CAST")
-    val root = RowMajor().fromFwf(fixedWidth, indexableOf(nio, fixedWidth), nio, Columnar(drivers.zip( names) as Vect02<TypeMemento, String?> ))
+    val root = RowMajor().fromFwf(
+        fixedWidth,
+        indexableOf(nio, fixedWidth),
+        nio,
+        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+    )
 
 
     @Test
@@ -194,4 +201,7 @@ class CursorKtTest/* : StringSpec()*/ {
                 "${it.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
-            }.toList())}}}
+            }.toList())
+        }
+    }
+}
