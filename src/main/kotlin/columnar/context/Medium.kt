@@ -2,17 +2,11 @@ package columnar.context
 
 import columnar.*
 import columnar.context.Arity.Companion.arityKey
-import kotlinx.coroutines.asContextElement
-import kotlinx.coroutines.ensurePresent
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import java.lang.ref.Reference
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
 typealias  MMapWindow = Tw1n<Long>
@@ -63,7 +57,7 @@ class NioMMap(
     var fixedWidth: FixedWidth? = null
 
     @Suppress("UNCHECKED_CAST")
-    suspend fun values(): NioCursor = this.run {
+    /*suspend*/ fun values(coroutineContext: CoroutineContext): NioCursor = this.run {
         val ordering = coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
         val arity = coroutineContext[arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
@@ -124,7 +118,7 @@ class NioMMap(
         indexable: Indexable,
         fixedWidth: FixedWidth
     ): Vect02<ByteBuffer, MMapWindow> = Vect0r(indexable.size()) { ix: Int ->
-        runBlocking {
+        /*runBlocking*/let {
             translateMapping(
                 ix,
                 fixedWidth.recordLen
@@ -165,7 +159,7 @@ class NioMMap(
      *
      * @return
      */
-    suspend fun translateMapping(
+    /*suspend*/ fun translateMapping(
         rowIndex: Int,
         rowsize: Int
     ): NioCursorState {

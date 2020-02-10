@@ -4,7 +4,6 @@ package columnar
 
 import columnar.context.*
 import columnar.context.RowMajor.Companion.indexableOf
-import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -49,9 +48,9 @@ fun Cursor.narrow() =
 val accnil = Array<Any?>(0) {}
 val <C : Vect0r<R>, R> C.`…`: List<R> get() = this.toList()
 
-val Cursor.scalars
+val Cursor.scalars: Vect0r<  Scalar>
     get() = toSequence().first()
-        .right α { it: () -> CoroutineContext -> runBlocking(it()) { coroutineContext[Arity.arityKey] as Scalar } }
+        .right α { it: () -> CoroutineContext -> /*runBlocking*/(it()).let { it: CoroutineContext -> it[Arity.arityKey] as Scalar }  }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -324,18 +323,18 @@ fun Cursor.writeBinary(
         val windex: Addressable = RowMajor.indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
 
 
-        val wtable: TableRoot = runBlocking(
-            windex +
-                    wcolumnar +
-                    wfixedWidth +
-                    wnio +
-                    RowMajor()
-        ) {
-            val wniocursor: NioCursor = wnio.values()
-            val coroutineContext1 = coroutineContext
-            val arity = coroutineContext1[Arity.arityKey] as Columnar
-            val first = System.err.println("columnar memento: " + arity.left.toList())
-            wniocursor t2 coroutineContext1
+        val context = windex +
+                wcolumnar +
+                wfixedWidth +
+                wnio +
+                RowMajor()
+        val wtable: TableRoot = /*runBlocking*/(
+            context
+        ) .let{coroutineContext->
+            val wniocursor: NioCursor = wnio.values(coroutineContext)
+            val arity = coroutineContext[Arity.arityKey] as Columnar
+            System.err.println("columnar memento: " + arity.left.toList())
+            wniocursor t2 coroutineContext
         }
 
         val scalars = scalars

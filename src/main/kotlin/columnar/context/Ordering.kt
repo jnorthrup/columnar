@@ -1,7 +1,6 @@
 package columnar.context
 
 import columnar.*
-import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import kotlin.coroutines.CoroutineContext
@@ -28,7 +27,6 @@ sealed class Ordering : CoroutineContext.Element {
  */
 class RowMajor : Ordering() {
     companion object {
-
         fun fixedWidthOf(
             nio: NioMMap,
             coords: Vect02<Int,Int>,
@@ -80,13 +78,13 @@ class RowMajor : Ordering() {
         indexable: Indexable,
         nio: NioMMap,
         columnarArity: Columnar
-    ): TableRoot = runBlocking(
+    ): TableRoot =  (
         this +
                 fixedWidth +
                 indexable +
                 nio +
                 columnarArity
-    ) { nio.values() as NioCursor t2 this.coroutineContext }
+    ).let { coroutineContext->nio.values(coroutineContext) as NioCursor t2  coroutineContext }
     /**
      * this builds a context and launches a cursor in the given NioMMap frame of reference
      */
@@ -95,13 +93,13 @@ class RowMajor : Ordering() {
         indexable: Indexable,
         nio: NioMMap,
         columnarArity: Columnar
-    ): TableRoot = runBlocking(
+    ): TableRoot = (
         this +
                 fixedWidth +
                 indexable +
                 nio +
                 columnarArity
-    ) { nio.values() as NioCursor t2 this.coroutineContext }
+    ) .let{coroutineContext-> nio.values(coroutineContext) as NioCursor t2  coroutineContext }
 }
 
 /**
