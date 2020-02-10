@@ -143,24 +143,24 @@ fun Cursor.pivot(
     System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
         val theRow: RowVec = cursr.second(iy)
-            theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
-                RowVec(xsize) { ix: Int ->
-                    when {
-                        ix < lhs.size -> {
-                            original(lhs[ix])
-                        }
-                        else /*fanout*/ -> {
-                            val theKey: List<Any?> = theRow[axis].left.toList()
-                            val keyGate = whichKey(ix)
-                            val cellVal = if (keys[theKey] == keyGate)
-                                original(fanOut[whichFanoutIndex(ix)]).first
-                            else null
+        theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
+            RowVec(xsize) { ix: Int ->
+                when {
+                    ix < lhs.size -> {
+                        original(lhs[ix])
+                    }
+                    else /*fanout*/ -> {
+                        val theKey: List<Any?> = theRow[axis].left.toList()
+                        val keyGate = whichKey(ix)
+                        val cellVal = if (keys[theKey] == keyGate)
+                            original(fanOut[whichFanoutIndex(ix)]).first
+                        else null
 
-                            cellVal t2 synthScalars[ix - lhs.size].`⟲`
-                        }
+                        cellVal t2 synthScalars[ix - lhs.size].`⟲`
                     }
                 }
             }
+        }
     }
 }
 
@@ -247,23 +247,27 @@ fun Cursor.group(
 }
 
 fun Cursor.groupClusters(
-    axis: IntArray
+    axis: IntArray,
+      clusters:MutableMap<List<Any?>,MutableList<Int>> = linkedMapOf()
 ) = run {
-    val clusters: Map<List<Any?>, MutableList<Int>>
-    System.err.println("--- group")
-    clusters = linkedMapOf()
-    val cap = max(8, (sqrt(first.toDouble()).toInt()))
-    val mapIndexed = mapIndexedToList { iy: Int, row: RowVec ->
+    System.err.println("--- groupClusters")
+    keyClusters(axis,clusters )
+    clusters.values α MutableList<Int>::toIntArray
+}
+
+private fun Cursor.keyClusters(
+    axis: IntArray,
+    clusters: MutableMap<List<Any?>, MutableList<Int>>
+) {
+    val cap = max(8, sqrt(size.toDouble()).toInt())
+    forEachIndexed { iy: Int, row: RowVec ->
         row[axis].left.toList().let {
-            clusters[it].let { clust ->
-                if (clust != null) clust.add(iy) else clusters[it] = ArrayList<Int>(cap).apply { add(iy) }
-            }
+            clusters.getOrPut(it) { ArrayList(cap) } += iy
         }
     }
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys /*.also { System.err.println("if this is visible without -ea we have a problem with `⟲`") }*/}" }
-    val list = clusters.values α MutableList<Int>::toIntArray
-    list
 }
+
 
 
 /**
@@ -272,12 +276,6 @@ fun Cursor.groupClusters(
  *
  * this is a tempfile format until further notice, changes and fixes should be aggressively developed, there is no
  * RFC other than this comment to go by
- *
- * For Strings, the #columnar.TypeMemento in the #columnar.Cursor::scalars must be customized at creationtime or the
- * default size must be used.  this breaking change has not been made yet.
- *
- * #IOMemento.IoString accompanies varchar coords, so custom TypeMemento is not a requirement in the meta file format
- * as of this comment.
  *
  */
 fun Cursor.writeBinary(
@@ -355,7 +353,7 @@ fun Cursor.writeBinary(
 }
 
 
-  fun networkCoords(
+fun networkCoords(
     ioMemos: Vect0r<TypeMemento>,
     defaultVarcharSize: Int,
     varcharSizes: Map<Int, Int>?
@@ -363,8 +361,8 @@ fun Cursor.writeBinary(
     val sizes1 = networkSizes(ioMemos, defaultVarcharSize, varcharSizes)
     //todo: make IntArray Tw1nt Matrix
     var wrecordlen = 0
-    val wcoords = Array(sizes1.size) { it ->
-        val size = sizes1[it]
+    val wcoords = Array(sizes1.size) { ix ->
+        val size = sizes1[ix]
         Tw1n(wrecordlen, (wrecordlen + size).also { wrecordlen = it })
     }
 
@@ -377,17 +375,17 @@ fun Cursor.writeBinary(
     }
 }
 
-  fun networkSizes(
+fun networkSizes(
     ioMemos: Vect0r<TypeMemento>,
     defaultVarcharSize: Int,
     varcharSizes: Map<Int, Int>?
 ): Vect0r<Int> = ioMemos.mapIndexed { ix, memento: TypeMemento ->
     val get = varcharSizes?.get(ix)
-    memento.networkSize ?:( get ?: defaultVarcharSize)
+    memento.networkSize ?: (get ?: defaultVarcharSize)
 }
 
 
-  fun Cursor.writeMeta(
+fun Cursor.writeMeta(
     pathname: String,
 //    wrecordlen: Int,
     wcoords: Vect02<Int, Int>
@@ -400,30 +398,31 @@ fun Cursor.writeBinary(
 
         val s: Vect02<TypeMemento, String?> = scalars as Vect02<TypeMemento, String?>
 
-        fileWriter.write("# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..")
-        fileWriter.write("\n")
-        fileWriter.write("# last coord is the recordlen")
-        fileWriter.write("\n")
-        fileWriter.write(wcoords.toList().map { listOf(it.first, it.second) }.flatten().joinToString(" "))
-        fileWriter.write("\n")
-        fileWriter.write(s.right.map { s: String? -> s!!.replace(' ', '_') }.toList().joinToString(" "))
-        fileWriter.write("\n")
-        fileWriter.write(s.left.mapIndexed<TypeMemento, Any> { ix, it ->
-            if (it is IOMemento) it.name
-            else wcoords[ix].size
-        }.toList().joinToString(" "))
-        fileWriter.write("\n")
-
+        val coords = wcoords.toList()
+            .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
+        val nama = s.right
+            .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
+        val mentos = s.left
+            .mapIndexed<TypeMemento, Any> { ix, it -> if (it is IOMemento) it.name else wcoords[ix].size }.toList()
+            .joinToString(" ")
+        val metaString =
+            """
+            # format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..
+            # last coord is the recordlen
+            $coords
+            $nama
+            $mentos            
+            """.trimIndent()
+        fileWriter.write(metaString)
     }
 }
-
 
 @Suppress("USELESS_CAST")
 fun binaryCursor(
     binpath: Path,
     mappedFile: MappedFile,
     metapath: Path = Paths.get(binpath.toString() + ".meta")
-) = mappedFile.let { mf ->
+) = mappedFile.run {
     val lines = Files.readAllLines(metapath)
     lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
     val rcoords: Vect02<Int, Int> = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
@@ -431,19 +430,15 @@ fun binaryCursor(
     val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
     val recordlen = rcoords.last().second
     val drivers = NioMMap.binary(typeVec)
-    val nio = NioMMap(mf, drivers)
-    val fixedWidth = FixedWidth(
-        recordlen, rcoords, null.`⟲`, null.`⟲`
-    )
+    val nio = NioMMap(this, drivers)
+    val fixedWidth = FixedWidth(recordlen, rcoords, null.`⟲`, null.`⟲`)
     val indexable: Addressable = indexableOf(nio, fixedWidth)
     cursorOf(
         RowMajor().fromFwf(
             fixedWidth,
             indexable as Indexable,
             nio,
-            Columnar(
-                typeVec.zip(rnames) as Vect02<TypeMemento, String?>
-            )
+            Columnar(typeVec.zip(rnames) as Vect02<TypeMemento, String?>)
         )
     )
 }

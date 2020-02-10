@@ -121,15 +121,15 @@ class CursorKtTest/* : StringSpec()*/ {
         println(cursor.narrow().toList())
         val piv = cursor.group((0))
         cursor.forEach { it ->
-            println(it.map { it ->
-                "${it.component1().let {
+            println(it.map { pai2 ->
+                "${pai2.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
             }.toList())
         }
         piv.forEach { it ->
-            println(it.map { it ->
-                "${it.component1().let {
+            println(it.map { pai2 ->
+                "${pai2.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
             }.toList())
@@ -144,8 +144,8 @@ class CursorKtTest/* : StringSpec()*/ {
         val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group((0))
         println()
         piv.forEach { it ->
-            println(it.map { it ->
-                "${it.component1().let {
+            println(it.map { vec     ->
+                "${vec.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
             }.toList())
@@ -164,8 +164,8 @@ class CursorKtTest/* : StringSpec()*/ {
         ).group((0)).`∑`(sumReducer[IoFloat]!!)
 
         piv.forEach { it ->
-            println(it.map { it ->
-                "${it.component1().let {
+            println(it.map { vec ->
+                "${vec.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
             }.toList())
@@ -178,8 +178,8 @@ class CursorKtTest/* : StringSpec()*/ {
         val cursor: Cursor = cursorOf(root)
         val resample = cursor.resample(0)
         resample.forEach { it ->
-            println(it.map { it ->
-                "${it.component1().let {
+            println(it.map { vec ->
+                "${vec.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
             }.toList())
@@ -187,8 +187,8 @@ class CursorKtTest/* : StringSpec()*/ {
         println("---")
         val grp = resample.group((1))
         grp.forEach { it ->
-            println(it.map { it ->
-                "${it.component1().let {
+            println(it.map { vec ->
+                "${vec.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
             }.toList())
@@ -197,8 +197,8 @@ class CursorKtTest/* : StringSpec()*/ {
         val pai2 = grp[2, 3]
         val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
         join.forEach { it ->
-            println(it.map { it ->
-                "${it.component1().let {
+            println(it.map { vec     ->
+                "${vec.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
             }.toList())
