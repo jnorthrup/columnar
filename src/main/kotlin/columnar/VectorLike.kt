@@ -61,27 +61,27 @@ infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B) = this.map { it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this.get(i) `→` m }
+infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <A, C, B : (A) -> C> Array<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this.get(i) `→` m }
+infix fun <A, C, B : (A) -> C> Array<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this.get(i) `→` m }
+infix fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 /*
 But as soon as a groupoid has both a left and a right identity, they are necessarily unique and equal. For if e is
@@ -103,7 +103,7 @@ val <T> T.`⟲`
 /**right identity*/
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <T, R> T.`⟲`(f: (T) -> R) = { f(this) }
+infix fun <T, R> T.`⟲`(f: (T) -> R) = run { f(this) }
 
 @JvmName("vlike_Sequence_1")
 @BuilderInference
@@ -164,7 +164,7 @@ inline operator fun <reified T> Array<T>.get(indexes: Iterable<Int>) = this[inde
 @JvmName("vlike_Array_IntArray3")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <reified T> Array<T>.get(index: IntArray) = Array<T>(index.size) { i: Int -> this[index[i]] }
+inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
 /*
 
 @JvmName("vlike_IntArray_1i")
@@ -187,7 +187,7 @@ operator fun <T> Vect0r<T>.get(vararg index: Int): Vect0r<T> = get(index)
 operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T> = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Vect0r_IntArray3")
-operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size, { ix: Int -> second(index[ix]) })
+operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
 fun <T> Vect0r<T>.toList(): List<T> = let { v ->
@@ -299,10 +299,10 @@ fun <T> combine(vararg a: List<T>) =
 @JvmName("combine_Array")
 inline fun <reified T> combine(vararg a: Array<T>) = a.sumBy { it.size }.let { size ->
     var x = 0
-    var y = 0; Array<T>(size) { i ->
+    var y = 0; Array(size) { i ->
     if (y >= a[x].size) {
         ++x; y = 0
-    };
+    }
     a[x][y++]
 }
 }

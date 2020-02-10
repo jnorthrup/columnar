@@ -1,5 +1,3 @@
 package columnar.context
 
-annotation class Destructure(val value: Int) {
-
-}
+annotation class Destructure(val value: Int)

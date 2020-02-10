@@ -69,7 +69,7 @@ interface Tripl3<F, S, T>/* : Pai2<F, S> */ {
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
-    val triple get() = let { Triple(first, second, third) }
+    val triple get() = Triple(first, second, third)
 
     companion object {
         operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
@@ -119,7 +119,9 @@ fun <T : Int> Tw1n(first: T, second: T) = Tw1nt(intArrayOf(first, second))
 fun <T : Long> Tw1n(first: T, second: T) = Twln(longArrayOf(first, second))
 
 
+ 
 inline class Twln(val ia: LongArray) : Tw1n<Long> {
+ 
     override val first get() = ia[0]
     override val second get() = ia[1]
 }

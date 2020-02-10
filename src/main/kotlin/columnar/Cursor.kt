@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.max
 import kotlin.math.sqrt
 
 typealias Cursor = Vect0r<RowVec>
@@ -75,7 +76,7 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
 
 fun Cursor.resample(indexcol: Int): Cursor = let {
     val curs = this[indexcol]
-    val indexValues = curs.narrow().map { it: List<Any?> -> it.first() as LocalDate }.toSequence()
+    val indexValues = curs.narrow().map { it.first() as LocalDate }.toSequence()
     val (min, max) = feature_range(indexValues)
     val scalars = this.scalars
     val sequence = daySeq(min, max) - indexValues
@@ -136,31 +137,31 @@ fun Cursor.pivot(
         val synthPrefix: String = list.mapIndexed { index: Int, any: Any? ->
             "${allscalars[axis[index]].second!!}=$any"
         }.joinToString(",", "[", "]")
-        fanoutScalars.map({ (ioMemento, s: String?): Scalar ->
+        fanoutScalars.map { (ioMemento, s: String?): Scalar ->
             Scalar(ioMemento, "$synthPrefix:$s")
-        })
+        }
     }.flatten().toTypedArray()
     System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
         val theRow: RowVec = cursr.second(iy)
-        theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
-            RowVec(xsize) { ix: Int ->
-                when {
-                    ix < lhs.size -> {
-                        original(lhs[ix])
-                    }
-                    else /*fanout*/ -> {
-                        val theKey: List<Any?> = theRow[axis].left.toList()
-                        val keyGate = whichKey(ix)
-                        val cellVal = if (keys[theKey] == keyGate)
-                            original(fanOut[whichFanoutIndex(ix)]).first
-                        else null
+            theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
+                RowVec(xsize) { ix: Int ->
+                    when {
+                        ix < lhs.size -> {
+                            original(lhs[ix])
+                        }
+                        else /*fanout*/ -> {
+                            val theKey: List<Any?> = theRow[axis].left.toList()
+                            val keyGate = whichKey(ix)
+                            val cellVal = if (keys[theKey] == keyGate)
+                                original(fanOut[whichFanoutIndex(ix)]).first
+                            else null
 
-                        cellVal t2 synthScalars[ix - lhs.size].`⟲`
+                            cellVal t2 synthScalars[ix - lhs.size].`⟲`
+                        }
                     }
                 }
             }
-        }
     }
 }
 
@@ -202,11 +203,14 @@ fun Cursor.group(
     val masterScalars = orig.scalars
     Cursor(clusters.size) { cy ->
         val cluster = clusters[cy]
+        val cfirst = cluster.first()
         RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
-                in axis -> orig.second(
-                    cluster.first()
-                )[ix]
+                in axis -> {
+                    orig.second(
+                        cfirst
+                    )[ix]
+                }
                 else -> Vect0r(cluster.size) { iy: Int ->
                     orig.second(cluster[iy])[ix].first
                 } t2 masterScalars[ix].`⟲`
@@ -249,10 +253,10 @@ fun Cursor.groupClusters(
     val clusters: Map<List<Any?>, MutableList<Int>>
     System.err.println("--- group")
     clusters = linkedMapOf()
-    val cap = Math.max(8, (sqrt(first.toDouble()).toInt()))
+    val cap = max(8, (sqrt(first.toDouble()).toInt()))
     val mapIndexed = mapIndexedToList { iy: Int, row: RowVec ->
         row[axis].left.toList().let {
-            clusters.get(it).let { clust ->
+            clusters[it].let { clust ->
                 if (clust != null) clust.add(iy) else clusters[it] = ArrayList<Int>(cap).apply { add(iy) }
             }
         }
@@ -303,6 +307,7 @@ fun Cursor.writeBinary(
     MappedFile(pathname, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
         mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * size)
 
+
         /**
          * preallocate the mmap file
          */
@@ -317,7 +322,7 @@ fun Cursor.writeBinary(
          */
         val wnio: Medium = NioMMap(mappedFile, drivers1)
         wnio.recordLen = wrecordlen.`⟲`
-        val windex: Addressable = RowMajor.indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
+        val windex: Addressable = indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
 
 
         val wtable: TableRoot = /*runBlocking*/(
@@ -359,7 +364,7 @@ private fun networkCoords(
     val sizes1 = networkSizes(ioMemos, defaultVarcharSize, varcharSizes)
     //todo: make IntArray Tw1nt Matrix
     var wrecordlen = 0
-    val wcoords = Array(sizes1.size) {
+    val wcoords = Array(sizes1.size) { it ->
         val size = sizes1[it]
         Tw1n(wrecordlen, (wrecordlen + size).also { wrecordlen = it })
     }
@@ -378,11 +383,12 @@ private fun networkSizes(
     defaultVarcharSize: Int,
     varcharSizes: Map<Int, Int>?
 ): Vect0r<Int> {
+
     val mapIndexed: Vect0r<Int> = ioMemos.mapIndexed { ix, memento: TypeMemento ->
+
         val get = varcharSizes?.get(ix)
         memento.networkSize ?: (get ?: defaultVarcharSize)
     }
-    return mapIndexed
 }
 
 private fun Cursor.writeMeta(
@@ -402,7 +408,7 @@ private fun Cursor.writeMeta(
         fileWriter.write("\n")
         fileWriter.write("# last coord is the recordlen")
         fileWriter.write("\n")
-        fileWriter.write(wcoords.toList().map { it -> listOf(it.first, it.second) }.flatten().joinToString(" "))
+        fileWriter.write(wcoords.toList().map { listOf(it.first, it.second) }.flatten().joinToString(" "))
         fileWriter.write("\n")
         fileWriter.write(s.right.map { s: String? -> s!!.replace(' ', '_') }.toList().joinToString(" "))
         fileWriter.write("\n")
