@@ -38,7 +38,8 @@ class NinetyDegreeTest/* : StringSpec()*/ {
                         IoFloat,
                         IoFloat
                     ).zip(
-                    vect0rOf<String?>("date", "channel", "delivered", "ret") )
+                        vect0rOf<String?>("date", "channel", "delivered", "ret")
+                    )
                 )
             )
         ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3)) α floatFillNa(0f)
@@ -66,7 +67,7 @@ class NinetyDegreeTest/* : StringSpec()*/ {
             "test",
             "resources", s2
         )
-        MappedFile(binpath.toString()).use {mf->
+        MappedFile(binpath.toString()).use { mf ->
             val cursr = binaryCursor(binpath, mf, metapath)
 
             System.err.println(cursr.second(0).left.toList())

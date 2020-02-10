@@ -38,5 +38,6 @@ class VectorLikeKtTest/* : StringSpec()*/ {
     }
 
     @org.junit.jupiter.api.Test
-    fun subranges() {    }
+    fun subranges() {
+    }
 }

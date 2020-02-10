@@ -29,7 +29,7 @@ class RowMajor : Ordering() {
     companion object {
         fun fixedWidthOf(
             nio: NioMMap,
-            coords: Vect02<Int,Int>,
+            coords: Vect02<Int, Int>,
             defaulteol: () -> Byte = '\n'::toByte
         ) = fixedWidth(nio, coords, defaulteol)
 
@@ -78,13 +78,14 @@ class RowMajor : Ordering() {
         indexable: Indexable,
         nio: NioMMap,
         columnarArity: Columnar
-    ): TableRoot =  (
-        this +
-                fixedWidth +
-                indexable +
-                nio +
-                columnarArity
-    ).let { coroutineContext->nio.values(coroutineContext) as NioCursor t2  coroutineContext }
+    ): TableRoot = (
+            this +
+                    fixedWidth +
+                    indexable +
+                    nio +
+                    columnarArity
+            ).let { coroutineContext -> nio.values(coroutineContext) as NioCursor t2 coroutineContext }
+
     /**
      * this builds a context and launches a cursor in the given NioMMap frame of reference
      */
@@ -94,12 +95,12 @@ class RowMajor : Ordering() {
         nio: NioMMap,
         columnarArity: Columnar
     ): TableRoot = (
-        this +
-                fixedWidth +
-                indexable +
-                nio +
-                columnarArity
-    ) .let{coroutineContext-> nio.values(coroutineContext) as NioCursor t2  coroutineContext }
+            this +
+                    fixedWidth +
+                    indexable +
+                    nio +
+                    columnarArity
+            ).let { coroutineContext -> nio.values(coroutineContext) as NioCursor t2 coroutineContext }
 }
 
 /**

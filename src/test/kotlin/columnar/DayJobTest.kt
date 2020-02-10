@@ -2,7 +2,10 @@ package columnar
 
 
 import columnar.IOMemento.*
-import columnar.context.*
+import columnar.context.Columnar
+import columnar.context.FixedWidth
+import columnar.context.NioMMap
+import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
 import java.io.File
@@ -16,7 +19,7 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_10000"     //"_RD"  139618738
 //        val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
-    val suffix = "_500000"     //"_RD"
+//    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
@@ -25,7 +28,7 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
-//        val suffix = ""//"_RD"
+    val suffix = ""//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
         0, 11,
@@ -60,7 +63,7 @@ class DayJobTest/* : StringSpec()*/ {
     )
 
     val zip = drivers.zip(names)
-    val columnar = Columnar(zip   as Vect02<TypeMemento, String?>)
+    val columnar = Columnar(zip as Vect02<TypeMemento, String?>)
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
@@ -80,9 +83,9 @@ class DayJobTest/* : StringSpec()*/ {
             System.err.println("using filename: " + pathname.toString())
             val reorder = intArrayOf(2, 1, 3, 5)
             val theCursor = curs[reorder]
-            val theCoords=coords[reorder]
+            val theCoords = coords[reorder]
             val varcharSizes = varcharMappings(theCursor, theCoords)
-            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(),24, varcharSizes)
+            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
         }
 
         System.err.println("transcription took: " + millis)
@@ -114,11 +117,11 @@ class DayJobTest/* : StringSpec()*/ {
     private fun varcharMappings(
         theCursor: Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>,
         theCoords: Vect0r<Pai2<Int, Int>>
-    )  = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
-         index t2 typeMemento
-     }.filter { (_, b) -> b == IoString }.map { (a, _) ->
-         a to theCoords[a].size
-     }.toMap()
+    ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
+        index t2 typeMemento
+    }.filter { (_, b) -> b == IoString }.map { (a, _) ->
+        a to theCoords[a].size
+    }.toMap()
 
     @org.junit.jupiter.api.Test
     fun `pivot+group+reduce`() {
