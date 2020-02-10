@@ -16,8 +16,53 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.math.max
 import kotlin.math.sqrt
 
+
+/**
+ * cursor is approximately the pandas Dataframe with some shortcuts
+ *
+ * # composition
+ *
+ *  Cursor is a Pair interface, here named Pai2 (also a Tripl3 interface similarly exists)
+ *
+ *  Cursor and Vect0r are also both the same Pai2 typealias having   .size==.first and .get(i)==.second.invoke(i)
+ *
+ *  Cursor has RowVec which is a Vect02 of value (Any?) and ()->Context method access per column.  you can describe
+ *  anything about any Cursor Value by controlling the CoroutineContext herein
+ *
+ * ## cursor column slices
+ * cursor[0] returns a new cursor from column 0
+ *
+ * DSEL gotcha:
+ * cursor[1][0] returns a new cursor from column 1, followed by a new cursor from new column 0 (the old column 1)
+ *
+ * ## multi column slices
+ * `cursor[0,1]` returns a new cursor with columns 0,1 in specified order
+ *
+ * `cursor[1,0]` returns a new cursor with columns 1,0 in specified order
+ *
+ * `cursor[2,1,1,2]` returns a new cursor with columns 2,1,1,2 in specified order
+ *
+ *
+ * ## transforms and reducers
+ *
+ * these operate on all of a cursor's type-safe columns, reading as Any?
+ *
+ * `cursor.`∑` {reducer}`
+ * `cursor.α { pure function }`
+ *
+ * ###  groupby processing
+ * `cursor.group(0,{myreducer})`
+ *
+ * ## value access
+ * cursor.second(0) returns rowVec 0  (interchangably mentioned as y=0)
+ *
+ * #to access the whole cursor x,y plane use
+ * `for(i in 0 to size) second(i)`
+ *
+ */
 typealias Cursor = Vect0r<RowVec>
 
+var ignore= cursorOf().α {  }
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
     nioc.let { (xy: IntArray, mapper: (IntArray) -> Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>): NioCursor ->
         xy.let { (xsize: Int, ysize: Int): IntArray ->
