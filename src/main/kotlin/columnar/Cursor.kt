@@ -24,7 +24,9 @@ import kotlin.math.sqrt
  *
  *  Cursor is a Pair interface, here named Pai2 (also a Tripl3 interface similarly exists)
  *
- *  Cursor and Vect0r are also both the same Pai2 typealias having   .size==.first and .get(i)==.second.invoke(i)
+ *  Cursor and Vect0r are also both the same Pai2 typealias having  properties true for
+ *
+ *  `.size==.first` and `.get(i)==.second.invoke(i)`
  *
  *  Cursor has RowVec which is a Vect02 of value (Any?) and ()->Context method access per column.  you can describe
  *  anything about any Cursor Value by controlling the CoroutineContext herein
@@ -57,6 +59,14 @@ import kotlin.math.sqrt
  *
  * # to access the whole cursor x,y plane use
  * `for(i in 0 until cursor.size) cursor.second(i)`
+ *
+ * # column meta
+ * `cursor.scalars` requests the type information (not the byte widths) for each column
+ *
+ * Cursors are created from within the blackboard state of a CoroutineContext which is accessable from each value
+ * by default unless specialized using `RowVec[x].second()`
+ *
+ * within every column member value is a `Scalar` context key as well as FixedWidth providing
  *
  */
 typealias Cursor = Vect0r<RowVec>
