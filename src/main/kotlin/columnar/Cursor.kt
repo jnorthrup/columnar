@@ -46,12 +46,11 @@ fun Cursor.reify() =
 fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
 
-val accnil = Array<Any?>(0) {}
 val <C : Vect0r<R>, R> C.`…`: List<R> get() = this.toList()
 
 val Cursor.scalars: Vect0r<Scalar>
     get() = toSequence().first()
-        .right α { it: () -> CoroutineContext -> /*runBlocking*/(it()).let { it: CoroutineContext -> it[Arity.arityKey] as Scalar } }
+        .right α { it: () -> CoroutineContext -> /*runBlocking*/it() `→` { it[Arity.arityKey] as Scalar } }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -356,7 +355,7 @@ fun Cursor.writeBinary(
 }
 
 
-private fun networkCoords(
+  fun networkCoords(
     ioMemos: Vect0r<TypeMemento>,
     defaultVarcharSize: Int,
     varcharSizes: Map<Int, Int>?
@@ -378,20 +377,17 @@ private fun networkCoords(
     }
 }
 
-private fun networkSizes(
+  fun networkSizes(
     ioMemos: Vect0r<TypeMemento>,
     defaultVarcharSize: Int,
     varcharSizes: Map<Int, Int>?
-): Vect0r<Int> {
-
-    val mapIndexed: Vect0r<Int> = ioMemos.mapIndexed { ix, memento: TypeMemento ->
-
-        val get = varcharSizes?.get(ix)
-        memento.networkSize ?: (get ?: defaultVarcharSize)
-    }
+): Vect0r<Int> = ioMemos.mapIndexed { ix, memento: TypeMemento ->
+    val get = varcharSizes?.get(ix)
+    memento.networkSize ?:( get ?: defaultVarcharSize)
 }
 
-private fun Cursor.writeMeta(
+
+  fun Cursor.writeMeta(
     pathname: String,
 //    wrecordlen: Int,
     wcoords: Vect02<Int, Int>
