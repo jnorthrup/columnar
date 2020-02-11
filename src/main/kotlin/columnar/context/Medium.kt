@@ -72,7 +72,7 @@ class NioMMap(
         val coords =
             fixedWidth?.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to propogate the null as a hard error for now. */
 
-        val asContextVect0r = asContextVect0r(addressable as Indexable, fixedWidth!!)
+        val asContextVect0r: Pai2<Int, (Int) -> Pai2<ByteBuffer, Pai2<Long, Long>>> = asContextVect0r(addressable as Indexable, fixedWidth!!)
         (asContextVect0r t2 { y: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
                 (drivers[x] t2 (arity as Columnar).left[x]) t3 coords!![x].size
@@ -229,25 +229,25 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
 
         val mapped = mapOf(
             IOMemento.IoInt as TypeMemento to Tokenized(
-                bb2ba `→` btoa `→` trim * String::toInt,
+                ::bb2ba `→` ::btoa `→` ::trim * String::toInt,
                 { a, b -> a.putInt(b) }),
             IOMemento.IoLong to Tokenized(
-                (bb2ba `→` btoa `→` trim * String::toLong),
+                ::bb2ba `→` ::btoa `→` ::trim * String::toLong,
                 { a, b -> a.putLong(b) }),
             IOMemento.IoFloat to Tokenized(
-                bb2ba `→` btoa `→` trim `→` String::toFloat,
+                ::bb2ba `→` ::btoa `→` ::trim `→` String::toFloat,
                 { a, b -> a.putFloat(b) }),
             IOMemento.IoDouble to Tokenized(
-                bb2ba `→` btoa `→` trim `→` String::toDouble,
+                ::bb2ba `→` ::btoa `→` ::trim `→` String::toDouble,
                 { a, b -> a.putDouble(b) }),
             IOMemento.IoString to Tokenized(
-                bb2ba `→` btoa `→` trim, xInsertString
+                ::bb2ba `→` ::btoa `→` ::trim, xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
-                dateMapper `⚬` trim `⚬` btoa `⚬` bb2ba,
+                dateMapper `⚬` ::trim `⚬` ::btoa `⚬` ::bb2ba,
                 { a, b -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
-                bb2ba `→` btoa `→` trim `→` instantMapper,
+                ::bb2ba `→` ::btoa `→` ::trim `→` instantMapper,
                 { a, b -> a.putLong(b.toEpochMilli()) })
         )
     }

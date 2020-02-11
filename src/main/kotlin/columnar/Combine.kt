@@ -3,10 +3,10 @@ package columnar
 import kotlin.math.absoluteValue
 
 @JvmName("combine_VecVec")
-fun <T> combine(vargs:  Vect0r<Vect0r<T>>): Vect0r<T> = combine( *vargs.toArray() )
+inline fun <reified T> combine(vargs:  Vect0r<Vect0r<T>>): Vect0r<T> = combine( *vargs.toArray() )
 
 @JvmName("combine_Vect0r")
-fun <T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
+inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
     val (size, order) = vargs.asIterable().foldIndexed(0 t2 IntArray(vargs.size)) { vix, (acc, avec), vec ->
         val size = acc.plus(vec.first)
         avec[vix] = size

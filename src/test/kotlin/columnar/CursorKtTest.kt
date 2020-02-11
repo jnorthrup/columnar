@@ -74,7 +74,7 @@ run        {
         System.err.println("ordered\n\n")
         run{
             val ordered = cursor.resample(0)
-                .ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })
+                .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
 
             val toList = ordered.narrow()
                 .toList()

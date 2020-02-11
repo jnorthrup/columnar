@@ -98,13 +98,13 @@ object `⟳` {
 /**right identity*/
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-val <T> T.`⟲`
+inline val <reified T> T.`⟲`
     get() = { this }
 
 /**right identity*/
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-infix fun <T, R> T.`⟲`(f: (T) -> R) = run { f(this) }
+inline infix fun <reified T,reified  R> T.`⟲`(f: (T) -> R) = run { f(this) }
 
 @JvmName("vlike_Sequence_1")
 @BuilderInference
@@ -245,7 +245,7 @@ inline fun <reified T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -
 
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-fun IntArray.toVect0r() :Vect0r<Int> =Vect0r( size)  { ix: Int -> get(ix) }
+ fun IntArray.toVect0r() :Vect0r<Int> =Vect0r( size)  { ix: Int -> get(ix) }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)

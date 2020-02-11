@@ -204,7 +204,7 @@ class DayJobTest/* : StringSpec()*/ {
         val nanos = measureNanoTimeStr {
             System.err.println("using filename: " + pathname.toString())
             val arrangement = intArrayOf(2, 1, 3, 5)
-            val theCursor = curs[arrangement].ordered(intArrayOf(0, 1, 2))
+            val theCursor = curs.ordered(intArrayOf(2, 1, 3))   [arrangement]
             val theCoords = coords[arrangement]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)

@@ -102,7 +102,7 @@ fun Cursor.reify() =
 fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
 
-inline val <reified C : Vect0r<R>,reified R> C.`…`: List<R> get() = this.toList()
+inline val <reified C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
 
 inline val Cursor.scalars: Vect0r<Scalar>
     get() = toSequence().first()
@@ -323,23 +323,19 @@ fun Cursor.keyClusters(
     }
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
 }
-val strvalComp = Comparator<List<Any?>> { o1, o2 -> o1.joinToString("\u0000").compareTo(o1.joinToString("\u0000")) }
+val strvalComp = Comparator<List<Any?>> { o1, o2 -> o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString())) }
 
-fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>>? = strvalComp): Cursor {
-    val intArrClusters = keyClusters(axis, comparator?.let { TreeMap(comparator) } ?: TreeMap()) `→`
+fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>>  = strvalComp): Cursor = combine(
+    (keyClusters(axis, comparator.let { TreeMap(comparator) }) `→`
             MutableMap<List<Any?>, MutableList<Int>>::values α
-            ( IntArray::toVect0r `⚬` MutableList<Int>::toIntArray  )
-    return combine(
-        intArrClusters.toVect0r()
-    ).let { superIndex ->
-        Cursor(superIndex.size) { iy: Int ->
-            val ix2 = superIndex.get(iy)
-            val second1: RowVec = this.second(ix2)
-            second1
-        }
+            (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()
+).let { superIndex ->
+    Cursor(superIndex.size) { iy: Int ->
+        val ix2 = superIndex.get(iy)
+        val second1: RowVec = this.second(ix2)
+        second1
     }
 }
-
 /**
  * this writes a cursor values to a single Network-endian ByteBuffer translation and writes an additional filename+".meta"
  * file containing commented meta description strings
@@ -381,7 +377,7 @@ fun Cursor.writeBinary(
 
         val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
             Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
-        val wfixedWidth: RecordBoundary = FixedWidth(wrecordlen, wcoords, null.`⟲`, null.`⟲`)
+        val wfixedWidth: RecordBoundary = FixedWidth(wrecordlen, wcoords, { null }, { null  })
 
         writeMeta(pathname, wcoords)
         /**
@@ -466,25 +462,25 @@ fun Cursor.writeMeta(
 
             fileWriter ->
 
-        val s: Vect02<TypeMemento, String?> = scalars as Vect02<TypeMemento, String?>
+        val s: Vect02<TypeMemento, String?> = scalars
 
         val coords = wcoords.toList()
             .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right
             .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left
-            .mapIndexed<TypeMemento, Any> { ix, it -> if (it is IOMemento) it.name else wcoords[ix].size }.toList()
+            .mapIndexed<TypeMemento, Any> { ix, it -> if (it is IOMemento) it.name else wcoords[ix].size  }.toList()
             .joinToString(" ")
-            listOf(
+        listOf(
             "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
             "# last coord is the recordlen",
-                coords,
-                nama,
-                mentos
-            ).forEach { s ->
-                 fileWriter.write(s)
-                fileWriter.newLine()
-            }
+            coords,
+            nama,
+            mentos
+        ).forEach { s ->
+            fileWriter.write(s)
+            fileWriter.newLine()
+        }
 
     }
 }
@@ -503,7 +499,7 @@ fun binaryCursor(
     val recordlen = rcoords.last().second
     val drivers = NioMMap.binary(typeVec)
     val nio = NioMMap(this, drivers)
-    val fixedWidth = FixedWidth(recordlen, rcoords, null.`⟲`, null.`⟲`)
+    val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null  })
     val indexable: Addressable = indexableOf(nio, fixedWidth)
     cursorOf(
         RowMajor().fromFwf(
