@@ -323,16 +323,22 @@ fun Cursor.keyClusters(
     }
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
 }
+val strvalComp = Comparator<List<Any?>> { o1, o2 -> o1.joinToString("\u0000").compareTo(o1.joinToString("\u0000")) }
 
-fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>>? = null): Cursor =
-    combine((keyClusters(axis, comparator?.let { TreeMap(comparator) } ?: TreeMap()).values
-        .map(MutableList<Int>::toIntArray)).map { it.toVect0r() }.toVect0r()
+fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>>? = strvalComp): Cursor {
+    val intArrClusters = keyClusters(axis, comparator?.let { TreeMap(comparator) } ?: TreeMap()) `→`
+            MutableMap<List<Any?>, MutableList<Int>>::values α
+            ( IntArray::toVect0r `⚬` MutableList<Int>::toIntArray  )
+    return combine(
+        intArrClusters.toVect0r()
     ).let { superIndex ->
         Cursor(superIndex.size) { iy: Int ->
-            val second1: RowVec = this.second(superIndex.get(iy))
+            val ix2 = superIndex.get(iy)
+            val second1: RowVec = this.second(ix2)
             second1
         }
     }
+}
 
 /**
  * this writes a cursor values to a single Network-endian ByteBuffer translation and writes an additional filename+".meta"
@@ -469,15 +475,17 @@ fun Cursor.writeMeta(
         val mentos = s.left
             .mapIndexed<TypeMemento, Any> { ix, it -> if (it is IOMemento) it.name else wcoords[ix].size }.toList()
             .joinToString(" ")
-        val metaString =
-            """
-            # format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..
-            # last coord is the recordlen
-            $coords
-            $nama
-            $mentos            
-            """.trimIndent()
-        fileWriter.write(metaString)
+            listOf(
+            "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
+            "# last coord is the recordlen",
+                coords,
+                nama,
+                mentos
+            ).forEach { s ->
+                 fileWriter.write(s)
+                fileWriter.newLine()
+            }
+
     }
 }
 

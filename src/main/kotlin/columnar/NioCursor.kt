@@ -16,8 +16,6 @@ fun stringOf(it: RowVec) = it.left.toList().map { any ->
     val any1 = isVec?.toList() ?: any
     any1
 }.toString()
-
-
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
 
 val <F, S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
@@ -31,8 +29,6 @@ val <F, S, T> V3ct0r<F, S, T>.x get() = this α (XYZ<F, S, T>::first)
 val <F, S, T> V3ct0r<F, S, T>.y get() = this α (XYZ<F, S, T>::second)
 val <F, S, T> V3ct0r<F, S, T>.z get() = this α (XYZ<F, S, T>::third)
 val <F, S, T> V3ct0r<F, S, T>.r3ify get() = this α (XYZ<F, S, T>::triple)
-
-
 
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>

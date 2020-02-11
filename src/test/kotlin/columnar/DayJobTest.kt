@@ -17,10 +17,10 @@ class DayJobTest/* : StringSpec()*/ {
 
     //        val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
-    //    val suffix = "_10000"     //"_RD"  139618738
-        val suffix = "_100000"     //"_RD"
+//        val suffix = "_10000"     //"_RD"  139618738
+//        val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
-//    val suffix = "_500000"     //"_RD"
+    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
@@ -33,7 +33,6 @@ class DayJobTest/* : StringSpec()*/ {
 //    val suffix = ""//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
-
         0, 11,
         11, 15,
         15, 25,
@@ -91,7 +90,7 @@ class DayJobTest/* : StringSpec()*/ {
 
             System.err.println("using filename: " + pathname.toString())
             val arrangement = intArrayOf(2, 1, 3, 5)
-            val theCursor = curs.ordered(intArrayOf(1), Comparator { o1,o2-> o1.first().toString().compareTo(o2.first().toString())  })[arrangement]
+            val theCursor = curs.ordered(intArrayOf(2,1,3), strvalComp)[arrangement]
             val theCoords = coords[arrangement]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
