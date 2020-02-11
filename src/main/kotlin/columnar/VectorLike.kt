@@ -190,7 +190,7 @@ operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T> = this[indexes
 @JvmName("vlike_Vect0r_IntArray3")
 operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
-inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
+inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array( first ) { vf(it) } }
 fun <T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
         override val size: Int = v.first

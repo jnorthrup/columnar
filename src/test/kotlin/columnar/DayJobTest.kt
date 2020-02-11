@@ -18,7 +18,7 @@ class DayJobTest/* : StringSpec()*/ {
     //        val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
     //    val suffix = "_10000"     //"_RD"  139618738
-//        val suffix = "_100000"     //"_RD"
+        val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
 //    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
@@ -30,7 +30,7 @@ class DayJobTest/* : StringSpec()*/ {
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
 
-    val suffix = ""//"_RD"
+//    val suffix = ""//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
 
@@ -81,6 +81,46 @@ class DayJobTest/* : StringSpec()*/ {
 
      inline fun measureNanoTimeStr(block: () -> Unit): String {
         return Duration.ofNanos(measureNanoTime(block)).toString()
+    }
+
+    @org.junit.jupiter.api.Test
+    fun `reorder+rewrite+pivot+pgroup+reduce`() {
+        lateinit var message: String
+        val pathname = File.createTempFile("dayjob", ".bin").toPath()
+        val nanos = measureNanoTimeStr {
+
+            System.err.println("using filename: " + pathname.toString())
+            val arrangement = intArrayOf(2, 1, 3, 5)
+            val theCursor = curs.ordered(intArrayOf(1), Comparator { o1,o2-> o1.first().toString().compareTo(o2.first().toString())  })[arrangement]
+            val theCoords = coords[arrangement]
+            val varcharSizes = varcharMappings(theCursor, theCoords)
+            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
+        }
+        System.err.println("transcription took: " + nanos)
+
+        MappedFile(pathname.toString()).use { mf ->
+            val binaryCursor = binaryCursor(pathname, mappedFile = mf)
+            val filtered = binaryCursor.resample(0).pivot(
+                intArrayOf(0),
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            ).group(intArrayOf(0), floatSum)
+
+            lateinit var second: RowVec
+            println(
+                "row 2 seektime: " +
+                        measureNanoTimeStr {
+                            second = filtered.second(2)
+                        } + " ms @ " + second.first + " columns"
+            )
+            println("row 2 took " + measureNanoTimeStr {
+                second.let {
+                    println("row 2 is:")
+                    message = stringOf(it)
+                }
+            } + "ms")
+            println(message)
+        }
     }
 
     @org.junit.jupiter.api.Test

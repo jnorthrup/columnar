@@ -35,7 +35,7 @@ import kotlin.math.sqrt
  * cursor[0] returns a new cursor from column 0
  *
  * DSEL gotcha:
- * cursor[1][0] returns a new cursor from column 1, followed by a new cursor from new column 0 (the old column 1)
+ * cursor[1][0] returns a new cursor from column 1, followed by a new cursor from new column 0 (the old column 1).
  *
  * ## multi column slices
  * `cursor[0,1]` returns a new cursor with columns 0,1 in specified order
@@ -64,9 +64,11 @@ import kotlin.math.sqrt
  * `cursor.scalars` requests the type information (not the byte widths) for each column
  *
  * Cursors are created from within the blackboard state of a CoroutineContext which is accessable from each value
- * by default unless specialized using `RowVec[x].second()`
+ * by default unless specialized using `RowVec[x].second()`   within every cursor value is a function`RowVec[i].second`
+ * providing the underlying construction factors and potentially cell-specific data.  Generally these are not accessed
+ * in DataFrame usecases but this forms the basis for emergent spreadsheet functions on top of cursor state.
  *
- * within every column member value is a `Scalar` context key as well as FixedWidth providing
+ * CoroutineContext access may yet require some caution in kotlin 1.3 around performance overhead
  *
  */
 typealias Cursor = Vect0r<RowVec>
