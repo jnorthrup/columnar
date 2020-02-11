@@ -9,13 +9,13 @@ In computer science, tuples come in many forms. In dynamically typed languages, 
 Tuples also occur in relational algebra; when programming the semantic web with the Resource Description Framework (RDF); in linguistics;[4] and in philosophy.[5]
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
+
 
 package columnar
 
 /**
 a singular reference.  front end of Pai2 and Tripl3.  */
-interface Hand1l<F> {
+interface Hand1l<out F> {
     val first: F
     operator fun component1(): F = first
     operator fun invoke() = first
@@ -28,7 +28,7 @@ interface Hand1l<F> {
 }
 
 /**inheritable version of pair that provides it's first compnent as a Un1t*/
-interface Pai2<F, S> {
+interface Pai2<out F, out S> {
     val first: F
     val second: S
 
@@ -37,34 +37,32 @@ interface Pai2<F, S> {
      */
     val pair get() = let { first to second }
 
-    operator fun component1(): F = first
-    operator fun component2(): S = second
-
     @Suppress("OVERRIDE_BY_INLINE")
     companion object {
-        operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
+        inline operator fun <reified F, reified S> invoke(first: F, second: S): Pai2<F, S> =
             object : Pai2<F, S> {
-                override val first get() = first
-                override val second get() = second
+                override inline val first get() = first
+                override inline val second get() = second
             }
 
 
-        inline operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P) =
+        inline operator fun <reified F, reified S, reified P : Pair<F, S>, reified R : Pai2<F, S>> invoke(p: P) =
             p.let { (f, s) ->
                 Pai2(f, s)
             }
     }
 }
 
+inline operator fun <F, S> Pai2<F, S>.component2(): S = second
+
+inline operator fun <F, S> Pai2<F, S>.component1(): F = first
+
 /**inheritable version of triple that also provides its first two as a pair.
  */
-interface Tripl3<F, S, T>/* : Pai2<F, S> */ {
+interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
     val first: F
     val second: S
     val third: T
-    operator fun component1(): F = first
-    operator fun component2(): S = second
-    operator fun component3(): T = third
 
     /**
      * for println and serializable usecases, offload that stuff using this method.
@@ -72,18 +70,22 @@ interface Tripl3<F, S, T>/* : Pai2<F, S> */ {
     val triple get() = Triple(first, second, third)
 
     companion object {
-        operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
+        inline operator fun <reified F,reified  S,reified  T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
             object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
-                override val first get() = first
-                override val second get() = second
-                override val third get() = third
+                override inline val first get() = first
+                override inline val second get() = second
+                override inline val third get() = third
             }
 
-        operator fun <F, S, T> invoke(p: Triple<F, S, T>) =
+        inline operator fun <reified F,reified  S,reified  T> invoke(p: Triple<F, S, T>) =
             p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 
 }
+
+inline operator fun <reified F, reified S, reified T> Tripl3<F, S, T>.component3(): T = third
+inline operator fun <reified F, reified S, reified T> Tripl3<F, S, T>.component2(): S = second
+inline operator fun <reified F, reified S, reified T> Tripl3<F, S, T>.component1(): F = first
 
 
 /**
@@ -99,12 +101,12 @@ typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
 /**
  * homage to eclipse types
  */
-typealias Tw1n<X> = XY<X, X>
+typealias Tw1n<reified X> = XY<X, X>
 
 inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
     object : Pai2<T, T> {
-        override val first get() = ar[0]
-        override val second get() = ar[1]
+      override inline val first get() = ar[0]
+      override inline val second get() = ar[1]
     }
 }
 
@@ -119,30 +121,29 @@ fun <T : Int> Tw1n(first: T, second: T) = Tw1nt(intArrayOf(first, second))
 fun <T : Long> Tw1n(first: T, second: T) = Twln(longArrayOf(first, second))
 
 
- 
 inline class Twln(val ia: LongArray) : Tw1n<Long> {
- 
+
     override val first get() = ia[0]
     override val second get() = ia[1]
 }
 
 
-infix fun <X, Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
+inline infix fun <reified X, reified Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
     (first t2 u.first) as P
 
-infix fun <X, Y, Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(
+inline infix fun <reified X, reified Y, reified Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(
     p: P
 ) = Tripl3(first, p.first, p.second)
 
 infix fun <X, Y, Z, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(t: T) =
     Qu4d(first, t.first, t.second, t.third)
 
-infix fun <F, S> F.t2(s: S) = Pai2(this, s)
-infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
-infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T) =
+inline infix fun <reified F, reified S> F.t2(s: S) = Pai2(this, s)
+inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
+inline infix fun <reified F, reified S, reified T, P : Pair<F, S>> P.t3(t: T) =
     let { (a, b) -> Tripl3(a, b, t) }
 
-infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D) = let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
+inline infix fun <reified A, reified B, reified C,  reified D> Tripl3<A, B, C>.t4(d: D) = let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
 
 
 /**inheritable version of quad that also provides its first three as a triple. */
@@ -152,28 +153,23 @@ interface Qu4d<F, S, T, Z>/* : Tripl3<F, S, T>*/ {
     val third: T
     val fourth: Z
 
-    operator fun component1(): F = first
-    operator fun component2(): S = second
-    operator fun component3(): T = third
-    operator fun component4(): Z = fourth
-
-    data class Quad<F, S, T, Z>(val x: F, val y: S, val z: T, val w: Z)
+    data class Quad<  F, out S, out T, out Z>(val x: F, val y: S, val z: T, val w: Z)
 
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
-    val quad
-        get() = let { (a, b, c, d) ->
+     val quad: Quad<F, S, T, Z>
+                 get() = let { (a, b, c, d) ->
             Quad(a, b, c, d)
         }
 
     companion object {
-        operator fun <F, S, T, Z> invoke(first: F, second: S, third: T, fourth: Z): Qu4d<F, S, T, Z> =
+      inline  operator fun <F, S, T, Z> invoke(first: F, second: S, third: T, fourth: Z): Qu4d<F, S, T, Z> =
             object : Qu4d<F, S, T, Z>/*, Tripl3<F, S, T> by Tripl3(f, s, t)*/ {
-                override val first: F get() = first
-                override val second: S get() = second
-                override val third: T get() = third
-                override val fourth: Z get() = fourth
+           inline    override val first: F get() = first
+           inline    override val second: S get() = second
+           inline    override val third: T get() = third
+           inline    override val fourth: Z get() = fourth
             }
 
         operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) = p.let { (f, s, t, z) ->
@@ -191,3 +187,11 @@ interface Qu4d<F, S, T, Z>/* : Tripl3<F, S, T>*/ {
         }
     }
 }
+
+inline  operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component4() = fourth
+
+inline  operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component3() = third
+
+inline  operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component2() = second
+
+inline  operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component1() = first

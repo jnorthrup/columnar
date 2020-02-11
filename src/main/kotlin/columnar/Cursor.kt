@@ -102,9 +102,9 @@ fun Cursor.reify() =
 fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
 
-val <C : Vect0r<R>, R> C.`…`: List<R> get() = this.toList()
+inline val <reified C : Vect0r<R>,reified R> C.`…`: List<R> get() = this.toList()
 
-val Cursor.scalars: Vect0r<Scalar>
+inline val Cursor.scalars: Vect0r<Scalar>
     get() = toSequence().first()
         .right α { it: () -> CoroutineContext -> /*runBlocking*/it() `→` { it[Arity.arityKey] as Scalar } }
 
