@@ -20,17 +20,17 @@ class DayJobTest/* : StringSpec()*/ {
 //        val suffix = "_10000"     //"_RD"  139618738
 //        val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
-    val suffix = "_500000"     //"_RD"
+//    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
     //    val suffix = "_1000"//"_RD"
-    //    val suffix = "_RD"
+        val suffix = "_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
 
-//    val suffix = ""//"_RD"
+//        val suffix = ""//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
         0, 11,
@@ -43,7 +43,7 @@ class DayJobTest/* : StringSpec()*/ {
         103, 108
     ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
 
-     val drivers = vect0rOf(
+    val drivers = vect0rOf(
         IoString as TypeMemento,
         IoString,
         IoLocalDate,
@@ -53,7 +53,7 @@ class DayJobTest/* : StringSpec()*/ {
         IoFloat,
         IoString
     )
-     val names = vect0rOf(
+    val names = vect0rOf(
         "SalesNo",    //        0
         "SalesAreaID",    //    1
         "date",    //           2
@@ -78,7 +78,7 @@ class DayJobTest/* : StringSpec()*/ {
 
     var lastmessage: String? = null
 
-     inline fun measureNanoTimeStr(block: () -> Unit): String {
+    inline fun measureNanoTimeStr(block: () -> Unit): String {
         return Duration.ofNanos(measureNanoTime(block)).toString()
     }
 
@@ -87,11 +87,9 @@ class DayJobTest/* : StringSpec()*/ {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
         val nanos = measureNanoTimeStr {
-
             System.err.println("using filename: " + pathname.toString())
-            val arrangement = intArrayOf(2, 1, 3, 5)
-            val theCursor = curs.ordered(intArrayOf(2,1,3), strvalComp)[arrangement]
-            val theCoords = coords[arrangement]
+            val theCursor = curs[ 2, 1, 3, 5 ].ordered(intArrayOf(0, 1, 2))
+            val theCoords = coords[2, 1, 3, 5 ]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
         }
@@ -110,14 +108,14 @@ class DayJobTest/* : StringSpec()*/ {
                 "row 2 seektime: " +
                         measureNanoTimeStr {
                             second = filtered.second(2)
-                        } + " ms @ " + second.first + " columns"
+                        } + "@ " + second.first + " columns"
             )
             println("row 2 took " + measureNanoTimeStr {
                 second.let {
                     println("row 2 is:")
                     message = stringOf(it)
                 }
-            } + "ms")
+            } )
             println(message)
         }
     }
@@ -150,19 +148,19 @@ class DayJobTest/* : StringSpec()*/ {
                 "row 2 seektime: " +
                         measureNanoTimeStr {
                             second = filtered.second(2)
-                        } + " ms @ " + second.first + " columns"
+                        } + "@ " + second.first + " columns"
             )
             println("row 2 took " + measureNanoTimeStr {
                 second.let {
                     println("row 2 is:")
                     message = stringOf(it)
                 }
-            } + "ms")
+            } )
             println(message)
         }
     }
 
-     fun varcharMappings(
+    fun varcharMappings(
         theCursor: Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>,
         theCoords: Vect0r<Pai2<Int, Int>>
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
@@ -177,7 +175,7 @@ class DayJobTest/* : StringSpec()*/ {
             intArrayOf(0),
             intArrayOf(1, 2),
             intArrayOf(3)
-        ).group((0))
+        ).group(0)
         val filtered = join(piv[0], (piv[1 until piv.scalars.first] /*α floatFillNa(0f)*/).`∑`(floatSum))
 
         lateinit var second: RowVec
@@ -185,7 +183,7 @@ class DayJobTest/* : StringSpec()*/ {
             "row 2 seektime: " +
                     measureNanoTimeStr {
                         second = filtered.second(2)
-                    } + " ms @ " + second.first + " columns"
+                    } + "@ " + second.first + " columns"
 
 
         )
@@ -195,8 +193,47 @@ class DayJobTest/* : StringSpec()*/ {
                 println("row 2 is:")
                 message = stringOf(it)
             }
-        } + "ms")
+        } )
         println(message)
+    }
+
+    @org.junit.jupiter.api.Test
+    fun `rorw+pivot+group+reduce`() {
+        lateinit var message: String
+        val pathname = File.createTempFile("dayjob", ".bin").toPath()
+        val nanos = measureNanoTimeStr {
+            System.err.println("using filename: " + pathname.toString())
+            val arrangement = intArrayOf(2, 1, 3, 5)
+            val theCursor = curs[arrangement].ordered(intArrayOf(0, 1, 2))
+            val theCoords = coords[arrangement]
+            val varcharSizes = varcharMappings(theCursor, theCoords)
+            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
+        }
+        System.err.println("transcription took: " + nanos)
+
+        MappedFile(pathname.toString()).use { mf ->
+            val piv = binaryCursor(pathname, mappedFile = mf).resample(0).pivot(
+                intArrayOf(0),
+                intArrayOf(1, 2),
+                intArrayOf(3)
+            ).group((0))
+            val filtered = join(piv[0], (piv[1 until piv.scalars.first] ).`∑`(floatSum))
+
+            lateinit var second: RowVec
+            println(
+                "row 2 seektime: " +
+                        measureNanoTimeStr {
+                            second = filtered.second(2)
+                        } + "@ " + second.first + " columns"
+            )
+            println("row 2 took " + measureNanoTimeStr {
+                second.let {
+                    println("row 2 is:")
+                    message = stringOf(it)
+                }
+            } )
+            println(message)
+        }
     }
 }
 
