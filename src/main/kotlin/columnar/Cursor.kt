@@ -1,4 +1,4 @@
-@file:Suppress("UNCHECKED_CAST")
+@file:Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
 
 package columnar
 
@@ -224,7 +224,7 @@ fun Cursor.pivot(
 /**
  * reducer func -- operator for sum/avg/mean etc. would be nice, but we have to play nice in a type-safe language so  ∑'s just a hint  of a reducer semantic
  */
-fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor =
+inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
         val aggcell: RowVec = second(iy)
         val al: Vect0r<*> = aggcell.left
@@ -242,13 +242,13 @@ fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor =
 /**
  * reducer func
  */
-infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor =
+inline infix fun Cursor.α(noinline unaryFunctor: (Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
-        val aggcell: RowVec = second(iy)
+        val aggcell = second(iy)
         (aggcell.left α unaryFunctor).zip(aggcell.right)
     }
 
-fun Cursor.group(
+inline fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
@@ -261,33 +261,29 @@ fun Cursor.group(
         val cfirst = cluster.first()
         RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
-                in axis -> {
-                    orig.second(
-                        cfirst
-                    )[ix]
-                }
-                else -> Vect0r(cluster.size) { iy: Int ->
-                    orig.second(cluster[iy])[ix].first
-                } t2 masterScalars[ix].`⟲`
+                in axis -> orig.second(cfirst)[ix]
+                else -> Vect0r(cluster.size) { iy: Int -> orig.second(cluster[iy])[ix].first } t2 masterScalars[ix].`⟲`
             }
         }
     }
 }
 
-fun Cursor.group(
+inline fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
-    axis: IntArray, reducer: ((Any?, Any?) -> Any?)
+    axis: IntArray,
+    crossinline reducer: ((Any?, Any?) -> Any?)
 ): Cursor = run {
     val clusters = groupClusters(axis)
     val masterScalars = scalars
-    Cursor(
-        clusters.size
-    ) { cy ->
-        val acc1 = arrayOfNulls<Any?>(masterScalars.first)
+    val xSize = masterScalars.first
+    Cursor(clusters.size) { cy ->
+        val acc1 = arrayOfNulls<Any?>(xSize)
         val cluster = clusters[cy]
+        val keyIndex = cluster.first()
         val valueIndices = acc1.indices - axis.toTypedArray()
+
         for (i in cluster) {
             val value = this.second(i).left
             for (valueIndex in valueIndices)
@@ -295,14 +291,16 @@ fun Cursor.group(
         }
         RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
-                in axis -> this.second(cluster.first())[ix]
+                in axis -> {
+                    this.second(keyIndex)[ix]
+                }
                 else -> acc1[ix] t2 masterScalars[ix].`⟲`
             }
         }
     }
 }
 
-fun Cursor.groupClusters(
+inline fun Cursor.groupClusters(
     axis: IntArray,
     clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf()
 ) = run {
@@ -311,11 +309,12 @@ fun Cursor.groupClusters(
     clusters.values α MutableList<Int>::toIntArray
 }
 
-fun Cursor.keyClusters(
+inline fun Cursor.keyClusters(
     axis: IntArray,
     clusters: MutableMap<List<Any?>, MutableList<Int>>
 ): MutableMap<List<Any?>, MutableList<Int>> = clusters.apply {
     val cap = max(8, sqrt(size.toDouble()).toInt())
+
     forEachIndexed { iy: Int, row: RowVec ->
         row[axis].left.toList().let {
             getOrPut(it) { ArrayList(cap) } += iy
@@ -323,9 +322,12 @@ fun Cursor.keyClusters(
     }
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
 }
-val strvalComp = Comparator<List<Any?>> { o1, o2 -> o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString())) }
 
-fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>>  = strvalComp): Cursor = combine(
+
+inline fun cmpany(o1: List<Any?>, o2: List<Any?>): Int =
+    o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
+
+inline fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>> = Comparator(::cmpany)) = combine(
     (keyClusters(axis, comparator.let { TreeMap(comparator) }) `→`
             MutableMap<List<Any?>, MutableList<Int>>::values α
             (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()
@@ -336,6 +338,7 @@ fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>>  = strvalC
         second1
     }
 }
+
 /**
  * this writes a cursor values to a single Network-endian ByteBuffer translation and writes an additional filename+".meta"
  * file containing commented meta description strings
@@ -377,7 +380,7 @@ fun Cursor.writeBinary(
 
         val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
             Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
-        val wfixedWidth: RecordBoundary = FixedWidth(wrecordlen, wcoords, { null }, { null  })
+        val wfixedWidth: RecordBoundary = FixedWidth(wrecordlen, wcoords, { null }, { null })
 
         writeMeta(pathname, wcoords)
         /**
@@ -462,14 +465,14 @@ fun Cursor.writeMeta(
 
             fileWriter ->
 
-        val s: Vect02<TypeMemento, String?> = scalars
+        val s: Vect02<TypeMemento, String?> = scalars as Vect02<TypeMemento, String?>
 
         val coords = wcoords.toList()
             .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right
             .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left
-            .mapIndexed<TypeMemento, Any> { ix, it -> if (it is IOMemento) it.name else wcoords[ix].size  }.toList()
+            .mapIndexed<TypeMemento, Any> { ix, it -> if (it is IOMemento) it.name else wcoords[ix].size }.toList()
             .joinToString(" ")
         listOf(
             "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
@@ -499,7 +502,7 @@ fun binaryCursor(
     val recordlen = rcoords.last().second
     val drivers = NioMMap.binary(typeVec)
     val nio = NioMMap(this, drivers)
-    val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null  })
+    val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null })
     val indexable: Addressable = indexableOf(nio, fixedWidth)
     cursorOf(
         RowMajor().fromFwf(

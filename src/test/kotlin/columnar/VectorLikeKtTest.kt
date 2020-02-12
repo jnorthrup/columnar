@@ -1,11 +1,8 @@
 package columnar
 
-//import io.kotlintest.shouldBe
 import shouldBe
 
-//import io\.kotlintest\.specs\.StringSpec\n
-
-class VectorLikeKtTest/* : StringSpec()*/ {
+class VectorLikeKtTest {
     @org.junit.jupiter.api.Test
     fun combinevec() {
         val c: Vect0r<Int> = combine(
@@ -24,9 +21,7 @@ class VectorLikeKtTest/* : StringSpec()*/ {
         fun IntRange.split(nSubRanges: Int) = run {
             val subSize = (last - first + (1 - first)) / nSubRanges
             sequence {
-                for (i in this@split step subSize) {
-                    yield(i..minOf(last, i + subSize - 1))
-                }
+                for (i in this@split step subSize) yield(i..minOf(last, i + subSize - 1))
             }
         }
         System.err.println(intRange.toList())
@@ -35,9 +30,5 @@ class VectorLikeKtTest/* : StringSpec()*/ {
         val toList1 = (intRange / 3).toList()
         System.err.println(toList to toList1)
         toList shouldBe toList1
-    }
-
-    @org.junit.jupiter.api.Test
-    fun subranges() {
     }
 }

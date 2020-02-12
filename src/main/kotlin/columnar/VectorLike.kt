@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package columnar
 
 import kotlinx.coroutines.flow.*
@@ -22,22 +24,22 @@ inline operator fun<reified T> Matrix<T>.get(vararg c: Int): T = second(c)
 
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline infix fun <O, reified R, F : (O) -> R> O.`→`(f: F) = this.let(f)
+inline infix fun <reified O, reified R, F : (O) -> R> O.`→`(f: F) = this.let(f)
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <A, reified B, reified R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> a `→` this `→` (b) }
+inline operator fun <reified A, reified B, reified R, reified O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> a `→` this `→` (b) }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <A, reified B, reified R, O : (A) -> B, G : (B) -> R> O.`→`(b: G): (A) -> R = this * b
+inline infix fun <reified A, reified B, reified R, reified O : (A) -> B, G : (B) -> R,reified R1:(A) -> R > O.`→`(b: G): R1 = (this * b ) as  R1
 
 /**
  * G follows F
  */
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline infix fun <A, reified B, reified C, G : (B) -> C, F : (A) -> B> G.`⚬`(f: F): (A) -> C = { a: A -> a `→` f `→` this }
+inline infix fun <reified A, reified B, reified C, reified G : (B) -> C,reified  F : (A) -> B,reified R:(A) -> C> G.`⚬`(f: F): R = { a: A -> a `→` f `→` this }as R
 
 /**
  * (λx.M[x]) → (λy.M[y])	α-conversion
@@ -45,44 +47,44 @@ inline infix fun <A, reified B, reified C, G : (B) -> C, F : (A) -> B> G.`⚬`(f
  * */
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline infix fun <reified A, reified C, B : (A) -> C, V : Vect0r<A>, R : Vect0r<C>> V.α(m: B): Vect0r<C> = map<A, C, V>(fn = m)
+inline infix fun <reified A, reified C, B : (A) -> C,reified  V : Vect0r<A>> V.α(m: B)  = map<A, C, V>(fn = m)
 
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <A, reified C, B : (A) -> C, T : Iterable<A>> T.α(m: B): List<C> = this.map { it: A -> it `→` m }
+inline infix fun <reified A, reified C,reified  B : (A) -> C, reified T : Iterable<A>> T.α(m: B): List<C> = this.map { it: A -> it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <A, reified C, B : (A) -> C, T : Sequence<A>> T.α(m: B): Sequence<C> = this.map { it: A -> it `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C,reified  T : Sequence<A>> T.α(m: B): Sequence<C> = this.map { it: A -> it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <A, reified C, B : (A) -> C, T : Flow<A>> T.α(m: B): Flow<C> = this.map { it: A -> it `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Flow<A>> T.α(m: B): Flow<C> = this.map { it: A -> it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <A, reified C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <A, reified C, B : (A) -> C> Array<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified A,   reified C,    reified  B : (A) -> C> Array<out A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C,reified  B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C,reified  B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C, reified B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C,reified  B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 /*
 But as soon as a groupoid has both a left and a right identity, they are necessarily unique and equal. For if e is
@@ -212,9 +214,9 @@ inline fun<reified T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
     }
 }
 
-inline fun <reified T, reified R, V : Vect0r<T>> V.map(crossinline fn: (T) -> R): Vect0r<R> = Vect0r(first) { it: Int -> it `→` (fn `⚬` second) }
-inline fun <reified T, R> Vect0r<T>.mapIndexed(crossinline fn: (Int, T) -> R): Vect0r<R> = Vect0r(first) { it: Int -> fn(it, it `→` second) }
-inline fun <reified T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> = List(first) { it: Int -> fn(it, it `→` second) }
+inline fun <reified T, reified R,reified V : Vect0r<T> > V.map(crossinline fn: (T) -> R)  = Vect0r(first) { it: Int -> it `→` (fn `⚬` second) }
+inline fun <reified T, reified R> Vect0r<T>.mapIndexed(crossinline fn: (Int, T) -> R): Vect0r<R> = Vect0r(first) { it: Int -> fn(it, it `→` second) }
+inline fun <reified T, reified R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> = List(first) { it: Int -> fn(it, it `→` second) }
 inline fun <reified T> Vect0r<T>.forEach(fn: (T) -> Unit) {
     for (ix: Int in (0 until first)) ix `→` (fn `⚬` second)
 }
@@ -245,7 +247,7 @@ inline fun <reified T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -
 
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
- fun IntArray.toVect0r() :Vect0r<Int> =Vect0r( size)  { ix: Int -> get(ix) }
+inline  fun IntArray.toVect0r() :Vect0r<Int> =Vect0r( size)  { ix: Int -> get(ix) }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
@@ -267,10 +269,9 @@ inline fun<reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
 inline fun<reified T> combine(@BuilderInference vararg s: Flow<T>): Flow<T> = flow {
-    ->
     @BuilderInference
     for (f: Flow<T> in s) {
-        f.collect { it: T ->
+        f.collect {
             emit(it)
         }
     }
@@ -280,7 +281,6 @@ inline fun<reified T> combine(@BuilderInference vararg s: Flow<T>): Flow<T> = fl
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
 inline fun<reified T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
-    ->
     @BuilderInference
     for (sequence: Sequence<T> in s) {
         for (t in sequence) {

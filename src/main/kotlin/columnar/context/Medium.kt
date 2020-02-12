@@ -7,6 +7,8 @@ import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
 
@@ -46,8 +48,8 @@ class NioMMap(
     val mf: MappedFile,
     /**by default this will fetch text but other Mementos can be passed in as non-default
      */
-     var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
-     var state: Pai2<ByteBuffer, Pai2<Long, Long>> = canary
+    var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
+    var state: Pai2<ByteBuffer, Pai2<Long, Long>> = canary
 ) : Medium() {
 
 
@@ -55,7 +57,7 @@ class NioMMap(
      * right now this is  a canary in the coal mine to make sure its safe to do Fixedwidth.
      * RecordBoundary could change but would it make sense in this class?
      */
-     var fixedWidth: FixedWidth? = null
+    var fixedWidth: FixedWidth? = null
 
     @Suppress("UNCHECKED_CAST")
             /*suspend*/ fun values(coroutineContext: CoroutineContext): NioCursor = this.run {
@@ -72,7 +74,8 @@ class NioMMap(
         val coords =
             fixedWidth?.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to propogate the null as a hard error for now. */
 
-        val asContextVect0r: Pai2<Int, (Int) -> Pai2<ByteBuffer, Pai2<Long, Long>>> = asContextVect0r(addressable as Indexable, fixedWidth!!)
+        val asContextVect0r: Pai2<Int, (Int) -> Pai2<ByteBuffer, Pai2<Long, Long>>> =
+            asContextVect0r(addressable as Indexable, fixedWidth!!)
         (asContextVect0r t2 { y: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
                 (drivers[x] t2 (arity as Columnar).left[x]) t3 coords!![x].size
@@ -118,7 +121,7 @@ class NioMMap(
             }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
     }
 
-     fun asContextVect0r(
+    fun asContextVect0r(
         indexable: Indexable,
         fixedWidth: FixedWidth
     ): Vect02<ByteBuffer, MMapWindow> = Vect0r(indexable.size()) { ix: Int ->
@@ -150,9 +153,9 @@ class NioMMap(
             }
         }) ?: TODO("recordlen missing from context creation!!")
     }
-     val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
+    val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-     fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
+    fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
         rafchannel.map(mf.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
     }
 
@@ -230,25 +233,25 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
         val mapped = mapOf(
             IOMemento.IoInt as TypeMemento to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim * String::toInt,
-                { a, b -> a.putInt(b) }),
+                { a, b: Int -> a.putInt(b) }),
             IOMemento.IoLong to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim * String::toLong,
-                { a, b -> a.putLong(b) }),
+                { a, b: Long -> a.putLong(b) }),
             IOMemento.IoFloat to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim `→` String::toFloat,
-                { a, b -> a.putFloat(b) }),
+                { a, b: Float -> a.putFloat(b) }),
             IOMemento.IoDouble to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim `→` String::toDouble,
-                { a, b -> a.putDouble(b) }),
+                { a, b: Double -> a.putDouble(b) }),
             IOMemento.IoString to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim, xInsertString
             ),
             IOMemento.IoLocalDate to Tokenized(
                 dateMapper `⚬` ::trim `⚬` ::btoa `⚬` ::bb2ba,
-                { a, b -> a.putLong(b.toEpochDay()) }),
+                { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim `→` instantMapper,
-                { a, b -> a.putLong(b.toEpochMilli()) })
+                { a, b:Instant  -> a.putLong(b.toEpochMilli()) })
         )
     }
 }

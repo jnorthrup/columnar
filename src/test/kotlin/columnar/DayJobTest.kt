@@ -184,8 +184,6 @@ class DayJobTest/* : StringSpec()*/ {
                     measureNanoTimeStr {
                         second = filtered.second(2)
                     } + "@ " + second.first + " columns"
-
-
         )
         lateinit var message: String
         println("row 2 took " + measureNanoTimeStr {
