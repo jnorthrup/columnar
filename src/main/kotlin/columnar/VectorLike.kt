@@ -9,9 +9,9 @@ import kotlin.experimental.ExperimentalTypeInference
 /**
  * semigroup
  */
-typealias Vect0r<T> = Pai2<Int, (Int) -> T>
+typealias Vect0r<reified T> = Pai2<Int, (Int) -> T>
 
-inline val <T>Vect0r<T>.size: Int get() = first
+inline val <reified T>Vect0r<T>.size: Int get() = first
 
 @Suppress("NonAsciiCharacters")
 typealias Matrix<T> = Pai2<
@@ -24,15 +24,15 @@ inline operator fun<reified T> Matrix<T>.get(vararg c: Int): T = second(c)
 
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline infix fun <reified O, reified R, F : (O) -> R> O.`→`(f: F) = this.let(f)
+inline infix fun <reified O, reified R,reified  F : (O) -> R> O.`→`(f: F) = this.let(f)
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <reified A, reified B, reified R, reified O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> a `→` this `→` (b) }
+inline operator fun <reified A, reified B, reified R, reified O : (A) -> B, reified G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> a `→` this `→` (b) }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified A, reified B, reified R, reified O : (A) -> B, G : (B) -> R,reified R1:(A) -> R > O.`→`(b: G): R1 = (this * b ) as  R1
+inline infix fun <reified A, reified B, reified R, reified O : (A) -> B,reified  G : (B) -> R,reified R1:(A) -> R > O.`→`(b: G): R1 = (this * b ) as  R1
 
 /**
  * G follows F

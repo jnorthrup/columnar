@@ -18,14 +18,14 @@ class DayJobTest/* : StringSpec()*/ {
     //        val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
 //        val suffix = "_10000"     //"_RD"  139618738
-//        val suffix = "_100000"     //"_RD"
+        val suffix = "_100000"     //"_RD"
 //      val suffix = "_1000000"     //"_RD"
 //    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
     //    val suffix = "_1000"//"_RD"
-        val suffix = "_RD"
+//        val suffix = "_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
