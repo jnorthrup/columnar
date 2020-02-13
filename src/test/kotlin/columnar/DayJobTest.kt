@@ -17,20 +17,20 @@ class DayJobTest/* : StringSpec()*/ {
 
     //        val suffix = "_100"//"_RD"  105340
     //    val suffix = "_1000"//"_RD"  3392440
-//        val suffix = "_10000"     //"_RD"  139618738
-        val suffix = "_100000"     //"_RD"
-//      val suffix = "_1000000"     //"_RD"
-//    val suffix = "_500000"     //"_RD"
+    //        val suffix = "_10000"     //"_RD"  139618738
+    val suffix = "_100000"     //"_RD"
+    //      val suffix = "_1000000"     //"_RD"
+    //    val suffix = "_500000"     //"_RD"
     //    val suffix = "_300000"     //"_RD"
     //    val suffix = "_400000"     //"_RD"
 
     //    val suffix = "_1000"//"_RD"
-//        val suffix = "_RD"
+    //        val suffix = "_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
     //    val suffix = "_1000"//"_RD"
 
-//        val suffix = ""//"_RD"
+    //        val suffix = ""//"_RD"
     val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
     val coords = intArrayOf(
         0, 11,
@@ -70,17 +70,10 @@ class DayJobTest/* : StringSpec()*/ {
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
-    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
-
-        System.err.println("record count=" + it.first)
-    }
-
-
+    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also { System.err.println("record count=" + it.first) }
     var lastmessage: String? = null
 
-    inline fun measureNanoTimeStr(block: () -> Unit): String {
-        return Duration.ofNanos(measureNanoTime(block)).toString()
-    }
+    inline fun measureNanoTimeStr(block: () -> Unit): String = Duration.ofNanos(measureNanoTime(block)).toString()
 
     @org.junit.jupiter.api.Test
     fun `reorder+rewrite+pivot+pgroup+reduce`() {
@@ -200,14 +193,14 @@ class DayJobTest/* : StringSpec()*/ {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
         val nanos = measureNanoTimeStr {
-            System.err.println("using filename: " + pathname.toString())
+            System.err.println("using filename: $pathname")
             val arrangement = intArrayOf(2, 1, 3, 5)
             val theCursor = curs.ordered(intArrayOf(2, 1, 3))   [arrangement]
             val theCoords = coords[arrangement]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
         }
-        System.err.println("transcription took: " + nanos)
+        System.err.println("transcription took: $nanos")
 
         MappedFile(pathname.toString()).use { mf ->
             val piv = binaryCursor(pathname, mappedFile = mf).resample(0).pivot(
@@ -224,12 +217,14 @@ class DayJobTest/* : StringSpec()*/ {
                             second = filtered.second(2)
                         } + "@ " + second.first + " columns"
             )
+
             println("row 2 took " + measureNanoTimeStr {
                 second.let {
                     println("row 2 is:")
                     message = stringOf(it)
                 }
             } )
+
             println(message)
         }
     }
