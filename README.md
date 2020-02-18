@@ -5,10 +5,9 @@
 This is an idiomatic kotlin dataframe toolkit to support data engineering 
 tasks of any size collection of datasets.
 
-The primary focus of this toolkit is to support large data extractions using function assignment and deferred reification instead of in-memory data manipulation
+The primary focus of this toolkit is to support Pandas-like operations on a Dataframe iterator for large data extractions using function assignment and deferred reification instead of in-memory data manipulation.
 
-
-so far, these are the  fundamaental composable UnaryOperators:  (val newcursor = oldcursor.operator) 
+so far, these are the fundamaental composable Unary Operators:  (val newcursor = oldcursor.operator) 
 
  * Resampling time-series datasets on LocalDate/LocatlTime columns
     
@@ -34,7 +33,7 @@ so far, these are the  fundamaental composable UnaryOperators:  (val newcursor =
       *  todo: Javanese + Balinese Calendars   
  
  
- ##   runtime objects
+ ###   runtime objects
  
  The familiar dataset abstractions are as follows:
  
