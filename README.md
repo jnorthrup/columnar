@@ -6,15 +6,25 @@ This is an idiomatic kotlin dataframe toolkit written from scratch to support da
 tasks of any size dataset.
 
 The primary focus of this toolkit is to support large data extractions using function assignment and deferred reification instead of in-memory data manipulation
-with fundamaental operations: 
+
+
+so far, these are the  fundamaental composable UnaryOperators:  (val newcursor = oldcursor.operator) 
 
  * Resampling time-series datasets on LocalDate/LocatlTime columns
+    cursor.resample(indexes)
  * Pivot any columns into any collection of other columns
+    cursor.pivot(preserved,newcolumns,expaniontargets)
  * Group with reducers
+    cursor.group(columns,{reducer})
  * slice and join columns 
+     * cursor[0] -slice first
+     * join(cursor[0],cursor[2],othercursor[0],...) 
  * random access across combined rows from different sources
+     combine(cursor1,cursor..n,)
  * Simplified one-hot encoding 
+     cursor[0,1].categories([DummySpec.last])
  * Julian, Lunar, and Islamic Calendar Time-Series support 
+      ...almost
  
  
  ##   runtime objects
@@ -58,7 +68,7 @@ this is purpose-built early implementations for large scale time series LSTM dat
   - [X] pivot n rows by m columns (lazy) preserving l left-hand-side pass-thru columns
   - [X] groupby n columns
   - [X] cursor.group(n..){reducer} 
-  - [ ] One-hot Encodings 
+  - [X] One-hot Encodings 
   - [ ] min/max scaling (same premise as resampling above)
   - [ ] support Numerics, Linear Algebra libraries
   - [X] support for (resampling) Calendar, Time and Units conversion libraries

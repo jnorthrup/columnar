@@ -11,14 +11,14 @@ import org.junit.jupiter.api.Test
 import shouldBe
 
 class CursorKtTest/* : StringSpec()*/ {
-     val coords = intArrayOf(
+    val coords = intArrayOf(
         0, 10,
         10, 84,
         84, 124,
         124, 164
     ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
 
-     val drivers = vect0rOf(
+    val drivers = vect0rOf(
         IoLocalDate as TypeMemento,
         IoString,
         IoFloat,
@@ -29,7 +29,7 @@ class CursorKtTest/* : StringSpec()*/ {
     val mf = MappedFile("src/test/resources/caven4.fwf")
     val nio = NioMMap(mf)
     val fixedWidth: FixedWidth
-        get() = fixedWidthOf(nio = nio, coords = coords as Vect02<Int, Int>)
+        get() = fixedWidthOf(nio = nio, coords = coords)
 
     @Suppress("UNCHECKED_CAST")
     val root = RowMajor().fromFwf(
@@ -59,20 +59,35 @@ class CursorKtTest/* : StringSpec()*/ {
     }
 
     @Test
+    fun oneHot() {
+        val cursor: Cursor = cursorOf(root)
+        var categories = cursor[0].categories()
+        var scalars = categories.scalars as Vect02<Any?, String>
+        System.err.println(scalars.right.toList())
+        var toList = categories.narrow().toList()
+        toList.forEach { System.err.println(it) }
+        categories = cursor[0].categories(DummySpec.Last)
+        scalars = categories.scalars as Vect02<Any?, String>
+        System.err.println(scalars.right.toList())
+        toList = categories.narrow().toList()
+        toList.forEach { System.err.println(it) }
+    }
+
+    @Test
     fun `resample+ordered`() {
         val cursor: Cursor = cursorOf(root)
-run        {
-    System.err.println("unordered\n\n")
+        run {
+            System.err.println("unordered\n\n")
 
             val resample = cursor.resample(0)
-                 val toList = resample
+            val toList = resample
                 /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
                 .toList()
             resample.toList()[3][2].first shouldBe 820f
             toList.forEach { System.err.println(it) }
         }
         System.err.println("ordered\n\n")
-        run{
+        run {
             val ordered = cursor.resample(0)
                 .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
 
@@ -171,7 +186,7 @@ run        {
         val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group((0))
         println()
         piv.forEach { it ->
-            println(it.map { vec     ->
+            println(it.map { vec ->
                 "${vec.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
@@ -224,7 +239,7 @@ run        {
         val pai2 = grp[2, 3]
         val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
         join.forEach { it ->
-            println(it.map { vec     ->
+            println(it.map { vec ->
                 "${vec.component1().let {
                     (it as? Vect0r<*>)?.toList() ?: it
                 }}"
