@@ -2,8 +2,8 @@
 
 ## description
 
-This is an idiomatic kotlin dataframe toolkit written from scratch to support data engineering 
-tasks of any size dataset.
+This is an idiomatic kotlin dataframe toolkit to support data engineering 
+tasks of any size collection of datasets.
 
 The primary focus of this toolkit is to support large data extractions using function assignment and deferred reification instead of in-memory data manipulation
 
