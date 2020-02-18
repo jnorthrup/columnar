@@ -11,27 +11,34 @@ The primary focus of this toolkit is to support large data extractions using fun
 so far, these are the  fundamaental composable UnaryOperators:  (val newcursor = oldcursor.operator) 
 
  * Resampling time-series datasets on LocalDate/LocatlTime columns
-    cursor.resample(indexes)
+    
+    `cursor.resample(indexes)`
  * Pivot any columns into any collection of other columns
-    cursor.pivot(preserved,newcolumns,expaniontargets)
+    
+    `cursor.pivot(preservedcolumns,newcolumnheaders,expansiontargets)`
  * Group with reducers
-    cursor.group(columns,{reducer})
+    
+    `cursor.group(columns,{reducer})`
  * slice and join columns 
-     * cursor[0] -slice first
-     * join(cursor[0],cursor[2],othercursor[0],...) 
+     * `cursor[0]` -slice first
+     * `join(cursor[0],cursor[2],othercursor[0],...)` 
  * random access across combined rows from different sources
-     combine(cursor1,cursor..n,)
- * Simplified one-hot encoding 
-     cursor[0,1].categories([DummySpec.last])
- * Julian, Lunar, and Islamic Calendar Time-Series support 
+   
+     `combine(cursor1,cursor..n,)`
+ * Simplified one-hot encoding
+   
+   `cursor[0,1].categories([DummySpec.last])`
+ * Julian, Lunar, and Islamic Jvm Calendar Time-Series support 
+     
       ...almost
+      *  todo: Javanese + Balinese Calendars   
  
  
  ##   runtime objects
  
  The familiar dataset abstractions are as follows:
  
- **Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by Vector of column pairs (value,type) on x axis.  This Row is a typealias called RowVec.  Future implementations will include more complex arrangements of x,y,z and more, as described in the CoroutineContext at creationtme.
+ **Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by Vector of column pairs (value,type) on x axis.  This Row is a typealias called RowVec.  Future implementations will include more complex arrangements of x,y,z and more, as described in the CoroutineContext at creationtime.
  
  **Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and heterogenous backing stores.  
  
