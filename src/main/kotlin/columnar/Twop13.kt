@@ -49,7 +49,8 @@ interface Pai2<F, S> {
         /**
          * Pair copy ctor conversion
          */
-        inline operator fun <reified F, reified S, reified P : Pair<F, S>, reified R : Pai2<F, S>> invoke(p: P):R =p.run { (first t2 second) as R  }
+        inline operator fun <reified F, reified S, reified P : Pair<F, S>, reified R : Pai2<F, S>> invoke(p: P): R =
+            p.run { (first t2 second) as R }
     }
 }
 

@@ -18,16 +18,16 @@ fun stringOf(it: RowVec) = it.left.toList().map { any ->
 }.toString()
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
 
-inline val <reified F,reified  S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
-inline val <reified F,reified  S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
-inline val <reified F,reified  S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair
+inline val <reified F, reified S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
+inline val <reified F, reified S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
+inline val <reified F, reified S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair
 
 
 typealias  V3ct0r<F, S, T> = Vect0r<XYZ<F, S, T>>
 
-inline val <reified F,reified  S,reified T> V3ct0r<F, S, T>.x get() = this α (XYZ<F, S, T>::first)
-inline val <reified F,reified  S,reified T> V3ct0r<F, S, T>.y get() = this α (XYZ<F, S, T>::second)
-inline val <reified F, reified S,reified T> V3ct0r<F, S, T>.z get() = this α (XYZ<F, S, T>::third)
+inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.x get() = this α (XYZ<F, S, T>::first)
+inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.y get() = this α (XYZ<F, S, T>::second)
+inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.z get() = this α (XYZ<F, S, T>::third)
 inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify get() = this α (XYZ<F, S, T>::triple)
 
 typealias writefn<M, R> = Function2<M, R, Unit>

@@ -20,26 +20,31 @@ typealias Matrix<T> = Pai2<
         /**accessor*/
             (IntArray) -> T>
 
-inline operator fun<reified T> Matrix<T>.get(vararg c: Int): T = second(c)
+inline operator fun <reified T> Matrix<T>.get(vararg c: Int): T = second(c)
 
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline infix fun <reified O, reified R,reified  F : (O) -> R> O.`→`(f: F) = this.let(f)
+inline infix fun <reified O, reified R, reified F : (O) -> R> O.`→`(f: F) = this.let(f)
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun <reified A, reified B, reified R, reified O : (A) -> B, reified G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> a `→` this `→` (b) }
+inline operator fun <reified A, reified B, reified R, reified O : (A) -> B, reified G : (B) -> R> O.times(b: G): (A) -> R =
+    { a: A -> a `→` this `→` (b) }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified A, reified B, reified R, reified O : (A) -> B,reified  G : (B) -> R,reified R1:(A) -> R > O.`→`(b: G): R1 = (this * b ) as  R1
+inline infix fun <reified A, reified B, reified R, reified O : (A) -> B, reified G : (B) -> R, reified R1 : (A) -> R> O.`→`(
+    b: G
+): R1 = (this * b) as R1
 
 /**
  * G follows F
  */
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline infix fun <reified A, reified B, reified C, reified G : (B) -> C,reified  F : (A) -> B,reified R:(A) -> C> G.`⚬`(f: F): R = { a: A -> a `→` f `→` this }as R
+inline infix fun <reified A, reified B, reified C, reified G : (B) -> C, reified F : (A) -> B, reified R : (A) -> C> G.`⚬`(
+    f: F
+): R = { a: A -> a `→` f `→` this } as R
 
 /**
  * (λx.M[x]) → (λy.M[y])	α-conversion
@@ -47,44 +52,53 @@ inline infix fun <reified A, reified B, reified C, reified G : (B) -> C,reified 
  * */
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline infix fun <reified A, reified C, B : (A) -> C,reified  V : Vect0r<A>> V.α(m: B)  = map<A, C, V>(fn = m)
+inline infix fun <reified A, reified C, B : (A) -> C, reified V : Vect0r<A>> V.α(m: B) = map<A, C, V>(fn = m)
 
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified A, reified C,reified  B : (A) -> C, reified T : Iterable<A>> T.α(m: B): List<C> = this.map { it: A -> it `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Iterable<A>> T.α(m: B): List<C> =
+    this.map { it: A -> it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified A, reified C, reified B : (A) -> C,reified  T : Sequence<A>> T.α(m: B): Sequence<C> = this.map { it: A -> it `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Sequence<A>> T.α(m: B): Sequence<C> =
+    this.map { it: A -> it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Flow<A>> T.α(m: B): Flow<C> = this.map { it: A -> it `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Flow<A>> T.α(m: B): Flow<C> =
+    this.map { it: A -> it `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified A, reified C, reified B : (A) -> C> List<A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C> List<A>.α(m: B): Vect0r<C> =
+    Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified A,   reified C,    reified  B : (A) -> C> Array<out A>.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified A, reified C, reified B : (A) -> C> Array<out A>.α(m: B): Vect0r<C> =
+    Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C,reified  B : (Int) -> C> IntArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C, reified B : (Int) -> C> IntArray.α(m: B): Vect0r<C> =
+    Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C,reified  B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C, reified B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> =
+    Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C, reified B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C, reified B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> =
+    Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified C,reified  B : (Long) -> C> LongArray.α(m: B): Vect0r<C> = Vect0r(this.size) { i: Int -> this[i] `→` m }
+inline infix fun <reified C, reified B : (Long) -> C> LongArray.α(m: B): Vect0r<C> =
+    Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 /*
 But as soon as a groupoid has both a left and a right identity, they are necessarily unique and equal. For if e is
@@ -94,7 +108,7 @@ a left identity and f is a right identity, then f=ef=e.
 @UseExperimental(ExperimentalTypeInference::class)
 object `⟳` {
     @BuilderInference
-    inline operator fun<reified T> invoke(t: T) = { t: T -> t }
+    inline operator fun <reified T> invoke(t: T) = { t: T -> t }
 }
 
 /**right identity*/
@@ -106,53 +120,53 @@ inline val <reified T> T.`⟲`
 /**right identity*/
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline infix fun <reified T,reified  R> T.`⟲`(f: (T) -> R) = run { f(this) }
+inline infix fun <reified T, reified R> T.`⟲`(f: (T) -> R) = run { f(this) }
 
 @JvmName("vlike_Sequence_1")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun<reified T> Sequence<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_Sequence_Iterable2")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun<reified T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+inline operator fun <reified T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Sequence_IntArray3")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun<reified T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
+inline operator fun <reified T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
 
 @JvmName("vlike_Flow_1")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-suspend inline fun<reified T> Flow<T>.get(vararg index: Int) = get(index)
+suspend inline fun <reified T> Flow<T>.get(vararg index: Int) = get(index)
 
 @Suppress("USELESS_CAST")
 @JvmName("vlike_Flow_Iterable2")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-suspend inline fun<reified T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
+suspend inline fun <reified T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
 
 @JvmName("vlike_Flow_IntArray3")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-suspend inline fun<reified T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()
+suspend inline fun <reified T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()
 
 @JvmName("vlike_List_1")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun<reified T> List<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun<reified T> List<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+inline operator fun <reified T> List<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_List_IntArray3")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline operator fun<reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
+inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
 
 @JvmName("vlike_Array_1")
 @BuilderInference
@@ -190,33 +204,40 @@ inline operator fun <reified T> Vect0r<T>.get(vararg index: Int): Vect0r<T> = ge
 inline operator fun <reified T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T> = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Vect0r_IntArray3")
-inline operator fun <reified T> Vect0r<T>.get(index: IntArray): Vect0r<T> = Vect0r(index.size) { ix: Int -> second(index[ix]) }
+inline operator fun <reified T> Vect0r<T>.get(index: IntArray): Vect0r<T> =
+    Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
-inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array( first ) { vf(it) } }
-inline fun<reified T> Vect0r<T>.toList(): List<T> = let { v ->
+inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
+inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
         override val size: Int = v.first
         override operator fun get(index: Int) = v.second(index)
     }
 }
 
-inline fun<reified T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
+inline fun <reified T> Vect0r<T>.toSequence() = this.let { (size, vf) ->
     sequence {
         for (ix in 0 until size)
             yield(vf(ix))
     }
 }
 
-inline fun<reified T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
+inline fun <reified T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
     flow {
         for (ix in 0 until size)
             emit(vf(ix))
     }
 }
 
-inline fun <reified T, reified R,reified V : Vect0r<T> > V.map(crossinline fn: (T) -> R)  = Vect0r(first) { it: Int -> it `→` (fn `⚬` second) }
-inline fun <reified T, reified R> Vect0r<T>.mapIndexed(crossinline fn: (Int, T) -> R): Vect0r<R> = Vect0r(first) { it: Int -> fn(it, it `→` second) }
-inline fun <reified T, reified R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> = List(first) { it: Int -> fn(it, it `→` second) }
+inline fun <reified T, reified R, reified V : Vect0r<T>> V.map(crossinline fn: (T) -> R) =
+    Vect0r(first) { it: Int -> it `→` (fn `⚬` second) }
+
+inline fun <reified T, reified R> Vect0r<T>.mapIndexed(crossinline fn: (Int, T) -> R): Vect0r<R> =
+    Vect0r(first) { it: Int -> fn(it, it `→` second) }
+
+inline fun <reified T, reified R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> =
+    List(first) { it: Int -> fn(it, it `→` second) }
+
 inline fun <reified T> Vect0r<T>.forEach(fn: (T) -> Unit) {
     for (ix: Int in (0 until first)) ix `→` (fn `⚬` second)
 }
@@ -226,7 +247,7 @@ inline fun <reified T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
     for (ix in (0 until size)) fn(ix, ix `→` second)
 }
 
-inline fun<reified T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { it: Int -> a[it] }
+inline fun <reified T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { it: Int -> a[it] }
 
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
@@ -247,28 +268,28 @@ inline fun <reified T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -
 
 @UseExperimental(ExperimentalTypeInference::class)
 @BuilderInference
-inline  fun IntArray.toVect0r() :Vect0r<Int> =Vect0r( size)  { ix: Int -> get(ix) }
+inline fun IntArray.toVect0r(): Vect0r<Int> = Vect0r(size) { ix: Int -> get(ix) }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline fun<reified T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -> this[ix] }
+inline fun <reified T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -> this[ix] }
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-suspend inline fun<reified T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+suspend inline fun <reified T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline fun<reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline fun<reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline fun<reified T> combine(@BuilderInference vararg s: Flow<T>): Flow<T> = flow {
+inline fun <reified T> combine(@BuilderInference vararg s: Flow<T>): Flow<T> = flow {
     @BuilderInference
     for (f: Flow<T> in s) {
         f.collect {
@@ -280,7 +301,7 @@ inline fun<reified T> combine(@BuilderInference vararg s: Flow<T>): Flow<T> = fl
 @JvmName("combine_Sequence")
 @BuilderInference
 @UseExperimental(ExperimentalTypeInference::class)
-inline fun<reified T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
+inline fun <reified T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
     @BuilderInference
     for (sequence: Sequence<T> in s) {
         for (t in sequence) {
@@ -290,7 +311,7 @@ inline fun<reified T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
 }
 
 @JvmName("combine_List")
-inline fun<reified T> combine(vararg a: List<T>): List<T> =
+inline fun <reified T> combine(vararg a: List<T>): List<T> =
     a.sumBy(List<T>::size).let { size: Int ->
         var x = 0
         var y = 0

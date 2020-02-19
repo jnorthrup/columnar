@@ -46,7 +46,8 @@ class CalendarTest {
             ZonedDateTime.ofInstant(localDate.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneId.systemDefault());
         JvmCal.values().forEach { jvmCal: JvmCal ->
             System.err.println("$jvmCal")
-            System.err.println("$jvmCal ${jvmCal.jvmProxy.date(zonedDateTime) }") }
+            System.err.println("$jvmCal ${jvmCal.jvmProxy.date(zonedDateTime)}")
+        }
     }
 }
 

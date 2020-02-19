@@ -29,7 +29,8 @@ tasks.withType(KotlinCompile::class)
             freeCompilerArgs = listOf(
                 "-Xnew-inference",
                 "-Xinline-classes",
-                "-Xuse-experimental=kotlin.Experimental")
+                "-Xuse-experimental=kotlin.Experimental"
+            )
         }
     }
 

@@ -1,9 +1,7 @@
 package columnar
 
-import columnar.context.Scalar
 import org.junit.jupiter.api.Test
 import shouldBe
-import kotlin.coroutines.CoroutineContext
 
 class OneHotTest {
 

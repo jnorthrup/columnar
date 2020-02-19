@@ -2,13 +2,10 @@ package columnar.context
 
 import columnar.*
 import columnar.context.Arity.Companion.arityKey
-
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
 
@@ -251,7 +248,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim `→` instantMapper,
-                { a, b:Instant  -> a.putLong(b.toEpochMilli()) })
+                { a, b: Instant -> a.putLong(b.toEpochMilli()) })
         )
     }
 }

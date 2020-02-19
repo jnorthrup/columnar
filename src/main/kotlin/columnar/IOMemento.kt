@@ -61,8 +61,6 @@ fun floatFillNa(fill: Float): (Any?) -> Any? {
 }
 
 
-
-
 val floatSum: (Any?, Any?) -> Any? = { acc: Any?, any2: Any? ->
     val fl = (acc as? Float) ?: ZERO
     val fl1 = (any2 as? Float) ?: ZERO

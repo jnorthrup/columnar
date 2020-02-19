@@ -529,9 +529,10 @@ fun binaryCursor(
  */
 fun Cursor.categories(
     /**
- if this is a value, that value is omitted from columns. by default null is an omitted value.  if this is a DummySpec, the DummySpec specifies the index
- */
-dummySpec: Any? = null):Cursor = let { curs ->
+    if this is a value, that value is omitted from columns. by default null is an omitted value.  if this is a DummySpec, the DummySpec specifies the index
+     */
+    dummySpec: Any? = null
+): Cursor = let { curs ->
     val origScalars = curs.scalars
     val xSize = origScalars.size
     val ySize = curs.size
@@ -551,7 +552,7 @@ dummySpec: Any? = null):Cursor = let { curs ->
 
 
             val catxScalar = origScalars[catx]
-            yield(Cursor (curs.size) { iy: Int ->
+            yield(Cursor(curs.size) { iy: Int ->
                 RowVec(cat2.size) { ix: Int ->
                     val origVal = curs.second(iy)[catx].first
                     val cardinal = if (origVal == cat2[ix]) 1 else 0
@@ -567,7 +568,7 @@ dummySpec: Any? = null):Cursor = let { curs ->
     }
 
     //widthwize join (90 degrees of combine, right?)
-    join( sequence.toVect0r())
+    join(sequence.toVect0r())
 }
 
 
@@ -591,5 +592,5 @@ fun onehot_mask(dummy: Any?, cats: List<*>) =
  * if you specify first or last categories to be the Dummy, this is
  */
 enum class DummySpec {
-   /*Dummy --  None,*/ First, Last
+    /*Dummy --  None,*/ First, Last
 }

@@ -15,14 +15,14 @@ import kotlin.math.min
  */
 open class MappedFile(
     filename: String,
-     val mode: String = "r",
+    val mode: String = "r",
     val mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
     val randomAccessFile: RandomAccessFile = RandomAccessFile(
         filename,
         mode
     ),
     val channel: FileChannel = randomAccessFile.channel,
-     val length: Long = randomAccessFile.length(),
+    val length: Long = randomAccessFile.length(),
     val mappedByteBuffer: ThreadLocal<MappedByteBuffer> = ThreadLocal.withInitial {
         channel.map(
             mapMode,

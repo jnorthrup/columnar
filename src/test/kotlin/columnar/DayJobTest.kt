@@ -70,7 +70,9 @@ class DayJobTest/* : StringSpec()*/ {
     val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
     val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
     val indexable = indexableOf(nioMMap, fixedWidth)
-    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also { System.err.println("record count=" + it.first) }
+    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
+        System.err.println("record count=" + it.first)
+    }
     var lastmessage: String? = null
 
     inline fun measureNanoTimeStr(block: () -> Unit): String = Duration.ofNanos(measureNanoTime(block)).toString()
@@ -81,8 +83,8 @@ class DayJobTest/* : StringSpec()*/ {
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
         val nanos = measureNanoTimeStr {
             System.err.println("using filename: " + pathname.toString())
-            val theCursor = curs[ 2, 1, 3, 5 ].ordered(intArrayOf(0, 1, 2))
-            val theCoords = coords[2, 1, 3, 5 ]
+            val theCursor = curs[2, 1, 3, 5].ordered(intArrayOf(0, 1, 2))
+            val theCoords = coords[2, 1, 3, 5]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
         }
@@ -108,7 +110,7 @@ class DayJobTest/* : StringSpec()*/ {
                     println("row 2 is:")
                     message = stringOf(it)
                 }
-            } )
+            })
             println(message)
         }
     }
@@ -148,7 +150,7 @@ class DayJobTest/* : StringSpec()*/ {
                     println("row 2 is:")
                     message = stringOf(it)
                 }
-            } )
+            })
             println(message)
         }
     }
@@ -184,7 +186,7 @@ class DayJobTest/* : StringSpec()*/ {
                 println("row 2 is:")
                 message = stringOf(it)
             }
-        } )
+        })
         println(message)
     }
 
@@ -195,7 +197,7 @@ class DayJobTest/* : StringSpec()*/ {
         val nanos = measureNanoTimeStr {
             System.err.println("using filename: $pathname")
             val arrangement = intArrayOf(2, 1, 3, 5)
-            val theCursor = curs.ordered(intArrayOf(2, 1, 3))   [arrangement]
+            val theCursor = curs.ordered(intArrayOf(2, 1, 3))[arrangement]
             val theCoords = coords[arrangement]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
@@ -208,7 +210,7 @@ class DayJobTest/* : StringSpec()*/ {
                 intArrayOf(1, 2),
                 intArrayOf(3)
             ).group((0))
-            val filtered = join(piv[0], (piv[1 until piv.scalars.first] ).`∑`(floatSum))
+            val filtered = join(piv[0], (piv[1 until piv.scalars.first]).`∑`(floatSum))
 
             lateinit var second: RowVec
             println(
@@ -223,7 +225,7 @@ class DayJobTest/* : StringSpec()*/ {
                     println("row 2 is:")
                     message = stringOf(it)
                 }
-            } )
+            })
 
             println(message)
         }
