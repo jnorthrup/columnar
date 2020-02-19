@@ -1,14 +1,20 @@
 package columnar
 
+import columnar.context.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.chrono.ChronoLocalDate
 import java.time.chrono.HijrahDate
 import java.time.chrono.IsoChronology
 import java.time.temporal.ChronoField
+import java.time.temporal.ChronoField.*
 import java.time.temporal.TemporalAdjusters
+import java.time.temporal.UnsupportedTemporalTypeException
+import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 
 object TestDate {
@@ -18,11 +24,87 @@ object TestDate {
     }
 }
 
+
+/**
+ * small example code to blow out calendar dates
+ */
+@Suppress("UNCHECKED_CAST")
 class CalendarTest {
+    val coords = intArrayOf(
+        0, 10,
+        10, 84,
+        84, 124,
+        124, 164
+    ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
+
+    val drivers = vect0rOf(
+        IOMemento.IoLocalDate as TypeMemento,
+        IOMemento.IoString,
+        IOMemento.IoFloat,
+        IOMemento.IoFloat
+    )
+
+    val names = vect0rOf("date", "channel", "delivered", "ret")
+    val mf = MappedFile("src/test/resources/caven4.fwf")
+    val nio = NioMMap(mf)
+    val fixedWidth: FixedWidth
+        get() = RowMajor.fixedWidthOf(nio = nio, coords = coords)
+
+    @Suppress("UNCHECKED_CAST")
+    val root = RowMajor().fromFwf(
+        fixedWidth,
+        RowMajor.indexableOf(nio, fixedWidth),
+        nio,
+        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+    )
+
+
+    @Test
+    fun test4Rows() {
+
+        val curs = cursorOf(root)
+
+        println("---")
+
+        val join1 = join(curs[0], curs[1, 2, 3])
+        val scalars1 = join1.scalars as Vect02<TypeMemento, String?>
+        join1.map { it.left.toList() }.toList().forEach(::println)
+
+
+
+        JvmCal.values().forEach { jvmCal: JvmCal ->
+
+            println("--- " + jvmCal)
+
+            val csrc = curs[0]
+            val xSize = csrc.scalars.size
+            val v: Cursor = Cursor(csrc.size) { iy: Int ->
+                RowVec(xSize) { ix: Int ->
+                    val row = csrc.second(iy)
+                    (row.left[ix] as? LocalDate)?.let { it: LocalDate ->
+                        val filterNotNull = jvmCal.DateWiseCategories(it)
+                        val pai2: Pai2<Any?, () -> CoroutineContext> = filterNotNull.toString() t2 {
+                            val second = row[ix].second()
+                            second + Scalar(IOMemento.IoString, "${jvmCal.name}_map")
+                        }
+                        pai2
+                    } ?: row[ix]
+                }
+            }
+
+            val join = join(v, curs[1, 2, 3])
+
+            val scalars = join.scalars as Vect02<TypeMemento, String?>
+            println(scalars.right.toList())
+            join.map { it.left.toList() }.toList().forEach(::println)
+        }
+    }
+
+
     @Test
     fun testHijRah() {
         //first day of Ramadan, 9th month
-        val ramadan = HijrahDate.now().with(ChronoField.DAY_OF_MONTH, 1).with(ChronoField.MONTH_OF_YEAR, 9)
+        val ramadan = HijrahDate.now().with(DAY_OF_MONTH, 1).with(MONTH_OF_YEAR, 9)
         println("HijrahDate : $ramadan")
         //HijrahDate -> LocalDate
         println("\n--- Ramandan 2016 ---")
@@ -43,7 +125,7 @@ class CalendarTest {
         val localDate = LocalDate.of(1970, 1, 1)
 
         val zonedDateTime =
-            ZonedDateTime.ofInstant(localDate.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneId.systemDefault());
+            ZonedDateTime.ofInstant(localDate.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneId.systemDefault())
         JvmCal.values().forEach { jvmCal: JvmCal ->
             System.err.println("$jvmCal")
             System.err.println("$jvmCal ${jvmCal.jvmProxy.date(zonedDateTime)}")
