@@ -554,13 +554,15 @@ fun Cursor.categories(
             val catxScalar = origScalars[catx]
             yield(Cursor(curs.size) { iy: Int ->
                 RowVec(cat2.size) { ix: Int ->
-                    val origVal = curs.second(iy)[catx].first
-                    val cardinal = if (origVal == cat2[ix]) 1 else 0
+                    val cell = curs.second(iy)[catx]
+                    val rowValue = cell.first
+                    val diagonalValue = cat2[ix]
+                    val cardinal = if (rowValue == diagonalValue) 1 else 0
                     cardinal t2 {
-                        catxScalar + Scalar(
-                            IOMemento.IoInt,
-                            origScalars[catx].second + "_" + origVal.toString()
-                        )
+                        /**
+                         * there may be context data other than simple scalars in this cell, so we will just replace the scalar key and pass it along.
+                         */
+                        cell.second() + Scalar(IOMemento.IoInt, origScalars[catx].second + "_" + diagonalValue.toString())
                     }
                 }
             })
