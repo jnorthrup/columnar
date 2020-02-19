@@ -27,7 +27,7 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
  * Simplified one-hot encoding
    
    `cursor[0,1].categories([DummySpec.last])`
- * Julian, Lunar, and Islamic Jvm Calendar Time-Series support 
+ * ISO, Lunar, and Islamic Jvm Calendar Time-Series support 
      
       ...almost
       *  todo: Javanese + Balinese Calendars   
@@ -42,9 +42,7 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
  **Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and heterogenous backing stores.  
  
  **Kotlin CoroutineContext** - documented elsewhere, is the defining collection of factors describing the Table and Cursor configurations above using ContextElements to differentiate execution strategies at creation from common top level interfaces. 
- 
- 
- 
+  
 ## architecture 
 
 The initial focus of the implementation rests on the fixed-width file format obtainable via the companion project 
@@ -64,10 +62,9 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
  
 
 ## features and todo 
-Kotlin Blackboard contexts for composable operations on composable data IO features. 
-this is purpose-built early implementations for large scale time series LSTM dataprep  
 
-  - [X] read an FWF text and efficiently mmap the row access (becomes a cursors iterator) `*`
+  - [X] Blackboard defined Table, Cursor, Row metadata driving access behaviors (using `CoroutineContext.Element`s)
+  - [X] read an FWF text and efficiently mmap the row access (becomes a `Cursor`) [^flatsql]
   - [X] enable index operations, reordering, expansions, preserving column metadata 
   - [X] resample timeseries data (jvm LocalDate initially) to fill in series gaps
   - [X] concatenation of n cursors from disimilar FP projections
@@ -101,11 +98,11 @@ this is purpose-built early implementations for large scale time series LSTM dat
  - [ ] R-Tree n-dimensional associative
  - [ ] parallel and concurrent access helpers
  - [ ] explicit platter and direct partition mapping
- - [ ] jdbc adapters `*`
- - [ ] sql query language driver `*`
+ - [ ] jdbc adapters [^flatsql]
+ - [ ] sql query language driver [^flatsql]
  - [ ] jq query language driver
  
- `*` downstream of [jdbc2json](https://github.com/jnorthrup/jdbc2json)
+[^flatsql]:   downstream of [jdbc2json](https://github.com/jnorthrup/jdbc2json)
  
 Figure below: Orthogonal Context elements (Sealed Class Hierarchies).
    
@@ -124,4 +121,3 @@ inspired by the [STXXL](https://stxxl.org)  project
  using  `-server -Xmx24g -XX:MaxDirectMemorySize=1G` outperforms everything I've tried to hand-tune  before adding `-server`
  
 
-[]: https://github.com/jnorthrup/jdbc2json#flatsqlsh
