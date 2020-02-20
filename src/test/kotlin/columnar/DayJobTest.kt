@@ -120,7 +120,6 @@ class DayJobTest/* : StringSpec()*/ {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
         val nanos = measureNanoTimeStr {
-
             System.err.println("using filename: " + pathname.toString())
             val reorder = intArrayOf(2, 1, 3, 5)
             val theCursor = curs[reorder]

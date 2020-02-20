@@ -242,10 +242,10 @@ inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
 /**
  * reducer func
  */
-inline infix fun Cursor.α(noinline unaryFunctor: (Any?) -> Any?): Cursor =
+inline infix fun Cursor.α(crossinline  unaryFunctor: (Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
         val aggcell = second(iy)
-        (aggcell.left α unaryFunctor).zip(aggcell.right)
+        (aggcell.left.map(unaryFunctor)).zip(aggcell.right)
     }
 
 inline fun Cursor.group(
@@ -577,7 +577,7 @@ fun Cursor.categories(
 /**
  * Cursors creates one series of values, then optionally omits a column from cats
  */
-fun onehot_mask(dummy: Any?, cats: List<*>) =
+inline fun onehot_mask(dummy: Any?, cats: List<*>) =
     when {
         dummy is DummySpec ->
             when (dummy) {
