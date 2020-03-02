@@ -5,7 +5,8 @@
 This is an idiomatic kotlin dataframe toolkit to support data engineering 
 tasks of any size collection of datasets.
 
-The primary focus of this toolkit is to support Pandas-like operations on a Dataframe iterator for large data extractions using function assignment and deferred reification instead of in-memory data manipulation.
+The primary focus of this toolkit is to support Pandas-like operations on a Dataframe iterator for large data 
+extractions using function assignment and deferred reification instead of in-memory data manipulation.
 
 so far, these are the fundamaental composable Unary Operators:  (val newcursor = oldcursor.operator) 
 
@@ -37,29 +38,36 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
  
  The familiar dataset abstractions are as follows:
  
- **Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by Vector of column pairs (value,type) on x axis.  This Row is a typealias called RowVec.  Future implementations will include more complex arrangements of x,y,z and more, as described in the CoroutineContext at creationtime.
+ **Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by Vector of column 
+ pairs (value,type) on x axis.  This Row is a typealias called RowVec.  Future implementations will include more 
+ complex arrangements of x,y,z and more, as described in the CoroutineContext at creationtime.
  
- **Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and heterogenous backing stores.  
+ **Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and
+  heterogenous backing stores.  
  
- **Kotlin CoroutineContext** - documented elsewhere, is the defining collection of factors describing the Table and Cursor configurations above using ContextElements to differentiate execution strategies at creation from common top level interfaces. 
+ **Kotlin CoroutineContext** - documented elsewhere, is the defining collection of factors describing the Table and 
+ Cursor configurations above using ContextElements to differentiate execution strategies at creation from common top 
+ level interfaces. 
   
 ## architecture 
 
 The initial focus of the implementation rests on the fixed-width file format obtainable via the companion project 
 [flatsql, part of json2jdbc](https://github.com/jnorthrup/jdbc2json#flatsqlsh).  
-the library is designed to levereage the ISAM properties of FWF and to extend toward reading and creation of other data formats such as Binary rowsets and Scalar Column index volumes 
+the library is designed to levereage the ISAM properties of FWF and to extend toward reading and creation of other
+ data formats such as Binary rowsets and Scalar Column index volumes 
 
  ###   implementation distinctions from other implementations
-The implementation relies on a set of typealiases and extension functions approximating various pure-functional constructs and retaining off-heap and deferred/lazy processing semantics.
+The implementation relies on a set of typealiases and extension functions approximating various pure-functional 
+constructs and retaining off-heap and deferred/lazy processing semantics.
 
-to briefly explain this a  little more, the typalias features in kotlin enable a Pair (Pai2) as an interface, which provides Vectors (Vect0r) as pairs of size and functions, and some rich many-to-one indexing operations in function composition.
+to briefly explain this a  little more, the typalias features in kotlin enable a Pair (Pai2) as an interface, which 
+provides Vectors (Vect0r) as pairs of size and functions, and some rich many-to-one indexing operations in
+ function composition.
 
-Operations on this particular Pair(Pai2) may be the mechanism of mapping list or sequence semantics on primitive arrays or dynamically destructing 
+Operations on this particular Pair(Pai2) may be the mechanism of mapping list or sequence semantics on primitive arrays 
+or dynamically destructing 
 a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate left, right functions without conversion.
 
-
-
- 
 
 ## features and todo 
 
@@ -82,6 +90,8 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] Algebraic Vector aggregate operations with lazy runtime execution on contents
   - [ ] Mapper Buffer pools 
   - [ ] Access (named) Columns by name 
+  - [ ] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
+  - [ ] Review as Java lib via maven.  what is available, what's not.  
  
 ### lower priorities (as-yet unimplemented orthogonals)
  - [X] a token amount of jvm switch testing.
@@ -115,6 +125,26 @@ These are easy to think of as hierarchical threadlocals to achieve IOBound stora
 
 inspired by the [STXXL](https://stxxl.org)  project
 
+
+### priorities and organization
+
+the code is only about composable cursor abstraction.  this part has been made as clean as possible.
+
+**However,** the driver code is complex, the capabilities are unbounded,
+ and the preamble for a cursor on the existing NIO driver  is a little bit unsightly.  it is hoped that macro 
+ simplifications can converge with similar libraries in the long run.  the driver code is intended to be orthogonal and
+ not a cleanest possible implementation of one format, and the overly-abstract class heirarchy was not collapsed after writing the first IO  driver for 
+ this reason.  experiments show IO arrangement is the biggest factor enabling single threaded code to copmete and 
+ sometimes outperform embarassingly parrallel toolkits [Scalability! But at what COST?](https://www.usenix.org/system/files/conference/hotos15/hotos15-paper-mcsherry.pdf)
+ 
+ the tradeoff here is that a simplistic format-only serializer interface is going to induce
+ users to write for loops to fix up near misses, instead of having composability first.  this is my experience with 
+ pandas as it applies to my early experiences.  For whatever reason Pandas has a c optimized non-ISAM CSV reader but 
+ the FWF implementation lacks the capabilities of the fied-width guarantees, benhcmarking much better in CSV than FWF.  
+ 
+the end-product of a blackboard driver construction layer is hopefully a format construction dsl to accomodate a 
+variety of common and slightly tweaked combinations of IO and encodings.
+ 
 
 ## jvm switches
 
