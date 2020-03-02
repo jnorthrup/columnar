@@ -133,17 +133,20 @@ the code is only about composable cursor abstraction.  this part has been made a
 **However,** the driver code is complex, the capabilities are unbounded,
  and the preamble for a cursor on the existing NIO driver  is a little bit unsightly.  it is hoped that macro 
  simplifications can converge with similar libraries in the long run.  the driver code is intended to be orthogonal and
- not a cleanest possible implementation of one format, and the overly-abstract class heirarchy was not collapsed after writing the first IO  driver for 
- this reason.  experiments show IO arrangement is the biggest factor enabling single threaded code to copmete and 
- sometimes outperform embarassingly parrallel toolkits [Scalability! But at what COST?](https://www.usenix.org/system/files/conference/hotos15/hotos15-paper-mcsherry.pdf)
+ not a cleanest possible implementation of one format, and the overly-abstract class heirarchy was not collapsed after writing the first IO  driver for this reason.
  
- the tradeoff here is that a simplistic format-only serializer interface is going to induce
- users to write for loops to fix up near misses, instead of having composability first.  this is my experience with 
- pandas as it applies to my early experiences.  For whatever reason Pandas has a c optimized non-ISAM CSV reader but 
- the FWF implementation lacks the capabilities of the fied-width guarantees, benhcmarking much better in CSV than FWF.  
+ Experiments show IO arrangement is the biggest factor enabling algorithmic code to compete and 
+ sometimes outperform embarassingly parrallel approaches ![image](https://user-images.githubusercontent.com/73514/75646078-eff81580-5c7a-11ea-83b1-44b0dd747619.png) 
+ 
+ [Scalability! But at what COST? slides](https://www.usenix.org/sites/default/files/conference/protected-files/hotos15_slides_mcsherry.pdf)
+ 
+ The tradeoff here is that a simplistic format-only serializer interface is going to induce
+ users to write for loops to fix up near misses, instead of having composability first.  This is my experience with 
+ Pandas as it applies to my early experiences.  For whatever reason Pandas has a c optimized non-ISAM CSV reader but 
+ the FWF implementation lacks the capabilities of the fixed-width guarantees, benhcmarking much better in CSV than FWF when the hardware support is quite the opposite.  
  
 the end-product of a blackboard driver construction layer is hopefully a format construction dsl to accomodate a 
-variety of common and slightly tweaked combinations of IO and encodings.
+variety of common and slightly tweaked combinations of IO and encodings.  progress in here should have no impact or influence on the Columnar cursor user API, datesources should be abstract even if there are potentially multiple driver implementations to enable better IO for specific cases.
  
 
 ## jvm switches
