@@ -28,6 +28,29 @@ inline fun logDebug(debugTxt: () -> String) {
 }
 
 var logReuseCountdown = 0
+
+/**
+ * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
+ */
+object _l {
+    inline operator fun <T> get(vararg t: T) = listOf(*t)
+}
+
+/**
+ * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
+ */
+object _a {
+    inline operator fun <T> get(vararg t: T) = t
+}
+
+/**
+ * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
+ */
+object _s {
+    inline operator fun <T> get(vararg t: T) = setOf(*t)
+}
+
+
 fun main() {
     logDebug { "this ought not be visible" }
 }

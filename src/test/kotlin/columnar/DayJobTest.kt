@@ -2,78 +2,93 @@ package columnar
 
 
 import columnar.IOMemento.*
-import columnar.context.Columnar
-import columnar.context.FixedWidth
-import columnar.context.NioMMap
-import columnar.context.RowMajor
+import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 import kotlin.system.measureNanoTime
 
 class DayJobTest/* : StringSpec()*/ {
+    var curs1:  Cursor
+    var curs : Cursor
+    var indexable: Indexable
+    var fixedWidth: FixedWidth
+    var nioMMap: NioMMap
+    var columnar: Columnar
+    var zip: Pai2<Int, (Int) -> Pai2<TypeMemento, String>>
+    var names: Pai2<Int, (Int) -> String>
+    var drivers: Pai2<Int, (Int) -> TypeMemento>
+    var coords: Pai2<Int, (Int) -> Pai2<Int, Int>>
+    var rowFwfFname: String
 
-    //        val suffix = "_100"//"_RD"  105340
-    //    val suffix = "_1000"//"_RD"  3392440
-    //        val suffix = "_10000"     //"_RD"  139618738
-    val suffix = "_100000"     //"_RD"
-    //      val suffix = "_1000000"     //"_RD"
-    //    val suffix = "_500000"     //"_RD"
-    //    val suffix = "_300000"     //"_RD"
-    //    val suffix = "_400000"     //"_RD"
+    val testRecordCount = 100_000
 
-    //    val suffix = "_1000"//"_RD"
-    //        val suffix = "_RD"
-    //    val suffix = "_1000"//"_RD"
-    //    val suffix = "_1000"//"_RD"
-    //    val suffix = "_1000"//"_RD"
+    init {
+        this.rowFwfFname = "../superannuate/superannuated1909.fwf"
+        this.coords = intArrayOf(
+            0, 11,
+            11, 15,
+            15, 25,
+            25, 40,
+            40, 60,
+            60, 82,
+            82, 103,
+            103, 108
+        ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
 
-    //        val suffix = ""//"_RD"
-    val s = "/vol/aux/rejuve/rejuvesinceapril2019" + suffix + ".fwf"
-    val coords = intArrayOf(
-        0, 11,
-        11, 15,
-        15, 25,
-        25, 40,
-        40, 60,
-        60, 82,
-        82, 103,
-        103, 108
-    ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
+        this.drivers = vect0rOf(
+            IoString as TypeMemento,
+            IoString,
+            IoLocalDate,
+            IoString,
+            IoString,
+            IoFloat,
+            IoFloat,
+            IoString
+        )
+        this.names = vect0rOf(
+            "SalesNo",    //        0
+            "SalesAreaID",    //    1
+            "date",    //           2
+            "PluNo",    //          3
+            "ItemName",    //       4
+            "Quantity",    //       5
+            "Amount",    //         6
+            "TransMode"    //       7
+        )
 
-    val drivers = vect0rOf(
-        IoString as TypeMemento,
-        IoString,
-        IoLocalDate,
-        IoString,
-        IoString,
-        IoFloat,
-        IoFloat,
-        IoString
-    )
-    val names = vect0rOf(
-        "SalesNo",    //        0
-        "SalesAreaID",    //    1
-        "date",    //           2
-        "PluNo",    //          3
-        "ItemName",    //       4
-        "Quantity",    //       5
-        "Amount",    //         6
-        "TransMode"    //       7
-    )
+        val fetchDayjobData = _l[
+                "git clone --depth=1 git@github.com:jnorthrup/superannuate",
+                "zstd -d --memory=268MB --rm superannuated1909.fwf.zst"
 
+        ]
 
-    val zip = drivers.zip(names)
-    val columnar = Columnar(zip as Vect02<TypeMemento, String?>)
-    val nioMMap = NioMMap(MappedFile(s), NioMMap.text(columnar.left))
-    val fixedWidth: FixedWidth = fixedWidthOf(nioMMap, coords)
-    val indexable = indexableOf(nioMMap, fixedWidth)
-    val curs = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
-        System.err.println("record count=" + it.first)
+        if (!Files.exists(Path.of(rowFwfFname))) {
+            val parentDir = File(".").parentFile
+            Runtime.getRuntime().exec(_a["git","clone","--depth=1","git@github.com:jnorthrup/superannuate"], null,
+                parentDir
+            )
+            Runtime.getRuntime().exec(_a["zstd","-d","--memory=268MB","--rm","superannuated1909.fwf.zst"], null,File("superannuate").relativeTo( parentDir) )
+        }
+
+        this.zip = drivers.zip(names)
+        this.columnar = Columnar(zip as Vect02<TypeMemento, String?>)
+        this.nioMMap = NioMMap(MappedFile(rowFwfFname), NioMMap.text(columnar.left))
+        this.fixedWidth = fixedWidthOf(nioMMap, coords)
+        this.indexable = indexableOf(nioMMap, fixedWidth)
+        this.curs1 = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
+            System.err.println("curs1 record count=" + it.first)
+        }
+        this.curs=Cursor(minOf(curs1.size,testRecordCount), { y:Int->curs1.second(y) }).also {
+            System.err.println("curs record count=" + it.first)
+        }
+
+        var lastmessage: String? = null
     }
-    var lastmessage: String? = null
 
     inline fun measureNanoTimeStr(block: () -> Unit): String = Duration.ofNanos(measureNanoTime(block)).toString()
 
@@ -173,11 +188,10 @@ class DayJobTest/* : StringSpec()*/ {
         val filtered = join(piv[0], (piv[1 until piv.scalars.first] /*α floatFillNa(0f)*/).`∑`(floatSum))
 
         lateinit var second: RowVec
-        println(
-            "row 2 seektime: " +
-                    measureNanoTimeStr {
-                        second = filtered.second(2)
-                    } + "@ " + second.first + " columns"
+        println("row 2 seektime: " +
+                measureNanoTimeStr {
+                    second = filtered.second(2)
+                } + "@ " + second.first + " columns"
         )
         lateinit var message: String
         println("row 2 took " + measureNanoTimeStr {
