@@ -19,12 +19,17 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
  * Group with reducers
     
     `cursor.group(columns,{reducer})`
- * slice and join columns 
-     * `cursor[0]` -slice first
-     * `join(cursor[0],cursor[2],othercursor[0],...)` 
+ * slice,reorder, and join columns 
+     * `cursor[0]` -slice first column only
+     * `cursor[0,1,2]` -slice first three columns
+     * `cursor[(0 until 3).painfulKotlinCastFunctions]` -slice first three columns
+     * `cursor[3,2,1,3,2, 1,1,1,1,2]` -remap 3 source columns into 10 columns  
+     * `join(cursor[0],cursor[2],othercursor[0],...)` -join any permutation of source cursor/columns as one cursor.  boundschecking is not done upfront here.  know your row sizes. 
  * random access across combined rows from different sources
    
-     `combine(cursor1,cursor..n,)`
+     `combine(cursor1,cursor..n,)` - a binary-searched column dispatch into n cursors.  column boundschecking is not done here.  non-uniform column meta-models per are built into the blackboard driver design to arrive at spreadsheet functionality (todo: formalization of cells functions ).
+     
+     
  * Simplified one-hot encoding
    
    `cursor[0,1].categories([DummySpec.last])`
@@ -46,8 +51,8 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
   heterogenous backing stores.  
  
  **Kotlin CoroutineContext** - documented elsewhere, is the defining collection of factors describing the Table and 
- Cursor configurations above using ContextElements to differentiate execution strategies at creation from common top 
- level interfaces. 
+ Cursor configurations above using ContextElements to differentiate driver-level execution strategies at creation from common top 
+ level interfaces. one source input may potentially be accessed y,x, and x,y from two driver configurations. 
   
 ## architecture 
 
