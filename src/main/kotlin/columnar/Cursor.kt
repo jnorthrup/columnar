@@ -17,6 +17,24 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 
+inline class MonoVal(val cell: Pai2<Any?, () -> CoroutineContext>)   {
+    inline fun ctxt(): CoroutineContext = cell.second()
+    inline  val  m:Any? get()=cell.first
+
+}
+
+inline class MonoRow(val row: Vect02<Any?, () -> CoroutineContext>) : Vect0r<MonoVal> {
+    override inline val first: Int get() = row.first
+    override inline val second: (Int) -> MonoVal get() = { ix: Int -> MonoVal(row.second(ix)) }
+}
+
+inline class MonoCursor(val curs: Cursor) : Vect0r<MonoRow> {
+    override inline val first: Int get() = curs.first
+    override inline val second: (Int) -> MonoRow
+        get() = { iy: Int ->
+            MonoRow(curs.second(iy))
+        }
+}
 /**
  * cursor is approximately the pandas Dataframe with some shortcuts
  *
@@ -242,10 +260,10 @@ inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
 /**
  * reducer func
  */
-inline infix fun Cursor.α(crossinline  unaryFunctor: (Any?) -> Any?): Cursor =
+inline infix fun Cursor.α(crossinline unaryFunctor: (Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
         val aggcell = second(iy)
-        (aggcell.left.map(unaryFunctor)).zip(aggcell.right)
+        (aggcell.left α (unaryFunctor)).zip(aggcell.right)
     }
 
 inline fun Cursor.group(
