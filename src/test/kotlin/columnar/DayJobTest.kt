@@ -6,7 +6,6 @@ import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
 import java.io.File
-import java.io.StringReader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -15,8 +14,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.system.measureNanoTime
 
 class DayJobTest/* : StringSpec()*/ {
-    var curs1:  Cursor
-    var curs : Cursor
+    var curs1: Cursor
+    var curs: Cursor
     var indexable: Indexable
     var fixedWidth: FixedWidth
     var nioMMap: NioMMap
@@ -25,12 +24,12 @@ class DayJobTest/* : StringSpec()*/ {
     var names: Pai2<Int, (Int) -> String>
     var drivers: Pai2<Int, (Int) -> TypeMemento>
     var coords: Pai2<Int, (Int) -> Pai2<Int, Int>>
-    var rowFwfFname:Path
+    var rowFwfFname: Path
 
     val testRecordCount = 100_000
 
     init {
-        this.rowFwfFname = Paths.get( "..","superannuate","superannuated1909.fwf")
+        this.rowFwfFname = Paths.get("..", "superannuate", "superannuated1909.fwf")
         this.coords = intArrayOf(
             0, 11,
             11, 15,
@@ -73,17 +72,21 @@ class DayJobTest/* : StringSpec()*/ {
             val s = "git@github.com:jnorthrup/superannuate"
             System.err.println("fetching $s")
             val parentDir = Paths.get("..").toFile()
-            Runtime.getRuntime().exec(_a["git","clone","--depth=1", s], null, parentDir) .also {
+            Runtime.getRuntime().exec(_a["git", "clone", "--depth=1", s], null, parentDir).also {
 
 
                 val retcode = it.waitFor()
-                if(    retcode !=0)throw Error("git fetch issue"+it+"\nstderr"+String(it.errorStream.readAllBytes()))
-                else
-                {
+                if (retcode != 0) throw Error(
+                    "git fetch issue" + it + "\nstderr" + String(
+                        it.errorStream.readAllBytes()
+                    )
+                )
+                else {
                     val strings = _a["zstd", "-d", "--memory=268MB", "--rm", "superannuated1909.fwf.zst"]
                     System.err.println("decompression:  $strings")
-                    Runtime.getRuntime().exec(strings, null, Paths.get("..","superannuate").toFile() )
-            }}
+                    Runtime.getRuntime().exec(strings, null, Paths.get("..", "superannuate").toFile()).waitFor()
+                }
+            }
         }
 
         this.zip = drivers.zip(names)
@@ -94,7 +97,7 @@ class DayJobTest/* : StringSpec()*/ {
         this.curs1 = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
             System.err.println("curs1 record count=" + it.first)
         }
-        this.curs=Cursor(minOf(curs1.size,testRecordCount), { y:Int->curs1.second(y) }).also {
+        this.curs = Cursor(minOf(curs1.size, testRecordCount), { y: Int -> curs1.second(y) }).also {
             System.err.println("curs record count=" + it.first)
         }
 
