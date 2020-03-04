@@ -7,18 +7,9 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.chrono.HijrahDate
-import java.time.chrono.IsoChronology
 import java.time.temporal.ChronoField.*
 import java.time.temporal.TemporalAdjusters
 import kotlin.coroutines.CoroutineContext
-
-
-object TestDate {
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val x: IsoChronology
-    }
-}
 
 
 /**
