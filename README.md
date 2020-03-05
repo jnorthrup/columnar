@@ -77,7 +77,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
 ## features and todo 
 
   - [X] Blackboard defined Table, Cursor, Row metadata driving access behaviors (using `CoroutineContext.Element`s)
-  - [X] read an FWF text and efficiently mmap the row access (becomes a `Cursor`) [^flatsql]
+  - [X] read an FWF text and efficiently mmap the row access, it becomes a `Cursor`.  [1]
   - [X] enable index operations, reordering, expansions, preserving column metadata 
   - [X] resample timeseries data (jvm LocalDate initially) to fill in series gaps
   - [X] concatenation of n cursors from disimilar FP projections
@@ -105,7 +105,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
  - [ ] json    field format IO/mapping
  - [ ] CBOR    field format IO/mapping
  - [ ] csv IO tokenization +- headers
- - [ ] gossip mesh addressable cursor iterators
+ - [x] gossip mesh addressable cursor iterators (this branch) [2]
  - [ ] columnstore access patterns +- apache arrow compatibility
  - [ ] matrix math integrations with adjacent ecosystem libraries
  - [ ] key-value associative cursor indexes
@@ -113,12 +113,14 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
  - [ ] R-Tree n-dimensional associative
  - [ ] parallel and concurrent access helpers
  - [ ] explicit platter and direct partition mapping
- - [ ] jdbc adapters [^flatsql]
- - [ ] sql query language driver [^flatsql]
+ - [ ] jdbc adapters [1]
+ - [ ] sql query language driver [1]
  - [ ] jq query language driver
  
-[^flatsql]:   downstream of [jdbc2json](https://github.com/jnorthrup/jdbc2json)
- 
+[1]: downstream of [jdbc2json](https://github.com/jnorthrup/jdbc2json)
+
+[2]: [borrowing from SWIM Implementation here](https://github.com/calvin-pietersen/gossip-mesh)
+
 Figure below: Orthogonal Context elements (Sealed Class Hierarchies).
    
 These describe different aspects of accessing  data and projecting columnar and matrix transformations 
