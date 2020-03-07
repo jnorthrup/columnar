@@ -17,9 +17,9 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 
-inline class MonoVal(val cell: Pai2<Any?, () -> CoroutineContext>)   {
+inline class MonoVal(val cell: Pai2<Any?, () -> CoroutineContext>) {
     inline fun ctxt(): CoroutineContext = cell.second()
-    inline  val  m:Any? get()=cell.first
+    inline val m: Any? get() = cell.first
 
 }
 
@@ -580,7 +580,10 @@ fun Cursor.categories(
                         /**
                          * there may be context data other than simple scalars in this cell, so we will just replace the scalar key and pass it along.
                          */
-                        cell.second() + Scalar(IOMemento.IoInt, origScalars[catx].second + "_" + diagonalValue.toString())
+                        cell.second() + Scalar(
+                            IOMemento.IoInt,
+                            origScalars[catx].second + "_" + diagonalValue.toString()
+                        )
                     }
                 }
             })
@@ -614,3 +617,4 @@ inline fun onehot_mask(dummy: Any?, cats: List<*>) =
 enum class DummySpec {
     /*Dummy --  None,*/ First, Last
 }
+
