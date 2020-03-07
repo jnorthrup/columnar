@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version  "1.3.70-eap-274"
+    kotlin("jvm") version  "1.3.70"
 }
 group = "columnar"
 version = "1.0-SNAPSHOT"
@@ -10,7 +10,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.1.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.1.0")
-    testRuntimeOnly("de.mpicbg.scicomp:krangl:0.11")
+//    testRuntimeOnly("de.mpicbg.scicomp:krangl:0.11")
 }
 repositories {
     maven { setUrl("https://dl.bintray.com/kotlin/kotlin-eap") }
