@@ -66,7 +66,7 @@ val floatSum: (Any?, Any?) -> Any? = { acc: Any?, any2: Any? ->
     val fl1 = (any2 as? Float) ?: ZERO
     fl + fl1
 }
-
+typealias Reducer=(Any?, Any?) -> Any?
 
 val sumReducer: Map<IOMemento, (Any?, Any?) -> Any?> = mapOf(
     IOMemento.IoInt to { acc: Any?, any2: Any? -> ((acc as? Int) ?: 0) + ((any2 as? Int) ?: 0) },

@@ -60,9 +60,7 @@ class CalendarTest {
 
 
         JvmCal.values().forEach { jvmCal: JvmCal ->
-
             println("--- " + jvmCal)
-
             val csrc = curs[0]
             val xSize = csrc.scalars.size
             val v: Cursor = Cursor(csrc.size) { iy: Int ->

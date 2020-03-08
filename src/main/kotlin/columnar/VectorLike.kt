@@ -233,10 +233,10 @@ inline fun <reified T, reified R, reified V : Vect0r<T>> V.map(crossinline fn: (
     Vect0r(first) { it: Int -> it `→` (fn `⚬` second) }
 
 inline fun <reified T, reified R> Vect0r<T>.mapIndexed(crossinline fn: (Int, T) -> R): Vect0r<R> =
-    Vect0r(first) { it: Int -> fn(it, it `→` second) }
+    Vect0r(first) { fn(it, it `→` second) }
 
 inline fun <reified T, reified R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> =
-    List(first) { it: Int -> fn(it, it `→` second) }
+    List(first) { fn(it, it `→` second) }
 
 inline fun <reified T> Vect0r<T>.forEach(fn: (T) -> Unit) {
     for (ix: Int in (0 until first)) ix `→` (fn `⚬` second)

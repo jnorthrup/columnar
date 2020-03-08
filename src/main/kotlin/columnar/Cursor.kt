@@ -170,6 +170,18 @@ fun feature_range(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDat
     minOf(a, localDate) t2 maxOf(b, localDate)
 }
 
+
+/**
+ * prior to this class, pivot works well enough, but leaves an opaque cursor.
+ *
+ * this will be an available contextElement containing the converted key values.
+ */
+class PivotInfo(val pivotKey: List<Any?>, val parentContext: () -> CoroutineContext) :CoroutineContext.Element{
+    companion object  {
+        object pivotInfoKey: CoroutineContext.Key<PivotInfo>
+    }
+    override val key: CoroutineContext.Key<PivotInfo> =pivotInfoKey
+}
 /**
 synthesize pivot columns by key(axis) columns present.
  */
@@ -214,23 +226,26 @@ fun Cursor.pivot(
             Scalar(ioMemento, "$synthPrefix:$s")
         }
     }.flatten().toTypedArray()
+
+
     System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
         val theRow: RowVec = cursr.second(iy)
         theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
             RowVec(xsize) { ix: Int ->
                 when {
-                    ix < lhs.size -> {
-                        original(lhs[ix])
-                    }
+                    /** this is a passthru column
+                     */
+                    ix < lhs.size -> original(lhs[ix])
                     else /*fanout*/ -> {
                         val theKey: List<Any?> = theRow[axis].left.toList()
                         val keyGate = whichKey(ix)
-                        val cellVal = if (keys[theKey] == keyGate)
-                            original(fanOut[whichFanoutIndex(ix)]).first
-                        else null
+                        val original1 = original(fanOut[whichFanoutIndex(ix)])
+                        val cellVal = if (keys[theKey] == keyGate) {
+                            original1.first
+                        } else null
 
-                        cellVal t2 synthScalars[ix - lhs.size].`⟲`
+                        cellVal t2 { PivotInfo(theKey, original1.second) + synthScalars[ix - lhs.size] }
                     }
                 }
             }
