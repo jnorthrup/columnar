@@ -2,27 +2,28 @@ package com.gossipmesh.core
 
 import java.util.*
 
-class Member internal constructor(val state: MemberState, val generation: Byte, val serviceByte: Byte, val servicePort: Short) {
+class Member internal constructor(
+    val state: MemberState,
+    val generation: Byte,
+    val serviceByte: Byte,
+    val servicePort: Short
+) {
     @JvmField
     var timesMentioned: Long = 0
-    fun merge(other: Member): Member {
-        return if (isLaterGeneration(other.generation, generation)) {
-            other
-        } else if (other.state.ordinal > state.ordinal) {
-            other
-        } else {
-            this
-        }
+    fun merge(other: Member): Member = when {
+        isLaterGeneration(other.generation, generation) -> other
+        other.state.ordinal > state.ordinal -> other
+        else -> this
     }
 
     fun withState(state: MemberState): Member {
         return Member(state, generation, serviceByte, servicePort)
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        val nodeState = o as Member
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val nodeState = other as Member
         return generation == nodeState.generation && state === nodeState.state && serviceByte == nodeState.serviceByte && servicePort == nodeState.servicePort
     }
 
@@ -31,9 +32,11 @@ class Member internal constructor(val state: MemberState, val generation: Byte, 
     }
 
     override fun toString(): String {
-        return String.format("%s[%s]{%s:%s}",
-                state, generation,
-                serviceByte, servicePort)
+        return String.format(
+            "%s[%s]{%s:%s}",
+            state, generation,
+            serviceByte, servicePort
+        )
     }
 
     companion object {

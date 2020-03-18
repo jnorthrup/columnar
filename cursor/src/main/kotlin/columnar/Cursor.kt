@@ -39,6 +39,9 @@ inline class MonoCursor(val curs: Cursor) : Vect0r<MonoRow> {
  * cursor is approximately the pandas Dataframe with some shortcuts
  *
  * # composition
+                    <compilerPlugins>
+
+                    </compilerPlugins>
  *
  *  Cursor is a Pair interface, here named Pai2 (also a Tripl3 interface similarly exists)
  *
@@ -123,8 +126,8 @@ fun Cursor.narrow() =
 inline val <reified C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
 
 inline val Cursor.scalars: Vect0r<Scalar>
-    get() = toSequence().first()
-        .right α { it: () -> CoroutineContext -> /*runBlocking*/it() `→` { it[Arity.arityKey] as Scalar } }
+    get() = toSequence().first()  .right .map {    it.invoke()  `→`    {
+        it[Arity.arityKey] as Scalar } }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)

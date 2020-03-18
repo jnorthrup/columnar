@@ -22,17 +22,17 @@ typealias Matrix<T> = Pai2<
 
 inline operator fun <reified T> Matrix<T>.get(vararg c: Int): T = second(c)
 
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 @BuilderInference
 inline infix fun <reified O, reified R, reified F : (O) -> R> O.`→`(f: F) = this.let(f)
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified A, reified B, reified R, reified O : (A) -> B, reified G : (B) -> R> O.times(b: G): (A) -> R =
     { a: A -> a `→` this `→` (b) }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified A, reified B, reified R, reified O : (A) -> B, reified G : (B) -> R, reified R1 : (A) -> R> O.`→`(
     b: G
 ): R1 = (this * b) as R1
@@ -40,7 +40,7 @@ inline infix fun <reified A, reified B, reified R, reified O : (A) -> B, reified
 /**
  * G follows F
  */
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 @BuilderInference
 inline infix fun <reified A, reified B, reified C, reified G : (B) -> C, reified F : (A) -> B, reified R : (A) -> C> G.`⚬`(
     f: F
@@ -50,53 +50,53 @@ inline infix fun <reified A, reified B, reified C, reified G : (B) -> C, reified
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 @BuilderInference
 inline infix fun <reified A, reified C, B : (A) -> C, reified V : Vect0r<A>> V.α(m: B) = map<A, C, V>(fn = m)
 
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Iterable<A>> T.α(m: B): List<C> =
     this.map { it: A -> it `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Sequence<A>> T.α(m: B): Sequence<C> =
     this.map { it: A -> it `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified A, reified C, reified B : (A) -> C, reified T : Flow<A>> T.α(m: B): Flow<C> =
     this.map { it: A -> it `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified A, reified C, reified B : (A) -> C> List<A>.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified A, reified C, reified B : (A) -> C> Array<out A>.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified C, reified B : (Int) -> C> IntArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified C, reified B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified C, reified B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified C, reified B : (Long) -> C> LongArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
@@ -105,82 +105,82 @@ But as soon as a groupoid has both a left and a right identity, they are necessa
 a left identity and f is a right identity, then f=ef=e.
 */
 /** left identity */
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 object `⟳` {
     @BuilderInference
-    inline operator fun <reified T> invoke(t: T) = { t: T -> t }
+    inline operator fun <reified T> invoke(f: T) = { f: T ->f }
 }
 
 /**right identity*/
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline val <reified T> T.`⟲`
     get() = { this }
 
 /**right identity*/
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline infix fun <reified T, reified R> T.`⟲`(f: (T) -> R) = run { f(this) }
 
 @JvmName("vlike_Sequence_1")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> Sequence<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_Sequence_Iterable2")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Sequence_IntArray3")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
 
 @JvmName("vlike_Flow_1")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 suspend inline fun <reified T> Flow<T>.get(vararg index: Int) = get(index)
 
 @Suppress("USELESS_CAST")
 @JvmName("vlike_Flow_Iterable2")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 suspend inline fun <reified T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
 
 @JvmName("vlike_Flow_IntArray3")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 suspend inline fun <reified T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()
 
 @JvmName("vlike_List_1")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> List<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_List_IntArray3")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
 
 @JvmName("vlike_Array_1")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_Array_Iterable2")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> Array<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Array_IntArray3")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
 /*
 
@@ -263,32 +263,32 @@ inline fun <reified T, reified O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =
     Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline fun <reified T> Array<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -> this[ix] }
 
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 @BuilderInference
 inline fun IntArray.toVect0r(): Vect0r<Int> = Vect0r(size) { ix: Int -> get(ix) }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline fun <reified T> List<T>.toVect0r(): Vect0r<T> = Vect0r(size) { ix: Int -> this[ix] }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 suspend inline fun <reified T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline fun <reified T> combine(@BuilderInference vararg s: Flow<T>): Flow<T> = flow {
     @BuilderInference
     for (f: Flow<T> in s) {
@@ -300,7 +300,7 @@ inline fun <reified T> combine(@BuilderInference vararg s: Flow<T>): Flow<T> = f
 
 @JvmName("combine_Sequence")
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline fun <reified T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
     @BuilderInference
     for (sequence: Sequence<T> in s) {
@@ -353,22 +353,22 @@ fun Vect0r<Int>.zipWithNext(): Vect02<Int, Int> = Vect0r(
 
 //array-like mapped map
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified K, reified V> Map<K, V>.get(@BuilderInference ks: Vect0r<K>): Array<V> =
     this.get(*ks.toList().toTypedArray())
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified K, reified V> Map<K, V>.get(@BuilderInference ks: Iterable<K>): Array<V> =
     this.get(*ks.toList().toTypedArray())
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 inline operator fun <K, reified V> Map<K, V>.get(@BuilderInference vararg ks: K): Array<V> =
     Array(ks.size) { ix: Int -> ks[ix].let(this::get)!! }
 
 @BuilderInference
-@UseExperimental(ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class)
 infix operator fun IntRange.div(@BuilderInference denominator: Int): Vect0r<IntRange> =
     (this t2 (last - first + (1 - first)) / denominator).let { (_: IntRange, subSize: Int): Pai2<IntRange, Int> ->
         Vect0r(denominator) { x: Int ->

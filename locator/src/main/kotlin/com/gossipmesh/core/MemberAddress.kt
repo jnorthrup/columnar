@@ -4,10 +4,10 @@ import java.net.Inet4Address
 import java.util.*
 
 class MemberAddress(val address: Inet4Address, val port: Short) {
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        val that = o as MemberAddress
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as MemberAddress
         return port == that.port && address == that.address
     }
 
