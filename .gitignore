@@ -4,10 +4,11 @@
 # Ignore Gradle build output directory
 build
 .idea
-target.idea
+target
 *.iml
 /out/
 *.log
 /gradle/
 superannuate
 /target/
+*/target
