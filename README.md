@@ -97,15 +97,17 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [ ] Access (named) Columns by name 
   - [ ] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
   - [ ] Review as Java lib via maven.  what is available, what's not.  
- 
+  - [X] a token amount of jvm switch testing.
+  - [X] textual field format IO/mapping
+  - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
+  - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
+  - [X] sharded cursor - file column per column and presents joined cursor 
+   
 ### lower priorities (as-yet unimplemented orthogonals)
- - [X] a token amount of jvm switch testing.
- - [X] textual field format IO/mapping
- - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
+ - [ ] gossip mesh addressable cursor iterators (this branch) [2]
  - [ ] json    field format IO/mapping
  - [ ] CBOR    field format IO/mapping
  - [ ] csv IO tokenization +- headers
- - [x] gossip mesh addressable cursor iterators (this branch) [2]
  - [ ] columnstore access patterns +- apache arrow compatibility
  - [ ] matrix math integrations with adjacent ecosystem libraries
  - [ ] key-value associative cursor indexes
