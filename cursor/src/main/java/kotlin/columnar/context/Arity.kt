@@ -12,7 +12,9 @@ sealed class Arity : CoroutineContext.Element {
     }
 }
 
-open class Scalar(type: TypeMemento, name: String? = null) : Pai2<TypeMemento, String?> by Pai2(type, name), Arity()
+open class Scalar(type: TypeMemento, name: String? = null) : Pai2<TypeMemento, String?> by Pai2(type, name), Arity() {
+    val name:String get()=this.second?: "generic${(first as? IOMemento)?.name?:first::class.java.simpleName  }:${first.networkSize}"
+}
 
 /**Borg reference*/
 class UniMatrix(type: TypeMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar(type, name)

@@ -311,12 +311,10 @@ inline fun Cursor.group(
                 acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
         }
         RowVec(masterScalars.first) { ix: Int ->
-            when (ix) {
-                in axis -> {
-                    this.second(keyIndex)[ix]
-                }
-                else -> acc1[ix] t2 masterScalars[ix].`⟲`
+            if (ix in axis) {
+                this.second(keyIndex)[ix]
             }
+            else acc1[ix] t2 masterScalars[ix].`⟲`
         }
     }
 }
@@ -386,9 +384,7 @@ fun Cursor.writeBinary(
         ) t2 mementos
     }
     /** create context columns */
-    val (wcolumnar: Arity, _: Vect0r<TypeMemento>) = vec
-    /** create context columns */
-    val (_: Arity, ioMemos: Vect0r<TypeMemento>) = vec
+    val (wcolumnar: Arity,   ioMemos: Vect0r<TypeMemento>) = vec
     val wcoords = networkCoords(ioMemos, defaultVarcharSize, varcharSizes)
     val wrecordlen: Int = wcoords.right.last()
     MappedFile(pathname, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
