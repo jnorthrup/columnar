@@ -171,7 +171,7 @@ class NioMMap(
         val first = window1.first
         val l = window1.second - rowsize
         when {
-            seekTo > first && (seekTo < l) -> reuse = true
+            seekTo >= first && (seekTo <= l) -> reuse = true
             else -> {
                 window1 = (seekTo t2 min(size() - seekTo, windowSize))
                 val mappedByteBuffer = remap(mappedFile.channel, window1)
