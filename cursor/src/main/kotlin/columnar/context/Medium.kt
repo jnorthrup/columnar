@@ -2,6 +2,7 @@ package columnar.context
 
 import columnar.*
 import columnar.context.Arity.Companion.arityKey
+import columnar.io.*
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant

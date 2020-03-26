@@ -1,9 +1,9 @@
-package columnar
+package columnar.io
 
+import columnar.io.FileAccess
 import java.io.Closeable
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
-import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import kotlin.math.min
 

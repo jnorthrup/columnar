@@ -1,4 +1,4 @@
-package columnar
+package columnar.io
 
 import java.io.Closeable
 

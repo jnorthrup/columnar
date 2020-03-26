@@ -1,6 +1,7 @@
 package columnar.context
 
 import columnar.*
+import columnar.io.IOMemento
 import kotlin.coroutines.CoroutineContext
 
 sealed class Arity : CoroutineContext.Element {

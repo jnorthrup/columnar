@@ -55,7 +55,6 @@ interface Pai2<F, S> {
 }
 
 inline operator fun <reified F, reified S> Pai2<F, S>.component2(): S = second
-
 inline operator fun <reified F, reified S> Pai2<F, S>.component1(): F = first
 
 /**inheritable version of triple that also provides its first two as a pair.

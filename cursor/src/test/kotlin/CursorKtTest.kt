@@ -1,12 +1,17 @@
 package columnar
 
-import columnar.IOMemento.*
+import columnar.io.IOMemento.*
 import columnar.context.Columnar
 import columnar.context.FixedWidth
 import columnar.context.NioMMap
 import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
+import columnar.io.MappedFile
+import columnar.io.floatSum
+import columnar.io.sumReducer
+import columnar.ml.DummySpec
+import columnar.ml.categories
 import org.junit.jupiter.api.Test
 import shouldBe
 

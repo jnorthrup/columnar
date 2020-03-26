@@ -1,6 +1,7 @@
 package columnar
 
 import columnar.context.CellDriver
+import columnar.io.IOMemento
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 

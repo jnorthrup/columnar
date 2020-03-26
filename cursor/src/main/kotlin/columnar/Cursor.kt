@@ -2,10 +2,11 @@
 
 package columnar
 
+import columnar.calendar.feature_range
 import columnar.context.*
 import columnar.context.RowMajor.Companion.indexableOf
-import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
+import columnar.io.IOMemento
+import columnar.io.MappedFile
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -17,31 +18,13 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 
-inline class MonoVal(val cell: Pai2<Any?, () -> CoroutineContext>)   {
-    inline fun ctxt(): CoroutineContext = cell.second()
-    inline  val  m:Any? get()=cell.first
-
-}
-
-inline class MonoRow(val row: Vect02<Any?, () -> CoroutineContext>) : Vect0r<MonoVal> {
-    override inline val first: Int get() = row.first
-    override inline val second: (Int) -> MonoVal get() = { ix: Int -> MonoVal(row.second(ix)) }
-}
-
-inline class MonoCursor(val curs: Cursor) : Vect0r<MonoRow> {
-    override inline val first: Int get() = curs.first
-    override inline val second: (Int) -> MonoRow
-        get() = { iy: Int ->
-            MonoRow(curs.second(iy))
-        }
-}
 /**
  * cursor is approximately the pandas Dataframe with some shortcuts
  *
  * # composition
-                    <compilerPlugins>
+<compilerPlugins>
 
-                    </compilerPlugins>
+</compilerPlugins>
  *
  *  Cursor is a Pair interface, here named Pai2 (also a Tripl3 interface similarly exists)
  *
@@ -126,8 +109,11 @@ fun Cursor.narrow() =
 inline val <reified C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
 
 inline val Cursor.scalars: Vect0r<Scalar>
-    get() = toSequence().first()  .right .map {    it.invoke()  `→`    {
-        it[Arity.arityKey] as Scalar } }
+    get() = toSequence().first().right.map {
+        it.invoke() `→` {
+            it[Arity.arityKey] as Scalar
+        }
+    }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -153,7 +139,7 @@ fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
 fun Cursor.resample(indexcol: Int): Cursor = let {
     val curs = this[indexcol]
     val indexValues = curs.narrow().map { it.first() as LocalDate }.toSequence()
-    val (min, max) = feature_range(indexValues)
+    val (min, max) = feature_range<LocalDate>(indexValues, LocalDate.MAX t2 LocalDate.MIN)
     val scalars = this.scalars
     val sequence = daySeq(min, max) - indexValues
     val indexVec = sequence.toVect0r()
@@ -167,10 +153,6 @@ fun Cursor.resample(indexcol: Int): Cursor = let {
         }
     }
     combine(this, cursor)
-}
-
-fun feature_range(seq: Sequence<LocalDate>) = seq.fold(LocalDate.MAX t2 LocalDate.MIN) { (a, b), localDate ->
-    minOf(a, localDate) t2 maxOf(b, localDate)
 }
 
 /**
@@ -242,33 +224,6 @@ fun Cursor.pivot(
 }
 
 
-/**
- * reducer func -- operator for sum/avg/mean etc. would be nice, but we have to play nice in a type-safe language so  ∑'s just a hint  of a reducer semantic
- */
-inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
-    Cursor(first) { iy: Int ->
-        val aggcell: RowVec = second(iy)
-        val al: Vect0r<*> = aggcell.left
-        RowVec(aggcell.first) { ix: Int ->
-            val ac = al[ix]
-            val toList = (ac as? Vect0r<*>)?.toList()
-            val iterable = toList ?: (ac as? Iterable<*>)
-            val any1 = iterable?.reduce(reducer)
-            val any = any1 ?: ac
-            any t2 aggcell[ix].second
-        }
-
-    }
-
-/**
- * reducer func
- */
-inline infix fun Cursor.α(crossinline unaryFunctor: (Any?) -> Any?): Cursor =
-    Cursor(first) { iy: Int ->
-        val aggcell = second(iy)
-        (aggcell.left α (unaryFunctor)).zip(aggcell.right)
-    }
-
 inline fun Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
@@ -313,8 +268,7 @@ inline fun Cursor.group(
         RowVec(masterScalars.first) { ix: Int ->
             if (ix in axis) {
                 this.second(keyIndex)[ix]
-            }
-            else acc1[ix] t2 masterScalars[ix].`⟲`
+            } else acc1[ix] t2 masterScalars[ix].`⟲`
         }
     }
 }
@@ -342,11 +296,13 @@ inline fun Cursor.keyClusters(
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
 }
 
-
-inline fun cmpany(o1: List<Any?>, o2: List<Any?>): Int =
+/**
+ * this is a helper for comparing keys.
+ */
+inline fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
     o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
-inline fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>> = Comparator(::cmpany)) = combine(
+inline fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>> = Comparator(::cmpAny)) = combine(
     (keyClusters(axis, comparator.let { TreeMap(comparator) }) `→`
             MutableMap<List<Any?>, MutableList<Int>>::values α
             (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()
@@ -355,86 +311,6 @@ inline fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>> = C
         val ix2 = superIndex.get(iy)
         val second1: RowVec = this.second(ix2)
         second1
-    }
-}
-
-/**
- * this writes a cursor values to a single Network-endian ByteBuffer translation and writes an additional filename+".meta"
- * file containing commented meta description strings
- *
- * this is a tempfile format until further notice, changes and fixes should be aggressively developed, there is no
- * RFC other than this comment to go by
- *
- */
-fun Cursor.writeBinary(
-    pathname: String,
-    defaultVarcharSize: Int = 128,
-    varcharSizes: Map<
-            /**
-            column*/
-            Int,
-            /**length*/
-            Int>? = null
-) {
-    val mementos = scalars α Scalar::first
-
-    val vec = scalars `→` { scalars: Vect0r<Scalar> ->
-        Columnar.of(
-            scalars
-        ) t2 mementos
-    }
-    /** create context columns */
-    val (wcolumnar: Arity,   ioMemos: Vect0r<TypeMemento>) = vec
-    val wcoords = networkCoords(ioMemos, defaultVarcharSize, varcharSizes)
-    val wrecordlen: Int = wcoords.right.last()
-    MappedFile(pathname, "rw", FileChannel.MapMode.READ_WRITE).use { mappedFile ->
-        mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * size)
-
-
-        /**
-         * preallocate the mmap file
-         */
-
-        val drivers1: Array<CellDriver<ByteBuffer, Any?>> =
-            Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
-        val wfixedWidth: RecordBoundary = FixedWidth(wrecordlen, wcoords, { null }, { null })
-
-        writeMeta(pathname, wcoords)
-        /**
-         * nio object
-         */
-        val wnio: Medium = NioMMap(mappedFile, drivers1)
-        wnio.recordLen = wrecordlen.`⟲`
-        val windex: Addressable = indexableOf(wnio as NioMMap, wfixedWidth as FixedWidth)
-
-
-        val wtable: TableRoot = /*runBlocking*/(
-                windex +
-                        wcolumnar +
-                        wfixedWidth +
-                        wnio +
-                        RowMajor()
-                ).let { coroutineContext ->
-            val wniocursor: NioCursor = wnio.values(coroutineContext)
-            val arity = coroutineContext[Arity.arityKey] as Columnar
-            System.err.println("columnar memento: " + arity.left.toList())
-            wniocursor t2 coroutineContext
-        }
-
-        val scalars = scalars
-        val xsize = scalars.size
-        val ysize = size
-
-        for (y in 0 until ysize) {
-            val rowVals = this.second(y).left
-            for (x in 0 until xsize) {
-                val tripl3 = wtable.first[x, y]
-                val writefN = tripl3.second
-                val any = rowVals[x]
-//                System.err.println("wfn: ($y,$x)=$any")
-                writefN(any)
-            }
-        }
     }
 }
 
@@ -471,40 +347,6 @@ fun networkSizes(
 }
 
 
-fun Cursor.writeMeta(
-    pathname: String,
-//    wrecordlen: Int,
-    wcoords: Vect02<Int, Int>
-) {
-    Files.newOutputStream(
-        Paths.get(pathname + ".meta")
-    ).bufferedWriter().use {
-
-            fileWriter ->
-
-        val s: Vect02<TypeMemento, String?> = scalars as Vect02<TypeMemento, String?>
-
-        val coords = wcoords.toList()
-            .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
-        val nama = s.right
-            .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
-        val mentos = s.left
-            .mapIndexed<TypeMemento, Any> { ix, it -> if (it is IOMemento) it.name else wcoords[ix].size }.toList()
-            .joinToString(" ")
-        listOf(
-            "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
-            "# last coord is the recordlen",
-            coords,
-            nama,
-            mentos
-        ).forEach { line ->
-            fileWriter.write(line)
-            fileWriter.newLine()
-        }
-
-    }
-}
-
 @Suppress("USELESS_CAST")
 fun binaryCursor(
     binpath: Path,
@@ -532,84 +374,3 @@ fun binaryCursor(
 }
 
 
-/***
- *
- * this creates a one-hot encoding set of categories for each value in each column.
- *
- * every distinct (column,value) permutation is reified as (as of this comment, expensive) in-place pivot
- *
- * TODO: staple the catx values to the cursor foreheads
- *
- *
- * maybe this is faster if each (column,value) pair was a seperate 1-column cursor.  first fit for now.
- *
- */
-fun Cursor.categories(
-    /**
-    if this is a value, that value is omitted from columns. by default null is an omitted value.  if this is a DummySpec, the DummySpec specifies the index
-     */
-    dummySpec: Any? = null
-): Cursor = let { curs ->
-    val origScalars = curs.scalars
-    val xSize = origScalars.size
-    val ySize = curs.size
-/* todo: vector */
-    val sequence = sequence<Cursor> {
-        for (catx in 0 until xSize) {
-            val cat2 = sequence/* todo: vector */ {
-                for (iy in 0 until ySize)
-                    yield(curs.second(iy)[0].first)
-            }.distinct().toList().let { cats ->
-                val noDummies = onehot_mask(dummySpec, cats)
-                if (noDummies.first > -1)
-                    cats - cats[noDummies.first]
-                else
-                    cats
-            }
-
-
-            val catxScalar = origScalars[catx]
-            yield(Cursor(curs.size) { iy: Int ->
-                RowVec(cat2.size) { ix: Int ->
-                    val cell = curs.second(iy)[catx]
-                    val rowValue = cell.first
-                    val diagonalValue = cat2[ix]
-                    val cardinal = if (rowValue == diagonalValue) 1 else 0
-                    cardinal t2 {
-                        /**
-                         * there may be context data other than simple scalars in this cell, so we will just replace the scalar key and pass it along.
-                         */
-                        cell.second() + Scalar(IOMemento.IoInt, origScalars[catx].second + "_" + diagonalValue.toString())
-                    }
-                }
-            })
-        }
-    }
-
-    //widthwize join (90 degrees of combine, right?)
-    join(sequence.toVect0r())
-}
-
-
-/**
- * Cursors creates one series of values, then optionally omits a column from cats
- */
-inline fun onehot_mask(dummy: Any?, cats: List<*>) =
-    when {
-        dummy is DummySpec ->
-            when (dummy) {
-                DummySpec.First -> 0 t2 cats.first()
-                DummySpec.Last -> cats.lastIndex t2 cats.last()
-//                DummySpec.None -> TODO()
-            }
-        dummy != null -> cats.indexOf(dummy) t2 dummy
-        else -> -1 t2 Unit
-    }
-
-
-/**
- * if you specify first or last categories to be the Dummy, this is
- */
-enum class DummySpec {
-    /*Dummy --  None,*/ First, Last
-}

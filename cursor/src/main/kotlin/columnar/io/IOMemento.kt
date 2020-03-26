@@ -1,5 +1,8 @@
-package columnar
+package columnar.io
 
+import columnar.TypeMemento
+import columnar.Vect0r
+import columnar.α
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate

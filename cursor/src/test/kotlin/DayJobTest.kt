@@ -1,10 +1,14 @@
 package columnar
 
 
-import columnar.IOMemento.*
+import columnar.io.IOMemento.*
 import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
+import columnar.io.MappedFile
+import columnar.io.floatFillNa
+import columnar.io.floatSum
+import columnar.io.writeBinary
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path

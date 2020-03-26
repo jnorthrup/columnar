@@ -1,5 +1,6 @@
 package columnar
 
+import columnar.ml.onehot_mask
 import org.junit.jupiter.api.Test
 import shouldBe
 

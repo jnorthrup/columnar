@@ -1,10 +1,13 @@
 package columnar
 
 //import io\.kotlintest\.specs\.StringSpec\n
-import columnar.IOMemento.*
+import columnar.io.IOMemento.*
 import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
+import columnar.io.MappedFile
+import columnar.io.floatFillNa
+import columnar.io.writeBinary
 import org.junit.jupiter.api.Test
 import shouldBe
 import java.io.File
