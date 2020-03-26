@@ -6,26 +6,26 @@ import columnar.context.NioMMap
 import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.io.*
+import columnar.io.IOMemento.*
 import columnar.macros.*
 import columnar.ml.DummySpec
 import columnar.ml.categories
 import org.junit.jupiter.api.Test
 import shouldBe
 
-
-class CursorKtTest/* : StringSpec()*/ {
+class CursorKtTest {
     val coords = intArrayOf(
         0, 10,
         10, 84,
         84, 124,
         124, 164
-    ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
+    ).zipWithNext()
 
     val drivers = vect0rOf(
-        IOMemento.IoLocalDate as TypeMemento,
-        IOMemento.IoString,
-        IOMemento.IoFloat,
-        IOMemento.IoFloat
+        IoLocalDate as TypeMemento,
+        IoString,
+        IoFloat,
+        IoFloat
     )
 
     val names = vect0rOf("date", "channel", "delivered", "ret")

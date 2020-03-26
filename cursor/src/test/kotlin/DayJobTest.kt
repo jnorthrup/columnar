@@ -16,7 +16,7 @@ import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 import kotlin.system.measureNanoTime
 
-class DayJobTest/* : StringSpec()*/ {
+class DayJobTest {
     var curs1: Cursor
     var curs: Cursor
     var indexable: Indexable
