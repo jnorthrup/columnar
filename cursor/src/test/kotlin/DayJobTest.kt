@@ -1,14 +1,13 @@
 package columnar
 
 
-import columnar.io.IOMemento.*
 import columnar.context.*
-import columnar.context.RowMajor.Companion.fixedWidthOf
-import columnar.context.RowMajor.Companion.indexableOf
-import columnar.io.MappedFile
-import columnar.io.floatFillNa
-import columnar.io.floatSum
-import columnar.io.writeBinary
+import columnar.io.*
+import columnar.io.IOMemento.*
+import columnar.macros.*
+import columnar.util._a
+import columnar.util._l
+import columnar.util.size
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -96,12 +95,19 @@ class DayJobTest/* : StringSpec()*/ {
         this.zip = drivers.zip(names)
         this.columnar = Columnar(zip as Vect02<TypeMemento, String?>)
         this.nioMMap = NioMMap(MappedFile(rowFwfFname.toString()), NioMMap.text(columnar.left))
-        this.fixedWidth = fixedWidthOf(nioMMap, coords)
-        this.indexable = indexableOf(nioMMap, fixedWidth)
-        this.curs1 = cursorOf(RowMajor().fromFwf(fixedWidth, indexable, nioMMap, columnar)).also {
+        this.fixedWidth = RowMajor.fixedWidthOf(nioMMap, coords)
+        this.indexable = RowMajor.indexableOf(nioMMap, fixedWidth)
+        this.curs1 = cursorOf(
+            RowMajor().fromFwf(
+                fixedWidth,
+                indexable,
+                nioMMap,
+                columnar
+            )
+        ).also {
             System.err.println("curs1 record count=" + it.first)
         }
-        this.curs = Cursor(minOf(curs1.size, testRecordCount), { y: Int -> curs1.second(y) }).also {
+        this.curs = Cursor(minOf(curs1.size, testRecordCount), { y: Int -> curs1 at (y) }).also {
             System.err.println("curs record count=" + it.first)
         }
 
@@ -118,8 +124,8 @@ class DayJobTest/* : StringSpec()*/ {
             System.err.println("using filename: " + pathname.toString())
             val theCursor = curs[2, 1, 3, 5].ordered(intArrayOf(0, 1, 2))
             val theCoords = coords[2, 1, 3, 5]
-            val varcharSizes = varcharMappings(theCursor, theCoords)
-            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
+            val varcharSizes = varcharMappings(theCursor as Cursor, theCoords)
+         (   (theCursor α floatFillNa(0f)) as Cursor).writeBinary(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: " + nanos)
 
@@ -135,7 +141,7 @@ class DayJobTest/* : StringSpec()*/ {
             println(
                 "row 2 seektime: " +
                         measureNanoTimeStr {
-                            second = filtered.second(2)
+                            second = filtered at (2)
                         } + "@ " + second.first + " columns"
             )
             println("row 2 took " + measureNanoTimeStr {
@@ -174,7 +180,7 @@ class DayJobTest/* : StringSpec()*/ {
             println(
                 "row 2 seektime: " +
                         measureNanoTimeStr {
-                            second = filtered.second(2)
+                            second = filtered at (2)
                         } + "@ " + second.first + " columns"
             )
             println("row 2 took " + measureNanoTimeStr {
@@ -188,7 +194,7 @@ class DayJobTest/* : StringSpec()*/ {
     }
 
     fun varcharMappings(
-        theCursor: Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>,
+        theCursor:Cursor,
         theCoords: Vect0r<Pai2<Int, Int>>
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
         index t2 typeMemento
@@ -208,7 +214,7 @@ class DayJobTest/* : StringSpec()*/ {
         lateinit var second: RowVec
         println("row 2 seektime: " +
                 measureNanoTimeStr {
-                    second = filtered.second(2)
+                    second = filtered at (2)
                 } + "@ " + second.first + " columns"
         )
         lateinit var message: String
@@ -230,8 +236,8 @@ class DayJobTest/* : StringSpec()*/ {
             val arrangement = intArrayOf(2, 1, 3, 5)
             val theCursor = curs.ordered(intArrayOf(2, 1, 3))[arrangement]
             val theCoords = coords[arrangement]
-            val varcharSizes = varcharMappings(theCursor, theCoords)
-            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
+            val varcharSizes = varcharMappings(theCursor as Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>, theCoords)
+            ((theCursor α floatFillNa(0f))as Cursor).writeBinary(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: $nanos")
 
@@ -247,7 +253,7 @@ class DayJobTest/* : StringSpec()*/ {
             println(
                 "row 2 seektime: " +
                         measureNanoTimeStr {
-                            second = filtered.second(2)
+                            second = filtered at (2)
                         } + "@ " + second.first + " columns"
             )
 

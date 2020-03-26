@@ -1,10 +1,10 @@
 @file:Suppress("NOTHING_TO_INLINE")
 
-package columnar
+package columnar.macros
 
 import kotlinx.coroutines.flow.*
 import java.util.*
-import kotlin.experimental.ExperimentalTypeInference
+import kotlin.experimental.*
 
 /**
  * semigroup
@@ -104,12 +104,6 @@ inline infix fun <reified C, reified B : (Long) -> C> LongArray.α(m: B): Vect0r
 But as soon as a groupoid has both a left and a right identity, they are necessarily unique and equal. For if e is
 a left identity and f is a right identity, then f=ef=e.
 */
-/** left identity */
-@OptIn(ExperimentalTypeInference::class)
-object `⟳` {
-    @BuilderInference
-    inline operator fun <reified T> invoke(f: T) = { f: T ->f }
-}
 
 /**right identity*/
 @BuilderInference
@@ -211,7 +205,7 @@ inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) 
 inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
         override val size: Int = v.first
-        override operator fun get(index: Int) = v.second(index)
+        override operator fun get(index: Int) =( v  [index])
     }
 }
 

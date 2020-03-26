@@ -1,9 +1,9 @@
 package columnar.calendar
 
-import columnar.context.*
 import columnar.*
-import columnar.io.IOMemento
-import columnar.io.MappedFile
+import columnar.context.*
+import columnar.io.*
+import columnar.macros.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZoneId
@@ -71,11 +71,11 @@ class CalendarTest {
             val xSize = csrc.scalars.size
             val v: Cursor = Cursor(csrc.size) { iy: Int ->
                 RowVec(xSize) { ix: Int ->
-                    val row = csrc.second(iy)
+                    val row = csrc at (iy)
                     (row.left[ix] as? LocalDate)?.let { it: LocalDate ->
                         val filterNotNull = jvmCal.DateWiseCategories(it)
                         val pai2: Pai2<Any?, () -> CoroutineContext> = filterNotNull.toString() t2 {
-                            val second = row[ix].second()
+                            val second = row[ix] .second ()
                             second + Scalar(IOMemento.IoString, "${jvmCal.name}_map")
                         }
                         pai2

@@ -1,8 +1,14 @@
 package columnar.ml
 
-import columnar.*
+import columnar.Cursor
+import columnar.at
 import columnar.context.Scalar
-import columnar.io.IOMemento
+import columnar.io.*
+import columnar.join
+import columnar.macros.get
+import columnar.macros.size
+import columnar.macros.t2
+import columnar.macros.toVect0r
 
 /***
  *
@@ -30,7 +36,7 @@ fun Cursor.categories(
         for (catx in 0 until xSize) {
             val cat2 = sequence/* todo: vector */ {
                 for (iy in 0 until ySize)
-                    yield(curs.second(iy)[0].first)
+                    yield((curs at (iy))[0].first)
             }.distinct().toList().let { cats ->
                 val noDummies = onehot_mask(dummySpec, cats)
                 if (noDummies.first > -1)
@@ -42,8 +48,8 @@ fun Cursor.categories(
 
             val catxScalar = origScalars[catx]
             yield(Cursor(curs.size) { iy: Int ->
-                columnar.RowVec(cat2.size) { ix: Int ->
-                    val cell = curs.second(iy)[catx]
+                RowVec(cat2.size) { ix: Int ->
+                    val cell = (curs at (iy))[catx]
                     val rowValue = cell.first
                     val diagonalValue = cat2[ix]
                     val cardinal = if (rowValue == diagonalValue) 1 else 0

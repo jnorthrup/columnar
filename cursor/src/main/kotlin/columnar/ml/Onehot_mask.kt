@@ -1,6 +1,6 @@
 package columnar.ml
 
-import columnar.t2
+import columnar.macros.t2
 
 /**
  * Cursors creates one series of values, then optionally omits a column from cats

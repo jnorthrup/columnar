@@ -2,6 +2,26 @@ package columnar
 
 import shouldBe
 
+import columnar.context.Columnar
+import columnar.context.FixedWidth
+import columnar.context.NioMMap
+import columnar.context.*
+import columnar.io.*
+import columnar.util.*
+import columnar.macros.*
+import columnar.ml.*
+import columnar.calendar.*
+import columnar.context.*
+import columnar.context.RowMajor.Companion.fixedWidthOf
+import columnar.context.RowMajor.Companion.indexableOf
+import columnar.io.*
+import columnar.io.IOMemento.*
+import columnar.macros.*
+import columnar.ml.DummySpec
+import org.junit.jupiter.api.Test
+import shouldBe
+import kotlin.coroutines.CoroutineContext
+
 class VectorLikeKtTest {
     @org.junit.jupiter.api.Test
     fun combinevec() {

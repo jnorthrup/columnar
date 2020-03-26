@@ -1,12 +1,14 @@
 package columnar
 
+import columnar.io.RowVec
+import columnar.io.scalars
+import columnar.macros.*
 import kotlin.math.absoluteValue
-
 
 // c[0,1,2]
 // scalars[0,1,2],[3,4,5],[6,7,8]
 //
-//c[iy].second(7)
+//c[iy] at (7)
 fun join(vararg v: Cursor): Cursor = join(vect0rOf(*v as Array<Cursor>))
 
 fun join(c: Vect0r<Cursor>): Cursor = run {
@@ -21,7 +23,7 @@ fun join(c: Vect0r<Cursor>): Cursor = run {
         RowVec(xsize) { ix: Int ->
             val slot = (1 + order.binarySearch(ix)).absoluteValue
             val cursor: Cursor = c[slot]
-            val rowVec: RowVec = cursor.second(iy)
+            val rowVec: RowVec = cursor at (iy)
 
             val adjusted: Int = if (0 == slot) ix % order[slot]
             else {//the usual case

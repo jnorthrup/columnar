@@ -1,8 +1,7 @@
 package columnar.ml
 
-import columnar.Tw1n
-import columnar.component1
-import columnar.component2
+import columnar.macros.Tw1n
+
 
 @JvmName("FRComparable")
 inline fun <reified T : Comparable<T>> featureRange(seq: Sequence<T>, maxMinTwin: Tw1n<T>) =

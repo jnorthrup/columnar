@@ -1,5 +1,8 @@
 package columnar
 
+import columnar.macros.Vect0r
+import columnar.macros.t2
+import columnar.macros.toArray
 import kotlin.math.absoluteValue
 
 @JvmName("combine_VecVec")
@@ -15,7 +18,7 @@ inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> {
 
     return Vect0r(size) { ix: Int ->
         val slot = (1 + order.binarySearch(ix)).absoluteValue
-        vargs[slot].second(
+        vargs[slot] .second (
             if (0 == slot)
                 ix % order[slot]
             else {//the usual case

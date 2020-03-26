@@ -1,18 +1,19 @@
 package columnar
 
 //import io\.kotlintest\.specs\.StringSpec\n
-import columnar.io.IOMemento.*
+
+
 import columnar.context.*
 import columnar.context.RowMajor.Companion.fixedWidthOf
 import columnar.context.RowMajor.Companion.indexableOf
-import columnar.io.MappedFile
-import columnar.io.floatFillNa
-import columnar.io.writeBinary
+import columnar.io.*
+import columnar.io.IOMemento.*
+import columnar.macros.*
+import columnar.util.toArray
 import org.junit.jupiter.api.Test
 import shouldBe
 import java.io.File
 import java.nio.file.Paths
-
 
 class NinetyDegreeTest/* : StringSpec()*/ {
 
@@ -121,10 +122,8 @@ class NinetyDegreeTest/* : StringSpec()*/ {
             val piv2 = join(c)
 
 
-            for (i in 0 until piv.size) {
-                for (j in 0 until piv.scalars.size)
-                    piv.second(i)[j].first shouldBe piv2.second(i)[j].first
-            }
+            for (i in 0 until piv.size) for (j in 0 until piv.scalars.size)
+               ( piv at i)[j].first shouldBe (piv2 at (i))[j].first
 
         } finally {
             try {
@@ -148,10 +147,10 @@ class NinetyDegreeTest/* : StringSpec()*/ {
         MappedFile(binpath.toString()).use { mf ->
             val cursr = binaryCursor(binpath, mf)
 
-            System.err.println(cursr.second(0).left.toList())
-            System.err.println(cursr.second(1).left.toList())
-            System.err.println(cursr.second(2).left.toList())
-            System.err.println(cursr.second(3).left.toList())
+            System.err.println((cursr at (0)).left.toList())
+            System.err.println((cursr at (1)).left.toList())
+            System.err.println((cursr at (2)).left.toList())
+            System.err.println((cursr at (3)).left.toList())
         }
     }
 

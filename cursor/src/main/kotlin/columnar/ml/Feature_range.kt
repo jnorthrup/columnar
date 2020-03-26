@@ -1,7 +1,6 @@
 package columnar.ml
 
-import columnar.Tw1n
-
+import columnar.macros.Tw1n
 
 
 @JvmName("FrInt")

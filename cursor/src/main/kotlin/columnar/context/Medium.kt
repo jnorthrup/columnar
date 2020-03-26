@@ -1,15 +1,23 @@
 package columnar.context
 
 import columnar.*
-import columnar.context.Arity.Companion.arityKey
 import columnar.io.*
-import java.nio.ByteBuffer
+import columnar.macros.*
+import columnar.macros.Vect02
+import columnar.macros.Vect0r
+import columnar.macros.toList
+import columnar.util.*
+import java.nio.*
 import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
-
+import columnar.*
+import columnar.context.*
+import columnar.macros.*
+import columnar.util.*
+import columnar.io.*
 typealias  MMapWindow = Tw1n<Long>
 typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
@@ -47,9 +55,9 @@ class NioMMap(
     /**by default this will fetch text but other Mementos can be passed in as non-default
      */
     var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
-    var state: Pai2<ByteBuffer, Pai2<Long, Long>> = if (mappedFile.length.toLong()>Integer.MAX_VALUE.toLong()) canary else
-        mappedFile.mappedByteBuffer .let{
-            (it  as ByteBuffer ) t2 (0L t2 it.remaining().toLong())
+    var state: Pai2<ByteBuffer, Pai2<Long, Long>> = if (mappedFile.length.toLong() > Integer.MAX_VALUE.toLong()) canary else
+        mappedFile.mappedByteBuffer.let {
+            it t2 (0L t2 it.remaining().toLong())
 
         }
 ) : Medium() {
@@ -61,18 +69,17 @@ class NioMMap(
             /*suspend*/ fun values(coroutineContext: CoroutineContext): NioCursor = this.run {
         val ordering =
             coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
-        val arity = coroutineContext[arityKey]!!
+        val arity = coroutineContext[Arity.arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         fixedWidth = coroutineContext[RecordBoundary.boundaryKey]!! as FixedWidth
 
         val drivers = drivers ?: text((arity as Columnar).left /*assuming fwf here*/)
-        val coords =
-            fixedWidth.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to
+        val coords = fixedWidth.coords /* todo: fixedwidth is Optional; this code is expected to do CSV someday, but we need to
              propogate the null as a hard error for now. */
 
         val asContextVect0r: Vect02<ByteBuffer, Pai2<Long, Long>> =
             asContextVect0r(addressable as Indexable, fixedWidth)
-        (asContextVect0r t2 { y: ByteBuffer ->
+        (asContextVect0r t2  { y: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
                 (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].size
             }
@@ -80,7 +87,7 @@ class NioMMap(
             NioCursor(intArrayOf(drivers.size, row.first)) { (x: Int, y: Int): IntArray ->
                 mappedDriver(row, y, col, x, coords)
             }
-        } as NioCursor
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -131,7 +138,7 @@ class NioMMap(
      * seek to record offset
      */
     override val seek: (Int) -> Unit = { newPosition ->
-        mappedFile.mappedByteBuffer .position(newPosition * recordLen()).slice().limit(recordLen())
+        mappedFile.mappedByteBuffer.position(newPosition * recordLen()).slice().limit(recordLen())
     }
     override val size = { mappedFile.randomAccessFile.length() }
 

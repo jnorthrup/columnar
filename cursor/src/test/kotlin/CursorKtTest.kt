@@ -1,19 +1,17 @@
 package columnar
 
-import columnar.io.IOMemento.*
 import columnar.context.Columnar
 import columnar.context.FixedWidth
 import columnar.context.NioMMap
 import columnar.context.RowMajor
 import columnar.context.RowMajor.Companion.fixedWidthOf
-import columnar.context.RowMajor.Companion.indexableOf
-import columnar.io.MappedFile
-import columnar.io.floatSum
-import columnar.io.sumReducer
+import columnar.io.*
+import columnar.macros.*
 import columnar.ml.DummySpec
 import columnar.ml.categories
 import org.junit.jupiter.api.Test
 import shouldBe
+
 
 class CursorKtTest/* : StringSpec()*/ {
     val coords = intArrayOf(
@@ -24,10 +22,10 @@ class CursorKtTest/* : StringSpec()*/ {
     ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
 
     val drivers = vect0rOf(
-        IoLocalDate as TypeMemento,
-        IoString,
-        IoFloat,
-        IoFloat
+        IOMemento.IoLocalDate as TypeMemento,
+        IOMemento.IoString,
+        IOMemento.IoFloat,
+        IOMemento.IoFloat
     )
 
     val names = vect0rOf("date", "channel", "delivered", "ret")
@@ -39,7 +37,7 @@ class CursorKtTest/* : StringSpec()*/ {
     @Suppress("UNCHECKED_CAST")
     val root = RowMajor().fromFwf(
         fixedWidth,
-        indexableOf(nio, fixedWidth),
+        RowMajor.indexableOf(nio, fixedWidth),
         nio,
         Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
     )
@@ -67,12 +65,12 @@ class CursorKtTest/* : StringSpec()*/ {
     fun oneHot() {
         val cursor: Cursor = cursorOf(root)
         var categories = cursor[0].categories()
-        var scalars = categories.scalars as Vect02<Any?, String>
+        var scalars = categories.scalars as Vect02<TypeMemento, String?>
         System.err.println(scalars.right.toList())
         var toList = categories.narrow().toList()
         toList.forEach { System.err.println(it) }
         categories = cursor[0].categories(DummySpec.Last)
-        scalars = categories.scalars as Vect02<Any?, String>
+        scalars = categories.scalars as Vect02<TypeMemento, String?>
         System.err.println(scalars.right.toList())
         toList = categories.narrow().toList()
         toList.forEach { System.err.println(it) }
@@ -113,9 +111,9 @@ class CursorKtTest/* : StringSpec()*/ {
         val resample = cursor.resample(0)
         val join = join(resample[0, 1], resample[2, 3])
         for (i in 0 until resample.first) {
-            resample.second(i).left.toList() shouldBe join.second(i).left.toList()
+            (resample at (i)).left.toList() shouldBe (join at (i)).left.toList()
             println(
-                resample.second(i).left.toList() to join.second(i).left.toList()
+                (resample at (i)).left.toList() to (join at (i)).left.toList()
             )
         }
 
@@ -208,7 +206,7 @@ class CursorKtTest/* : StringSpec()*/ {
             intArrayOf(0),
             intArrayOf(1),
             intArrayOf(2, 3)
-        ).group((0)).`∑`(sumReducer[IoFloat]!!)
+        ).group((0)).`∑`(sumReducer[IOMemento.IoFloat]!!)
 
         piv.forEach { it ->
             println(it.map { vec ->

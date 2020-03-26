@@ -1,4 +1,16 @@
-package columnar
+package columnar.macros
+
+import columnar.Cursor
+import columnar.io.RowVec
+import columnar.io.left
+import kotlin.experimental.ExperimentalTypeInference
+import java.nio.channels.*
+import columnar.*
+import columnar.context.*
+import columnar.macros.*
+import columnar.util.*
+import columnar.io.*
+import columnar.ml.*
 
 /**
  * reducer func -- operator for sum/avg/mean etc. would be nice, but we have to play nice in a type-safe language so  ∑'s just a hint  of a reducer semantic
@@ -13,7 +25,7 @@ inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
             val iterable = toList ?: (ac as? Iterable<*>)
             val any1 = iterable?.reduce(reducer)
             val any = any1 ?: ac
-            any t2 aggcell[ix].second
+            any t2 aggcell[ix] .second
         }
 
     }
@@ -26,3 +38,12 @@ inline infix fun Cursor.α(crossinline unaryFunctor: (Any?) -> Any?): Cursor =
         val aggcell = second(iy)
         (aggcell.left α (unaryFunctor)).zip(aggcell.right)
     }
+
+inline val <reified C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
+
+/** left identity */
+@OptIn(ExperimentalTypeInference::class)
+object `⟳` {
+    @BuilderInference
+    inline operator fun <reified T> invoke(f: T) = { f: T ->f }
+}

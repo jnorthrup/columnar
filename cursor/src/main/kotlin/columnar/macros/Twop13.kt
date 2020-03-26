@@ -12,7 +12,7 @@ Tuples also occur in relational algebra; when programming the semantic web with 
 
 @file:Suppress("OVERRIDE_BY_INLINE")
 
-package columnar
+package columnar.macros
 
 /**
 a singular reference.  front end of Pai2 and Tripl3.  */
@@ -32,6 +32,8 @@ interface Hand1l<out F> {
 interface Pai2<F, S> {
     val first: F
     val second: S
+    operator fun component1(): F = first
+    operator fun component2(): S = second
 
     /**
      * for println and serializable usecases, offload that stuff using this method.
@@ -113,6 +115,7 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
 inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
     override inline val first get() = ia[0]
     override inline val second get() = ia[1]
+
 }
 
 @JvmName("twinint")
@@ -133,10 +136,10 @@ inline infix fun <reified X, reified Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Ha
 
 inline infix fun <reified X, reified Y, reified Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(
     p: P
-) = Tripl3(first, p.first, p.second)
+) = Tripl3(first, p.first, p .second )
 
 inline infix fun <reified X, reified Y, reified Z, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(t: T) =
-    Qu4d(first, t.first, t.second, t.third)
+    Qu4d(first, t.first, t .second , t.third)
 
 inline infix fun <reified F, reified S> F.t2(s: S) = Pai2(this, s)
 inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }

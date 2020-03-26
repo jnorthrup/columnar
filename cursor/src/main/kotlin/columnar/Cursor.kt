@@ -2,21 +2,34 @@
 
 package columnar
 
+import columnar.calendar.daySeq
 import columnar.calendar.feature_range
 import columnar.context.*
 import columnar.context.RowMajor.Companion.indexableOf
-import columnar.io.IOMemento
-import columnar.io.MappedFile
+import columnar.io.*
+import columnar.macros.*
+import columnar.ml.feature_range
+import columnar.util.logDebug
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDate
 import java.util.*
-import kotlin.collections.ArrayList
+import kotlin.Comparator
 import kotlin.coroutines.CoroutineContext
+import columnar.Cursor
+import columnar.io.RowVec
+import columnar.io.left
+import kotlin.experimental.ExperimentalTypeInference
+import java.nio.channels.*
+import columnar.*
+import columnar.context.*
+import columnar.macros.*
+import columnar.util.*
+import columnar.io.*
+import columnar.ml.*
 import kotlin.math.max
 import kotlin.math.sqrt
-
 
 /**
  * cursor is approximately the pandas Dataframe with some shortcuts
@@ -30,7 +43,7 @@ import kotlin.math.sqrt
  *
  *  Cursor and Vect0r are also both the same Pai2 typealias having  properties true for
  *
- *  `.size==.first` and `.get(i)==.second.invoke(i)`
+ *  `.size==.first` and `.get(i)== at .invoke(i)`
  *
  *  Cursor has RowVec which is a Vect02 of value (Any?) and ()->Context method access per column.  you can describe
  *  anything about any Cursor Value by controlling the CoroutineContext herein
@@ -59,16 +72,16 @@ import kotlin.math.sqrt
  * `cursor.group(0,{myreducer})`
  *
  * ## value access
- * cursor.second(0) returns rowVec 0  (interchangably mentioned as y=0)
+ * cursor at (0) returns rowVec 0  (interchangably mentioned as y=0)
  *
  * # to access the whole cursor x,y plane use
- * `for(i in 0 until cursor.size) cursor.second(i)`
+ * `for(i in 0 until cursor.size) cursor at (i)`
  *
  * # column meta
  * `cursor.scalars` requests the type information (not the byte widths) for each column
- *
+ *maxMinTwin
  * Cursors are created from within the blackboard state of a CoroutineContext which is accessable from each value
- * by default unless specialized using `RowVec[x].second()`   within every cursor value is a function`RowVec[i].second`
+ * by default unless specialized using `RowVec[x] at ()`   within every cursor value is a function`RowVec[i] at `
  * providing the underlying construction factors and potentially cell-specific data.  Generally these are not accessed
  * in DataFrame usecases but this forms the basis for emergent spreadsheet functions on top of cursor state.
  *
@@ -77,26 +90,7 @@ import kotlin.math.sqrt
  */
 typealias Cursor = Vect0r<RowVec>
 
-//var ignore = cursorOf(...).α { }
-
-fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
-    val (xy: IntArray, mapper: (IntArray) -> Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>) = nioc
-    val (xsize: Int, ysize: Int) = xy
-    Vect0r(ysize) { iy ->
-        Vect0r(xsize) { ix ->
-            val (a: () -> Any?) = mapper(intArrayOf(ix, iy))
-            a() t2 {
-                val cnar: Columnar = crt[Arity.arityKey] as Columnar
-                //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
-                // and call in a cell through here
-                val name =
-                    cnar.right.get(ix) ?: throw(InstantiationError("Tableroot's Columnar has no names"))
-                val type = cnar.left[ix]
-                Scalar(type, name)
-            }
-        }
-    }
-}
+inline infix fun <reified T : Int> Cursor.at(t: T) = second.invoke(t)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.reify() =
@@ -105,15 +99,6 @@ fun Cursor.reify() =
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> -> list.map(Pai2<*, *>::first) }
-
-inline val <reified C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
-
-inline val Cursor.scalars: Vect0r<Scalar>
-    get() = toSequence().first().right.map {
-        it.invoke() `→` {
-            it[Arity.arityKey] as Scalar
-        }
-    }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -124,16 +109,6 @@ operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArr
 @JvmName("vlike_RSequence_IntArray31")
 operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
-}
-
-fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
-    var cursor = min
-    return sequence {
-        while (max > cursor) {
-            yield(cursor)
-            cursor = cursor.plusDays(1)
-        }
-    }
 }
 
 fun Cursor.resample(indexcol: Int): Cursor = let {
@@ -201,7 +176,7 @@ fun Cursor.pivot(
     }.flatten().toTypedArray()
     System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
-        val theRow: RowVec = cursr.second(iy)
+        val theRow: RowVec = cursr at (iy)
         theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
             RowVec(xsize) { ix: Int ->
                 when {
@@ -237,8 +212,8 @@ inline fun Cursor.group(
         val cfirst = cluster.first()
         RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
-                in axis -> orig.second(cfirst)[ix]
-                else -> Vect0r(cluster.size) { iy: Int -> orig.second(cluster[iy])[ix].first } t2 masterScalars[ix].`⟲`
+                in axis -> (orig at (cfirst))[ix]
+                else -> Vect0r(cluster.size) { iy: Int -> (orig at (cluster[iy]))[ix].first } t2 masterScalars[ix].`⟲`
             }
         }
     }
@@ -261,13 +236,13 @@ inline fun Cursor.group(
         val valueIndices = acc1.indices - axis.toTypedArray()
 
         for (i in cluster) {
-            val value = this.second(i).left
+            val value = (this at (i)).left
             for (valueIndex in valueIndices)
                 acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
         }
         RowVec(masterScalars.first) { ix: Int ->
             if (ix in axis) {
-                this.second(keyIndex)[ix]
+                (this at (keyIndex))[ix]
             } else acc1[ix] t2 masterScalars[ix].`⟲`
         }
     }
@@ -302,48 +277,17 @@ inline fun Cursor.keyClusters(
 inline fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
     o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
-inline fun Cursor.ordered(axis: IntArray, comparator: Comparator<List<Any?>> = Comparator(::cmpAny)) = combine(
-    (keyClusters(axis, comparator.let { TreeMap(comparator) }) `→`
-            MutableMap<List<Any?>, MutableList<Int>>::values α
+inline fun Cursor.ordered(
+    axis: IntArray,
+    comparator: Comparator<List<Any?>> = Comparator(::cmpAny)
+): Cursor = combine(
+    (keyClusters(axis, comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
             (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()
-).let { superIndex ->
-    Cursor(superIndex.size) { iy: Int ->
-        val ix2 = superIndex.get(iy)
-        val second1: RowVec = this.second(ix2)
-        second1
+).let {
+    Cursor(it.size) { iy: Int ->
+        val ix2 = it[iy]
+        this at ix2
     }
-}
-
-
-fun networkCoords(
-    ioMemos: Vect0r<TypeMemento>,
-    defaultVarcharSize: Int,
-    varcharSizes: Map<Int, Int>?
-): Vect02<Int, Int> = Unit.let {
-    val sizes1 = networkSizes(ioMemos, defaultVarcharSize, varcharSizes)
-    //todo: make IntArray Tw1nt Matrix
-    var wrecordlen = 0
-    val wcoords = Array(sizes1.size) { ix ->
-        val size = sizes1[ix]
-        Tw1n(wrecordlen, (wrecordlen + size).also { wrecordlen = it })
-    }
-
-    wcoords.map { tw1nt: Tw1nt -> tw1nt.ia.toList() }.toList().flatten().toIntArray().let { ia ->
-        Vect02(wcoords.size) { ix: Int ->
-            val i = ix * 2
-            val i1 = i + 1
-            Tw1n(ia[i], ia[i1])
-        }
-    }
-}
-
-fun networkSizes(
-    ioMemos: Vect0r<TypeMemento>,
-    defaultVarcharSize: Int,
-    varcharSizes: Map<Int, Int>?
-): Vect0r<Int> = ioMemos.mapIndexed { ix, memento: TypeMemento ->
-    val get = varcharSizes?.get(ix)
-    memento.networkSize ?: (get ?: defaultVarcharSize)
 }
 
 
