@@ -1,8 +1,8 @@
 package columnar.calendar
 
-import columnar.macros.*
+import columnar.macros.Pai2
+import columnar.macros.t2
 import columnar.ml.featureRange
-
 import java.time.LocalDate
 
 @JvmName("FRLocalDate")

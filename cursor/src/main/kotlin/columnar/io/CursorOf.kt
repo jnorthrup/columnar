@@ -1,18 +1,14 @@
 package columnar.io
 
-import columnar.*
+import columnar.Cursor
 import columnar.context.Arity
-import columnar.context.*
-import columnar.io.*
-import columnar.context.*
+import columnar.context.Columnar
 import columnar.context.Scalar
 import columnar.macros.*
-import kotlin.coroutines.*
-import columnar.*
-import columnar.context.*
-import columnar.macros.*
-import columnar.util.*
-import columnar.io.*
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.coroutines.CoroutineContext
+
 fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: CoroutineContext): TableRoot ->
     val (xy: IntArray, mapper: (IntArray) -> Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>) = nioc
     val (xsize: Int, ysize: Int) = xy

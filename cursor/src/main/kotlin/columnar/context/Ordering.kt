@@ -1,11 +1,10 @@
 package columnar.context
 
-import columnar.*
-import columnar.macros.*
-import columnar.io.*
+import columnar.io.NioCursor
 import columnar.io.TableRoot
-import columnar.macros.Vect02
-import java.nio.*
+import columnar.io.right
+import columnar.macros.*
+import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -42,7 +41,7 @@ class RowMajor : Ordering() {
             defaulteol: () -> Byte
         ): FixedWidth {
             return FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
-                nio.mappedFile.mappedByteBuffer. duplicate().clear().run {
+                nio.mappedFile.mappedByteBuffer.duplicate().clear().run {
                     while (get() != endl);
                     position()
                 }

@@ -54,7 +54,7 @@ fun Cursor.writeBinary(
          * preallocate the mmap file
          */
 
-        val drivers1: Array<CellDriver<ByteBuffer, Any?>> = Fixed.mapped[ ioMemos ] as Array<CellDriver<ByteBuffer, Any?>>
+        val drivers1: Array<CellDriver<ByteBuffer, Any?>> = Fixed.mapped[ioMemos] as Array<CellDriver<ByteBuffer, Any?>>
         val wfixedWidth: RecordBoundary =
             FixedWidth(wrecordlen, wcoords, { null }, { null })
 
@@ -80,7 +80,7 @@ fun Cursor.writeBinary(
                         RowMajor()
                 ).let { coroutineContext: CoroutineContext ->
             val wniocursor: NioCursor = wnio.values(coroutineContext)
-            val arity: Columnar = coroutineContext[arityKey ] as  Columnar
+            val arity: Columnar = coroutineContext[arityKey] as Columnar
             System.err.println("columnar memento: " + arity.left.toList())
             wniocursor t2 coroutineContext
         }
@@ -113,7 +113,7 @@ fun Cursor.writeMeta(
 
             fileWriter ->
 
-        val s  = this.scalars  as Vect02<TypeMemento, String?>
+        val s = this.scalars as Vect02<TypeMemento, String?>
 
         val coords = wcoords.toList()
             .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
@@ -146,7 +146,7 @@ fun Cursor.writeMeta(
 inline val Cursor.scalars: Vect0r<Scalar>
     get() = toSequence().first().right.map {
         it.invoke() `→` {
-            it[  arityKey  ] as Scalar
+            it[arityKey] as Scalar
         }
     }
 

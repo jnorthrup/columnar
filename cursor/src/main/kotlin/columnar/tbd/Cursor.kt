@@ -1,14 +1,15 @@
 package columnar.tbd
 
-import columnar.*
+import columnar.Cursor
+import columnar.at
 import columnar.macros.Pai2
 import columnar.macros.Vect02
 import columnar.macros.Vect0r
 import kotlin.coroutines.CoroutineContext
 
-inline class MonoVal(val cell: Pai2<Any?, () -> CoroutineContext>)   {
-    inline fun ctxt(): CoroutineContext = cell .second ()
-    inline  val  m:Any? get()=cell.first
+inline class MonoVal(val cell: Pai2<Any?, () -> CoroutineContext>) {
+    inline fun ctxt(): CoroutineContext = cell.second()
+    inline val m: Any? get() = cell.first
 
 }
 
@@ -18,7 +19,7 @@ inline class MonoRow(val row: Vect02<Any?, () -> CoroutineContext>) :
     override inline val second: (Int) -> MonoVal
         get() = { ix: Int ->
             MonoVal(
-                row .second (ix)
+                row.second(ix)
             )
         }
 }

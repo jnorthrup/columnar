@@ -125,7 +125,7 @@ class DayJobTest/* : StringSpec()*/ {
             val theCursor = curs[2, 1, 3, 5].ordered(intArrayOf(0, 1, 2))
             val theCoords = coords[2, 1, 3, 5]
             val varcharSizes = varcharMappings(theCursor as Cursor, theCoords)
-         (   (theCursor α floatFillNa(0f)) as Cursor).writeBinary(pathname.toString(), 24, varcharSizes)
+            ((theCursor α floatFillNa(0f)) as Cursor).writeBinary(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: " + nanos)
 
@@ -194,7 +194,7 @@ class DayJobTest/* : StringSpec()*/ {
     }
 
     fun varcharMappings(
-        theCursor:Cursor,
+        theCursor: Cursor,
         theCoords: Vect0r<Pai2<Int, Int>>
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
         index t2 typeMemento
@@ -236,8 +236,9 @@ class DayJobTest/* : StringSpec()*/ {
             val arrangement = intArrayOf(2, 1, 3, 5)
             val theCursor = curs.ordered(intArrayOf(2, 1, 3))[arrangement]
             val theCoords = coords[arrangement]
-            val varcharSizes = varcharMappings(theCursor as Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>, theCoords)
-            ((theCursor α floatFillNa(0f))as Cursor).writeBinary(pathname.toString(), 24, varcharSizes)
+            val varcharSizes =
+                varcharMappings(theCursor as Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>, theCoords)
+            ((theCursor α floatFillNa(0f)) as Cursor).writeBinary(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: $nanos")
 

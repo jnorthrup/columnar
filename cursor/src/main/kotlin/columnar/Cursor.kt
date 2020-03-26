@@ -8,7 +8,6 @@ import columnar.context.*
 import columnar.context.RowMajor.Companion.indexableOf
 import columnar.io.*
 import columnar.macros.*
-import columnar.ml.feature_range
 import columnar.util.logDebug
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,17 +16,6 @@ import java.time.LocalDate
 import java.util.*
 import kotlin.Comparator
 import kotlin.coroutines.CoroutineContext
-import columnar.Cursor
-import columnar.io.RowVec
-import columnar.io.left
-import kotlin.experimental.ExperimentalTypeInference
-import java.nio.channels.*
-import columnar.*
-import columnar.context.*
-import columnar.macros.*
-import columnar.util.*
-import columnar.io.*
-import columnar.ml.*
 import kotlin.math.max
 import kotlin.math.sqrt
 

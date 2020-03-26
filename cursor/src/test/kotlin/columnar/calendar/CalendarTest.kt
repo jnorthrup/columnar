@@ -75,7 +75,7 @@ class CalendarTest {
                     (row.left[ix] as? LocalDate)?.let { it: LocalDate ->
                         val filterNotNull = jvmCal.DateWiseCategories(it)
                         val pai2: Pai2<Any?, () -> CoroutineContext> = filterNotNull.toString() t2 {
-                            val second = row[ix] .second ()
+                            val second = row[ix].second()
                             second + Scalar(IOMemento.IoString, "${jvmCal.name}_map")
                         }
                         pai2

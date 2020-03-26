@@ -4,7 +4,7 @@ package columnar.macros
 
 import kotlinx.coroutines.flow.*
 import java.util.*
-import kotlin.experimental.*
+import kotlin.experimental.ExperimentalTypeInference
 
 /**
  * semigroup
@@ -205,7 +205,7 @@ inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) 
 inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
         override val size: Int = v.first
-        override operator fun get(index: Int) =( v  [index])
+        override operator fun get(index: Int) = (v[index])
     }
 }
 

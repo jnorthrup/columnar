@@ -136,10 +136,10 @@ inline infix fun <reified X, reified Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Ha
 
 inline infix fun <reified X, reified Y, reified Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(
     p: P
-) = Tripl3(first, p.first, p .second )
+) = Tripl3(first, p.first, p.second)
 
 inline infix fun <reified X, reified Y, reified Z, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(t: T) =
-    Qu4d(first, t.first, t .second , t.third)
+    Qu4d(first, t.first, t.second, t.third)
 
 inline infix fun <reified F, reified S> F.t2(s: S) = Pai2(this, s)
 inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }

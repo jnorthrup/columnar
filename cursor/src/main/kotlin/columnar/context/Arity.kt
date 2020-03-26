@@ -1,22 +1,23 @@
 package columnar.context
 
-import columnar.*
+import columnar.TypeMemento
 import columnar.io.IOMemento
 import columnar.macros.*
-import columnar.macros.Vect02
 import kotlin.coroutines.CoroutineContext
 
 sealed class Arity : CoroutineContext.Element {
     override val key get() = arityKey
 
     companion object {
-open public         val arityKey = object :
+        open public val arityKey = object :
             CoroutineContext.Key<Arity> {}
     }
 }
 
 open class Scalar(type: TypeMemento, name: String? = null) : Pai2<TypeMemento, String?> by Pai2(type, name), Arity() {
-    val name:String get()=this .second ?: "generic${(first as? IOMemento)?.name?:first::class.java.simpleName  }:${first.networkSize}"
+    val name: String
+        get() = this.second
+            ?: "generic${(first as? IOMemento)?.name ?: first::class.java.simpleName}:${first.networkSize}"
 }
 
 /**Borg reference*/

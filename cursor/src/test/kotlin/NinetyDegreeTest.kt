@@ -123,7 +123,7 @@ class NinetyDegreeTest/* : StringSpec()*/ {
 
 
             for (i in 0 until piv.size) for (j in 0 until piv.scalars.size)
-               ( piv at i)[j].first shouldBe (piv2 at (i))[j].first
+                (piv at i)[j].first shouldBe (piv2 at (i))[j].first
 
         } finally {
             try {

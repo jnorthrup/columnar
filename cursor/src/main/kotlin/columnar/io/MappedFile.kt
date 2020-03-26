@@ -1,6 +1,5 @@
 package columnar.io
 
-import columnar.io.FileAccess
 import java.io.Closeable
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -24,10 +23,10 @@ open class MappedFile(
     ),
     val channel: FileChannel = randomAccessFile.channel,
     val length: Long = randomAccessFile.length(),
-    val mappedByteBuffer: ByteBuffer =   channel.map(
-            mapMode,
-            0,
-            min(Int.MAX_VALUE.toLong(), length)
-        )
+    val mappedByteBuffer: ByteBuffer = channel.map(
+        mapMode,
+        0,
+        min(Int.MAX_VALUE.toLong(), length)
+    )
 
 ) : FileAccess(filename), Closeable by randomAccessFile

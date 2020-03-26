@@ -1,23 +1,16 @@
 package columnar.context
 
-import columnar.*
+import columnar.TypeMemento
 import columnar.io.*
 import columnar.macros.*
-import columnar.macros.Vect02
-import columnar.macros.Vect0r
-import columnar.macros.toList
 import columnar.util.*
-import java.nio.*
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
-import columnar.*
-import columnar.context.*
-import columnar.macros.*
-import columnar.util.*
-import columnar.io.*
+
 typealias  MMapWindow = Tw1n<Long>
 typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
@@ -79,7 +72,7 @@ class NioMMap(
 
         val asContextVect0r: Vect02<ByteBuffer, Pai2<Long, Long>> =
             asContextVect0r(addressable as Indexable, fixedWidth)
-        (asContextVect0r t2  { y: ByteBuffer ->
+        (asContextVect0r t2 { y: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
                 (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].size
             }
