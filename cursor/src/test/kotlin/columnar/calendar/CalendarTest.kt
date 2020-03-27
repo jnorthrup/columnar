@@ -1,7 +1,10 @@
 package columnar.calendar
 
-import columnar.*
+import columnar.Cursor
+import columnar.TypeMemento
+import columnar.at
 import columnar.context.*
+import columnar.get
 import columnar.io.*
 import columnar.macros.*
 import org.junit.jupiter.api.Test

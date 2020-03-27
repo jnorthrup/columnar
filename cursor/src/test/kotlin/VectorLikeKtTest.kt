@@ -1,9 +1,6 @@
 package columnar
 
-import columnar.macros.Vect0r
-import columnar.macros.div
-import columnar.macros.toList
-import columnar.macros.toVect0r
+import columnar.macros.*
 import shouldBe
 
 class VectorLikeKtTest {

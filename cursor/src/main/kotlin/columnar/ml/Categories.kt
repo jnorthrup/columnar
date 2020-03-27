@@ -4,11 +4,7 @@ import columnar.Cursor
 import columnar.at
 import columnar.context.Scalar
 import columnar.io.*
-import columnar.join
-import columnar.macros.get
-import columnar.macros.size
-import columnar.macros.t2
-import columnar.macros.toVect0r
+import columnar.macros.*
 
 /***
  *

@@ -1,8 +1,9 @@
-package columnar
+package columnar.macros
 
+import columnar.Cursor
+import columnar.at
 import columnar.io.RowVec
 import columnar.io.scalars
-import columnar.macros.*
 import kotlin.math.absoluteValue
 
 // c[0,1,2]
