@@ -73,7 +73,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <incrementalCachesRoot>true</incrementalCachesRoot>
+
                     <jvmTarget>11</jvmTarget>
                     <args>
                         <arg>-Xopt-in=kotlin.RequiresOptIn</arg>

@@ -96,7 +96,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [ ] Mapper Buffer pools 
   - [ ] Access (named) Columns by name 
   - [ ] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
-  - [ ] Review as Java lib via maven.  what is available, what's not.  
+  - [X] Review as Java lib via maven.  what is available, what's not.  
   - [X] a token amount of jvm switch testing.
   - [X] textual field format IO/mapping
   - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
