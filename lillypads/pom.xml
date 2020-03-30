@@ -12,4 +12,21 @@
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
     </build>
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>k</id>
+            <name>kl</name>
+            <url>https://dl.bintray.com/korlibs/korlibs/</url>
+        </repository>
+    </repositories>
+    <dependencies>
+        <dependency>
+            <groupId>com.soywiz.korlibs.korio</groupId>
+            <artifactId>korio-jvm</artifactId>
+            <version>1.10.1</version>
+        </dependency>
+    </dependencies>
 </project>

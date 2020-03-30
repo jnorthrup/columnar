@@ -13,3 +13,5 @@ superannuate
 /target/
 */target
 /superannuate
+*.class
+/superannuated1909.fwf
