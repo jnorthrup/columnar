@@ -22,9 +22,9 @@ fun main(args: Array<String>) {
     val receiver = InetSocketAddress(allBroadcastAddresses.last(), 2112)
     Executors.newCachedThreadPool().invokeAll(
 
-        listOf<Callable<Unit>>(
+        listOf(
 
-            Callable<Unit> {
+            Callable {
                 println(allBroadcastAddresses)
                 println("is anylocal   " + activeAddresses.map { it.address to it.address.isAnyLocalAddress })
                 println("is sitelocal  " + activeAddresses.map { it.address to it.address.isSiteLocalAddress })
@@ -46,11 +46,11 @@ fun main(args: Array<String>) {
 
                     val sz = (allocate as ByteBuffer).position()
                     val byteArray = ByteArray(sz)
-                    allocate.flip()  .get(byteArray).clear()
+                    allocate.flip().get(byteArray).clear()
                     println(String(byteArray))
                 }
             }
-            , Callable<Unit> {
+            , Callable {
 
                 val channel = DatagramChannel.open(StandardProtocolFamily.INET)
 

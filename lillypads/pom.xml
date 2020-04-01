@@ -12,7 +12,7 @@
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
     </build>
-    <repositories>
+<!--    <repositories>
         <repository>
             <snapshots>
                 <enabled>false</enabled>
@@ -28,5 +28,5 @@
             <artifactId>korio-jvm</artifactId>
             <version>1.10.1</version>
         </dependency>
-    </dependencies>
+    </dependencies>-->
 </project>
