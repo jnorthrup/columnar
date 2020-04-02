@@ -125,7 +125,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
 
 Figure below: Orthogonal Context elements (Sealed Class Hierarchies).
    
-These describe different aspects of accessing  data and projecting columnar and matrix transformations 
+These describe different aspects of accessing  data and projecting cursors and matrix transformations 
 These are easy to think of as hierarchical threadlocals to achieve IOBound storage access to large datasets. 
 
 ![image](https://user-images.githubusercontent.com/73514/71553240-7a838500-2a3e-11ea-8e3e-b85c0602873f.png)

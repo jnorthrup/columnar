@@ -1,3 +1,3 @@
-package columnar
+package cursors
 
 internal class DummySpecTest

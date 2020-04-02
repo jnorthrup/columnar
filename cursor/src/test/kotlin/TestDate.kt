@@ -1,4 +1,4 @@
-package columnar
+package cursors
 
 import java.time.chrono.IsoChronology
 
