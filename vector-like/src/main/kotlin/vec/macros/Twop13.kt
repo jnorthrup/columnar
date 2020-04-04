@@ -15,7 +15,9 @@ Tuples also occur in relational algebra; when programming the semantic web with 
 package vec.macros
 
 /**
-a singular reference.  front end of Pai2 and Tripl3.  */
+ * 1-ary tuple interface, a handle.  was conceived as something that provided "first" by inheritance,
+ * so it's mostly vestigial dead code for now.
+ */
 interface Hand1l<out F> {
     val first: F
     operator fun component1(): F = first
@@ -28,7 +30,7 @@ interface Hand1l<out F> {
     }
 }
 
-/**inheritable version of pair that provides it's first compnent as a Un1t*/
+/**inheritable version of pair  */
 interface Pai2<F, S> {
     val first: F
     val second: S
@@ -59,7 +61,7 @@ interface Pai2<F, S> {
 inline operator fun <reified F, reified S> Pai2<F, S>.component2(): S = second
 inline operator fun <reified F, reified S> Pai2<F, S>.component1(): F = first
 
-/**inheritable version of triple that also provides its first two as a pair.
+/**inheritable version of triple
  */
 interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
     val first: F
@@ -101,10 +103,16 @@ typealias XY<X, Y> = Pai2<X, Y>
 
 typealias XYZ<X, Y, Z> = Tripl3<X, Y, Z>
 /**
+ * a pair with uniform types
+ *
+ *
  * homage to eclipse types
  */
 typealias Tw1n<reified X> = XY<X, X>
 
+/**
+ * a factory method
+ */
 inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
     object : Pai2<T, T> {
         override inline val first get() = ar[0]
@@ -112,23 +120,29 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
     }
 }
 
+/**
+ * int-type specific twin with primitive array backing store.
+ */
 inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
     override inline val first get() = ia[0]
     override inline val second get() = ia[1]
 
 }
+/**
+ * long-type specific twin with primitive array backing store.
+ */
+inline class Twln(val ia: LongArray) : Tw1n<Long> {
+    override inline val first get() = ia[0]
+    override inline val second get() = ia[1]
+}
 
 @JvmName("twinint")
 inline fun <reified T : Int> Tw1n(first: T, second: T) = Tw1nt(intArrayOf(first, second))
 
+@JvmName("twinlong")
 inline fun <reified T : Long> Tw1n(first: T, second: T) = Twln(longArrayOf(first, second))
 
 
-inline class Twln(val ia: LongArray) : Tw1n<Long> {
-
-    override inline val first get() = ia[0]
-    override inline val second get() = ia[1]
-}
 
 
 inline infix fun <reified X, reified Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
@@ -209,9 +223,6 @@ interface Qu4d<F, S, T, Z>/* : Tripl3<F, S, T>*/ {
 }
 
 inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component4() = fourth
-
 inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component3() = third
-
 inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component2() = second
-
 inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component1() = first

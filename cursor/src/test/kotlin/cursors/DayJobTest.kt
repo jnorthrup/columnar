@@ -80,7 +80,6 @@ class DayJobTest {
             System.err.println("fetching $s")
             val parentDir = Paths.get("..").toFile()
             Runtime.getRuntime().exec(_a["git", "clone", "--depth=1", s], null, parentDir).also {
-it.
 
                 val retcode = it.waitFor()
                 when (retcode) {
