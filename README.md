@@ -100,9 +100,12 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] a token amount of jvm switch testing.
   - [X] textual field format IO/mapping
   - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
-  - [X] binary  field format IO/mapping (network endian binary int/long/ieee)
-  - [X] sharded cursor - file column per column and presents joined cursor 
-   
+  - [X] basic ISAM \[de]hydradation - in review of network-endian binary fwf, we ought to just call it ISAM.
+  - [X] idempotent ISAM - ISAM volumes can be cryptographically digested to give a placeholder of the contents in
+         operator expressions of transforms
+  - [X] sharded \[de]hydration - unit test to shard dayjob sample by column 
+         
+  
 ### lower priorities (as-yet unimplemented orthogonals)
  - [ ] gossip mesh addressable cursor iterators (this branch) [2]
  - [ ] json    field format IO/mapping
@@ -118,6 +121,10 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
  - [ ] jdbc adapters [1]
  - [ ] sql query language driver [1]
  - [ ] jq query language driver
+ - [ ] sharded datatables - IO Routines to persist idempotent rowsets across multiple rows and column divisions
+ - [ ] mutability facade - append-only journal of volume mutations as idempotent transformation expressions  
+ - [ ] adaptive cavitation - consolidate and redivide TableRoots based on mutation patterns to absorb journalized
+        mutations into contiguous and conjoined volumes with join and combine operators against digests 
  
 [1]: downstream of [jdbc2json](https://github.com/jnorthrup/jdbc2json)
 

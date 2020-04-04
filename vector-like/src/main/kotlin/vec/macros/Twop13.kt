@@ -172,7 +172,7 @@ inline infix fun <reified A, reified B, reified C, reified D> Tripl3<A, B, C>.t4
 
 
 /**inheritable version of quad that also provides its first three as a triple. */
-interface Qu4d<F, S, T, Z>/* : Tripl3<F, S, T>*/ {
+interface Qu4d<F, S, T, Z> {
     val first: F
     val second: S
     val third: T
@@ -198,7 +198,7 @@ interface Qu4d<F, S, T, Z>/* : Tripl3<F, S, T>*/ {
             third: T,
             fourth: Z
         ): Qu4d<F, S, T, Z> =
-            object : Qu4d<F, S, T, Z>/*, Tripl3<F, S, T> by Tripl3(f, s, t)*/ {
+            object : Qu4d<F, S, T, Z> {
                 override inline val first get() = first
                 override inline val second get() = second
                 override inline val third get() = third

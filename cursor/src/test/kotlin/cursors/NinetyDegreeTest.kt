@@ -55,7 +55,7 @@ class NinetyDegreeTest {
          */
         val createTempFile = File.createTempFile("ninetyDegreesTest1", ".bin")
         System.err.println("tmpfile is " + createTempFile.toPath())
-        piv.writeBinary(createTempFile.absolutePath, defaultVarcharSize)
+        piv.writeISAM(createTempFile.absolutePath, defaultVarcharSize)
     }
 
     /**
@@ -107,14 +107,14 @@ class NinetyDegreeTest {
             )
             System.err.println("tmpfile is " + createTempFile.toPath())
             val pathname = createTempFile.absolutePath
-            piv[i].writeBinary(pathname)
+            piv[i].writeISAM(pathname)
             pathname
         }
         System.err.println(fnList)
 
         val handleMapThing: Vect02<MappedFile, Cursor> = fnList.α {
             val mappedFile = MappedFile(it)
-            mappedFile t2 binaryCursor(Paths.get(it), mappedFile)
+            mappedFile t2 ISAMCursor(Paths.get(it), mappedFile)
         }
 
         try {
@@ -145,7 +145,7 @@ class NinetyDegreeTest {
         )
 
         MappedFile(binpath.toString()).use { mf ->
-            val cursr = binaryCursor(binpath, mf)
+            val cursr = ISAMCursor(binpath, mf)
 
             System.err.println((cursr at (0)).left.toList())
             System.err.println((cursr at (1)).left.toList())

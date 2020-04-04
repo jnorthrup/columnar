@@ -7,6 +7,8 @@ package vec.util
 
 
 import vec.macros.Pai2
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import kotlin.text.Charsets.UTF_8
 
@@ -61,4 +63,18 @@ object _s {
 
 fun main() {
     logDebug { "this ought not be visible" }
+}
+fun fileSha256Sum(pathname:String): String {
+    val command = ProcessBuilder().command("sha256sum", pathname)
+
+    val process = command.start()
+    val reader = BufferedReader(InputStreamReader(process.getInputStream()))
+    val builder = StringBuilder()
+    var line: String? = null
+    while (reader.readLine().also { line = it } != null) {
+        builder.append(line)
+        builder.append(System.getProperty("line.separator"))
+    }
+    val result = builder.toString()
+    return result
 }

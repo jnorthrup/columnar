@@ -5,13 +5,9 @@ package cursors
 import cursors.calendar.daySeq
 import cursors.calendar.feature_range
 import cursors.context.*
-import cursors.context.RowMajor.Companion.indexableOf
 import cursors.io.*
  import vec.macros.*
 import vec.util.logDebug
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.LocalDate
 import java.util.*
 import kotlin.Comparator
@@ -279,33 +275,6 @@ inline fun Cursor.ordered(
         val ix2 = it[iy]
         this at ix2
     }
-}
-
-
-@Suppress("USELESS_CAST")
-fun binaryCursor(
-    binpath: Path,
-    mappedFile: MappedFile,
-    metapath: Path = Paths.get(binpath.toString() + ".meta")
-) = mappedFile.run {
-    val lines = Files.readAllLines(metapath)
-    lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
-    val rcoords: Vect02<Int, Int> = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
-    val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
-    val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
-    val recordlen = rcoords.last().second
-    val drivers = NioMMap.binary(typeVec)
-    val nio = NioMMap(this, drivers)
-    val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null })
-    val indexable: Addressable = indexableOf(nio, fixedWidth)
-    cursorOf(
-        RowMajor().fromFwf(
-            fixedWidth,
-            indexable as Indexable,
-            nio,
-            Columnar(typeVec.zip(rnames) as Vect02<TypeMemento, String?>)
-        )
-    )
 }
 
 

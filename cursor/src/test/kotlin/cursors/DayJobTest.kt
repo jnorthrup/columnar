@@ -10,7 +10,7 @@ import cursors.macros.α
 import vec.macros.*
 import vec.util._a
 import vec.util._l
-import vec.util._s
+import vec.util.fileSha256Sum
 import vec.util.size
 import java.io.File
 import java.nio.file.Files
@@ -18,6 +18,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.min
 import kotlin.system.measureNanoTime
 
 class DayJobTest {
@@ -130,12 +131,12 @@ class DayJobTest {
             val theCursor = curs[2, 1, 3, 5].ordered(intArrayOf(0, 1, 2))
             val theCoords = coords[2, 1, 3, 5]
             val varcharSizes = varcharMappings(theCursor, theCoords)
-            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
+            (theCursor α floatFillNa(0f)).writeISAM(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: " + nanos)
 
         MappedFile(pathname.toString()).use { mf ->
-            val binaryCursor = binaryCursor(pathname, mappedFile = mf)
+            val binaryCursor = ISAMCursor(pathname, mappedFile = mf)
             val filtered = binaryCursor.resample(0).pivot(
                 intArrayOf(0),
                 intArrayOf(1, 2),
@@ -169,12 +170,16 @@ class DayJobTest {
             val theCursor = curs[reorder]
             val theCoords = coords[reorder]
             val varcharSizes = varcharMappings(theCursor, theCoords)
-            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
+            (theCursor α floatFillNa(0f)).writeISAM(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: " + nanos)
 
+        val fileSha256Sum = fileSha256Sum(pathname.toString())
+
+        System.err.println("isam digest: " + fileSha256Sum)
+
         MappedFile(pathname.toString()).use { mf ->
-            val binaryCursor = binaryCursor(pathname, mappedFile = mf)
+            val binaryCursor = ISAMCursor(pathname, mappedFile = mf)
             val filtered = binaryCursor.resample(0).pivot(
                 intArrayOf(0),
                 intArrayOf(1, 2),
@@ -191,7 +196,7 @@ class DayJobTest {
             println("row 2 took " + measureNanoTimeStr {
                 second.let {
                     println("row 2 is:")
-                    message = stringOf(it)
+                    message = stringOf(RowVec(min(it.size, 100), it.second))
                 }
             })
             println(message)
@@ -242,13 +247,13 @@ class DayJobTest {
             val theCursor = curs.ordered(intArrayOf(2, 1, 3))[arrangement]
             val theCoords = coords[arrangement]
             val varcharSizes =
-                varcharMappings(theCursor as Pai2<Int, (Int) -> Vect0r<Pai2<Any?, () -> CoroutineContext>>>, theCoords)
-            (theCursor α floatFillNa(0f)).writeBinary(pathname.toString(), 24, varcharSizes)
+                varcharMappings(theCursor, theCoords)
+            (theCursor α floatFillNa(0f)).writeISAM(pathname.toString(), 24, varcharSizes)
         }
         System.err.println("transcription took: $nanos")
 
         MappedFile(pathname.toString()).use { mf ->
-            val piv = binaryCursor(pathname, mappedFile = mf).resample(0).pivot(
+            val piv = ISAMCursor(pathname, mappedFile = mf).resample(0).pivot(
                 intArrayOf(0),
                 intArrayOf(1, 2),
                 intArrayOf(3)

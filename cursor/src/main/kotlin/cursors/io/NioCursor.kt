@@ -13,6 +13,12 @@ typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
 typealias RowVec = Vect02<Any?, () -> CoroutineContext>
 
+typealias writefn<M, R> = Function2<M, R, Unit>
+typealias readfn<M, R> = Function1<M, R>
+
+
+
+
 fun stringOf(it: RowVec) = it.left.toList().map { any ->
     val isVec = any as? Vect0r<*>
     val any1 = isVec?.toList() ?: any
@@ -28,9 +34,4 @@ inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.x get() = this α (
 inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.y get() = this α (XYZ<F, S, T>::second)
 inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.z get() = this α (XYZ<F, S, T>::third)
 inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify get() = this α (XYZ<F, S, T>::triple)
-
-typealias writefn<M, R> = Function2<M, R, Unit>
-typealias readfn<M, R> = Function1<M, R>
-
-
 

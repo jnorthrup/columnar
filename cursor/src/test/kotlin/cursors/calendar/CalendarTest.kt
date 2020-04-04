@@ -8,7 +8,6 @@ import cursors.io.*
 import cursors.macros.join
 import org.junit.jupiter.api.Test
 import vec.macros.*
-import vec.util.at
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
