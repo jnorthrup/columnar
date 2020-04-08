@@ -61,6 +61,8 @@ The initial focus of the implementation rests on the fixed-width file format obt
 the library is designed to levereage the ISAM properties of FWF and to extend toward reading and creation of other
  data formats such as Binary rowsets and Scalar Column index volumes 
 
+internals: [vectorlike](vector-like/README.md)
+
  ###   implementation distinctions from other implementations
 The implementation relies on a set of typealiases and extension functions approximating various pure-functional 
 constructs and retaining off-heap and deferred/lazy processing semantics.
