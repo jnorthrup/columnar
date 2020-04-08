@@ -28,11 +28,11 @@ at heart, the Vect0r is a pair of size and function.  the debugger shows what is
  val convertedToArray =strVec.toArray()
  val convertedToList =strVec.toList()
 ```
- we can make a lazy vector of ints from the array of strings.
- val intVec = strVec α String::toInt
 
- intVec.last() shouldBe 2
+ we can make a lazy vector of ints from the array of strings. the `α` "conversion" operator was chosen. this is the same as a  defered `.map{}` 
+ `val intVec = strVec α String::toInt`
 
+ 
  we can combine them to create new indexed vect0r's
  ``` 
  val doubleLength = combine(intVec, intVec)
