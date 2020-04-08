@@ -71,7 +71,6 @@ class RowMajor : Ordering() {
         }
     }
 
-    //todo: move to rowMajor
     /**
      * this builds a context and launches a cursor in the given NioMMap frame of reference
      */

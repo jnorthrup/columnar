@@ -49,7 +49,7 @@ object _a {
     operator fun get(vararg t: Byte) = t
     operator fun get(vararg t: Boolean) = t
     operator fun get(vararg t: Long) = t
-    operator fun <T> get(vararg t: T) = t
+    operator fun <T> get(vararg t: T)  = t as Array<T>
 
 }
 
@@ -64,11 +64,12 @@ object _s {
 fun main() {
     logDebug { "this ought not be visible" }
 }
-fun fileSha256Sum(pathname:String): String {
+
+fun fileSha256Sum(pathname: String): String {
     val command = ProcessBuilder().command("sha256sum", pathname)
 
     val process = command.start()
-    val reader = BufferedReader(InputStreamReader(process.getInputStream()))
+    val reader = BufferedReader(InputStreamReader(process.inputStream))
     val builder = StringBuilder()
     var line: String? = null
     while (reader.readLine().also { line = it } != null) {
