@@ -1,7 +1,7 @@
 # Vector-like utils
 
 
-#### _a, _l, _s convenience operators (array,list,set)
+#### _a, _l, _s, _v convenience operators (array,list,set, vect0r)
 we can create an array from bikeshed util
 ``` 
  val ar: Array<String> = _a["0", "1", "2"]
