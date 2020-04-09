@@ -9,7 +9,7 @@ we can create an array from bikeshed util
 
 ![image](https://user-images.githubusercontent.com/73514/78833279-cdde7980-7a16-11ea-8b5b-80c6d8c5bce3.png)
 
- ## bikeshedding: "convertables"
+ ## bikeshedding: "collection-like"
  #### convert from collections/iterables/sequences/flows
  we can make a lazy vector from the array of strings
 ``` 
@@ -68,14 +68,14 @@ we can combine them to create new indexed vect0r's
 
 
 #### [bikeshed util] reindex/reorder operator
-we can reorder them as a new Vect0r, lazily. the bikeshed util extends this to Any convertables above.  applies to other "convertibles" via convertion .toList() 
+we can reorder them as a new Vect0r, lazily. the bikeshed util extends this to any collection-like above.  applies to other "convertibles" via convertion .toList() 
 ``` 
  val reordered1 = doubleLength[2, 1, 3, 4,4,4,4,4]
  >[2, 1, 0, 1, 1, 1, 1, 1] 
 ```
 ![image](https://user-images.githubusercontent.com/73514/78834769-46463a00-7a19-11ea-8d40-008584fb588c.png)
 
-#### pairswise construction 
+#### pairwise construction 
  we can destructure them to reach under the hood.
  
  larger abstractions, namely  cursors, and tables in Columnar are also pairwise construction at this time.
@@ -98,7 +98,7 @@ System.err.println("z1: zip" + z1.toList())
 >z1: zip[(2, 2), (1, 1), (0, 0), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
 ```
 #### Vect0r.zipWithNext()
-also similar to stdlib with a modified
+also similar to stdlib with a modified pair type
 ```
 val zwn = combine(strVec, strVec).zipWithNext()
 val z2 = zwn α Pai2<String, String>::pair
