@@ -125,7 +125,7 @@ System.err.println(" theTw1n:" + theTw1n.pair)
 we can still specialize based on type semantics in typealiases.  powerful language to say the least.  
 ```
 val theTw1n2: Tw1nt = Tw1n<Int>(0, 1)
-System.err.println(" theTw1n:" +/* */_l[theTw1n2.toString()])
+System.err.println(" theTw1n:" +/* inline class diverges slightly from interface Pai2*/_l[theTw1n2.toString()])
 ```
 
 ### twins
