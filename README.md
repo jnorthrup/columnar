@@ -57,7 +57,7 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
 ## architecture 
 
 The initial focus of the implementation rests on the fixed-width file format obtainable via the companion project 
-[flatsql, part of json2jdbc](https://github.com/jnorthrup/jdbc2json#flatsqlsh).  
+[flatsql, part of jdbc2json](https://github.com/jnorthrup/jdbc2json#flatsqlsh).  
 the library is designed to levereage the ISAM properties of FWF and to extend toward reading and creation of other
  data formats such as Binary rowsets and Scalar Column index volumes 
 
