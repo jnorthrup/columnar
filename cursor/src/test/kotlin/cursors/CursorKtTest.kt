@@ -2,10 +2,7 @@
 
 package cursors
 
-import cursors.context.Columnar
-import cursors.context.FixedWidth
-import cursors.context.NioMMap
-import cursors.context.RowMajor
+import cursors.context.*
 import cursors.context.RowMajor.Companion.fixedWidthOf
 import cursors.io.*
 import cursors.io.IOMemento.IoFloat
@@ -257,30 +254,6 @@ class CursorKtTest {
                 }}"
             }.toList())
         }
-    }
-
-    @Test
-    fun cursorFromheapObjects() {
-        /* val drivers = vect0rOf(
-     IOMemento.IoLocalDate as TypeMemento,
-     IoString,
-     IoFloat,
-     IoFloat
-     )*/
-        data class row(val date: LocalDate, val channel: String, val delivered: Float, val ret: Float)
-
-        val rows = _v[
-
-                row(LocalDate.of(2017, 10, 13), "0101761/0101010207/13-14/01", 88.0f, 0.0f),
-                row(LocalDate.of(2017, 10, 22), "0102211/0101010212/13-14/01", 80.0f, 0.0f),
-                row(LocalDate.of(2017, 10, 24), "0500020/0101010106/13-14/05", 4.0f, 0.0f),
-                row(LocalDate.of(2017, 10, 22), "0500020/0101010106/13-14/05", 820.0f, 0.0f)
-        ]
-
-        Cursor(rows.size){iy:Int->
-            rows.javaClass.declaredFields.size
-        }
-
     }
 
 }
