@@ -22,7 +22,7 @@ fun ISAMCursor(
 ) = mappedFile.run {
     val lines = Files.readAllLines(metapath)
     lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
-    val rcoords: Vect02<Int, Int> = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
+    val rcoords  = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext() as Vect02<Int, Int>
     val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
     val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
     val recordlen = rcoords.last().second

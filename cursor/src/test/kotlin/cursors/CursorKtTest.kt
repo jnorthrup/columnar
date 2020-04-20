@@ -7,10 +7,9 @@ import cursors.context.FixedWidth
 import cursors.context.NioMMap
 import cursors.context.RowMajor
 import cursors.context.RowMajor.Companion.fixedWidthOf
-import cursors.io.cursorOf
-import cursors.io.IOMemento
-import cursors.io.IOMemento.*
 import cursors.io.*
+import cursors.io.IOMemento.IoFloat
+import cursors.io.IOMemento.IoString
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.ml.DummySpec
@@ -18,24 +17,27 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import shouldBe
 import vec.macros.*
+import vec.util._a
+import vec.util._v
+import java.time.LocalDate
 
 
 class CursorKtTest {
-    val coords = intArrayOf(
-        0, 10,
-        10, 84,
-        84, 124,
-        124, 164
-    ).zipWithNext()
+    val coords = _a[
+            0, 10,
+            10, 84,
+            84, 124,
+            124, 164
+    ].zipWithNext()
 
-    val drivers = vect0rOf(
-        IOMemento.IoLocalDate as TypeMemento,
-        IoString,
-        IoFloat,
-        IoFloat
-    )
+    val drivers = _v[
+            IOMemento.IoLocalDate,
+            IoString,
+            IoFloat,
+            IoFloat
+    ]
 
-    val names = vect0rOf("date", "channel", "delivered", "ret")
+    val names = _v["date", "channel", "delivered", "ret"]
     val mf = MappedFile("src/test/resources/caven4.fwf")
     val nio = NioMMap(mf)
     val fixedWidth: FixedWidth
@@ -43,10 +45,10 @@ class CursorKtTest {
 
     @Suppress("UNCHECKED_CAST")
     val root = RowMajor().fromFwf(
-        fixedWidth,
-        RowMajor.indexableOf(nio, fixedWidth),
-        nio,
-        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+            fixedWidth,
+            RowMajor.indexableOf(nio, fixedWidth),
+            nio,
+            Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
     )
 
 
@@ -91,18 +93,18 @@ class CursorKtTest {
 
             val resample = cursor.resample(0)
             val toList = resample
-                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
-                .toList()
+                    /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
+                    .toList()
             resample.toList()[3][2].first shouldBe 820f
             toList.forEach { System.err.println(it) }
         }
         System.err.println("ordered\n\n")
         run {
             val ordered = cursor.resample(0)
-                .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
+                    .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
 
             val toList = ordered.narrow()
-                .toList()
+                    .toList()
 
             toList.forEach { System.err.println(it) }
             ordered.toList()[9][1].first shouldBe "0102211/0101010212/13-14/01"
@@ -120,7 +122,7 @@ class CursorKtTest {
         for (i in 0 until resample.first) {
             (resample at (i)).left.toList() shouldBe (join at (i)).left.toList()
             println(
-                (resample at (i)).left.toList() to (join at (i)).left.toList()
+                    (resample at (i)).left.toList() to (join at (i)).left.toList()
             )
         }
 
@@ -210,9 +212,9 @@ class CursorKtTest {
         val cursor: Cursor = cursorOf(root)
         println(cursor.narrow().toList())
         val piv = cursor.pivot(
-            intArrayOf(0),
-            intArrayOf(1),
-            intArrayOf(2, 3)
+                intArrayOf(0),
+                intArrayOf(1),
+                intArrayOf(2, 3)
         ).group((0)).`∑`(sumReducer[IOMemento.IoFloat]!!)
 
         piv.forEach { it ->
@@ -256,4 +258,29 @@ class CursorKtTest {
             }.toList())
         }
     }
+
+    @Test
+    fun cursorFromheapObjects() {
+        /* val drivers = vect0rOf(
+     IOMemento.IoLocalDate as TypeMemento,
+     IoString,
+     IoFloat,
+     IoFloat
+     )*/
+        data class row(val date: LocalDate, val channel: String, val delivered: Float, val ret: Float)
+
+        val rows = _v[
+
+                row(LocalDate.of(2017, 10, 13), "0101761/0101010207/13-14/01", 88.0f, 0.0f),
+                row(LocalDate.of(2017, 10, 22), "0102211/0101010212/13-14/01", 80.0f, 0.0f),
+                row(LocalDate.of(2017, 10, 24), "0500020/0101010106/13-14/05", 4.0f, 0.0f),
+                row(LocalDate.of(2017, 10, 22), "0500020/0101010106/13-14/05", 820.0f, 0.0f)
+        ]
+
+        Cursor(rows.size){iy:Int->
+            rows.javaClass.declaredFields.size
+        }
+
+    }
+
 }

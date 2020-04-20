@@ -13,4 +13,5 @@
 /target/
 build
 superannuate
-target
+target*.ipr
+*.iws
