@@ -1,12 +1,14 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
 
 package vec.util
 
 
 import vec.macros.Pai2
+import vec.macros.Vect0r
+import vec.macros.toVect0r
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
@@ -35,21 +37,28 @@ var logReuseCountdown = 0
 /**
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
+object _v {
+    inline operator fun <reified T> get(vararg t: T) = (_a[t]).toVect0r() as Vect0r<T>
+}
+
+/**
+ * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
+ */
 object _l {
-    inline operator fun <T> get(vararg t: T) = listOf(*t)
+    inline operator fun <reified T> get(vararg t: T) = listOf(*t)
 }
 
 /**
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-    operator fun get(vararg t: Int) = t
-    operator fun get(vararg t: Double) = t
-    operator fun get(vararg t: Short) = t
-    operator fun get(vararg t: Byte) = t
-    operator fun get(vararg t: Boolean) = t
-    operator fun get(vararg t: Long) = t
-    operator fun <T> get(vararg t: T)  = t as Array<T>
+    inline operator fun get(vararg t: Int) = t
+    inline operator fun get(vararg t: Double) = t
+    inline operator fun get(vararg t: Short) = t
+    inline operator fun get(vararg t: Byte) = t
+    inline operator fun get(vararg t: Boolean) = t
+    inline operator fun get(vararg t: Long) = t
+    inline operator fun <reified T> get(vararg t: T) = t as Array<T>
 
 }
 
@@ -57,7 +66,7 @@ object _a {
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-    inline operator fun <T> get(vararg t: T) = setOf(*t)
+    inline operator fun <reified T> get(vararg t: T) = setOf(*t)
 }
 
 
