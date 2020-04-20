@@ -6,7 +6,6 @@
     <artifactId>columnar-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>cursors-parent</name>
     <modules>
         <module>cursor</module>
         <module>vector-like</module>
@@ -17,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>13</maven.compiler.source>
         <maven.compiler.target>13</maven.compiler.target>
-        <kotlin.version>1.3.71</kotlin.version>
+        <kotlin.version>1.4-M1</kotlin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -32,21 +31,6 @@
             <version>5.6.0</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency><!--
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-common</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>-->
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
@@ -65,18 +49,56 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-script-runtime</artifactId>
-            <version>1.3.71</version>
+            <version>${kotlin.version}</version>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray.kotlin.eap</id>
+            <name>Bintray Kotlin EAP Repository</name>
+            <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray.kotlin.eap</id>
+            <name>Bintray Kotlin EAP Repository</name>
+            <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+
     <build>
-        <!--
                 <sourceDirectory>src/main/kotlin</sourceDirectory>
                 <testSourceDirectory>src/test/kotlin</testSourceDirectory>
-                <sourceDirectory>src/main/java</sourceDirectory>
-                <testSourceDirectory>src/test/java</testSourceDirectory>
-        -->
+<!--                <sourceDirectory>src/main/java</sourceDirectory>-->
+<!--                <testSourceDirectory>src/test/java</testSourceDirectory>-->
         <plugins>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -107,15 +129,13 @@
                     <execution>
                         <id>test-compile</id>
                         <phase>test-compile</phase>
-
                         <goals>
                             <goal>test-compile</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-
-                    <jvmTarget>11</jvmTarget>
+                    <jvmTarget>13</jvmTarget>
                     <args>
                         <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
                         <arg>-Xnew-inference</arg>>
@@ -137,10 +157,33 @@
                         </configurationParameters>
                     </properties>
                 </configuration>
-
             </plugin>
+<!--
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
+            </plugin>
+-->
         </plugins>
-        <sourceDirectory>src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
     </build>
 </project>
