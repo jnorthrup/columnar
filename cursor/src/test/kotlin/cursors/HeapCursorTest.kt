@@ -2,22 +2,17 @@
 
 package cursors
 
-import cursors.context.*
-import cursors.context.RowMajor.Companion.fixedWidthOf
+import cursors.context.Scalar
 import cursors.io.*
 import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString
 import cursors.macros.`∑`
 import cursors.macros.join
-import cursors.ml.DummySpec
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import shouldBe
 import vec.macros.*
 import vec.util._a
 import vec.util._v
 import java.time.LocalDate
-import kotlin.coroutines.CoroutineContext
 
 data class row(val date: LocalDate, val channel: String, val delivered: Float, val ret: Float)
 
@@ -46,28 +41,17 @@ class HeapCursorTest {
     ]
 
     val names = _v["date", "channel", "delivered", "ret"]
-/*    val heapCursor: Cursor = (rows.size) t2 { iy: Int ->
-        return rows[iy].run {
+
+
+    val heapCursor: Cursor = Cursor(rows.size) { iy: Int ->
+        rows[iy].run {
             RowVec(names.size) { ix: Int ->
                 when (ix) {
                     0 -> component1()
                     1 -> component2()
                     2 -> component3()
                     else -> component4()
-                }
-            } t2 { Scalar(drivers[ix], names[ix]) }
-        }
-    }*/
-
-    val heapCursor: Cursor = Cursor(rows.size) { iy: Int ->
-        rows[iy].run {
-            RowVec(names.size){ ix: Int ->
-                               when (ix) {
-                    0 -> component1()
-                    1 -> component2()
-                    2 -> component3()
-                    else -> component4()
-                } as Any? t2 {Scalar(drivers[ix],names[ix])}
+                } as Any? t2 { Scalar(drivers[ix], names[ix]) }
 
             }
         }

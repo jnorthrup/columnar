@@ -39,7 +39,6 @@ var logReuseCountdown = 0
  */
 object _v {
     inline operator fun <reified T> get(vararg t: T): Vect0r<T> = (t as Array<T>).toVect0r()
-    inline operator fun <reified T> invoke(vararg t: T): Vect0r<T> = (t as Array<T>).toVect0r()
 }
 
 /**
@@ -47,7 +46,6 @@ object _v {
  */
 object _l {
     inline operator fun <reified T> get(vararg t: T) = listOf(*t)
-    inline operator fun <reified T>invoke(vararg t: T) = listOf(*t)
 }
 
 /**
@@ -61,13 +59,7 @@ object _a {
     inline operator fun get(vararg t: Boolean) = t
     inline operator fun get(vararg t: Long) = t
     inline operator fun <reified T> get(vararg t: T) = t as Array<T>
-    inline operator fun             invoke(vararg t: Int) = t
-    inline operator fun             invoke(vararg t: Double) = t
-    inline operator fun             invoke(vararg t: Short) = t
-    inline operator fun             invoke(vararg t: Byte) = t
-    inline operator fun             invoke(vararg t: Boolean) = t
-    inline operator fun             invoke(vararg t: Long) = t
-    inline operator fun <reified T> invoke(vararg t: T) = t as Array<T>
+
 
 }
 
@@ -76,7 +68,6 @@ object _a {
  */
 object _s {
     inline operator fun <reified T> get(vararg t: T) = setOf(*t)
-    inline operator fun <reified T> invoke(vararg t: T) = setOf(*t)
 }
 
 

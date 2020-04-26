@@ -2,7 +2,10 @@
 
 package cursors
 
-import cursors.context.*
+import cursors.context.Columnar
+import cursors.context.FixedWidth
+import cursors.context.NioMMap
+import cursors.context.RowMajor
 import cursors.context.RowMajor.Companion.fixedWidthOf
 import cursors.io.*
 import cursors.io.IOMemento.IoFloat
@@ -16,7 +19,6 @@ import shouldBe
 import vec.macros.*
 import vec.util._a
 import vec.util._v
-import java.time.LocalDate
 
 
 class CursorKtTest {
