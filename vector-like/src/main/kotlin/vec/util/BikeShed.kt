@@ -4,8 +4,6 @@
 @file:Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
 
 package vec.util
-
-
 import vec.macros.Pai2
 import vec.macros.Vect0r
 import vec.macros.toVect0r

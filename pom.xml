@@ -140,8 +140,10 @@
                     <jvmTarget>13</jvmTarget>
                     <args>
                         <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
-                        <arg>-Xnew-inference</arg>>
-                        <arg>-Xinline-classes</arg>>
+                        <arg>-Xnew-inference</arg>
+                        <arg>-Xinline-classes</arg>
+                        <arg>-Xemit-jvm-type-annotations</arg>
+                        <arg>-Xallocator=mimalloc</arg>
                     </args>
                 </configuration>
             </plugin>
