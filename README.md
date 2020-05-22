@@ -87,7 +87,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] groupby n columns
   - [X] cursor.group(n..){reducer} 
   - [X] One-hot Encodings 
-  - [ ] min/max scaling (same premise as resampling above)
+  - [ ] min/max scaling (applying the reverse conversion using code from resampling)
   - [ ] support Numerics, Linear Algebra libraries
   - [X] support for (resampling) Calendar, Time and Units conversion libraries
   - [X] orthogonal offheap and indirect IO component taxonomy
@@ -97,7 +97,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] Algebraic Vector aggregate operations with lazy runtime execution on contents
   - [ ] Mapper Buffer pools 
   - [ ] Access (named) Columns by name 
-  - [ ] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
+  - [X] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
   - [X] Review as Java lib via maven.  what is available, what's not.  
   - [X] a token amount of jvm switch testing.
   - [X] textual field format IO/mapping
@@ -106,7 +106,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] idempotent ISAM - ISAM volumes can be cryptographically digested to give a placeholder of the contents in
          operator expressions of transforms
   - [X] sharded \[de]hydration - unit test to shard dayjob sample by column 
-         
+  - [X] bloom filter indexes for clusters       
   
 ### lower priorities (as-yet unimplemented orthogonals)
  - [ ] gossip mesh addressable cursor iterators (this branch) [2]
