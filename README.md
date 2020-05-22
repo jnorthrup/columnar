@@ -11,25 +11,53 @@ extractions using function assignment and deferred reification instead of in-mem
 so far, these are the fundamaental composable Unary Operators:  (val newcursor = oldcursor.operator) 
 
  * Resampling time-series datasets on LocalDate/LocatlTime columns
-    
+
     `cursor.resample(indexes)`
+
  * Pivot any columns into any collection of other columns
-    
+
     `cursor.pivot(preservedcolumns,newcolumnheaders,expansiontargets)`
- * Group with reducers
+
+ * Value Replacement, Aliasing, and Reducers
+   * Synthetic "3" Cursor 
+        ```kotlin
+            
+             //three rows of threes
+             Cursor(3){rownum:Int-> 
+                RowVec(3){colIndex:Int->
+                   3 t2 {Scalar(ioInt,"Three")}
+              }
+             }
+           
+        ```
+   * Column-wise value replacement
+   
+        ```kotlin
+                
+                   val cities: Vect0r<String> = cities()
+        
+                   val cityCursor:Cursor= Cursor(curs.size) { rowNum: Int ->
+                    RowVec(1) { ix: Int ->
+                        val cindex = bloomIndex.indexOfFirst {  (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum )> -1)}
+                        cities[cindex] t2 {Scalar(IoString, "City")}
+                    }
+                } 
+        ```
+   * Group with reducers  
+        `cursor.group(columns,{reducer})`
+      
     
-    `cursor.group(columns,{reducer})`
  * slice,reorder, and join columns 
      * `cursor[0]` -slice first column only
      * `cursor[0,1,2]` -slice first three columns
      * `cursor[(0 until 3).painfulKotlinCastFunctions]` -slice first three columns
      * `cursor[3,2,1,3,2, 1,1,1,1,2]` -remap 3 source columns into 10 columns  
      * `join(cursor[0],cursor[2],othercursor[0],...)` -join any permutation of source cursor/columns as one cursor.  boundschecking is not done upfront here.  know your row sizes. 
- * random access across combined rows from different sources
-   
-     `combine(cursor1,cursor..n,)` - a binary-searched column dispatch into n cursors.  column boundschecking is not done here.  non-uniform column meta-models per are built into the blackboard driver design to arrive at spreadsheet functionality (todo: formalization of cells functions ).
+
+ * random access across combined rows from different sources   
+     `combine(cursor1,cursor..n,)` - creates a new aggregate cursor with rows in the order combined
      
-     
+
  * Simplified one-hot encoding
    
    `cursor[0,1].categories([DummySpec.last])`
@@ -37,6 +65,10 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
      
       ...almost
       *  todo: Javanese + Balinese Calendars   
+ 
+ * Column remapping 
+ 
+  
  
  
  ###   runtime objects

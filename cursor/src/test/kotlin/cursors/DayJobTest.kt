@@ -312,16 +312,15 @@ class DayJobTest {
         val groupClusters: List<IntArray> = curs.groupClusters(_a[1])
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
-
         val bloomIndex: List<Pai2<BloomFilter, IntArray>> = bloomAccess(groupClusters)
         val scalarColHdr = Scalar(IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
-        var seeks=0
-        var misses=0
-        val cityCursor: Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = Cursor(curs.size) { rowNum: Int ->
+
+
+        val cityCursor:Cursor= Cursor(curs.size) { rowNum: Int ->
             RowVec(1) { ix: Int ->
-                seeks++
-                val cindex = bloomIndex.indexOfFirst {  (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum )> -1).also { if (!it) misses++ }  }
+                /*seeks++*/
+                val cindex = bloomIndex.indexOfFirst {  (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum )> -1)/*.also { if (!it) misses++ } */ }
                 cities[cindex] t2 function
             }
         }
@@ -330,7 +329,7 @@ class DayJobTest {
         for (i in 0 until 100) {
             System.err.println(citified.second(Random.nextInt(citified.size)).left.toList())
         }
-        System.err.println("seeks:$seeks misses:$misses %${misses.toFloat()/seeks.toFloat() *100.0}")
+//        System.err.println("seeks:$seeks misses:$misses %${misses.toFloat()/seeks.toFloat() *100.0}") //11 bits is ~ 1%
     }
 }
 
