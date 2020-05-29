@@ -72,6 +72,7 @@ object _s {
 fun main() {
     logDebug { "this ought not be visible" }
 }
+val eol = System.getProperty("line.separator")
 
 fun fileSha256Sum(pathname: String): String {
     val command = ProcessBuilder().command("sha256sum", pathname)
@@ -82,7 +83,7 @@ fun fileSha256Sum(pathname: String): String {
     var line: String? = null
     while (reader.readLine().also { line = it } != null) {
         builder.append(line)
-        builder.append(System.getProperty("line.separator"))
+        builder.append(eol)
     }
     val result = builder.toString()
     return result

@@ -26,7 +26,7 @@ suspend fun List<Pai2<BloomFilter, IntArray>>.fetch(rowNum: Int): Int = this.map
 fun bloomAccess(groupClusters: List<IntArray>): List<Pai2<BloomFilter, IntArray>> {
     return groupClusters.map {
         val n = it.size
-        val bloomFilter = BloomFilter(n, n * 11).apply {
+        val bloomFilter = BloomFilter(n/*, n * 11*/).apply {
             for (i in it) {
                 add(i)
             }

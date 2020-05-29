@@ -122,9 +122,7 @@ class DayJobTest {
         ).also {
             System.err.println("curs1 record count=" + it.first)
         }
-        this.curs = Cursor(minOf(curs1.size, testRecordCount), { y: Int -> curs1 at (y) }).also {
-            System.err.println("curs record count=" + it.first)
-        }
+        this.curs = Cursor(minOf(curs1.size, testRecordCount), { y: Int -> curs1 at (y) }).also { System.err.println("curs record count=" + it.first) }
 
         var lastmessage: String? = null
     }
@@ -214,7 +212,7 @@ class DayJobTest {
 
     fun varcharMappings(
             theCursor: Cursor,
-            theCoords: Vect0r<Pai2<Int, Int>>
+            theCoords: Vect0r<Pai2<Int, Int>>,
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
         index t2 typeMemento
     }.filter { (_, b) -> b == IoString }.map { (a, _) ->
@@ -309,27 +307,62 @@ class DayJobTest {
         val cities: Vect0r<String> = cities()
 
         // SalesArea column is 1.  cluster key is on _a[1]
-        val groupClusters: List<IntArray> = curs.groupClusters(_a[1])
+        val groupClusters: List<IntArray> = curs1.groupClusters(_a[1])
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
         val bloomIndex: List<Pai2<BloomFilter, IntArray>> = bloomAccess(groupClusters)
         val scalarColHdr = Scalar(IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
-
-
-        val cityCursor:Cursor= Cursor(curs.size) { rowNum: Int ->
-            RowVec(1) { ix: Int ->
-                /*seeks++*/
-                val cindex = bloomIndex.indexOfFirst {  (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum )> -1)/*.also { if (!it) misses++ } */ }
+        var seeks = 0
+        var misses = 0
+        val cityCursor: Cursor = Cursor(curs.size) { rowNum: Int ->
+            RowVec(1) { _: Int ->
+                seeks++
+                val cindex = bloomIndex.indexOfFirst { (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum) > -1).also { if (!it) misses++ } }
                 cities[cindex] t2 function
             }
         }
-        val citified:Cursor  = join(curs[0], cityCursor, curs[2 until curs.scalars.size])
+        val citified: Cursor = join(curs[0], cityCursor, curs[2 until curs.scalars.size])
 
         for (i in 0 until 100) {
             System.err.println(citified.second(Random.nextInt(citified.size)).left.toList())
         }
-//        System.err.println("seeks:$seeks misses:$misses %${misses.toFloat()/seeks.toFloat() *100.0}") //11 bits is ~ 1%
+        logDebug {
+            "seeks:$seeks misses:$misses %${misses.toFloat() / seeks.toFloat() * 100.0}" //11 bits is ~ 1%
+        }
+    }
+    /**
+     * index based column substitution by gathering a cluster of the target column and bloom filtering the indexes.
+     */
+    @Test
+    fun testBloomRemapViaFlows() {
+        // a list of cities at least as large as the cluster index (70)
+        val cities: Vect0r<String> = cities()
+
+        // SalesArea column is 1.  cluster key is on _a[1]
+        val groupClusters: List<IntArray> = curs1.groupClusters(_a[1])
+
+        // replace lambda capture overhead from this cursor by using cluster-level bloom filters
+        val bloomIndex: List<Pai2<BloomFilter, IntArray>> = bloomAccess(groupClusters)
+        val scalarColHdr = Scalar(IoString, "City")
+        val function: () -> Scalar = scalarColHdr.`⟲`
+        var seeks = 0
+        var misses = 0
+        val cityCursor: Cursor = Cursor(curs.size) { rowNum: Int ->
+            RowVec(1) { _: Int ->
+                seeks++
+                val cindex = bloomIndex.indexOfFirst { (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum) > -1).also { if (!it) misses++ } }
+                cities[cindex] t2 function
+            }
+        }
+        val citified: Cursor = join(curs[0], cityCursor, curs[2 until curs.scalars.size])
+
+        for (i in 0 until 100) {
+            System.err.println(citified.second(Random.nextInt(citified.size)).left.toList())
+        }
+        logDebug {
+            "seeks:$seeks misses:$misses %${misses.toFloat() / seeks.toFloat() * 100.0}" //11 bits is ~ 1%
+        }
     }
 }
 

@@ -10,6 +10,7 @@
         <module>cursor</module>
         <module>vector-like</module>
         <module>lillypads</module>
+        <module>seventyfive</module>
     </modules>
     <properties>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>

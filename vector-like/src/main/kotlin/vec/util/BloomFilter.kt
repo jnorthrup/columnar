@@ -5,20 +5,23 @@ package com.github.lovasoa.bloomfilter
  */
 
 package vec.util
+
 import java.lang.Math.*
 import java.util.*
+import kotlin.math.log
+import kotlin.math.log2
+
 /**
  *  bloom filter.
  * @param n Expected number of elements
  * @param m Desired size of the container in bits
  */
 
-public class BloomFilter  (n: Int, m: Int = 1024 * 1024 * 8) : Cloneable {
+public class BloomFilter(n: Int, m: Int =n*11  /* good for 31 bit ints*/  ): Cloneable {
     private var k // Number of hash functions
-            : Int = round(LN2 * m / n).toInt()   .let { if(it <= 0)   1 else it }
-    private val hashes: BitSet= BitSet(m)
-    private val prng: RandomInRange= RandomInRange(m, k)
-
+            : Int = round(LN2 * m / n).toInt().let { if (it <= 0) 1 else it }
+    private val hashes: BitSet = BitSet(m).also { logDebug {  "bloomfilter for $n using $m bits"} }
+    private val prng: RandomInRange = RandomInRange(m, k)
 
 
     /**
@@ -53,25 +56,19 @@ public class BloomFilter  (n: Int, m: Int = 1024 * 1024 * 8) : Cloneable {
      * Create a copy of the current filter
      */
     @Throws(CloneNotSupportedException::class)
-    public override fun clone(): BloomFilter {
-        return super.clone() as BloomFilter
-    }
+    public override fun clone(): BloomFilter = super.clone() as BloomFilter
 
     /**
      * Generate a unique hash representing the filter
      */
-    override fun hashCode(): Int {
-        return hashes.hashCode() xor k
-    }
+    override fun hashCode(): Int = hashes.hashCode() xor k
 
     /**
      * Test if the filters have equal bitsets.
      * WARNING: two filters may contain the same elements, but not be equal
      * (if the filters have different size for example).
      */
-    fun equals(other: BloomFilter): Boolean {
-        return hashes == other.hashes && k == other.k
-    }
+    fun equals(other: BloomFilter): Boolean = hashes == other.hashes && k == other.k
 
     /**
      * Merge another bloom filter into the current one.
@@ -83,10 +80,14 @@ public class BloomFilter  (n: Int, m: Int = 1024 * 1024 * 8) : Cloneable {
         hashes.or(other.hashes)
     }
 
-      inner class RandomInRange internal constructor(// Maximum value returned + 1
+    inner class RandomInRange internal constructor(
+// Maximum value returned + 1
             private val max: Int, // Number of random elements to generate
-            private val count: Int) : Iterable<RandomInRange  >, MutableIterator<RandomInRange > {
-        private val prng: Random
+            private val count: Int, val seed: Long = Runtime.getRuntime().freeMemory(),
+    ) : Iterable<RandomInRange>, MutableIterator<RandomInRange> {
+        private val prng: Random = Random(seed).also {
+            logDebug { "using randomSeeed $seed" }
+        }
         private var i = 0 // Number of elements generated
         var value // The current value
                 = 0
@@ -107,17 +108,13 @@ public class BloomFilter  (n: Int, m: Int = 1024 * 1024 * 8) : Cloneable {
             return this
         }
 
-        override fun hasNext(): Boolean {
-            return i < count
-        }
+        override fun hasNext(): Boolean = i < count
 
         override fun remove() {
             throw UnsupportedOperationException()
         }
 
-        init {
-            prng = Random()
-        }
+
     }
 
     companion object {
