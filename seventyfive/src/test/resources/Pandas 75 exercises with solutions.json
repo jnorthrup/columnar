@@ -618,7 +618,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q27'></a>\n\n**27. How to compute the euclidean distance between two series?**\n\nCompute the [euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) between series (points) p and q, without using a packaged formula.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q27'></a>\n\n**27. How to compute the euclidean distance between two series?**\n\nCompute the [euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) between series (points) p and q, without using a packaged formula."
     },
     {
       "metadata": {
@@ -880,7 +880,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q38'></a>\n\n**38. How to extract the row and column number of a particular cell with given criterion?**\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q38'></a>\n\n**38. How to extract the row and column number of a particular cell with given criterion?**"
     },
     {
       "metadata": {
@@ -903,7 +903,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q39'></a>\n\n**39. How to rename a specific columns in a dataframe?**\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q39'></a>\n\n**39. How to rename a specific columns in a dataframe?**"
     },
     {
       "metadata": {
@@ -926,7 +926,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q40'></a>\n\n**40. How to check if a dataframe has any missing values?**\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q40'></a>\n\n**40. How to check if a dataframe has any missing values?**"
     },
     {
       "metadata": {
@@ -949,7 +949,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q41'></a>\n\n**41. How to count the number of missing values in each column?**\n\nCount the number of missing values in each column of df. Which column has the maximum number of missing values?\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q41'></a>\n\n**41. How to count the number of missing values in each column?**\n\nCount the number of missing values in each column of df. Which column has the maximum number of missing values?"
     },
     {
       "metadata": {
@@ -972,7 +972,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q42'></a>\n\n**42. How to replace missing values of multiple numeric columns with the mean?**\n\nReplace missing values in Luggage.room columns with their respective mean.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q42'></a>\n\n**42. How to replace missing values of multiple numeric columns with the mean?**\n\nReplace missing values in Luggage.room columns with their respective mean."
     },
     {
       "metadata": {
@@ -995,7 +995,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q43'></a>\n\n**43. How to use apply function on existing columns with global variables as additional arguments?**\n\nIn df, use apply method to replace the missing values in Rear.seat.room with mean Luggage.room with median by passing an argument to the function.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q43'></a>\n\n**43. How to use apply function on existing columns with global variables as additional arguments?**\n\nIn df, use apply method to replace the missing values in Rear.seat.room with mean Luggage.room with median by passing an argument to the function."
     },
     {
       "metadata": {
@@ -1018,7 +1018,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q44'></a>\n\n**44. How to select a specific column from a dataframe as a dataframe instead of a series?**\n\nGet the first column (a) in df as a dataframe (rather than as a Series).\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q44'></a>\n\n**44. How to select a specific column from a dataframe as a dataframe instead of a series?**\n\nGet the first column (a) in df as a dataframe (rather than as a Series)."
     },
     {
       "metadata": {
@@ -1041,7 +1041,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q45'></a>\n\n**45. How to change the order of columns of a dataframe?**\n\nActually 3 questions.\n\n1. In df, interchange columns 'a' and 'c'.\n\n2. Create a generic function to interchange two columns, without hardcoding column names.\n\n3. Sort the columns in reverse alphabetical order, that is colume 'e' first through column 'a' last.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q45'></a>\n\n**45. How to change the order of columns of a dataframe?**\n\nActually 3 questions.\n\n1. In df, interchange columns 'a' and 'c'.\n\n2. Create a generic function to interchange two columns, without hardcoding column names.\n\n3. Sort the columns in reverse alphabetical order, that is colume 'e' first through column 'a' last."
     },
     {
       "metadata": {
@@ -1064,7 +1064,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q46'></a>\n\n**46. How to set the number of rows and columns displayed in the output?**\n\nChange the pandas display settings on printing the dataframe df it shows a maximum of 10 rows and 10 columns.\n\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q46'></a>\n\n**46. How to set the number of rows and columns displayed in the output?**\n\nChange the pandas display settings on printing the dataframe df it shows a maximum of 10 rows and 10 columns.\n"
     },
     {
       "metadata": {
@@ -1087,7 +1087,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q47'></a>\n\n**47. How to format or suppress scientific notations in a pandas dataframe?**\n\nSuppress scientific notations like ‘e-03’ in df and print upto 4 numbers after decimal.\n\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q47'></a>\n\n**47. How to format or suppress scientific notations in a pandas dataframe?**\n\nSuppress scientific notations like ‘e-03’ in df and print upto 4 numbers after decimal.\n"
     },
     {
       "metadata": {
@@ -1110,7 +1110,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q48'></a>\n\n**48. How to format all the values in a dataframe as percentages?**\n\nFormat the values in column 'random' of df as percentages.\n\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q48'></a>\n\n**48. How to format all the values in a dataframe as percentages?**\n\nFormat the values in column 'random' of df as percentages.\n"
     },
     {
       "metadata": {
@@ -1133,7 +1133,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q49'></a>\n\n**49. How to filter every nth row in a dataframe?**\n\nFrom df, filter the 'Manufacturer', 'Model' and 'Type' for every 20th row starting from 1st (row 0).\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q49'></a>\n\n**49. How to filter every nth row in a dataframe?**\n\nFrom df, filter the 'Manufacturer', 'Model' and 'Type' for every 20th row starting from 1st (row 0)."
     },
     {
       "metadata": {
@@ -1156,7 +1156,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q50'></a>\n\n**50. How to create a primary key index by combining relevant columns?**\n\nIn df, Replace NaNs with ‘missing’ in columns 'Manufacturer', 'Model' and 'Type' and create a index as a combination of these three columns and check if the index is a primary key.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q50'></a>\n\n**50. How to create a primary key index by combining relevant columns?**\n\nIn df, Replace NaNs with ‘missing’ in columns 'Manufacturer', 'Model' and 'Type' and create a index as a combination of these three columns and check if the index is a primary key."
     },
     {
       "metadata": {
@@ -1179,7 +1179,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q51'></a>\n\n**51. How to get the row number of the nth largest value in a column?**\n\nFind the row position of the 5th largest value of column 'a' in df.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q51'></a>\n\n**51. How to get the row number of the nth largest value in a column?**\n\nFind the row position of the 5th largest value of column 'a' in df."
     },
     {
       "metadata": {
@@ -1202,7 +1202,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q52'></a>\n\n**52. How to find the position of the nth largest value greater than a given value?**\n\nIn ser, find the position of the 2nd largest value greater than the mean.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q52'></a>\n\n**52. How to find the position of the nth largest value greater than a given value?**\n\nIn ser, find the position of the 2nd largest value greater than the mean."
     },
     {
       "metadata": {
@@ -1225,7 +1225,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q53'></a>\n\n**53. How to get the last n rows of a dataframe with row sum > 100?**\n\nGet the last two rows of df whose row sum is greater than 100.\n\n[Go back to the table of contents](#table_of_contents)\n\n\n\n"
+      "source": "\n<a id = 'q53'></a>\n\n**53. How to get the last n rows of a dataframe with row sum > 100?**\n\nGet the last two rows of df whose row sum is greater than 100.\n\n\n"
     },
     {
       "metadata": {
@@ -1248,7 +1248,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q54'></a>\n\n**54. How to find and cap outliers from a series or dataframe column?**\n\nReplace all values of ser in the lower 5%ile and greater than 95%ile with respective 5th and 95th %ile value.\n\n[Go back to the table of contents](#table_of_contents)\n\n\n\n"
+      "source": "\n<a id = 'q54'></a>\n\n**54. How to find and cap outliers from a series or dataframe column?**\n\nReplace all values of ser in the lower 5%ile and greater than 95%ile with respective 5th and 95th %ile value.\n\n\n"
     },
     {
       "metadata": {
@@ -1294,7 +1294,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q56'></a>\n\n**56. How to swap two rows of a dataframe?**\n\nSwap rows 1 and 2 in df.\n\n[Go back to the table of contents](#table_of_contents)\n\n"
+      "source": "\n<a id = 'q56'></a>\n\n**56. How to swap two rows of a dataframe?**\n\nSwap rows 1 and 2 in df.\n"
     },
     {
       "metadata": {
@@ -1317,7 +1317,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q57'></a>\n\n**57. How to reverse the rows of a dataframe?**\n\nReverse all the rows of dataframe df.\n\n[Go back to the table of contents](#table_of_contents)\n\n"
+      "source": "\n<a id = 'q57'></a>\n\n**57. How to reverse the rows of a dataframe?**\n\nReverse all the rows of dataframe df.\n"
     },
     {
       "metadata": {
@@ -1340,7 +1340,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q58'></a>\n\n**58. How to create one-hot encodings of a categorical variable (dummy variables)?**\n\nGet one-hot encodings for column 'a' in the dataframe df and append it as columns.\n\n[Go back to the table of contents](#table_of_contents)\n\n"
+      "source": "\n<a id = 'q58'></a>\n\n**58. How to create one-hot encodings of a categorical variable (dummy variables)?**\n\nGet one-hot encodings for column 'a' in the dataframe df and append it as columns.\n"
     },
     {
       "metadata": {
@@ -1363,7 +1363,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q59'></a>\n\n**59. Which column contains the highest number of row-wise maximum values?**\n\nObtain the column name with the highest number of row-wise maximum’s in df.\n\n[Go back to the table of contents](#table_of_contents)\n\n"
+      "source": "\n<a id = 'q59'></a>\n\n**59. Which column contains the highest number of row-wise maximum values?**\n\nObtain the column name with the highest number of row-wise maximum’s in df.\n"
     },
     {
       "metadata": {
@@ -1386,7 +1386,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q60'></a>\n\n**60. How to create a new column that contains the row number of nearest column by euclidean distance?**\n\nCreate a new column such that, each row contains the row number of nearest row-record by euclidean distance.\n\n[Go back to the table of contents](#table_of_contents)\n\n"
+      "source": "\n<a id = 'q60'></a>\n\n**60. How to create a new column that contains the row number of nearest column by euclidean distance?**\n\nCreate a new column such that, each row contains the row number of nearest row-record by euclidean distance.\n"
     },
     {
       "metadata": {
@@ -1409,7 +1409,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q61'></a>\n\n**61. How to know the maximum possible correlation value of each column against other columns?**\n\nFor each column get the maximum possible correlation with other columns (only 1 value)\n\n[Go back to the table of contents](#table_of_contents)\n\n\n"
+      "source": "\n<a id = 'q61'></a>\n\n**61. How to know the maximum possible correlation value of each column against other columns?**\n\nFor each column get the maximum possible correlation with other columns (only 1 value)\n\n"
     },
     {
       "metadata": {
@@ -1432,7 +1432,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q62'></a>\n\n**62. How to create a column containing the minimum by maximum of each row?**\n\nCompute the minimum-by-maximum for every row of df.\n\n[Go back to the table of contents](#table_of_contents)\n\n\n"
+      "source": "\n<a id = 'q62'></a>\n\n**62. How to create a column containing the minimum by maximum of each row?**\n\nCompute the minimum-by-maximum for every row of df.\n\n"
     },
     {
       "metadata": {
@@ -1455,7 +1455,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q63'></a>\n\n**63. How to create a column that contains the penultimate value in each row?**\n\nCreate a new column 'penultimate' which has the second largest value of each row of df.\n\n[Go back to the table of contents](#table_of_contents)\n\n\n"
+      "source": "\n<a id = 'q63'></a>\n\n**63. How to create a column that contains the penultimate value in each row?**\n\nCreate a new column 'penultimate' which has the second largest value of each row of df.\n\n"
     },
     {
       "metadata": {
@@ -1478,7 +1478,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q64'></a>\n\n**64. How to normalize all columns in a dataframe?**\n\n1. Normalize all columns of df by subtracting the column mean and divide by standard deviation.\n\n2. Range all columns of df such that the minimum value in each column is 0 and max is 1.\n\n**Don’t use external packages like sklearn**\n\n[Go back to the table of contents](#table_of_contents)\n\n\n"
+      "source": "\n<a id = 'q64'></a>\n\n**64. How to normalize all columns in a dataframe?**\n\n1. Normalize all columns of df by subtracting the column mean and divide by standard deviation.\n\n2. Range all columns of df such that the minimum value in each column is 0 and max is 1.\n\n**Don’t use external packages like sklearn**\n\n"
     },
     {
       "metadata": {
@@ -1501,7 +1501,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q65'></a>\n\n**65. How to compute the correlation of each row with the suceeding row?**\n\nCompute the correlation of each row of df with its succeeding row.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "\n<a id = 'q65'></a>\n\n**65. How to compute the correlation of each row with the suceeding row?**\n\nCompute the correlation of each row of df with its succeeding row."
     },
     {
       "metadata": {
@@ -1524,7 +1524,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "\n<a id = 'q66'></a>\n\n**66. How to replace both the diagonals of dataframe with 0?**\n\nReplace both values in both diagonals of df with 0.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "\n<a id = 'q66'></a>\n\n**66. How to replace both the diagonals of dataframe with 0?**\n\nReplace both values in both diagonals of df with 0."
     },
     {
       "metadata": {
@@ -1547,7 +1547,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q67'></a>\n\n**67. How to get the particular group of a groupby dataframe by key?**\n\nThis is a question related to understanding of grouped dataframe. From df_grouped, get the group belonging to 'apple' as a dataframe.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q67'></a>\n\n**67. How to get the particular group of a groupby dataframe by key?**\n\nThis is a question related to understanding of grouped dataframe. From df_grouped, get the group belonging to 'apple' as a dataframe."
     },
     {
       "metadata": {
@@ -1570,7 +1570,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q68'></a>\n\n**68. How to get the n’th largest value of a column when grouped by another column?**\n\nIn df, find the second largest value of 'rating' for 'banana'\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q68'></a>\n\n**68. How to get the n’th largest value of a column when grouped by another column?**\n\nIn df, find the second largest value of 'rating' for 'banana'"
     },
     {
       "metadata": {
@@ -1593,7 +1593,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q69'></a>\n\n**69. How to compute grouped mean on pandas dataframe and keep the grouped column as another column (not index)?**\n\nIn df, Compute the mean price of every fruit, while keeping the fruit as another column instead of an index.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q69'></a>\n\n**69. How to compute grouped mean on pandas dataframe and keep the grouped column as another column (not index)?**\n\nIn df, Compute the mean price of every fruit, while keeping the fruit as another column instead of an index."
     },
     {
       "metadata": {
@@ -1616,7 +1616,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q70'></a>\n\n**70. How to join two dataframes by 2 columns so they have only the common rows?**\n\nJoin dataframes df1 and df2 by ‘fruit-pazham’ and ‘weight-kilo’.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q70'></a>\n\n**70. How to join two dataframes by 2 columns so they have only the common rows?**\n\nJoin dataframes df1 and df2 by ‘fruit-pazham’ and ‘weight-kilo’."
     },
     {
       "metadata": {
@@ -1639,7 +1639,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q71'></a>\n\n**71. How to remove rows from a dataframe that are present in another dataframe?**\n\nFrom df1, remove the rows that are present in df2. All three columns must be the same.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q71'></a>\n\n**71. How to remove rows from a dataframe that are present in another dataframe?**\n\nFrom df1, remove the rows that are present in df2. All three columns must be the same."
     },
     {
       "metadata": {
@@ -1662,7 +1662,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q72'></a>\n\n**72. How to get the positions where values of two columns match?**\n\nFind the index where col fruit1 and fruit2 match\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q72'></a>\n\n**72. How to get the positions where values of two columns match?**\n\nFind the index where col fruit1 and fruit2 match"
     },
     {
       "metadata": {
@@ -1685,7 +1685,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q73'></a>\n\n**73. How to create lags and leads of a column in a dataframe?**\n\nCreate two new columns in df, one of which is a lag1 (shift column a down by 1 row) of column ‘a’ and the other is a lead1 (shift column b up by 1 row).\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q73'></a>\n\n**73. How to create lags and leads of a column in a dataframe?**\n\nCreate two new columns in df, one of which is a lag1 (shift column a down by 1 row) of column ‘a’ and the other is a lead1 (shift column b up by 1 row)."
     },
     {
       "metadata": {
@@ -1708,7 +1708,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q74'></a>\n\n**74. How to get the frequency of unique values in the entire dataframe?**\n\nGet the frequency of unique values in the entire dataframe df.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q74'></a>\n\n**74. How to get the frequency of unique values in the entire dataframe?**\n\nGet the frequency of unique values in the entire dataframe df."
     },
     {
       "metadata": {
@@ -1731,7 +1731,7 @@
     {
       "metadata": {},
       "cell_type": "markdown",
-      "source": "<a id = 'q75'></a>\n\n**75. How to split a text column into two separate columns?**\n\nSplit the string column in df to form a dataframe with 3 columns as shown.\n\n[Go back to the table of contents](#table_of_contents)\n"
+      "source": "<a id = 'q75'></a>\n\n**75. How to split a text column into two separate columns?**\n\nSplit the string column in df to form a dataframe with 3 columns as shown."
     },
     {
       "metadata": {

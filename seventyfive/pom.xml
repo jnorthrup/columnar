@@ -13,6 +13,17 @@
 
 
 </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>columnar</groupId>
+            <artifactId>cursor</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+
     <artifactId>seventyfive</artifactId>
 
 

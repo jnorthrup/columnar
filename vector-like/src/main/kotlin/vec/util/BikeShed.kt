@@ -4,6 +4,7 @@
 @file:Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
 
 package vec.util
+
 import vec.macros.Pai2
 import vec.macros.Vect0r
 import vec.macros.toVect0r
@@ -68,10 +69,18 @@ object _s {
     inline operator fun <reified T> get(vararg t: T) = setOf(*t)
 }
 
+/**
+ * missing stdlib map convenience operator
+ */
+object _m {
+    inline operator fun <reified K, reified V, reified P : Pair<K, V>> get(p: List<P>) = (p).toMap()
+    inline operator fun <reified K, reified V, reified P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
+}
 
 fun main() {
     logDebug { "this ought not be visible" }
 }
+
 val eol = System.getProperty("line.separator")
 
 fun fileSha256Sum(pathname: String): String {

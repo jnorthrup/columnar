@@ -7,7 +7,6 @@ import cursors.io.IOMemento.*
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.macros.α
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.w3c.dom.Document
 import org.w3c.dom.NodeList
@@ -15,7 +14,6 @@ import vec.macros.*
 import vec.util.*
 import java.io.File
 import java.io.FileInputStream
-import kotlin.coroutines.CoroutineContext
 
 import java.nio.file.Files
 import java.nio.file.Path
