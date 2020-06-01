@@ -1,6 +1,9 @@
 package cursors.context
 
-import vec.macros.Vect02
+import cursors.Cursor
+import cursors.io.IOMemento
+import vec.macros.*
+import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -26,12 +29,32 @@ sealed class RecordBoundary : CoroutineContext.Element {
 
 
 class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
-    companion object
+    companion object {
+        /**
+         * this does no quote escapes, handles no padding, and assumes row 0 is the header names
+         */
+        fun CsvLinesCursor(csvLines: Vect0r<String>, dt: Vect0r<IOMemento> = Pai2(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString }): Cursor {
+            val colnames = csvLines[0].split(",").toVect0r()
+            val meta = colnames.zip(dt)
+
+            return Cursor(csvLines.size) { iy: Int ->
+                val row = csvLines[iy + 1].split(",")
+                Pai2(colnames.size) { ix: Int ->
+                    meta[ix].let { (n, t) ->
+                        val read = Tokenized.mapped[t]!!.read
+                        val csvCell = row[ix].toByteArray()
+                        val wrap = ByteBuffer.wrap(csvCell).rewind()
+                        read(wrap) t2 { Scalar(t, n) }
+                    }
+                }
+            }
+        }
+    }
 }
 
 class FixedWidth(
-    val recordLen: Int,
-    val coords: Vect02<Int, Int>,
-    val endl: () -> Byte? = '\n'::toByte,
-    val pad: () -> Byte? = ' '::toByte
+        val recordLen: Int,
+        val coords: Vect02<Int, Int>,
+        val endl: () -> Byte? = '\n'::toByte,
+        val pad: () -> Byte? = ' '::toByte,
 ) : RecordBoundary()
