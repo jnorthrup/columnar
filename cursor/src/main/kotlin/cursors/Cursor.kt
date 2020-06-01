@@ -93,25 +93,6 @@ operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
 
-fun Cursor.resample(indexcol: Int): Cursor = let {
-    val curs = this[indexcol]
-    val indexValues = curs.narrow().map { it.first() as LocalDate }.toSequence()
-    val (min, max) = feature_range<LocalDate>(indexValues, LocalDate.MAX t2 LocalDate.MIN)
-    val scalars = this.scalars
-    val sequence = daySeq(min, max) - indexValues
-    val indexVec = sequence.toVect0r()
-    val cursor: Cursor = Cursor(indexVec.first) { iy: Int ->
-        RowVec(scalars.first) { ix: Int ->
-            val any = when (ix == indexcol) {
-                true -> indexVec[iy]
-                else -> null
-            }
-            any t2 (scalars[ix] as CoroutineContext).`⟲`
-        }
-    }
-    combine(this, cursor)
-}
-
 /**
 synthesize pivot columns by key(axis) columns present.
  */
