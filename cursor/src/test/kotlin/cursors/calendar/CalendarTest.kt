@@ -16,7 +16,6 @@ import java.time.chrono.HijrahDate
 import java.time.temporal.ChronoField.DAY_OF_MONTH
 import java.time.temporal.ChronoField.MONTH_OF_YEAR
 import java.time.temporal.TemporalAdjusters
-import kotlin.coroutines.CoroutineContext
 
 
 /**
@@ -25,17 +24,17 @@ import kotlin.coroutines.CoroutineContext
 @Suppress("UNCHECKED_CAST")
 class CalendarTest {
     val coords = intArrayOf(
-        0, 10,
-        10, 84,
-        84, 124,
-        124, 164
+            0, 10,
+            10, 84,
+            84, 124,
+            124, 164
     ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
 
     val drivers = vect0rOf(
-        IOMemento.IoLocalDate as TypeMemento,
-        IOMemento.IoString,
-        IOMemento.IoFloat,
-        IOMemento.IoFloat
+            IOMemento.IoLocalDate as TypeMemento,
+            IOMemento.IoString,
+            IOMemento.IoFloat,
+            IOMemento.IoFloat
     )
 
     val names = vect0rOf("date", "channel", "delivered", "ret")
@@ -45,22 +44,22 @@ class CalendarTest {
         get() = RowMajor.fixedWidthOf(nio = nio, coords = coords)
 
     @Suppress("UNCHECKED_CAST")
-    val root = RowMajor().fromFwf(
-        fixedWidth,
-        RowMajor.indexableOf(nio, fixedWidth),
-        nio,
-        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+    val caven4Root = RowMajor().fromFwf(
+            fixedWidth,
+            RowMajor.indexableOf(nio, fixedWidth),
+            nio,
+            Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
     )
 
 
     @Test
     fun test4Rows() {
 
-        val curs = cursorOf(root)
+        val caven4Cursor = cursorOf(caven4Root)
 
         println("---")
 
-        val join1 = join(curs[0], curs[1, 2, 3])
+        val join1 = join(caven4Cursor[0], caven4Cursor[1, 2, 3])
         val scalars1 = join1.scalars as Vect02<TypeMemento, String?>
         join1.map { it.left.toList() }.toList().forEach(::println)
 
@@ -70,23 +69,24 @@ class CalendarTest {
 
             println("--- " + jvmCal)
 
-            val csrc = curs[0]
+            val csrc = caven4Cursor[0]
             val xSize = csrc.scalars.size
             val v: Cursor = Cursor(csrc.size) { iy: Int ->
                 RowVec(xSize) { ix: Int ->
-                    val row = csrc at  (iy)
-                    (row.left[ix] as? LocalDate)?.let { it: LocalDate ->
-                        val filterNotNull = jvmCal.DateWiseCategories(it)
-                        val pai2: Pai2<Any?, () -> CoroutineContext> = filterNotNull.toString() t2 {
+                    val row = csrc at (iy)
+                    (row.left[ix] as? LocalDate)?.let { localDate: LocalDate ->
+                        val localDate1 = localDate
+                        val categories = jvmCal.DateWiseCategories(localDate1)
+                        categories.toString() t2 {
                             val second = row[ix].second()
                             second + Scalar(IOMemento.IoString, "${jvmCal.name}_map")
                         }
-                        pai2
+
                     } ?: row[ix]
                 }
             }
 
-            val join = join(v, curs[1, 2, 3])
+            val join = join(v, caven4Cursor[1, 2, 3])
 
             val scalars = join.scalars as Vect02<TypeMemento, String?>
             println(scalars.right.toList())
@@ -119,7 +119,7 @@ class CalendarTest {
         val localDate = LocalDate.of(1970, 1, 1)
 
         val zonedDateTime =
-            ZonedDateTime.ofInstant(localDate.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneId.systemDefault())
+                ZonedDateTime.ofInstant(localDate.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneId.systemDefault())
         JvmCal.values().forEach { jvmCal: JvmCal ->
             System.err.println("$jvmCal")
             System.err.println("$jvmCal ${jvmCal.jvmProxy.date(zonedDateTime)}")
