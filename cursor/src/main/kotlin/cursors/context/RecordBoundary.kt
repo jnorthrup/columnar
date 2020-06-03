@@ -56,28 +56,23 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
          * same as CsvLinesCursor but does the splits at creationtime.
          * this does no quote escapes, handles no padding, and assumes row 0 is the header names
          */
-        fun CsvArraysCursor(csvLines1: Vect0r<String>, dt: Vect0r<IOMemento> = Pai2(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString }): Cursor =
-                csvLines1.let { l ->
-                    val csvArrays = l.map { s: String -> s.split(",").toTypedArray() }
-
-
-                    val colnames = csvArrays[0]
-                    val meta = colnames.zip(dt.toArray())
-                    val xSize = colnames.size
-
-
-                    Cursor(csvArrays.size - 1) { iy: Int ->
-                        val row = csvArrays[iy + 1]
-                        Pai2(xSize) { ix: Int ->
-                            meta[ix].let { (n, t) ->
-                                val read = Tokenized.mapped[t]!!.read
-                                val csvCell = row[ix].toByteArray()
-                                val wrap = ByteBuffer.wrap(csvCell).rewind()
-                                read(wrap) t2 { Scalar(t, n) }
-                            }
-                        }
+        fun CsvArraysCursor(csvLines1: Iterable<String>, dt: Vect0r<IOMemento> = Pai2(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString }): Cursor {
+            val csvArrays = csvLines1.map { s: String -> s.split(",").toTypedArray() }
+            val colnames = csvArrays[0]
+            val meta = colnames.toVect0r().zip(dt )
+            val xSize = colnames.size
+           return  Cursor(csvArrays.size - 1) { iy: Int ->
+                val row = csvArrays[iy + 1]
+                Pai2(xSize) { ix: Int ->
+                    meta[ix].let { (n, t) ->
+                        val read = Tokenized.mapped[t]!!.read
+                        val csvCell = row[ix].toByteArray()
+                        val wrap = ByteBuffer.wrap(csvCell).rewind()
+                        read(wrap) t2 { Scalar(t, n) }
                     }
                 }
+            }
+        }
     }
 }
 

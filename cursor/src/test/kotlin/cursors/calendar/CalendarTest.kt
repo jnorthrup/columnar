@@ -76,7 +76,7 @@ class CalendarTest {
                     val row = csrc at (iy)
                     (row.left[ix] as? LocalDate)?.let { localDate: LocalDate ->
                         val localDate1 = localDate
-                        val categories = jvmCal.DateWiseCategories(localDate1)
+                        val categories = jvmCal.dateWiseCategories(localDate1)
                         categories.toString() t2 {
                             val second = row[ix].second()
                             second + Scalar(IOMemento.IoString, "${jvmCal.name}_map")
