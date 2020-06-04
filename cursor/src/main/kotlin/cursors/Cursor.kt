@@ -186,7 +186,7 @@ inline fun Cursor.ordered(
 /**
  * recent addition - cursor["f1","f2","f3"] to auto map the indexes
  */
-fun Cursor.get(vararg s: String): Cursor =
+operator fun Cursor.get(vararg s: String): Cursor =
         (scalars as Vect02<IOMemento, String?>).right.toList().let { scalarNames ->
             this[s.map { s ->
                 val indexOf = scalarNames.indexOf(s)
@@ -195,3 +195,15 @@ fun Cursor.get(vararg s: String): Cursor =
             }]
         }
 
+/*simple printout macro*/
+fun Cursor.show(range: IntRange = 0 until size) {
+    println("columns" to scala2s.right.toList())
+
+    showValues(range)
+}
+
+  fun Cursor.showValues(range: IntRange) {
+    (range).forEach {
+        println((this at it).left.toList())
+    }
+}

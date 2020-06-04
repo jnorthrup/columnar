@@ -13,6 +13,8 @@ inline val Cursor.scalars: Vect0r<Scalar>
         }
     }
 
+inline val Cursor.scala2s   :Vect02<IOMemento,String?> get()=  scalars α {sc:Scalar->sc as Pai2<IOMemento, String?> }
+
 fun networkCoords(
     ioMemos: Vect0r<TypeMemento>,
     defaultVarcharSize: Int,
@@ -42,3 +44,4 @@ fun networkSizes(
     val sz = varcharSizes?.get(ix)
     memento.networkSize ?: (sz ?: defaultVarcharSize)
 }
+
