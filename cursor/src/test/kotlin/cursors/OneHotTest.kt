@@ -11,6 +11,7 @@ class OneHotTest {
         Assertions.assertEquals("asdasdasd", "asdasdasd")
     }
 
+    @Test
     fun testCategories() {
         val colname = "something"
         val cats: List<*> = listOf(
@@ -30,6 +31,7 @@ class OneHotTest {
         val colnames = cats.map {
             "${colname}_is_$it"
         }
+        println(colnames)
     }
 
 
