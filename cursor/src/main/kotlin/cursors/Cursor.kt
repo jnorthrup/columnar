@@ -183,4 +183,15 @@ inline fun Cursor.ordered(
     }
 }
 
+/**
+ * recent addition - cursor["f1","f2","f3"] to auto map the indexes
+ */
+fun Cursor.get(vararg s: String): Cursor =
+        (scalars as Vect02<IOMemento, String?>).right.toList().let { scalarNames ->
+            this[s.map { s ->
+                val indexOf = scalarNames.indexOf(s)
+                if (-1 == indexOf) throw Exception("$s not found in Cursor")
+                indexOf
+            }]
+        }
 
