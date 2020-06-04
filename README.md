@@ -25,7 +25,7 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
              //three rows of threes
              Cursor(3){rownum:Int-> 
                 RowVec(3){colIndex:Int->
-                   3 t2 {Scalar(ioInt,"Three")}
+                   3 t2 {Scalar(IoInt,"Three")}
               }
              }
            
@@ -119,7 +119,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] groupby n columns
   - [X] cursor.group(n..){reducer} 
   - [X] One-hot Encodings 
-  - [ ] min/max scaling (applying the reverse conversion using code from resampling)
+  - [X] min/max scaling (applying the reverse conversion using code from resampling)
   - [ ] support Numerics, Linear Algebra libraries
   - [X] support for (resampling) Calendar, Time and Units conversion libraries
   - [X] orthogonal offheap and indirect IO component taxonomy
@@ -128,7 +128,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] large file access: JVM NIO mmap window addressability beyond MAXINT bytes   
   - [X] Algebraic Vector aggregate operations with lazy runtime execution on contents
   - [ ] Mapper Buffer pools 
-  - [ ] Access (named) Columns by name 
+  - [X] Access (named) Columns by name 
   - [X] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
   - [X] Review as Java lib via maven.  what is available, what's not.  
   - [X] a token amount of jvm switch testing.
@@ -139,12 +139,12 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
          operator expressions of transforms
   - [X] sharded \[de]hydration - unit test to shard dayjob sample by column 
   - [X] bloom filter indexes for clusters       
-  
+  - [X] csv Cursors
+
 ### lower priorities (as-yet unimplemented orthogonals)
  - [ ] gossip mesh addressable cursor iterators (this branch) [2]
  - [ ] json    field format IO/mapping
  - [ ] CBOR    field format IO/mapping
- - [ ] csv IO tokenization +- headers
  - [ ] columnstore access patterns +- apache arrow compatibility
  - [ ] matrix math integrations with adjacent ecosystem libraries
  - [ ] key-value associative cursor indexes

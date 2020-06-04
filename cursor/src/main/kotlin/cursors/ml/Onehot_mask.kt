@@ -3,7 +3,8 @@ package cursors.ml
 import vec.macros.t2
 
 /**
- * Cursors creates one series of values, then optionally omits a column from cats
+ * Cursors creates one series of values,
+ * then optionally omits a column from cats
  */
 inline fun onehot_mask(dummy: Any?, cats: List<*>) =
     when {
