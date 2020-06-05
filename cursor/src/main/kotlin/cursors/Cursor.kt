@@ -2,12 +2,9 @@
 
 package cursors
 
-import cursors.calendar.daySeq
-import cursors.calendar.feature_range
 import cursors.context.*
 import cursors.io.*
- import vec.macros.*
-import java.time.LocalDate
+import vec.macros.*
 import java.util.*
 import kotlin.Comparator
 import kotlin.coroutines.CoroutineContext
@@ -75,12 +72,14 @@ inline infix fun <reified T : Int> Cursor.at(t: T) = second.invoke(t)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.reify() =
-    this α RowVec::toList
+        this α RowVec::toList
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.narrow() =
-    ( reify()) α { list: List<Pai2<*, *>> -> list.map(
-        Pai2<*, *>::first) }
+        (reify()) α { list: List<Pai2<*, *>> ->
+            list.map(
+                    Pai2<*, *>::first)
+        }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -97,26 +96,26 @@ operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
 synthesize pivot columns by key(axis) columns present.
  */
 fun Cursor.pivot(
-    /**
-    lhs columns are unmodified from original index inclusive of
-    axis and fanout columns
-     */
-    lhs: IntArray,
-    /**
-     * these will be used to synthesize columns from values, in order indexed. no dupe limitations apply.
-     * using fanout columns in here is a bad idea.
-     */
-    axis: IntArray,
-    /**
-     * these will be mapped underneath the axis keys of the source column in the order specified. no dupe limitations apply.
-     * using axis columns in here also is a bad idea.
-     */
-    fanOut: IntArray
+        /**
+        lhs columns are unmodified from original index inclusive of
+        axis and fanout columns
+         */
+        lhs: IntArray,
+        /**
+         * these will be used to synthesize columns from values, in order indexed. no dupe limitations apply.
+         * using fanout columns in here is a bad idea.
+         */
+        axis: IntArray,
+        /**
+         * these will be mapped underneath the axis keys of the source column in the order specified. no dupe limitations apply.
+         * using axis columns in here also is a bad idea.
+         */
+        fanOut: IntArray
 ): Cursor = let { cursr ->
     val keys: LinkedHashMap<List<Any?>, Int> =
-        (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left.toList() })
-            .toList()
-            .distinct().mapIndexed { xIndex: Int, any -> any to xIndex }.toMap(linkedMapOf())
+            (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left.toList() })
+                    .toList()
+                    .distinct().mapIndexed { xIndex: Int, any -> any to xIndex }.toMap(linkedMapOf())
 
     val synthSize: Int = fanOut.size * keys.size
     val xsize: Int = lhs.size + synthSize
@@ -166,43 +165,42 @@ fun Cursor.pivot(
  * this is a helper for comparing keys.
  */
 inline fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
-    o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
+        o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
 inline fun Cursor.ordered(
-    axis: IntArray,
-    comparator: Comparator<List<Any?>> = Comparator(::cmpAny)
+        axis: IntArray,
+        comparator: Comparator<List<Any?>> = Comparator(::cmpAny)
 ): Cursor = combine(
-    ( keyClusters(
-        axis,
-        comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
-            (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()
-).let {
+        (keyClusters(
+                axis,
+                comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
+                (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()).let {
     Cursor(it.size) { iy: Int ->
         val ix2 = it[iy]
         this at ix2
     }
 }
 
+inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
+    s.map {
+        val indexOf = this.indexOf(it)
+        if (-1 == indexOf) throw Exception("$it not found in meta")
+        indexOf
+    }.toIntArray()
+}
+
 /**
  * recent addition - cursor["f1","f2","f3"] to auto map the indexes
  */
-operator fun Cursor.get(vararg s: String): Cursor =
-        (scalars as Vect02<IOMemento, String?>).right.toList().let { scalarNames ->
-            this[s.map { s ->
-                val indexOf = scalarNames.indexOf(s)
-                if (-1 == indexOf) throw Exception("$s not found in Cursor")
-                indexOf
-            }]
-        }
+operator fun Cursor.get(vararg s: String) = this[scala2s.get(*s)]
 
 /*simple printout macro*/
 fun Cursor.show(range: IntRange = 0 until size) {
     println("columns" to scala2s.right.toList())
-
     showValues(range)
 }
 
-  fun Cursor.showValues(range: IntRange) {
+fun Cursor.showValues(range: IntRange) {
     (range).forEach {
         println((this at it).left.toList())
     }

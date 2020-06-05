@@ -89,10 +89,10 @@ enum class JvmCal(val jvmProxy: Chronology) {
      * @param localdateIndex #calendarCurs index of LocalDate
      * @param catSize the length of categories to use defaulting to all avail
      */
-    fun inflate(calendarCurs: Cursor, localdateIndex: Int, catSize: Int = dateWiseCategories(LocalDate.now()).size): Cursor =
+    fun inflate(calendarCurs: Cursor, localdateIndex: Int=0, catSize: Int = dateWiseCategories(LocalDate.now()).size): Cursor =
             Cursor(calendarCurs.size) { iy: Int ->
                 val rvec: RowVec = (calendarCurs at iy)
-                val localDate: LocalDate = rvec.left.get(localdateIndex) as LocalDate
+                val localDate: LocalDate = rvec.left [localdateIndex] as LocalDate
                 val row: RowVec = dateWiseCategories(localDate) α { (nama: String, theVal: Int) ->
                     theVal t2 { Scalar(IOMemento.IoInt, "$name:$nama") }
                 }
