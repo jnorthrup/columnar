@@ -16,13 +16,13 @@ import kotlin.coroutines.CoroutineContext
 
 @Suppress("USELESS_CAST")
 fun ISAMCursor(
-    binpath: Path,
-    mappedFile: MappedFile,
-    metapath: Path = Paths.get(binpath.toString() + ".meta")
+        binpath: Path,
+        mappedFile: MappedFile,
+        metapath: Path = Paths.get(binpath.toString() + ".meta")
 ) = mappedFile.run {
     val lines = Files.readAllLines(metapath)
     lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
-    val rcoords  = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext() as Vect02<Int, Int>
+    val rcoords = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext() as Vect02<Int, Int>
     val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
     val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
     val recordlen = rcoords.last().second
@@ -30,14 +30,14 @@ fun ISAMCursor(
     val nio = NioMMap(this, drivers)
     val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null })
     val indexable: Addressable =
-        RowMajor.indexableOf(nio, fixedWidth)
+            RowMajor.indexableOf(nio, fixedWidth)
     cursorOf(
-        RowMajor().fromFwf(
-            fixedWidth,
-            indexable as Indexable,
-            nio,
-            Columnar(typeVec.zip(rnames) as Vect02<TypeMemento, String?>)
-        )
+            RowMajor().fromFwf(
+                    fixedWidth,
+                    indexable as Indexable,
+                    nio,
+                    Columnar(typeVec.zip(rnames) as Vect02<TypeMemento, String?>)
+            )
     )
 }
 
@@ -50,31 +50,47 @@ fun ISAMCursor(
  *
  */
 fun Cursor.writeISAM(
-    pathname: String,
-    defaultVarcharSize: Int = 128,
-    varcharSizes: Map<
-            /**
-            column*/
-            Int,
-            /**length*/
-            Int>? = null
+        pathname: String,
+        defaultVarcharSize: Int = 128,
+        varcharSizes: Map<
+                /**
+                column*/
+                Int,
+                /**length*/
+                Int>? = null
 ) {
     val mementos = scalars α Scalar::first
 
     val vec = scalars `→` { scalars: Vect0r<Scalar> ->
         Columnar.of(
-            scalars
+                scalars
         ) t2 mementos
     }
     /** create context columns */
     val (wcolumnar: Arity, ioMemos: Vect0r<TypeMemento>) = vec
-    val wcoords: Vect02<Int, Int> =
-        networkCoords(ioMemos, defaultVarcharSize, varcharSizes)
+    val sizes = varcharSizes ?: let { curs ->
+        sequence {
+            (curs at 0).right.toList().mapIndexed { index, it ->
+
+                //our blackboard CoroutineCOntext  metadata function.
+                val cc = it.invoke()
+                (cc[Arity.arityKey] as? Scalar)?.let { (a) ->
+                    if (a == IOMemento.IoString)
+                        (cc[RecordBoundary.boundaryKey] as? FixedWidth)?.let { fw ->
+                            yield((index to fw.recordLen))
+                        }
+
+                }
+            }
+        }.toMap()
+    }
+
+    val wcoords: Vect02<Int, Int> = networkCoords(ioMemos, defaultVarcharSize, sizes)
     val wrecordlen: Int = wcoords.right.last()
     MappedFile(
-        pathname,
-        "rw",
-        FileChannel.MapMode.READ_WRITE
+            pathname,
+            "rw",
+            FileChannel.MapMode.READ_WRITE
     ).use { mappedFile: MappedFile ->
         mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * size)
 
@@ -85,22 +101,22 @@ fun Cursor.writeISAM(
 
         val drivers1 = Fixed.mapped[ioMemos]
         val wfixedWidth: RecordBoundary =
-            FixedWidth(wrecordlen, wcoords, { null }, { null })
+                FixedWidth(wrecordlen, wcoords, { null }, { null })
 
         writeISAMMeta(pathname, wcoords)
         /**
          * nio object
          */
         val wnio: Medium = NioMMap(
-            mappedFile,
-            drivers1 as Array<CellDriver<ByteBuffer, Any?>>
+                mappedFile,
+                drivers1 as Array<CellDriver<ByteBuffer, Any?>>
         )
         wnio.recordLen = wrecordlen.`⟲`
         val windex: Addressable =
-            RowMajor.indexableOf(
-                wnio as NioMMap,
-                wfixedWidth as FixedWidth
-            )
+                RowMajor.indexableOf(
+                        wnio as NioMMap,
+                        wfixedWidth as FixedWidth
+                )
 
 
         val wtable: TableRoot = /*runBlocking*/(
@@ -110,11 +126,11 @@ fun Cursor.writeISAM(
                         wnio +
                         RowMajor()
                 ).let { coroutineContext: CoroutineContext ->
-                val wniocursor: NioCursor = wnio.values(coroutineContext)
-                val arity: Columnar = coroutineContext[Arity.arityKey] as Columnar
-                System.err.println("columnar memento: " + arity.left.toList())
-                wniocursor t2 coroutineContext
-            }
+                    val wniocursor: NioCursor = wnio.values(coroutineContext)
+                    val arity: Columnar = coroutineContext[Arity.arityKey] as Columnar
+                    System.err.println("columnar memento: " + arity.left.toList())
+                    wniocursor t2 coroutineContext
+                }
 
 //        val scalars: Vect0r<Scalar> = scalars
         val xsize = scalars.size
@@ -124,7 +140,7 @@ fun Cursor.writeISAM(
             val rowVals: Vect0r<*> = (this at (y)).left
             for (x in 0 until xsize) {
                 val tripl3: Tripl3<() -> Any?, (Any?) -> Unit, Tripl3<CellDriver<ByteBuffer, *>, TypeMemento, Int>> =
-                    wtable.first[x, y]
+                        wtable.first[x, y]
                 val writefN: (Any?) -> Unit = tripl3.second
                 val any: Any? = rowVals[x]
 //                System.err.println("wfn: ($y,$x)=$any")
@@ -137,38 +153,38 @@ fun Cursor.writeISAM(
 }
 
 fun Cursor.writeISAMMeta(
-    pathname: String,
+        pathname: String,
 //    wrecordlen: Int,
-    wcoords: Vect02<Int, Int>
+        wcoords: Vect02<Int, Int>
 ) {
     Files.newOutputStream(
-        Paths.get(pathname + ".meta")
+            Paths.get(pathname + ".meta")
     ).bufferedWriter().use {
 
-            fileWriter ->
+        fileWriter ->
 
         val s = this.scalars as Vect02<TypeMemento, String?>
 
         val coords = wcoords.toList()
-            .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
+                .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right
-            .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
+                .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left
-            .mapIndexed<TypeMemento, Any> { ix, it ->
-                if (it is IOMemento)
-                    it.name else {
-                    val pai2 = wcoords[ix]
-                    pai2.size
-                }
-            }.toList()
+                .mapIndexed<TypeMemento, Any> { ix, it ->
+                    if (it is IOMemento)
+                        it.name else {
+                        val pai2 = wcoords[ix]
+                        pai2.size
+                    }
+                }.toList()
 
-            .joinToString(" ")
+                .joinToString(" ")
         listOf(
-            "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
-            "# last coord is the recordlen",
-            coords,
-            nama,
-            mentos
+                "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
+                "# last coord is the recordlen",
+                coords,
+                nama,
+                mentos
         ).forEach { line ->
             fileWriter.write(line)
             fileWriter.newLine()

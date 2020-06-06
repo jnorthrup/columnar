@@ -12,7 +12,7 @@ inline val Cursor.scalars: Vect0r<Scalar>
             it[arityKey] as Scalar
         }
     }
-
+inline val Cursor.width get()=this.scalars.size
 inline val Cursor.scala2s   :Vect02<IOMemento,String?> get()=  scalars α {sc:Scalar->sc as Pai2<IOMemento, String?> }
 
 fun networkCoords(

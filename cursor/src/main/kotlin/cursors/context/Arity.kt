@@ -9,7 +9,7 @@ sealed class Arity : CoroutineContext.Element {
     override val key get() = arityKey
 
     companion object {
-        open public val arityKey = object :
+        val arityKey = object :
             CoroutineContext.Key<Arity> {}
     }
 }

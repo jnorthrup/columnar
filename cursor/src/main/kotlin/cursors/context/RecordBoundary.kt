@@ -64,12 +64,14 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                         val csvCell = row[ix].toByteArray()
                         val wrap = ByteBuffer.wrap(csvCell).rewind()
                         read(wrap) t2 {
-                            if (IOMemento.IoString == dt[ix])
+                            if (IOMemento.IoString == dt[ix]) {
                                 Scalar(type = t, name = n) + FixedWidth(recordLen = longest[ix],
-                                    coords = vect0rOf(),
+                                    coords = dummy,
                                     endl = { ','.toByte() },
                                     pad = { ' '.toByte() }
-                            ) else Scalar(t, n)
+                            ) //TODO: review whether using FixedWidth here is is a bad thing and we need a new Context Class for this feature.
+
+                            } else Scalar(t, n)
                         }
                     }
                 }
@@ -77,6 +79,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
         }
     }
 }
+private val dummy = vect0rOf<Pai2<Int, Int>>()
 
 class FixedWidth(
         val recordLen: Int,
