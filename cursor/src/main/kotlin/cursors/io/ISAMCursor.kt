@@ -119,7 +119,7 @@ fun Cursor.writeISAM(
                 )
 
 
-        val wtable: TableRoot = /*runBlocking*/(
+        val wtable: TableRoot =  (
                 windex +
                         wcolumnar +
                         wfixedWidth +
@@ -133,14 +133,14 @@ fun Cursor.writeISAM(
                 }
 
 //        val scalars: Vect0r<Scalar> = scalars
-        val xsize = scalars.size
+        val xsize = width
         val ysize = size
 
         for (y in 0 until ysize) {
-            val rowVals: Vect0r<*> = (this at (y)).left
+            val rowVals = (this at y).left
             for (x in 0 until xsize) {
                 val tripl3: Tripl3<() -> Any?, (Any?) -> Unit, Tripl3<CellDriver<ByteBuffer, *>, TypeMemento, Int>> =
-                        wtable.first[x, y]
+                        wtable.first.get(x, y)
                 val writefN: (Any?) -> Unit = tripl3.second
                 val any: Any? = rowVals[x]
 //                System.err.println("wfn: ($y,$x)=$any")
@@ -148,8 +148,6 @@ fun Cursor.writeISAM(
             }
         }
     }
-
-
 }
 
 fun Cursor.writeISAMMeta(
