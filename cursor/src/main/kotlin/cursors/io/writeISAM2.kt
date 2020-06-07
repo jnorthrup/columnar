@@ -25,13 +25,13 @@ fun Cursor.writeISAM2(
         /**
          * optional map of columnIndex / length
          */
-        varcharSizes: Map<  Int,  Int>? = null) {
+        varcharSizes: Map<Int, Int>? = null) {
     val mementos = scalars α Scalar::first
     val vec = scalars `→` { scalars: Vect0r<Scalar> ->
-        Columnar.of(      scalars    ) t2 mementos
+        Columnar.of(scalars) t2 mementos
     }
     /** create context columns */
-    val (wcolumnar: Arity, ioMemos: Vect0r<TypeMemento>) = vec
+    val (_: Arity, ioMemos: Vect0r<TypeMemento>) = vec
     val sizes = varcharSizes ?: let { curs ->
         sequence {
             (curs at 0).right.toList().mapIndexed { index, it ->
@@ -50,26 +50,29 @@ fun Cursor.writeISAM2(
 
     val wcoords: Vect02<Int, Int> = networkCoords(ioMemos, defaultVarcharSize, sizes)
 
-
+    val reclen = wcoords.right.last()
     writeISAMMeta(pathname, wcoords)
+    val rowBuf = ByteBuffer.allocateDirect(reclen + 1)
 
-    val drivers : List<CellDriver<ByteBuffer,*>> = scala2s.left.map(Fixed.mapped::get).toList().filterNotNull()
-    FileChannel.open(Paths.get(pathname), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use {
-        fchannel ->
+    val drivers: List<CellDriver<ByteBuffer, *>> = scala2s.left.map(Fixed.mapped::get).toList().filterNotNull()
+    FileChannel.open(Paths.get(pathname), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { fchannel ->
 
         val xsize = width
         val ysize = size
         for (y in 0 until ysize) {
-            val row=this at y
-            for(x in 0 until xsize){
+            val row = this at y
+            rowBuf.clear()
+            for (x in 0 until xsize) {
                 val byteArray = ByteArray(wcoords[x].span)
                 val cellData = row.left[x]
-                val write = drivers[x].write as (ByteBuffer,Any?)->Unit
                 val wrap = ByteBuffer.wrap(byteArray)
-                write(wrap , cellData  )
-                fchannel.write(wrap.rewind() )
+                (drivers[x].write as (ByteBuffer, Any?) -> Unit)(wrap, cellData)
+                rowBuf.put(wrap.rewind())
 
             }
+
+            fchannel.write(rowBuf.flip())
+
         }
     }
 
