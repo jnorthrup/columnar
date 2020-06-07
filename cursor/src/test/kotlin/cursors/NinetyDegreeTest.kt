@@ -13,7 +13,9 @@ import shouldBe
 import vec.macros.*
 import vec.util.toArray
 import java.io.File
+import java.nio.channels.FileChannel
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 
 class NinetyDegreeTest {
 
@@ -112,9 +114,9 @@ class NinetyDegreeTest {
         }
         System.err.println(fnList)
 
-        val handleMapThing: Vect02<MappedFile, Cursor> = fnList.α {
-            val mappedFile = MappedFile(it)
-            mappedFile t2 ISAMCursor(Paths.get(it), mappedFile)
+        val handleMapThing: Vect02<FileChannel, Cursor> = fnList.α {
+            val fc = FileChannel.open(Paths.get(it),StandardOpenOption.READ)
+            fc t2 ISAMCursor(Paths.get(it), fc)
         }
 
         try {
@@ -144,7 +146,7 @@ class NinetyDegreeTest {
             "resources", s1
         )
 
-        MappedFile(binpath.toString()).use { mf ->
+        FileChannel.open(binpath ,StandardOpenOption.READ).use { mf ->
             val cursr = ISAMCursor(binpath, mf)
 
             System.err.println((cursr at (0)).left.toList())

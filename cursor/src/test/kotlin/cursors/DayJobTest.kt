@@ -14,10 +14,9 @@ import vec.macros.*
 import vec.util.*
 import java.io.File
 import java.io.FileInputStream
+import java.nio.channels.FileChannel
+import java.nio.file.*
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.Duration
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPath
@@ -140,8 +139,8 @@ class DayJobTest {
         }
         System.err.println("transcription took: " + nanos)
 
-        MappedFile(pathname.toString()).use { mf ->
-            val binaryCursor = ISAMCursor(pathname, mappedFile = mf)
+        FileChannel.open(Paths.get(pathname.toString()),StandardOpenOption.READ).use { fc ->
+            val binaryCursor = ISAMCursor(pathname, fc = fc)
             val filtered = binaryCursor.resample(0).pivot(
                     intArrayOf(0),
                     intArrayOf(1, 2),
@@ -183,8 +182,8 @@ class DayJobTest {
 
         System.err.println("isam digest: " + fileSha256Sum)
 
-        MappedFile(pathname.toString()).use { mf ->
-            val binaryCursor = ISAMCursor(pathname, mappedFile = mf)
+        FileChannel.open( pathname ,StandardOpenOption.READ).use { mf ->
+            val binaryCursor = ISAMCursor(pathname,   mf)
             val filtered = binaryCursor.resample(0).pivot(
                     intArrayOf(0),
                     intArrayOf(1, 2),
@@ -257,8 +256,8 @@ class DayJobTest {
         }
         System.err.println("transcription took: $nanos")
 
-        MappedFile(pathname.toString()).use { mf ->
-            val piv = ISAMCursor(pathname, mappedFile = mf).resample(0).pivot(
+        FileChannel.open(pathname ,StandardOpenOption.READ).use { mf ->
+            val piv = ISAMCursor(pathname, fc = mf).resample(0).pivot(
                     intArrayOf(0),
                     intArrayOf(1, 2),
                     intArrayOf(3)
