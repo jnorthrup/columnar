@@ -43,14 +43,13 @@ fun Cursor.writeISAM2(
                         (cc[RecordBoundary.boundaryKey] as? FixedWidth)?.let { fw ->
                             yield((index to fw.recordLen))
                         }
-
                 }
             }
         }.toMap()
     }
 
     val wcoords: Vect02<Int, Int> = networkCoords(ioMemos, defaultVarcharSize, sizes)
-    val wrecordlen: Int = wcoords.right.last()
+
 
     writeISAMMeta(pathname, wcoords)
 
@@ -63,7 +62,6 @@ fun Cursor.writeISAM2(
         for (y in 0 until ysize) {
             val row=this at y
             for(x in 0 until xsize){
-                val s = scala2s.left[x]
                 val byteArray = ByteArray(wcoords[x].span)
                 val cellData = row.left[x]
                 val write = drivers[x].write as (ByteBuffer,Any?)->Unit
