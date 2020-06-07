@@ -53,6 +53,7 @@ fun Cursor.writeISAM2(
     val reclen = wcoords.right.last()
     writeISAMMeta(pathname, wcoords)
     val rowBuf = ByteBuffer.allocateDirect(reclen + 1)
+    val bounceyBuff = ByteBuffer.allocate(reclen + 1)
 
     val drivers: List<CellDriver<ByteBuffer, *>> = scala2s.left.map(Fixed.mapped::get).toList().filterNotNull()
     FileChannel.open(Paths.get(pathname), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { fchannel ->
@@ -63,11 +64,9 @@ fun Cursor.writeISAM2(
             val row = this at y
             rowBuf.clear()
             for (x in 0 until xsize) {
-                val byteArray = ByteArray(wcoords[x].span)
                 val cellData = row.left[x]
-                val wrap = ByteBuffer.wrap(byteArray)
-                (drivers[x].write as (ByteBuffer, Any?) -> Unit)(wrap, cellData)
-                rowBuf.put(wrap.rewind())
+                (drivers[x].write as (ByteBuffer, Any?) -> Unit)(bounceyBuff.clear().limit(wcoords[x].span),cellData)
+                rowBuf.put(bounceyBuff.flip())
 
             }
 
