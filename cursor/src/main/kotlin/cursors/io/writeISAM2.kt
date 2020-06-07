@@ -1,11 +1,13 @@
 package cursors.io
 
+import com.sun.nio.file.ExtendedOpenOption
 import cursors.Cursor
 import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
 import vec.macros.*
 import vec.util.span
+import java.lang.Exception
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
@@ -56,7 +58,9 @@ fun Cursor.writeISAM2(
     val bounceyBuff = ByteBuffer.allocate(reclen + 1)
 
     val drivers: List<CellDriver<ByteBuffer, *>> = scala2s.left.map(Fixed.mapped::get).toList().filterNotNull()
-    FileChannel.open(Paths.get(pathname), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { fchannel ->
+  try  { FileChannel.open(Paths.get(pathname), ExtendedOpenOption.DIRECT, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE) }catch (x:Exception){
+      FileChannel.open(Paths.get(pathname),   StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+  }.use { fchannel ->
 
         val xsize = width
         val ysize = size
