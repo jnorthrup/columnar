@@ -58,7 +58,8 @@ fun Cursor.writeISAM(
                 Int,
                 /**length*/
                 Int>? = null
-){writeISAM2(pathname, defaultVarcharSize, varcharSizes)}/* {
+)= writeISAM2(pathname, defaultVarcharSize, varcharSizes)
+/* {
     val mementos = scalars α Scalar::first
 
     val vec = scalars `→` { scalars: Vect0r<Scalar> ->
