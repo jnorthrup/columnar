@@ -214,7 +214,7 @@ class DayJobTest {
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
         index t2 typeMemento
     }.filter { (_, b) -> b == IoString }.map { (a, _) ->
-        a to theCoords[a].size
+        a to theCoords[a].span
     }.toMap()
 
     @org.junit.jupiter.api.Test

@@ -70,7 +70,7 @@ class NioMMap(
                 asContextVect0r(addressable as Indexable, fixedWidth)
         (asContextVect0r t2 { y: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
-                (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].size
+                (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].span
             }
         }).let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<NioMeta>) ->
             NioCursor(intArrayOf(drivers.size, row.size)) { (x: Int, y: Int): IntArray ->

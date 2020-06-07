@@ -5,7 +5,7 @@ import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
 import vec.macros.*
-import vec.util.size
+import vec.util.span
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -58,7 +58,7 @@ fun Cursor.writeISAM(
                 Int,
                 /**length*/
                 Int>? = null
-) {
+){writeISAM2(pathname, defaultVarcharSize, varcharSizes)}/* {
     val mementos = scalars α Scalar::first
 
     val vec = scalars `→` { scalars: Vect0r<Scalar> ->
@@ -66,7 +66,7 @@ fun Cursor.writeISAM(
                 scalars
         ) t2 mementos
     }
-    /** create context columns */
+    *//** create context columns *//*
     val (wcolumnar: Arity, ioMemos: Vect0r<TypeMemento>) = vec
     val sizes = varcharSizes ?: let { curs ->
         sequence {
@@ -95,18 +95,18 @@ fun Cursor.writeISAM(
         mappedFile.randomAccessFile.setLength(wrecordlen.toLong() * size)
 
 
-        /**
+        *//**
          * preallocate the mmap file
-         */
+         *//*
 
         val drivers1 = Fixed.mapped[ioMemos]
         val wfixedWidth: RecordBoundary =
                 FixedWidth(wrecordlen, wcoords, { null }, { null })
 
         writeISAMMeta(pathname, wcoords)
-        /**
+        *//**
          * nio object
-         */
+         *//*
         val wnio: Medium = NioMMap(
                 mappedFile,
                 drivers1 as Array<CellDriver<ByteBuffer, Any?>>
@@ -149,7 +149,7 @@ fun Cursor.writeISAM(
         }
     }
 }
-
+*/
 fun Cursor.writeISAMMeta(
         pathname: String,
 //    wrecordlen: Int,
@@ -172,7 +172,7 @@ fun Cursor.writeISAMMeta(
                     if (it is IOMemento)
                         it.name else {
                         val pai2 = wcoords[ix]
-                        pai2.size
+                        pai2.span
                     }
                 }.toList()
 

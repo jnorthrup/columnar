@@ -16,8 +16,8 @@ import kotlin.text.Charsets.UTF_8
 
 inline infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
 inline operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
-inline val Pair<Int, Int>.size get() = let { (a: Int, b: Int) -> b - a }
-inline val Pai2<Int, Int>.size get() = let { (a: Int, b: Int) -> b - a }
+inline val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
+inline val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 
 inline fun Int.toArray(): IntArray = intArrayOf(this)
 inline fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
