@@ -41,7 +41,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
             lateinit var longest: IntArray
             val csvArrays = csvLines1.mapIndexed { index, s ->
 
-                val res = s.split(",").toTypedArray()
+                val res = s.split(",") .map{java.lang.String(it) as kotlin.String }
 
                 if (index == 0)
                     longest = IntArray(res.size) { 0 }
