@@ -37,48 +37,51 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
          * this does no quote escapes, handles no padding, and assumes row 0 is the header names
          */
         fun CsvArraysCursor(csvLines1: Iterable<String>, dt: Vect0r<IOMemento> = Pai2(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString }): Cursor {
-
             lateinit var longest: IntArray
+            lateinit var colnames: List<String>
+
             val csvArrays = csvLines1.mapIndexed { index, s ->
 
-                val res = s.split(",") .map{java.lang.String(it) as kotlin.String }
+                val res = s.split(",").map { java.lang.String(it) as kotlin.String }
 
-                if (index == 0)
+                if (index == 0) {
                     longest = IntArray(res.size) { 0 }
-                else
-                    repeat(res.count()) { i ->
-                        if (dt[i] == IOMemento.IoString)
-                            longest[i] = max(longest[i], res[i].length)
+                    colnames = res
+                    res
+                } else
+                    res.mapIndexed { i, s ->
+                        val ioMemento = dt[i]
+                        if (ioMemento == IOMemento.IoString) {
+                            longest[i] = max(longest[i], s.length)
+                            s
+                        } else {
+                            Tokenized.mapped[ioMemento]!!.read(ByteBuffer.wrap(s.toByteArray()).rewind())
+                        }
                     }
-                res
             }
 
-            val colnames = csvArrays[0]
             val meta = colnames.toVect0r().zip(dt)
             val xSize = colnames.size
             return Cursor(csvArrays.size - 1) { iy: Int ->
                 val row = csvArrays[iy + 1]
                 Pai2(xSize) { ix: Int ->
-                    meta[ix].let { (n, t) ->
-                        val read = Tokenized.mapped[t]!!.read
-                        val csvCell = row[ix].toByteArray()
-                        val wrap = ByteBuffer.wrap(csvCell).rewind()
-                        read(wrap) t2 {
-                            if (IOMemento.IoString == dt[ix]) {
-                                Scalar(type = t, name = n) + FixedWidth(recordLen = longest[ix],
+                    row[ix] t2 {
+                        if (IOMemento.IoString == dt[ix]) {
+                            Scalar(type = dt[ix], name = colnames[ix] ) + FixedWidth(
+                                    recordLen = longest[ix],
                                     coords = dummy,
-                                    endl = { ','.toByte() },
-                                    pad = { ' '.toByte() }
+                                    endl = { null },
+                                    pad = { null },
                             ) //TODO: review whether using FixedWidth here is is a bad thing and we need a new Context Class for this feature.
 
-                            } else Scalar(t, n)
-                        }
+                        } else Scalar(dt[ix], colnames[ix])
                     }
                 }
             }
         }
     }
 }
+
 private val dummy = vect0rOf<Pai2<Int, Int>>()
 
 class FixedWidth(
