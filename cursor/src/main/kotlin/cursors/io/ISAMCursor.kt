@@ -22,7 +22,7 @@ fun ISAMCursor(
         binpath: Path,
         fc: FileChannel,
         metapath: Path = Paths.get(binpath.toString() + ".meta")
-):Cursor = fc.let { fileChannel ->
+): Cursor = fc.let { fileChannel ->
     val lines = Files.readAllLines(metapath)
     lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
     val rcoords = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext() as Vect02<Int, Int>
@@ -31,20 +31,22 @@ fun ISAMCursor(
     val recordlen = rcoords.last().second
     val drivers: Array<CellDriver<ByteBuffer, Any?>> = NioMMap.binary(typeVec)
 
-    /**
-     * this is a departure from the original windowed
-     * ByteBuffer Nio harnasss
-     */
+    Cursor((fc.size() / recordlen).toInt()) { iy: Int ->
+        /**
+         * this is a departure from the original windowed
+         * ByteBuffer Nio harnasss
+         */
 
-    val row=ByteBuffer.allocateDirect(recordlen)
-    Cursor((fc.size() / recordlen).toInt() ){iy:Int->
-        val read = fc.read(row.clear(), iy.toLong() * recordlen.toLong()  )
+        val row = ByteBuffer.allocate (recordlen)
+        val read = fc.read(row.clear(), iy.toLong() * recordlen.toLong())
 
-        RowVec(drivers.size){ix:Int->
-            val slice = row.position(rcoords.left[ix]).limit(rcoords.right[ix]).slice()
-            val read1 = drivers[ix].read(slice)
-            read1 t2 { Scalar(typeVec[ix],rnames[ix]) }
+        RowVec(drivers.size) { ix: Int ->
 
+            rcoords.get(ix).let { (b, e) ->
+                val slice = row.limit(e).position(b).slice()
+                val read1 = drivers[ix].read(slice)
+                read1 t2 { Scalar(typeVec[ix], rnames[ix]) }
+            }
 
         }
 
@@ -52,20 +54,18 @@ fun ISAMCursor(
     }
 
 
-
-
-  /*  val nio = NioMMap(this, drivers)
-    val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null })
-    val indexable: Addressable =
-            RowMajor.indexableOf(nio, fixedWidth)
-    cursorOf(
-            RowMajor().fromFwf(
-                    fixedWidth,
-                    indexable as Indexable,
-                    nio,
-                    Columnar(typeVec.zip(rnames) as Vect02<TypeMemento, String?>)
-            )
-    )*/
+    /*  val nio = NioMMap(this, drivers)
+      val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null })
+      val indexable: Addressable =
+              RowMajor.indexableOf(nio, fixedWidth)
+      cursorOf(
+              RowMajor().fromFwf(
+                      fixedWidth,
+                      indexable as Indexable,
+                      nio,
+                      Columnar(typeVec.zip(rnames) as Vect02<TypeMemento, String?>)
+              )
+      )*/
 }
 
 /**
