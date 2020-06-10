@@ -14,22 +14,6 @@ Tuples also occur in relational algebra; when programming the semantic web with 
 
 package vec.macros
 
-/**
- * 1-ary tuple interface, a handle.  was conceived as something that provided "first" by inheritance,
- * so it's mostly vestigial dead code for now.
- */
-interface Hand1l<out F> {
-    val first: F
-    operator fun component1(): F = first
-    operator fun invoke() = first
-
-    companion object {
-        operator fun <F> invoke(first: F) = object : Hand1l<F> {
-            override val first get() = first
-        }
-    }
-}
-
 /**inheritable version of pair  */
 interface Pai2<F, S> {
     val first: F
@@ -142,19 +126,6 @@ inline fun <reified T : Int> Tw1n(first: T, second: T) = Tw1nt(intArrayOf(first,
 
 @JvmName("twinlong")
 inline fun <reified T : Long> Tw1n(first: T, second: T) = Twln(longArrayOf(first, second))
-
-
-
-
-inline infix fun <reified X, reified Y, Z, P : Pai2<X, Y>, U : Hand1l<X>, T : Hand1l<Y>> U.asLeft(u: T) =
-        (first t2 u.first) as P
-
-inline infix fun <reified X, reified Y, reified Z, P : Pai2<Y, Z>, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(
-        p: P,
-) = Tripl3(first, p.first, p.second)
-
-inline infix fun <reified X, reified Y, reified Z, U : Hand1l<X>, T : Tripl3<X, Y, Z>> U.asLeft(t: T) =
-        Qu4d(first, t.first, t.second, t.third)
 
 inline infix fun <reified F, reified S> F.t2(s: S) = Pai2(this, s)
 inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
