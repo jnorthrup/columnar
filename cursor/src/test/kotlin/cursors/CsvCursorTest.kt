@@ -10,6 +10,7 @@ import vec.macros.*
 import vec.util.*
 import java.nio.file.*
 import java.time.LocalDate
+import kotlin.streams.asSequence
 import kotlin.test.assertEquals
 
 
@@ -35,7 +36,7 @@ class CsvCursorTest {        val dt = _v[IoLocalDate, IoInt, IoString, IoString,
     @Test
     fun ArrayCsvCursor() {
 
-        val curs =  TokenizedRow.CsvArraysCursor(Files.readAllLines(path), dt)
+        val curs =  TokenizedRow.CsvArraysCursor(Files.lines(path)  .asSequence().asIterable(), dt)
 
         val testRow: RowVec = curs at 1
 
