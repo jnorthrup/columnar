@@ -12,17 +12,6 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 
-/*
-
-TODO: revisit parralel cluster bloom searches
-
-suspend fun List<Pai2<BloomFilter, IntArray>>.fetch(rowNum: Int): Int = this.mapIndexed { index: Int, (bf, ia) ->
-    flow<Int?> {
-        if (bf.contains(rowNum) && ia.binarySearch(rowNum) > 0) index else null
-    }
-}.asFlow().flatMapMerge(Runtime.getRuntime().availableProcessors()) { it: Flow<Int?> -> it }.filterNotNull().take(1).first()
-*/
-
 fun bloomAccess(groupClusters: List<IntArray>): List<Pai2<BloomFilter, IntArray>> {
     return groupClusters.map {
         val n = it.size

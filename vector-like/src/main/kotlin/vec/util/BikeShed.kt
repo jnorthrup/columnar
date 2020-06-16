@@ -19,7 +19,7 @@ inline operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end
 inline val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 inline val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 
-inline fun Int.toArray(): IntArray = intArrayOf(this)
+inline fun Int.toArray(): IntArray =_a[this]
 inline fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
 inline fun btoa(ba: ByteArray) = String(ba, UTF_8)
 inline fun trim(it: String) = it.trim()
@@ -58,8 +58,6 @@ object _a {
     inline operator fun get(vararg t: Boolean) = t
     inline operator fun get(vararg t: Long) = t
     inline operator fun <reified T> get(vararg t: T) = t as Array<T>
-
-
 }
 
 /**
@@ -85,7 +83,6 @@ val eol = System.getProperty("line.separator")
 
 fun fileSha256Sum(pathname: String): String {
     val command = ProcessBuilder().command("sha256sum", pathname)
-
     val process = command.start()
     val reader = BufferedReader(InputStreamReader(process.inputStream))
     val builder = StringBuilder()
