@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 
 
 
-class CsvCursorTest {        val dt = _v[IoLocalDate, IoInt, IoString, IoString, IoString,  IoString, IoString,  IoString,
+class CsvCursorTest {        val dt = _v[IoLocalDate as TypeMemento, IoInt, IoString, IoString, IoString,  IoString, IoString,  IoString,
         IoString, IoString, IoString, IoInt, IoInt, IoInt]
 
 

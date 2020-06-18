@@ -1,8 +1,10 @@
 package cursors.context
 
 import cursors.Cursor
+import cursors.TypeMemento
 import cursors.io.IOMemento
 import vec.macros.*
+import vec.util._a
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.max
@@ -36,17 +38,22 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
          * same as CsvLinesCursor but does the splits at creationtime.
          * this does no quote escapes, handles no padding, and assumes row 0 is the header names
          */
-        fun CsvArraysCursor(csvLines1: Iterable<String>, dt: Vect0r<IOMemento> = Pai2(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString }): Cursor {
+        fun CsvArraysCursor(
+                csvLines1: Iterable<String>,
+                dt1: Vect0r<TypeMemento> = Pai2(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString },
+                overrides: Map<String, TypeMemento>? = null,
+        ): Cursor {
             lateinit var longest: IntArray
-            lateinit var colnames: List<String>
-
+            var colnames = _a[""]
+            lateinit var dt: Vect0r<TypeMemento>
             val csvArrays = csvLines1.mapIndexed { index, s ->
-
-                val res = s.split(",").map { java.lang.String(it) as kotlin.String }
-
+                val res = s.split(",").map { java.lang.String(it) as kotlin.String }.toTypedArray()
                 if (index == 0) {
                     longest = IntArray(res.size) { 0 }
                     colnames = res
+                    dt = (Array<TypeMemento>(colnames.size) { i ->
+                        overrides?.let { overrides[colnames[i]] } ?: dt1[i]
+                    }).toVect0r()
                     res
                 } else
                     res.mapIndexed { i, s ->
@@ -57,9 +64,8 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                         } else {
                             Tokenized.mapped[ioMemento]!!.read(ByteBuffer.wrap(s.toByteArray()).rewind())
                         }
-                    }
+                    }.toTypedArray()
             }
-
             val meta = colnames.toVect0r().zip(dt)
             val xSize = colnames.size
             return Cursor(csvArrays.size - 1) { iy: Int ->
@@ -67,7 +73,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                 Pai2(xSize) { ix: Int ->
                     row[ix] t2 {
                         if (IOMemento.IoString == dt[ix]) {
-                            Scalar(type = dt[ix], name = colnames[ix] ) + FixedWidth(
+                            Scalar(type = dt[ix], name = colnames[ix]) + FixedWidth(
                                     recordLen = longest[ix],
                                     coords = dummy,
                                     endl = { null },

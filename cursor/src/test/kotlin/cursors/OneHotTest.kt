@@ -1,6 +1,7 @@
 package cursors
 
 import cursors.context.Scalar
+import cursors.effects.show
 import cursors.io.*
 import cursors.ml.DummySpec
 import cursors.ml.onehot_mask

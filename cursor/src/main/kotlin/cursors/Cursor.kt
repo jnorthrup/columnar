@@ -68,6 +68,7 @@ import kotlin.coroutines.CoroutineContext
  */
 typealias Cursor = Vect0r<RowVec>
 
+//inline infix fun <reified T : Int> Cursor.forEach(t: T) = second.invoke(t)
 inline infix fun <reified T : Int> Cursor.at(t: T) = second.invoke(t)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
@@ -181,27 +182,3 @@ inline fun Cursor.ordered(
     }
 }
 
-inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
-    s.map {
-        val indexOf = this.indexOf(it)
-        if (-1 == indexOf) throw Exception("$it not found in meta")
-        indexOf
-    }.toIntArray()
-}
-
-/**
- * recent addition - cursor["f1","f2","f3"] to auto map the indexes
- */
-operator fun Cursor.get(vararg s: String) = this[scala2s.get(*s)]
-
-/*simple printout macro*/
-fun Cursor.show(range: IntRange = 0 until size) {
-    println("columns" to scala2s.right.toList())
-    showValues(range)
-}
-
-fun Cursor.showValues(range: IntRange) {
-    (range).forEach {
-        println((this at it).left.toList())
-    }
-}
