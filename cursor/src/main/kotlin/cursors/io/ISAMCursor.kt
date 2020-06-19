@@ -1,6 +1,5 @@
 package cursors.io
 
-import com.sun.nio.file.ExtendedOpenOption
 import cursors.Cursor
 import cursors.TypeMemento
 import cursors.at
@@ -37,7 +36,7 @@ fun ISAMCursor(
          * ByteBuffer Nio harnasss
          */
 
-        val row = ByteBuffer.allocate (recordlen)
+        val row = ByteBuffer.allocate(recordlen)
         val read = fc.read(row.clear(), iy.toLong() * recordlen.toLong())
 
         RowVec(drivers.size) { ix: Int ->
@@ -174,3 +173,4 @@ fun Cursor.writeISAMMeta(
         }
     }
 }
+
