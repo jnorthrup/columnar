@@ -3,6 +3,7 @@ package cursors.context
 import cursors.Cursor
 import cursors.TypeMemento
 import cursors.io.IOMemento
+import cursors.io.RowVec
 import vec.macros.*
 import vec.util._a
 import java.nio.ByteBuffer
@@ -66,23 +67,22 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                         }
                     }.toTypedArray()
             }
-            val meta = colnames.toVect0r().zip(dt)
             val xSize = colnames.size
 
-         val sdt=dt.mapIndexed{ix,dt->
-             (if (IOMemento.IoString == dt  ) {
-                 Scalar(type = dt , name = colnames[ix]) + FixedWidth(
-                         recordLen = longest[ix],
-                         coords = dummy,
-                         endl = { null },
-                         pad = { null },
-                 ) //TODO: review whether using FixedWidth here is is a bad thing and we need a new Context Class for this feature.
+            val sdt = dt.mapIndexed { ix, dt ->
+                (if (IOMemento.IoString == dt) {
+                    Scalar(type = dt, name = colnames[ix]) + FixedWidth(
+                            recordLen = longest[ix],
+                            coords = dummy,
+                            endl = { null },
+                            pad = { null },
+                    ) //TODO: review whether using FixedWidth here is is a bad thing and we need a new Context Class for this feature.
 
-             } else Scalar(dt , colnames[ix])).`⟲`
-         }
+                } else Scalar(dt, colnames[ix])).`⟲`
+            }
             return Cursor(csvArrays.size - 1) { iy: Int ->
                 val row = csvArrays[iy + 1]
-                Pai2(xSize) { ix: Int ->
+                RowVec(xSize) { ix: Int ->
                     row[ix] t2 sdt[ix]
                 }
             }
