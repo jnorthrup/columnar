@@ -1,7 +1,9 @@
 package cursors
 
+import cursors.hash.md4
 import cursors.io.RowVec
 import cursors.io.left
+import cursors.io.scala2s
 import cursors.io.scalars
 import kotlinx.coroutines.flow.*
 import vec.macros.*
@@ -95,3 +97,16 @@ inline fun Cursor.keyClusters(
     }
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
 }
+
+fun Cursor.mapOnColumns(vararg colNames: String): Map<String, Int> {
+
+    val kix = scala2s.get(*colNames)
+    return  (0..scala2s.size).map {
+        (this at it).run {
+            this[kix].left.toList().md4 to it
+        }
+    }.toMap()
+
+
+}
+

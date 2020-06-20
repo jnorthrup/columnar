@@ -20,4 +20,4 @@ fun Cursor.showValues(range: IntProgression) {
         println((this at it).left.toList())
     }
 }
-fun Cursor.head ( last:Int)=show(0 until (min(last,size)))
+fun Cursor.head ( last:Int=5)=show(0 until (min(last,size)))
