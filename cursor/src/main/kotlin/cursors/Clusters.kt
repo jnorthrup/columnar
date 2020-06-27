@@ -1,11 +1,8 @@
 package cursors
 
 import cursors.hash.md4
-import cursors.io.RowVec
+import cursors.io.*
 import cursors.io.left
-import cursors.io.scala2s
-import cursors.io.scalars
-import kotlinx.coroutines.flow.*
 import vec.macros.*
 import vec.util.BloomFilter
 import vec.util.logDebug
@@ -26,7 +23,22 @@ fun bloomAccess(groupClusters: List<IntArray>): List<Pai2<BloomFilter, IntArray>
     }
 }
 
-inline fun Cursor.group(
+
+/**
+ * group on indexes created using the columnNames of the cursor passed in
+ *
+ */
+fun Cursor.group(
+        /**these columns will be preserved as the cluster key.
+         * the remaining indexes will be aggregate.
+         *
+         * setting the precedent here where curs[[-]foo"] is adequate to convey a longer scala2s extraction
+         */
+         axis: Cursor
+): Cursor =group(*scala2s.get(*axis.scala2s.right.toList().filterNotNull().toTypedArray()).toTypedArray().toIntArray())
+
+
+fun Cursor.group(
         /**these columns will be preserved as the cluster key.
          * the remaining indexes will be aggregate
          */

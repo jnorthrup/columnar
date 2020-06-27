@@ -2,8 +2,12 @@
 
 package cursors
 
-import cursors.context.*
+import cursors.context.NormalizedRange
+import cursors.context.Scalar
 import cursors.io.*
+import cursors.macros.join
+import cursors.ml.featureRange
+import cursors.ml.normalize
 import vec.macros.*
 import java.util.*
 import kotlin.Comparator
@@ -182,3 +186,32 @@ inline fun Cursor.ordered(
     }
 }
 
+
+fun <T : Float> Cursor.normalizeColumn(colName: String): Cursor = run {
+    val ptype = IOMemento.IoFloat
+    val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
+    inner_normalize(colName, maxMinTwin, ptype)
+}
+
+inline fun <reified T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
+    val colIdx = scala2s[colName][0]
+    val seq = this.let { curs ->
+        sequence {
+            for (iy in 0 until curs.size)
+                yield(curs.at(iy)[colIdx].first as T)
+        }
+    }
+
+    val normalizedRange = featureRange(seq, maxMinTwin)
+    val nprices = join(this[-colName], this[colName].let { c ->
+        val ctx = (Scalar(ptype, "normalized::") + NormalizedRange(normalizedRange)).`⟲`
+        c.size t2 { iy: Int ->
+            val row = (c at iy)
+            RowVec(row.size) { ix: Int ->
+                val (v) = row[ix]
+                (normalizedRange.normalize(v as T)) t2 ctx
+            }
+        }
+    })
+    return nprices
+}
