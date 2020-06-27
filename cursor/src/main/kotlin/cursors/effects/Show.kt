@@ -4,14 +4,14 @@ import cursors.Cursor
 import cursors.at
 import cursors.io.left
 import cursors.io.right
-import cursors.io.scala2s
+import cursors.io.colIdx
 import vec.macros.size
 import vec.macros.toList
 import kotlin.math.min
 
 /*simple printout macro*/
 fun Cursor.show(range: IntProgression = 0 until size) {
-    println("rows:$size" to scala2s.right.toList())
+    println("rows:$size" to colIdx.right.toList())
     showValues(range)
 }
 

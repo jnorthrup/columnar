@@ -13,7 +13,7 @@ fun Cursor.writeCSV(fn: String) {
             Paths.get(fn)
     ).bufferedWriter().use {
         fileWriter ->
-        fileWriter.appendLine(scala2s.right.toList().joinToString(","))
+        fileWriter.appendLine(colIdx.right.toList().joinToString(","))
         (0 until size).forEach {
             fileWriter.appendLine((this at it).left.map(Any?::toString).toList().joinToString(","))
         }

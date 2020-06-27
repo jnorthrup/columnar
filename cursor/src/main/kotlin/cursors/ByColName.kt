@@ -1,7 +1,7 @@
 package cursors
 
 import cursors.io.right
-import cursors.io.scala2s
+import cursors.io.colIdx
 import vec.macros.*
 
 inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
@@ -15,5 +15,5 @@ inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = righ
 /**
  * cursor["f1","f2","f3"] to auto map the indexes
  */
-operator fun Cursor.get(vararg s: String): Cursor = this[scala2s.get(*s)]
+operator fun Cursor.get(vararg s: String): Cursor = this[colIdx.get(*s)]
 

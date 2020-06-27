@@ -194,7 +194,7 @@ fun <T : Float> Cursor.normalizeColumn(colName: String): Cursor = run {
 }
 
 inline fun <reified T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
-    val colIdx = scala2s[colName][0]
+    val colIdx = colIdx[colName][0]
     val seq = this.let { curs ->
         sequence {
             for (iy in 0 until curs.size)

@@ -111,7 +111,7 @@ fun Cursor.writeISAM(
     writeISAMMeta(pathname, wcoords)
     val rowBuf = ByteBuffer.allocateDirect(reclen + 1)
     val bounceyBuff = ByteBuffer.allocate(reclen + 1)
-    val drivers: List<CellDriver<ByteBuffer, *>> = scala2s.left.map(Fixed.mapped::get).toList().filterNotNull()
+    val drivers: List<CellDriver<ByteBuffer, *>> = colIdx.left.map(Fixed.mapped::get).toList().filterNotNull()
     try {
         FileChannel.open(Paths.get(pathname), /*ExtendedOpenOption.DIRECT, */StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
     } catch (x: Exception) {

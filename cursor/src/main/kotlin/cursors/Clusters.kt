@@ -34,7 +34,7 @@ fun Cursor.group(
          * setting the precedent here where curs[[-]foo"] is adequate to convey a longer scala2s extraction
          */
         axis: Cursor
-): Cursor = group(*scala2s.get(*axis.scala2s.right.toList().filterNotNull().toTypedArray()).toTypedArray().toIntArray())
+): Cursor = group(*colIdx.get(*axis.colIdx.right.toList().filterNotNull().toTypedArray()).toTypedArray().toIntArray())
 
 
 fun Cursor.group(
@@ -128,8 +128,8 @@ fun Cursor.mapClusters(axis: IntArray)  =
  * /primary/ key mapping.  collision behaviors are map-defined
  */
 fun Cursor.mapOnColumns(vararg colNames: String): Map<String, Int> {
-    val kix = scala2s.get(*colNames)
-    return (0..scala2s.size).map {
+    val kix = colIdx.get(*colNames)
+    return (0..colIdx.size).map {
         (this at it).run {
             this[kix].left.toList().md4 to it
         }
