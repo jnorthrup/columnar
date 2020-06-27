@@ -2,11 +2,10 @@ package cursors
 
 import cursors.hash.md4
 import cursors.io.*
-import cursors.io.left
 import vec.macros.*
 import vec.util.BloomFilter
 import vec.util.logDebug
-import java.util.ArrayList
+import java.util.*
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -34,8 +33,8 @@ fun Cursor.group(
          *
          * setting the precedent here where curs[[-]foo"] is adequate to convey a longer scala2s extraction
          */
-         axis: Cursor
-): Cursor =group(*scala2s.get(*axis.scala2s.right.toList().filterNotNull().toTypedArray()).toTypedArray().toIntArray())
+        axis: Cursor
+): Cursor = group(*scala2s.get(*axis.scala2s.right.toList().filterNotNull().toTypedArray()).toTypedArray().toIntArray())
 
 
 fun Cursor.group(
@@ -87,21 +86,27 @@ inline fun Cursor.group(
     }
 }
 
-inline fun Cursor.groupClusters(
+
+/**
+ * Performs  [Cursor.keyClusters] and returns trimmed values for group clusters
+ */
+fun Cursor.groupClusters(
         axis: IntArray,
         clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf()
-) = run {
+): List<IntArray> = run {
     System.err.println("--- groupClusters")
     keyClusters(axis, clusters)
     clusters.values α MutableList<Int>::toIntArray
 }
 
-inline fun Cursor.keyClusters(
+/**
+ * grows a list for each cluster key using a bit of a guess on median capacity -- does not trim the clusters.
+ */
+fun Cursor.keyClusters(
         axis: IntArray,
         clusters: MutableMap<List<Any?>, MutableList<Int>>
 ): MutableMap<List<Any?>, MutableList<Int>> = clusters.apply {
     val cap = max(8, sqrt(size.toDouble()).toInt())
-
     forEachIndexed { iy: Int, row: RowVec ->
         row[axis].left.toList().let {
             getOrPut(it) { ArrayList(cap) } += iy
@@ -110,15 +115,24 @@ inline fun Cursor.keyClusters(
     logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
 }
 
-fun Cursor.mapOnColumns(vararg colNames: String): Map<String, Int> {
+/**
+ * ordered keys of ordered cluster indexes trimmed.
+ */
+fun Cursor.mapClusters(axis: IntArray)  =
+    keyClusters(axis, linkedMapOf()).entries.map { (k: List<Any?>, v: MutableList<Int>) ->
+        k to v.toIntArray()
+    }.toMap(linkedMapOf())
 
+
+/**
+ * /primary/ key mapping.  collision behaviors are map-defined
+ */
+fun Cursor.mapOnColumns(vararg colNames: String): Map<String, Int> {
     val kix = scala2s.get(*colNames)
-    return  (0..scala2s.size).map {
+    return (0..scala2s.size).map {
         (this at it).run {
             this[kix].left.toList().md4 to it
         }
     }.toMap()
-
-
 }
 
