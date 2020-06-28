@@ -187,7 +187,7 @@ inline fun Cursor.ordered(
 }
 
 
-fun <T : Float> Cursor.normalizeColumn(colName: String): Cursor = run {
+fun <T : Float> Cursor.normalizeDoubleColumn(colName: String): Cursor = run {
     val ptype = IOMemento.IoFloat
     val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
     inner_normalize(colName, maxMinTwin, ptype)

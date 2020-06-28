@@ -118,20 +118,34 @@ fun Cursor.keyClusters(
 /**
  * ordered keys of ordered cluster indexes trimmed.
  */
-fun Cursor.mapClusters(axis: IntArray)  =
-    keyClusters(axis, linkedMapOf()).entries.map { (k: List<Any?>, v: MutableList<Int>) ->
-        k to v.toIntArray()
-    }.toMap(linkedMapOf())
+fun Cursor.mapClusters(axis: IntArray) =
+        keyClusters(axis, linkedMapOf()).entries.map { (k: List<Any?>, v: MutableList<Int>) ->
+            k to v.toIntArray()
+        }.toMap(linkedMapOf())
 
 
 /**
  * /primary/ key mapping.  collision behaviors are map-defined
+ * produces more idealized hash bucket distributions
  */
-fun Cursor.mapOnColumns(vararg colNames: String): Map<String, Int> {
+fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> {
     val kix = colIdx.get(*colNames)
-    return (0..colIdx.size).map {
+    return (0 until size).map {
         (this at it).run {
             this[kix].left.toList().md4 to it
+        }
+    }.toMap()
+}
+
+/**
+ * /primary/ key mapping.  collision behaviors are map-defined
+ *
+ */
+fun Cursor.mapOnColumns (vararg colNames: String)=let{
+    val kix = colIdx.get(*colNames)
+  (0 until size).map {
+        (this at it).run {
+            this[kix].left.toList() to it
         }
     }.toMap()
 }

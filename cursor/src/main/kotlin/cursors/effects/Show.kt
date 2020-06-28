@@ -2,9 +2,9 @@ package cursors.effects
 
 import cursors.Cursor
 import cursors.at
+import cursors.io.colIdx
 import cursors.io.left
 import cursors.io.right
-import cursors.io.colIdx
 import vec.macros.size
 import vec.macros.toList
 import kotlin.math.min
@@ -20,4 +20,5 @@ fun Cursor.showValues(range: IntProgression) {
         println((this at it).left.toList())
     }
 }
-fun Cursor.head ( last:Int=5)=show(0 until (min(last,size)))
+
+fun Cursor.head(last: Int = 5) = show(0 until (min(last, size)))
