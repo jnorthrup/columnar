@@ -18,7 +18,7 @@ inline infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) c
 inline operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
 inline val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 inline val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
-
+inline infix   fun Any. debug(message:String)= kotlin.io.println( message)
 inline fun Int.toArray(): IntArray =_a[this]
 inline fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
 inline fun btoa(ba: ByteArray) = String(ba, UTF_8)
