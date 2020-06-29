@@ -8,6 +8,7 @@ import cursors.io.right
 import vec.macros.size
 import vec.macros.toList
 import kotlin.math.min
+import kotlin.random.Random
 
 /*simple printout macro*/
 fun Cursor.show(range: IntProgression = 0 until size) {
@@ -22,3 +23,6 @@ fun Cursor.showValues(range: IntProgression) {
 }
 
 fun Cursor.head(last: Int = 5) = show(0 until (min(last, size)))
+
+
+fun Cursor.headRandom(n: Int = 5)  { head(0);showValues(Random.nextInt(size).let { it..it }) }
