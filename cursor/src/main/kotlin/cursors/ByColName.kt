@@ -4,6 +4,9 @@ import cursors.io.right
 import cursors.io.colIdx
 import vec.macros.*
 
+/**
+ * colIdx lands here
+ */
 inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
     s.map {
         val indexOf = this.indexOf(it)
@@ -11,6 +14,15 @@ inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = righ
         indexOf
     }.toIntArray()
 }
+
+ /**
+ * colIdx lands here
+ */
+inline operator fun <reified X > Vect02<X,String?>.get(vararg s: NegateColumn) = ((0 until size).toList() -    get(*s.map { it.negated }.toTypedArray()) .toList()).toIntArray()
+
+
+
+
 
 /**
  * cursor["f1","f2","f3"] to auto map the indexes
