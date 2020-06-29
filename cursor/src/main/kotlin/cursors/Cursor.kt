@@ -186,30 +186,77 @@ inline fun Cursor.ordered(
     }
 }
 
-
-fun <T : Float> Cursor.normalizeDoubleColumn(colName: String): Cursor = run {
+@JvmName("NormalizeF1")
+fun <T : Float> Cursor.normalizeFloatColumn(colName: String) = run {
     val ptype = IOMemento.IoFloat
     val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
-    inner_normalize(colName, maxMinTwin, ptype)
+    inner_normalize<Float>(colName, maxMinTwin, ptype)
 }
 
-inline fun <reified T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
+@JvmName("NormalizeD1")
+fun <T : Double> Cursor.normalizeDoubleColumn(colName: String) = run {
+    val ptype = IOMemento.IoDouble
+    val maxMinTwin: Tw1n<Double> = Double.POSITIVE_INFINITY t2 Double.NEGATIVE_INFINITY
+    inner_normalize<Double>(colName, maxMinTwin, ptype)
+}
+
+@JvmName("NormalizeF2")
+
+fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
     val colIdx = colIdx[colName][0]
+    val colCurs = this[colIdx]
     val seq = this.let { curs ->
         sequence {
-            for (iy in 0 until curs.size)
-                yield(curs.at(iy)[colIdx].first as T)
+            for (iy in 0 until curs.size) {
+                val any = (colCurs at iy).left[0]
+                any.also { }
+                yield(any as T)
+            }
         }
     }
 
-    val normalizedRange = featureRange(seq, maxMinTwin)
+    val normalizedRange = featureRange<Float>(seq, maxMinTwin as Tw1n<Float>)
+
+    val ctx = (Scalar(ptype, "normalized::$colName") + NormalizedRange(normalizedRange)).`⟲`
+
     val nprices = join(this[-colName], this[colName].let { c ->
-        val ctx = (Scalar(ptype, "normalized::") + NormalizedRange(normalizedRange)).`⟲`
         c.size t2 { iy: Int ->
             val row = (c at iy)
             RowVec(row.size) { ix: Int ->
                 val (v) = row[ix]
-                (normalizedRange.normalize(v as T)) t2 ctx
+                normalizedRange.normalize(v as T) t2 ctx
+            }
+        }
+    })
+    return nprices
+}
+
+
+@JvmName("NormalizeD2")
+
+fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
+    val colIdx = colIdx[colName][0]
+    val colCurs = this[colIdx]
+    val seq = this.let { curs ->
+        sequence {
+            for (iy in 0 until curs.size) {
+                val any = (colCurs at iy).left[0]
+                any.also { }
+                yield(any as T)
+            }
+        }
+    }
+
+    val normalizedRange = featureRange<Double>(seq, maxMinTwin as Tw1n<Double>)
+
+    val ctx = (Scalar(ptype, "normalized::$colName") + NormalizedRange(normalizedRange)).`⟲`
+
+    val nprices = join(this[-colName], this[colName].let { c ->
+        c.size t2 { iy: Int ->
+            val row = (c at iy)
+            RowVec(row.size) { ix: Int ->
+                val (v) = row[ix]
+                normalizedRange.normalize(v as T) t2 ctx
             }
         }
     })
