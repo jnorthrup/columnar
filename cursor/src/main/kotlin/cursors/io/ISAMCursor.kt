@@ -7,7 +7,6 @@ import cursors.context.*
 import vec.macros.*
 import vec.util.logDebug
 import vec.util.span
-import java.lang.Exception
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -20,7 +19,7 @@ import java.nio.file.StandardOpenOption
 fun ISAMCursor(
         binpath: Path,
         fc: FileChannel,
-        metapath: Path = Paths.get(binpath.toString() + ".meta")
+        metapath: Path = Paths.get(binpath.toString() + ".meta"),
 ): Cursor = fc.let { fileChannel ->
     val lines = Files.readAllLines(metapath)
     lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
@@ -83,14 +82,14 @@ fun Cursor.writeISAM(
                 column*/
                 Int,
                 /**length*/
-                Int>? = null
+                Int>? = null,
 ) {
     val mementos = scalars α Scalar::first
     val vec = scalars `→` { scalars: Vect0r<Scalar> ->
         Columnar.of(scalars) t2 mementos
     }
     /** create context columns */
-    val (_: Arity, ioMemos: Vect0r<TypeMemento>) = vec
+    val (_: Arity, ioMemos ) = vec
     val sizes = varcharSizes ?: let { curs ->
         sequence {
             (curs at 0).right.toList().mapIndexed { index, it ->
@@ -106,7 +105,7 @@ fun Cursor.writeISAM(
             }
         }.toMap()
     }
-    val wcoords: Vect02<Int, Int> = networkCoords(ioMemos, defaultVarcharSize, sizes)
+    val wcoords: Vect02<Int, Int> = networkCoords(ioMemos.toArray(), defaultVarcharSize, sizes)
     val reclen = wcoords.right.last()
     writeISAMMeta(pathname, wcoords)
     val rowBuf = ByteBuffer.allocateDirect(reclen + 1)
@@ -137,7 +136,7 @@ fun Cursor.writeISAM(
 fun Cursor.writeISAMMeta(
         pathname: String,
 //    wrecordlen: Int,
-        wcoords: Vect02<Int, Int>
+        wcoords: Vect02<Int, Int>,
 ) {
     Files.newOutputStream(
             Paths.get(pathname + ".meta")
@@ -151,14 +150,13 @@ fun Cursor.writeISAMMeta(
                 .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right
                 .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
-        val mentos = s.left
-                .mapIndexed<TypeMemento, Any> { ix, it ->
-                    if (it is IOMemento)
-                        it.name else {
-                        val pai2 = wcoords[ix]
-                        pai2.span
-                    }
-                }.toList()
+        val mentos = s.left.toArray().mapIndexed<TypeMemento, Any> { ix, it ->
+            if (it is IOMemento)
+                it.name else {
+                val pai2 = wcoords[ix]
+                pai2.span
+            }
+        }.toList()
 
                 .joinToString(" ")
         listOf(

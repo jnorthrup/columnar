@@ -46,7 +46,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
         ): Cursor {
             lateinit var longest: IntArray
             var colnames = _a[""]
-            lateinit var dt: Vect0r<TypeMemento>
+            lateinit var dt: Array<TypeMemento>
             val csvArrays = csvLines1.mapIndexed { index, s ->
                 val res = s.split(",").map { java.lang.String(it) as kotlin.String }.toTypedArray()
                 if (index == 0) {
@@ -54,7 +54,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                     colnames = res
                     dt = (Array<TypeMemento>(colnames.size) { i ->
                         overrides?.let { overrides[colnames[i]] } ?: dt1[i]
-                    }).toVect0r()
+                    })
                     res
                 } else
                     res.mapIndexed { i, s ->

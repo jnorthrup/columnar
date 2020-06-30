@@ -1,11 +1,12 @@
 package cursors
 
 import cursors.context.Scalar
-import cursors.io.IOMemento.*
-import cursors.io.*
+import cursors.io.IOMemento.IoInt
+import cursors.io.colIdx
+import cursors.io.left
+import cursors.io.scalars
 import cursors.macros.join
-import cursors.ml.onehot_mask
-import vec.macros.t2
+import cursors.ml.DummySpec
 import vec.macros.*
 
 /***
@@ -20,54 +21,56 @@ import vec.macros.*
  * maybe this is faster if each (column,value) pair was a seperate 1-column cursor.  first fit for now.
  *
  */
+
 fun Cursor.categories(
-    /**
-    if this is a value, that value is omitted from columns. by default null is an omitted value.  if this is a DummySpec, the DummySpec specifies the index
-     */
-    dummySpec: Any? = null
-): Cursor = let { curs ->
-    val origScalars = curs.scalars
-    val xSize = origScalars.size
-    val ySize = curs.size
-/* todo: vector */
-    val sequence = sequence<Cursor> {
-        for (catx in 0 until xSize) {
-            val cat2 = sequence/* todo: vector */ {
-                for (iy in 0 until ySize)
-                    yield((curs at (iy))[0].first)
-            }.distinct().toList().let { cats ->
-                val noDummies = onehot_mask(dummySpec, cats)
-                if (noDummies.first > -1)
-                    cats - cats[noDummies.first]
-                else
-                    cats
+        /**
+        if this is a index value, that value is omitted from columns. by default null is an omitted value.  if this is a DummySpec, the DummySpec specifies the index.
+         */
+        dummySpec: Any? = null,
+): Cursor {
+    val cols = let { parent ->
+        val cols = parent.scalars.toList().mapIndexed { i, (a, b) ->
+            b t2 mutableMapOf<String, Int>() t3 mutableListOf<Int>()
+        }
+        for (iy in 0 until parent.size) {
+            val row = (parent at iy)
+            cols.toList().mapIndexed { i, (_, index, journal) ->
+                val v = row.left[i].toString()
+                journal += index.getOrPut(v, index::size)
             }
+        }
+        cols.map { (nama, index, journal) ->
 
-
-            val catxScalar = origScalars[catx]
-            yield(Cursor(curs.size) { iy: Int ->
-                RowVec(cat2.size) { ix: Int ->
-                    val cell = (curs at (iy))[catx]
-                    val rowValue = cell.first
-                    val diagonalValue = cat2[ix]
-                    val cardinal = if (rowValue == diagonalValue) 1 else 0
-                    cardinal t2 {
-                        /**
-                         * there may be context data other than simple scalars in this cell, so we will just replace the scalar key and pass it along.
-                         */
-                        /**
-                         * there may be context data other than simple scalars in this cell, so we will just replace the scalar key and pass it along.
-                         */
-                        cell.second() + Scalar(
-                             IoInt,
-                            origScalars[catx].second + "_" + diagonalValue.toString()
-                        )
-                    }
-                }
-            })
+            nama t2 index.keys.toTypedArray() t3 journal.toIntArray()
         }
     }
+    val tbj:List<Cursor> = cols.mapIndexed {
 
-    //widthwize join (90 degrees of combine, right?)
-    join(sequence.toVect0r())
+        i, (nama, index, journal) ->
+
+        this.size t2 { iy: Int ->
+            index.size t2 { ix: Int ->
+                (if (journal[iy] == ix) 1 else 0) t2 { Scalar(IoInt, "$nama=${index[ix]}") }
+            }
+        }
+    }
+    val map:List<Cursor> = tbj.map { curs: Cursor ->
+        val s = curs.scalars.size
+        curs[(0 until s) -
+                when (dummySpec) {
+                    is String -> {
+                        curs.colIdx[dummySpec][0]
+                    }
+                    is Int -> {
+                        dummySpec
+                    }
+                    DummySpec.Last -> {
+                        curs.scalars.size - 1
+                    }
+                    else -> 0
+                }]
+
+    }
+    return join(*map.toTypedArray())
+
 }

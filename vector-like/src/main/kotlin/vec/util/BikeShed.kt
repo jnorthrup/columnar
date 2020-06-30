@@ -11,6 +11,7 @@ import vec.macros.toVect0r
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
+import java.nio.file.Paths
 import kotlin.text.Charsets.UTF_8
 
 
@@ -94,3 +95,5 @@ fun fileSha256Sum(pathname: String): String {
     val result = builder.toString()
     return result
 }
+
+inline val String.path get() =  Paths.get(this)
