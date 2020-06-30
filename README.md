@@ -79,6 +79,9 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
  pairs (value,type) on x axis.  This Row is a typealias called RowVec.  Future implementations will include more 
  complex arrangements of x,y,z and more, as described in the CoroutineContext at creationtime.
  
+ Since Cursor is a typealias of several Pai2 typaliases, the kotlin type spec in intellij shows up as ![image](https://user-images.githubusercontent.com/73514/86093079-9d1f5500-bad8-11ea-9a68-5d58863c37a0.png) until you specify it explicitly. kotlin destructuring syntax tends to tame these loose representations quickly as needed as well as explicit typing.  
+ 
+ 
  **Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and
   heterogenous backing stores.  
  
