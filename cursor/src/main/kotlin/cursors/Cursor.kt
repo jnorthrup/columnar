@@ -217,7 +217,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
 
     val normalizedRange = featureRange<Float>(seq, maxMinTwin as Tw1n<Float>)
 
-    val ctx = (Scalar(ptype, "normalized::$colName") + NormalizedRange(normalizedRange)).`⟲`
+    val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
 
     val nprices = join(this[-colName], this[colName].let { c ->
         c.size t2 { iy: Int ->
@@ -249,7 +249,7 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
 
     val normalizedRange = featureRange<Double>(seq, maxMinTwin as Tw1n<Double>)
 
-    val ctx = (Scalar(ptype, "normalized::$colName") + NormalizedRange(normalizedRange)).`⟲`
+    val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
 
     val nprices = join(this[-colName], this[colName].let { c ->
         c.size t2 { iy: Int ->
