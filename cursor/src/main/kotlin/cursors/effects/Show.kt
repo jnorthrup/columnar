@@ -30,5 +30,5 @@ fun Cursor.showValues(range: IntProgression) {
 fun Cursor.head(last: Int = 5) = show(0 until (min(last, size)))
 
 
-fun Cursor.headRandom(n: Int = 5)  { head(0);repeat(n) { showValues(Random.nextInt(size).let { it..it }) }
+fun Cursor.showRandom(n: Int = 5)  { head(0);repeat(n) { showValues(Random.nextInt(size).let { it..it }) }
 }

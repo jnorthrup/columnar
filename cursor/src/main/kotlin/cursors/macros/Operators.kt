@@ -1,6 +1,7 @@
 package cursors.macros
 
 import cursors.Cursor
+import cursors.at
 import cursors.io.RowVec
 import cursors.io.left
 import cursors.io.right
@@ -26,13 +27,20 @@ inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
     }
 
 /**
- * reducer func
+ * tr func
  */
-inline infix fun Cursor.α(crossinline unaryFunctor: (Any?) -> Any?): Cursor =
-    Cursor(first) { iy: Int ->
-        val aggcell = second(iy)
-        (aggcell.left α (unaryFunctor)).zip(aggcell.right)
-    }
+inline infix fun Cursor.α(crossinline unaryFunctor: (Any?) -> Any?): Cursor = run {
+size t2 { iy: Int ->
+            val row: RowVec = (this at iy)
+            (row.left α (unaryFunctor) ).zip( row.right)
+        }
+}
+//    Cursor(first) { iy: Int ->
+//        val aggcell = second(iy)
+//        (aggcell.left α (unaryFunctor)).zip(aggcell.right)
+//    }
+
+
 
 inline val <reified C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
 

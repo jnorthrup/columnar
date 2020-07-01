@@ -7,7 +7,10 @@ import cursors.io.left
 import cursors.io.scalars
 import cursors.macros.join
 import cursors.ml.DummySpec
+
 import vec.macros.*
+import vec.util.fib
+import vec.util.logDebug
 
 /***
  *
@@ -20,6 +23,8 @@ import vec.macros.*
  *
  * maybe this is faster if each (column,value) pair was a seperate 1-column cursor.  first fit for now.
  *
+ * allocates IntArray per column, row length
+ *
  */
 
 fun Cursor.categories(
@@ -28,35 +33,45 @@ fun Cursor.categories(
          */
         dummySpec: Any? = null,
 ): Cursor {
+    var c=1;var trigger=0
+    logDebug { "categories on cursor with ${scalars.size} columns and $size rows" }
     val cols = let { parent ->
         val cols = parent.scalars.toList().mapIndexed { i, (a, b) ->
-            b t2 mutableMapOf<String, Int>() t3 mutableListOf<Int>()
+            b t2 mutableMapOf<String, Int>() t3 IntArray (size)
         }
         for (iy in 0 until parent.size) {
+           if( iy==trigger) logDebug { "step1 row $iy".also { trigger= fib(++c) } }
             val row = (parent at iy)
-            cols.toList().mapIndexed { i, (_, index, journal) ->
+            cols.toList().mapIndexed { i, (nama, uniq, journal) ->
+            if( iy==trigger)
+                logDebug { "step1a row $i $nama" .also { trigger= fib(++c) }}
                 val v = row.left[i].toString()
-                journal += index.getOrPut(v, index::size)
+                journal[iy] == uniq.getOrPut(v, uniq::size)
             }
         }
-        cols.map { (nama, index, journal) ->
+        cols.mapIndexed  { i,(nama, index, journal) ->
+          if( i==trigger)    logDebug { "step1 cleanup  col $i $nama elements: ${journal.size} uniq: ${index.keys.size}" .also { trigger= fib(++c) } }
 
-            nama t2 index.keys.toTypedArray() t3 journal.toIntArray()
+            nama t2 index.keys.toTypedArray() t3 journal
         }
     }
-    val tbj:List<Cursor> = cols.mapIndexed {
-
+    c=1
+    val toBeJournaled:List<Cursor> = cols.mapIndexed {
         i, (nama, index, journal) ->
+      if(i==trigger)  logDebug { "step2 projection col  $i  $nama uniq: ${index.size} len: ${journal.size}"  .also { trigger= fib(++c) } }
 
         this.size t2 { iy: Int ->
             index.size t2 { ix: Int ->
-                (if (journal[iy] == ix) 1 else 0) t2 { Scalar(IoInt, "$nama=${index[ix]}") }
+                (if (journal[iy] == ix) 1 else 0) t2 { Scalar(IoInt, "$nama=${index[ix].replace("\\W+".toRegex(),"_")}") }
             }
         }
     }
-    val map:List<Cursor> = tbj.map { curs: Cursor ->
+    logDebug { "pre-join using dummyspec $dummySpec"}
+    c=1
+    val toBeJoined:List<Cursor> = toBeJournaled.mapIndexed { index, curs: Cursor ->
+
         val s = curs.scalars.size
-        curs[(0 until s) -
+        (if(curs.scalars.size==1)curs else curs[(0 until s) -
                 when (dummySpec) {
                     is String -> {
                         curs.colIdx[dummySpec][0]
@@ -68,9 +83,12 @@ fun Cursor.categories(
                         curs.scalars.size - 1
                     }
                     else -> 0
-                }]
+                }]).also {
+
+            logDebug { "pre-join result cursor $index columns: in ${curs.scalars.size}  out ${it.scalars.size}"}
+        }
+
 
     }
-    return join(*map.toTypedArray())
-
+    return join(*toBeJoined.toTypedArray())
 }
