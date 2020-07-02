@@ -1,21 +1,24 @@
 package cursors.io
 
 import cursors.Cursor
-import cursors.at
-import vec.macros.map
 import vec.macros.size
 import vec.macros.toList
+import vec.util.path
 import java.nio.file.Files
-import java.nio.file.Paths
 
 fun Cursor.writeCSV(fn: String) {
-    Files.newOutputStream(
-            Paths.get(fn)
-    ).bufferedWriter().use {
-        fileWriter ->
+    val eol = '\n'.toInt()
+    val sep = ','.toInt()
+    Files.newOutputStream(fn.path).bufferedWriter().use { fileWriter ->
+        val xsize = colIdx.size
         fileWriter.appendLine(colIdx.right.toList().joinToString(","))
-        (0 until size).forEach {
-            fileWriter.appendLine((this at it).left.map(Any?::toString).toList().joinToString(","))
+        for (iy in 0 until size) {
+            val (_, cell) = second(iy).left
+            for (ix in 0 until xsize) {
+                if (0 < ix) fileWriter.write(sep)
+                fileWriter.write("${cell(ix)}")
+            }
+            fileWriter.write(eol)
         }
     }
 }
