@@ -23,7 +23,7 @@ inline fun <reified T> combine(vararg srcVecs: Vect0r<T>): Vect0r<T> {
     /**
      * fold operation - converts individual 0-based sizes to interval markers on one dimension
      */
-    val (size, tails) = srcVecs.asIterable().foldIndexed(0 t2 IntArray(srcVecs.size)) { vix, (acc, srcVec), vec ->
+    val (size: Int, tails: IntArray) = srcVecs.asIterable().foldIndexed(0 t2 IntArray(srcVecs.size)) { vix: Int, (acc: Int, srcVec: IntArray): Pai2<Int, IntArray>, vec: Vect0r<T> ->
         val size = acc.plus(vec.size)
         srcVec[vix] = size
         size t2 srcVec
