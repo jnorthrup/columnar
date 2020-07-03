@@ -128,9 +128,9 @@ fun Cursor.mapClusters(axis: IntArray) =
  * /primary/ key mapping.  collision behaviors are map-defined
  * produces more idealized hash bucket distributions
  */
-fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> {
+fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> =run{
     val kix = colIdx.get(*colNames)
-    return (0 until size).map {
+    Array(size)  {
         (this at it).run {
             this[kix].left.toList().md4 to it
         }
@@ -143,7 +143,7 @@ fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> {
  */
 fun Cursor.mapOnColumns (vararg colNames: String)=let{
     val kix = colIdx.get(*colNames)
-  (0 until size).map {
+  Array(size) {
         (this at it).run {
             this[kix].left.toList() to it
         }

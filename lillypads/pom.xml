@@ -11,7 +11,7 @@
     <dependencies>
         <dependency>
             <groupId>columnar</groupId>
-            <artifactId>vector-like</artifactId>
+            <artifactId>cursor</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
