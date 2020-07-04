@@ -39,16 +39,12 @@ fun ISAMCursor(
         val read = fc.read(row.clear(), iy.toLong() * recordlen.toLong())
 
         RowVec(drivers.size) { ix: Int ->
-
             rcoords.get(ix).let { (b, e) ->
                 val slice = row.limit(e).position(b).slice()
                 val read1 = drivers[ix].read(slice)
                 read1 t2 { Scalar(typeVec[ix], rnames[ix]) }
             }
-
         }
-
-
     }
 
 
