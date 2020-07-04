@@ -25,7 +25,7 @@ fun stringOf(it: RowVec) = it.left.toList().map { any ->
     any1
 }.toString()
 
-inline val <reified F, reified S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
+inline val <reified F, reified S> Vect02<F, S>.left get() = this.α(Pai2<F, S>::first)
 inline val <reified F, reified S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
 inline val <reified F, reified S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair
 

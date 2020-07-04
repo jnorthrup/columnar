@@ -19,8 +19,8 @@ inline infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) c
 inline operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
 inline val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 inline val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
-inline infix   fun Any. debug(message: String)= kotlin.io.println( message)
-inline fun Int.toArray(): IntArray =_a[this]
+inline infix fun Any.debug(message: String) = kotlin.io.println(message)
+inline fun Int.toArray(): IntArray = _a[this]
 inline fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
 inline fun btoa(ba: ByteArray) = String(ba, UTF_8)
 inline fun trim(it: String) = it.trim()
@@ -31,6 +31,9 @@ inline fun logDebug(debugTxt: () -> String) {
         System.err.println(debugTxt())
     }
 }
+
+val IntProgression.indices
+    get() = map { it }
 
 var logReuseCountdown = 0
 
@@ -96,15 +99,16 @@ fun fileSha256Sum(pathname: String): String {
     return result
 }
 
-inline val String.path get() =  Paths.get(this)
+inline val String.path get() = Paths.get(this)
 
- inline infix fun Any?.println(x: Any?){
-     kotlin.io.println("$x")}
+inline infix fun Any?.println(x: Any?) {
+    kotlin.io.println("$x")
+}
 
 @JvmOverloads
 tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
-    when (n) {
-        0 -> a
-        1 -> b
-        else -> fib(n - 1, b, a + b)
-    }
+        when (n) {
+            0 -> a
+            1 -> b
+            else -> fib(n - 1, b, a + b)
+        }

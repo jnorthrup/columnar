@@ -2,6 +2,7 @@ package cursors
 
 import cursors.hash.md4
 import cursors.io.*
+
 import vec.macros.*
 import vec.util.BloomFilter
 import vec.util.logDebug
@@ -130,9 +131,10 @@ fun Cursor.mapClusters(axis: IntArray) =
  */
 fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> =run{
     val kix = colIdx.get(*colNames)
+    val index = this[kix]
     Array(size)  {
-        (this at it).run {
-            this[kix].left.toList().md4 to it
+        (index at it).run {
+            index.left.toList().md4 to it
         }
     }.toMap()
 }
@@ -143,10 +145,26 @@ fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> =run{
  */
 fun Cursor.mapOnColumns (vararg colNames: String)=let{
     val kix = colIdx.get(*colNames)
-  Array(size) {
-        (this at it).run {
-            this[kix].left.toList() to it
+    val index = this[kix]
+    Array(size) {
+      (index at it).run {
+            index.left.toList() to it
         }
     }.toMap()
+}
+
+/**
+ * /primary/ key mapping.  collision behaviors are map-defined
+ *
+ */
+fun Cursor.trieOnColumns (vararg colNames: String)=let{
+    val kix = colIdx.get(*colNames)
+     val index=this[kix]
+  trie.Trie<String,Int>().apply {
+      repeat(size){ iy ->
+         add(iy,*(index at iy).left.α(Any?::toString).toArray())
+      }
+  }
+
 }
 
