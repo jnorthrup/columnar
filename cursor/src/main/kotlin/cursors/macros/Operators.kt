@@ -11,7 +11,7 @@ import kotlin.experimental.ExperimentalTypeInference
 /**
  * reducer func -- operator for sum/avg/mean etc. would be nice, but we have to play nice in a type-safe language so  ∑'s just a hint  of a reducer semantic
  */
-inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
+ fun Cursor.`∑`(  reducer: (Any?, Any?) -> Any?): Cursor =
     Cursor(first) { iy: Int ->
         val aggcell: RowVec = second(iy)
         val al: Vect0r<*> = aggcell.left
@@ -29,7 +29,7 @@ inline fun Cursor.`∑`(crossinline reducer: (Any?, Any?) -> Any?): Cursor =
 /**
  * tr func
  */
-inline infix fun Cursor.α(crossinline unaryFunctor: (Any?) -> Any?): Cursor = run {
+ infix fun Cursor.α(  unaryFunctor: (Any?) -> Any?): Cursor = run {
 size t2 { iy: Int ->
             val row: RowVec = (this at iy)
             (row.left α (unaryFunctor) ).zip( row.right)
@@ -42,11 +42,11 @@ size t2 { iy: Int ->
 
 
 
-inline val <reified C : Vect0r<R>, reified R> C.`…`: List<R> get() = this.toList()
+ val < C : Vect0r<R>,  R> C.`…`: List<R> get() = this.toList()
 
 /** left identity */
 @OptIn(ExperimentalTypeInference::class)
 object `⟳` {
-    @BuilderInference
-    inline operator fun <reified T> invoke(f: T) = { f: T -> f }
+
+     operator fun < T> invoke(f: T) = { f: T -> f }
 }

@@ -1,7 +1,7 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
+@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST")
 
 package vec.util
 
@@ -15,16 +15,16 @@ import java.nio.file.Paths
 import kotlin.text.Charsets.UTF_8
 
 
-inline infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
-inline operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
-inline val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
-inline val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
-inline infix fun Any.debug(message: String) = kotlin.io.println(message)
-inline fun Int.toArray(): IntArray = _a[this]
-inline fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
-inline fun btoa(ba: ByteArray) = String(ba, UTF_8)
-inline fun trim(it: String) = it.trim()
-inline fun logDebug(debugTxt: () -> String) {
+ infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
+ operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
+ val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
+ val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
+ infix fun Any?.debug(message: String) = kotlin.io.println(message)
+ fun Int.toArray(): IntArray = _a[this]
+ fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
+ fun btoa(ba: ByteArray) = String(ba, UTF_8)
+ fun trim(it: String) = it.trim()
+ fun logDebug(debugTxt: () -> String) {
     try {
         assert(false, debugTxt)
     } catch (a: AssertionError) {
@@ -41,42 +41,42 @@ var logReuseCountdown = 0
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _v {
-    inline operator fun <reified T> get(vararg t: T): Vect0r<T> = (t as Array<T>).toVect0r()
+     operator fun < T> get(vararg t: T): Vect0r<T> = (t as Array<T>).toVect0r()
 }
 
 /**
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _l {
-    inline operator fun <reified T> get(vararg t: T) = listOf(*t)
+     operator fun < T> get(vararg t: T) = listOf(*t)
 }
 
 /**
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-    inline operator fun get(vararg t: Int) = t
-    inline operator fun get(vararg t: Double) = t
-    inline operator fun get(vararg t: Short) = t
-    inline operator fun get(vararg t: Byte) = t
-    inline operator fun get(vararg t: Boolean) = t
-    inline operator fun get(vararg t: Long) = t
-    inline operator fun <reified T> get(vararg t: T) = t as Array<T>
+     operator fun get(vararg t: Int) = t
+     operator fun get(vararg t: Double) = t
+     operator fun get(vararg t: Short) = t
+     operator fun get(vararg t: Byte) = t
+     operator fun get(vararg t: Boolean) = t
+     operator fun get(vararg t: Long) = t
+     operator fun < T> get(vararg t: T) = t as Array<T>
 }
 
 /**
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-    inline operator fun <reified T> get(vararg t: T) = setOf(*t)
+     operator fun < T> get(vararg t: T) = setOf(*t)
 }
 
 /**
  * missing stdlib map convenience operator
  */
 object _m {
-    inline operator fun <reified K, reified V, reified P : Pair<K, V>> get(p: List<P>) = (p).toMap()
-    inline operator fun <reified K, reified V, reified P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
+     operator fun < K,  V,  P : Pair<K, V>> get(p: List<P>) = (p).toMap()
+     operator fun < K,  V,  P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
 
 fun main() {
@@ -99,9 +99,9 @@ fun fileSha256Sum(pathname: String): String {
     return result
 }
 
-inline val String.path get() = Paths.get(this)
+ val String.path get() = Paths.get(this)
 
-inline infix fun Any?.println(x: Any?) {
+ infix fun Any?.println(x: Any?) {
     kotlin.io.println("$x")
 }
 

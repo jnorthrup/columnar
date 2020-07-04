@@ -1,4 +1,4 @@
-@file:Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
+@file:Suppress("UNCHECKED_CAST", "NOTHING_TO_")
 
 package cursors
 
@@ -72,8 +72,8 @@ import kotlin.coroutines.CoroutineContext
  */
 typealias Cursor = Vect0r<RowVec>
 
-//inline infix fun <reified T : Int> Cursor.forEach(t: T) = second.invoke(t)
-inline infix fun <reified T : Int> Cursor.at(t: T) = second.invoke(t)
+// infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
+ infix fun < T : Int> Cursor.at(t: T) = second.invoke(t)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.reify() =
@@ -169,10 +169,10 @@ fun Cursor.pivot(
 /**
  * this is a helper for comparing keys.
  */
-inline fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
+ fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
         o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
-inline fun Cursor.ordered(
+ fun Cursor.ordered(
         axis: IntArray,
         comparator: Comparator<List<Any?>> = Comparator(::cmpAny)
 ): Cursor = combine(

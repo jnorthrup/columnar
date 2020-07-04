@@ -6,14 +6,14 @@ import cursors.context.*
 import cursors.context.Arity.Companion.arityKey
 import vec.macros.*
 
-inline val Cursor.scalars: Vect0r<Scalar>
+ val Cursor.scalars: Vect0r<Scalar>
     get() = toSequence().first().right.map {
         it.invoke() `→` {
             it[arityKey] as Scalar
         }
     }
-inline val Cursor.width get()=this.scalars.size
-inline val Cursor.colIdx   :Vect02<IOMemento,String?> get()=  scalars α { sc:Scalar->sc as Pai2<IOMemento, String?> }
+ val Cursor.width get()=this.scalars.size
+ val Cursor.colIdx   :Vect02<IOMemento,String?> get()=  scalars α { sc:Scalar->sc as Pai2<IOMemento, String?> }
 
 fun networkCoords(
     ioMemos: Array<TypeMemento>,

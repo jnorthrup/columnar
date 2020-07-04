@@ -41,7 +41,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
          */
         fun CsvArraysCursor(
                 csvLines1: Iterable<String>,
-                dt1: Vect0r<TypeMemento> = Pai2(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString },
+                dt1: Vect0r<TypeMemento> = Vect0r(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString },
                 overrides: Map<String, TypeMemento>? = null,
         ): Cursor {
             lateinit var longest: IntArray

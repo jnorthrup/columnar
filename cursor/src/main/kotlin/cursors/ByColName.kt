@@ -7,7 +7,7 @@ import vec.macros.*
 /**
  * colIdx lands here
  */
-inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
+ operator fun < X,  T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
     s.map {
         val indexOf = this.indexOf(it)
         if (-1 == indexOf) throw Exception("$it not found in meta")
@@ -18,7 +18,7 @@ inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = righ
  /**
  * colIdx lands here
  */
-inline operator fun <reified X > Vect02<X,String?>.get(vararg s: NegateColumn) = ((0 until size).toList() -    get(*s.map { it.negated }.toTypedArray()) .toList()).toIntArray()
+ operator fun < X > Vect02<X,String?>.get(vararg s: NegateColumn) = ((0 until size).toList() -    get(*s.map { it.negated }.toTypedArray()) .toList()).toIntArray()
 
 
 

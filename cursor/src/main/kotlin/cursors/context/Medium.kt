@@ -68,7 +68,7 @@ class NioMMap(
 
         val asContextVect0r: Vect02<ByteBuffer, Pai2<Long, Long>> =
                 asContextVect0r(addressable as Indexable, fixedWidth)
-        (asContextVect0r t2 { y: ByteBuffer ->
+        (asContextVect0r t2 { _: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
                 (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].span
             }

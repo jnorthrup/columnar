@@ -6,7 +6,7 @@ import vec.macros.Tw1n
  * returns min,max of sequence given
  */
 @JvmName("FRComparable")
-inline fun <reified T : Comparable<T>> featureRange(seq: Sequence<T>, maxMinTwin: Tw1n<T>) =
+inline fun < reified T : Comparable<T>> featureRange(seq: Sequence<T>, maxMinTwin: Tw1n<T>) =
         seq.fold(maxMinTwin) { incumbent, candidate: T ->
             val (incumbentMin, incumbentMax) = incumbent
             val cmin = minOf(incumbentMin, candidate)
