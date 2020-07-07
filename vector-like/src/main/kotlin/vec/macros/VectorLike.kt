@@ -188,19 +188,20 @@ operator fun IntArray.get(indexes: Iterable<Int>) = this.get(indexes.toList().to
 operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> this[index[i]] }
 */
 
-@JvmName("vlike_Vect0r_get")
+@JvmName("vlike_Vect0r_getByInt")
  operator fun < T> Vect0r<T>.get(index: Int): T = second(index)
 
-@JvmName("vlike_Vect0r_1")
+@JvmName("vlike_Vect0r_getVarargInt")
  operator fun < T> Vect0r<T>.get(vararg index: Int): Vect0r<T> = get(index)
 
-@JvmName("vlike_Vect0r_Iterable2")
+@JvmName("vlike_Vect0r_getIntIterator")
  operator fun < T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T> = this[indexes.toList().toIntArray()]
 
-@JvmName("vlike_Vect0r_IntArray3")
+@JvmName("vlike_Vect0r_getIntArray")
  operator fun < T> Vect0r<T>.get(index: IntArray): Vect0r<T> =
         Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
+@JvmName("vlike_Vect0r_toArray")
   inline fun <  reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
  fun < T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {

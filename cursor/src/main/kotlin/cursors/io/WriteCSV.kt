@@ -17,29 +17,31 @@ fun Cursor.writeCSV(fn: String) {
 
     var trigger = 0
     var countdown = 1
-    val eol = '\n'.toInt()
-    val sep = ','.toInt()
+    val eol = '\n'.toChar()
+    val sep = ','.toChar()
     Files.newOutputStream(fn.path).bufferedWriter().use { fileWriter ->
         var begin = Instant.now()
         val xsize = colIdx.size
         fileWriter.appendLine(colIdx.right.toList().joinToString(","))
         for (iy in 0 until size) {
             val (_, cell) = second(iy).left
+            val r = StringBuilder()
             for (ix in 0 until xsize) {
-                if (0 < ix) fileWriter.write(sep)
+                if (0 < ix) r.append(sep)
                 val cell1 = cell(ix)
 
                 //ignore 0's
                 when (cell1) {
-                    is Boolean -> if (cell1) fileWriter.write("1")
-                    is Int -> if (cell1 != 0) fileWriter.write("$cell1")
-                    is Long -> if (cell1 != 0) fileWriter.write("$cell1")
-                    is Double -> if (cell1 != 0.0) fileWriter.write("$cell1")
-                    is Float -> if (cell1 != 0f) fileWriter.write("$cell1")
-                    else fileWriter.write("$cell1")
+                    is Boolean -> if (cell1) r.append('1'.toChar())
+                    is Int -> if (cell1 != 0) r.append("$cell1")
+                    is Long -> if (cell1 != 0) r.append("$cell1")
+                    is Double -> if (cell1 != 0.0) r.append("$cell1")
+                    is Float -> if (cell1 != 0f) r.append("$cell1")
+                    else r.append("$cell1")
                 }
             }
-            fileWriter.write(eol).also {
+            r.append(eol)
+            fileWriter.write(r.toString()).also {
                 if (--countdown == 0) {
                     logDebug {
                         //without -ea this benchmark only costs a unused variable decrement.
