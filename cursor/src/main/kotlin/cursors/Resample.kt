@@ -25,7 +25,7 @@ fun Cursor.resample(indexcol: Int): Cursor = let {
                 true -> indexVec[iy]
                 else -> null
             }
-            any t2 (scalars[ix] as CoroutineContext).`⟲`
+            any t2 { scalars[ix] }
         }
     }
     combine(this, cursor)

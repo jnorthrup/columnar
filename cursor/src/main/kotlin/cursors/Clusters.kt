@@ -52,7 +52,7 @@ fun Cursor.group(
         RowVec(masterScalars.first) { ix: Int ->
             when (ix) {
                 in axis -> (orig at (cfirst))[ix]
-                else -> vec.macros.Vect0r(cluster.size) { iy: Int -> (orig at (cluster[iy]))[ix].first } t2 masterScalars[ix].`⟲`
+                else -> vec.macros.Vect0r(cluster.size) { iy: Int -> (orig at (cluster[iy]))[ix].first } t2 { masterScalars[ix] }
             }
         }
     }

@@ -157,7 +157,7 @@ fun Cursor.pivot(
                             original(fanOut[whichFanoutIndex(ix)]).first
                         else null
 
-                        cellVal t2 synthScalars[ix - lhs.size].`⟲`
+                        cellVal t2 { synthScalars[ix - lhs.size] }
                     }
                 }
             }
@@ -249,7 +249,7 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
 
     val normalizedRange = featureRange<Double>(seq, maxMinTwin as Tw1n<Double>)
 
-    val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
+    val ctx = { Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange) }
 
     val nprices = join(this[-colName], this[colName].let { c ->
         c.size t2 { iy: Int ->

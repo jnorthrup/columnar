@@ -2,11 +2,8 @@ package cursors
 
 import cursors.context.Columnar
 import cursors.context.Scalar
+import cursors.io.*
 import cursors.io.IOMemento.IoInt
-import cursors.io.RowVec
-import cursors.io.colIdx
-import cursors.io.left
-import cursors.io.scalars
 import cursors.macros.join
 import cursors.macros.α
 import cursors.ml.DummySpec
@@ -96,9 +93,10 @@ fun Cursor.categories(
 }
 
 fun Cursor.asBitSet(): Cursor = run {
+//    val sc=scalars.map { (a,b)->   Scalar(IOMemento.IoBoolean, b).`⟲` {  }    }.toList()
     val xsize = scalars.size
     val r = BitSet(size * xsize)
-    val tmp = this.α { b: Any? -> (b as? Int) ?: 0 == 1 }
+    val tmp = this.α { b: Any? -> b == 1 }
     for (iy in 0 until size) {
         for (ix in 0 until xsize) {
             r[iy * ix] = (tmp at iy).left[ix] as Boolean
@@ -106,7 +104,7 @@ fun Cursor.asBitSet(): Cursor = run {
     }
     size t2 { iy: Int ->
         xsize t2 { ix: Int ->
-            (if (r[iy * ix + ix]) 1.toByte() else 0.toByte()) t2 { scalars[ix] }
+            r[iy * ix + ix] t2 { scalars[ix] }/* sc[ix] *///weirdness, if this is scalars[ix] this optimizes much better
         }
     }
 }

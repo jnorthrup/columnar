@@ -7,6 +7,7 @@ import vec.util.fib
 import vec.util.logDebug
 import vec.util.path
 import java.io.FileWriter
+import java.lang.System.*
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
@@ -43,15 +44,13 @@ fun Cursor.writeCSV(fn: String) {
             r.append(eol)
             fileWriter.write(r.toString()).also {
                 if (--countdown == 0) {
-                    logDebug {
-                        //without -ea this benchmark only costs a unused variable decrement.
-                        countdown = fib(++trigger)
-                        val l = Instant.now().minusMillis(begin.toEpochMilli()).toEpochMilli()
-                        val sofar = Duration.ofMillis(l)
-                        val perUnit = sofar.dividedBy(max(iy, 1).toLong())
-                        val remaining = perUnit.multipliedBy(size.toLong()).minus(sofar)
-                        "written $iy rows in ${sofar} ${Duration.ofSeconds(1).dividedBy(perUnit)}/s remaining: $remaining est ${LocalDateTime.now().plus(remaining)} "
-                    }
+                    //without -ea this benchmark only costs a unused variable decrement.
+                    countdown = fib(++trigger)
+                    val l = Instant.now().minusMillis(begin.toEpochMilli()).toEpochMilli()
+                    val sofar = Duration.ofMillis(l)
+                    val perUnit = sofar.dividedBy(max(iy, 1).toLong())
+                    val remaining = perUnit.multipliedBy(size.toLong()).minus(sofar)
+                    err.println("written $iy rows in ${sofar} ${Duration.ofSeconds(1).dividedBy(perUnit)}/s remaining: $remaining est ${LocalDateTime.now().plus(remaining)} ")
                 }
             }
         }
