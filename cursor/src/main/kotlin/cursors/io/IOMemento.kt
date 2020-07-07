@@ -40,6 +40,7 @@ val instantMapper = { s: String ->
 }
 
 enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
+    IoBoolean(1),
     IoInt(4),
     IoLong(8),
     IoFloat(4),

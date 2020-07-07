@@ -8,16 +8,16 @@
     <packaging>pom</packaging>
     <modules>
         <module>cursor</module>
-        <module>vector-like</module>
         <module>lillypads</module>
-        <!--        <module>seventyfive</module>-->
+        <module>vector-like</module>
+        <module>trie</module>
     </modules>
     <properties>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>15</maven.compiler.source>
         <maven.compiler.target>15</maven.compiler.target>
-        <kotlin.version>1.4-M2</kotlin.version>
+        <kotlin.version>1.4-M3</kotlin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -144,7 +144,7 @@
                         <arg>-Xnew-inference</arg>
                         <arg>-Xinline-classes</arg>
                         <arg>-Xemit-jvm-type-annotations</arg>
-                        <arg>-Xallocator=mimalloc</arg>
+<!--                        <arg>-Xallocator=mimalloc</arg>-->
                     </args>
                 </configuration>
             </plugin>

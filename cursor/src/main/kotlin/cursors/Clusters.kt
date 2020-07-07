@@ -129,10 +129,10 @@ fun Cursor.mapClusters(axis: IntArray) =
  * /primary/ key mapping.  collision behaviors are map-defined
  * produces more idealized hash bucket distributions
  */
-fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> =run{
+fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> = run {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
-    Array(size)  {
+    Array(size) {
         (index at it).run {
             index.left.toList().md4 to it
         }
@@ -143,11 +143,11 @@ fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> =run{
  * /primary/ key mapping.  collision behaviors are map-defined
  *
  */
-fun Cursor.mapOnColumns (vararg colNames: String)=let{
+fun Cursor.mapOnColumns(vararg colNames: String) = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
     Array(size) {
-      (index at it).run {
+        (index at it).run {
             index.left.toList() to it
         }
     }.toMap()
@@ -157,14 +157,13 @@ fun Cursor.mapOnColumns (vararg colNames: String)=let{
  * /primary/ key mapping.  collision behaviors are map-defined
  *
  */
-fun Cursor.trieOnColumns (vararg colNames: String)=let{
+fun Cursor.trieOnColumns(vararg colNames: String) = let {
     val kix = colIdx.get(*colNames)
-     val index=this[kix]
-  trie.Trie<String,Int>().apply {
-      repeat(size){ iy ->
-         add(iy,*(index at iy).left.α(Any?::toString).toArray())
-      }
-  }
-
+    val index = this[kix]
+    trie.Trie<String, Int>().apply {
+        repeat(size) { iy ->
+            add(iy, *(index at iy).left.α(Any?::toString).toArray())
+        }
+    }
 }
 

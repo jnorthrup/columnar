@@ -30,4 +30,10 @@ internal class CategoriesKtTest {
         curs.categories(DummySpec.Last).show()
         curs.categories(1).show()
     }
+    @Test
+    fun testCategories1() {
+        curs.categories().asBitSet().show()
+        curs.categories(DummySpec.Last).asBitSet().show()
+        curs.categories(1).asBitSet().show()
+    }
 }
