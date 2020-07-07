@@ -131,7 +131,7 @@ fun Cursor.writeISAM(
 
 fun Cursor.writeISAMMeta(
         pathname: String,
-//    wrecordlen: Int,
+        //wrecordlen: Int,
         wcoords: Vect02<Int, Int>,
 ) {
     Files.newOutputStream(
