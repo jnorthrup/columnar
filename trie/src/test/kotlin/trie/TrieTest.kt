@@ -9,11 +9,11 @@ import kotlin.test.assertTrue
  * Created by kenny on 6/6/16.
  */
 class TrieTest {
-    val d = Double.POSITIVE_INFINITY
+    val d = Int.MIN_VALUE
 
     @Test
     fun stringTrie() {
-        val trie = Trie<String, Any?>()
+        val trie = Trie<String >()
         assertFalse(trie.contains(*emptyArray()))
 
         trie.add(d, "a", "b", "c")
@@ -30,7 +30,7 @@ class TrieTest {
 
     @Test
     fun charTrie() {
-        val trie = Trie<Char, Any?>()
+        val trie = Trie<Char >()
         assertFalse(trie.contains(*emptyArray()))
 
         trie.add(d, 'a', 'b', 'c')
@@ -47,7 +47,7 @@ class TrieTest {
 
     @Test
     fun intTrie() {
-        val trie = Trie<Int, Any?>()
+        val trie = Trie<Int >()
         assertFalse(trie.contains(*emptyArray()))
 
         trie.add(d, 1, 2, 3)
