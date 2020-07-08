@@ -13,7 +13,7 @@ import kotlin.coroutines.CoroutineContext
 
 
 
-fun Cursor.asBitSet(): Cursor = run {
+fun Cursor.asRBitSet(): Cursor = run {
 //    val sc=scalars.map { (a,b)->   Scalar(IOMemento.IoBoolean, b).`⟲` {  }    }.toList()
     val xsize = scalars.size
     val r = BitSet(size * xsize)
