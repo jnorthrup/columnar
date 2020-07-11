@@ -160,7 +160,7 @@ fun Cursor.mapOnColumns(vararg colNames: String) = let {
 fun Cursor.trieOnColumns(vararg colNames: String) = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
-    trie.Trie<String >().apply {
+    trie.Trie ().apply {
         repeat(size) { iy ->
             add(iy, *(index at iy).left.α(Any?::toString).toArray())
         }

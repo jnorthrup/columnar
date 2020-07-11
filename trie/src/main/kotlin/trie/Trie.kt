@@ -1,44 +1,42 @@
 package trie
 
-import vec.macros.*
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.*
+
 
 /**
  * Created by kenny on 6/6/16.
  */
-class Trie<T>() {
-
-    val root: MutableMap<T, Node<T>> = mutableMapOf()
-    fun add(v: Int, vararg values: T) {
-        var children: MutableMap<T, Node<T>> = root
+class Trie(val root: SortedMap<String, Node> = sortedMapOf()) {
+    fun add(v: Int, vararg values: String) {
+        var children = root
         var parent = root
         for ((i, value) in values.withIndex()) {
 
             val isLeaf = i == values.size - 1
             // add new node
             if (!children.contains(value)) {
-                val node = Node(value, AtomicBoolean(isLeaf), v, mutableMapOf<T, Node<T>>())
-                children[value] = node as Node<T>
-                children = node.fourth
+                val node = Node(value, isLeaf, v)
+                children[value] = node as Node
+                children = node.children
 
             } else {
                 // exist, so traverse current path + set isLeaf if needed
                 val node = children[value]!!
-                if (isLeaf != node.second.get()) {
-                    node.second.set(isLeaf)
+                if (isLeaf != node.leaf) {
+                    node.leaf = isLeaf
                 }
-                children = node.fourth as MutableMap<T, Node<T>>
+                children = node.children
             }
         }
     }
 
-    fun contains(vararg values: T): Boolean {
+    fun contains(vararg values: String): Boolean {
         return search(*values) != null
     }
 
-    operator fun get(vararg key: T) = search(*key)?.third
+    operator fun get(vararg key: String) = search(*key)?.payload
 
-    fun search(vararg segments: T): Node<T>? {
+    fun search(vararg segments: String): Node? {
         var children = root// exist, so traverse current path, ending if is last value, and is leaf node
         // not at end, continue traversing
         // add new node
@@ -49,13 +47,13 @@ class Trie<T>() {
                 if (children.contains(value)) {
                     // exist, so traverse current path, ending if is last value, and is leaf node
                     val node = children[value]!!
-                    if (isLeaf) if (node.second.get()) {
+                    if (isLeaf) if (node.leaf) {
                         return node
                     } else {
                         return null
                     }
                     // not at end, continue traversing
-                    children = node.fourth as MutableMap<T, Node<T>>
+                    children = node.children
                 } else return null
             }
             throw IllegalStateException("Should not get here")
