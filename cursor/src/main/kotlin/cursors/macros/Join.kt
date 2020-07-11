@@ -14,21 +14,23 @@ import kotlin.math.absoluteValue
 
 fun join(vararg v: Cursor): Cursor = join(vect0rOf(*v as Array<Cursor>))
 
-fun join(c: Vect0r<Cursor>): Cursor = run {
+fun join(c: Vect0r<Cursor>): Cursor {
 
     val vargs = c α Cursor::scalars
 
-    val (xsize, order) = vargs.toSequence().foldIndexed(0 t2 IntArray(vargs.first)) { vix, (acc, avec), vec ->
-        val xsize = acc.plus(vec.first)
-        xsize t2 avec.also { avec[vix] = xsize }
+    val (xsize, order) = vargs.toSequence().foldIndexed(0 t2 IntArray(vargs.size)) { vix, (acc, avec), vec ->
+        val xsize = acc + vec.size
+        avec[vix] = xsize
+        xsize t2 avec
     }
-    Cursor(c[0].first) { iy: Int ->
-        RowVec(xsize) { ix: Int ->
+    val distortRowIndex = { iy: Int ->
+        val distortColumnIndex = { ix: Int ->
             val slot = (1 + order.binarySearch(ix)).absoluteValue
             val cursor: Cursor = c[slot]
-            val rowVec: RowVec = cursor at  (iy)
+            val rowVec: RowVec = cursor at (iy)
 
-            val adjusted: Int = if (0 == slot) ix % order[slot]
+            val adjusted: Int = if (0 == slot)
+                ix % order[slot]
             else {//the usual case
                 var p = slot - 1
                 val prev = order[p++]
@@ -37,5 +39,7 @@ fun join(c: Vect0r<Cursor>): Cursor = run {
             }
             rowVec[adjusted]
         }
+        xsize t2 distortColumnIndex
     }
+    return  c[0].size t2 distortRowIndex
 }
