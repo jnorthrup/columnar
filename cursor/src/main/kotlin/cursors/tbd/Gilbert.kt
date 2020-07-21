@@ -1,6 +1,5 @@
 package cursors.tbd
 
-import vec.macros.Tw1nt
 import vec.macros.`→`
 import java.lang.Integer.signum
 import kotlin.math.abs

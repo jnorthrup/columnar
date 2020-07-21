@@ -1,9 +1,12 @@
 package trie;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Iterator;
-import java.util.Map;
 
 public class BinarySearchTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<K, V> {
+    @Nullable
     private TreeNode<K, V> overallRoot;
     private int size;
 
@@ -19,10 +22,11 @@ public class BinarySearchTreeMap<K extends Comparable<K>, V> extends AbstractIte
         return oldNode.value;
     }
 
-    private TreeNode<K, V> put(TreeNode<K, V> current, TreeNode<K, V> newNode, TreeNode<K, V> oldNode) {
+    private TreeNode<K, V> put(TreeNode<K, V> current, TreeNode<K, V> newNode, TreeNode<K, ? super V> oldNode) {
+        TreeNode<K, V> res;
         if (current == null) {
             size++;
-            return newNode;
+            res = newNode;
         } else {
             int result = newNode.key.compareTo(current.key);
             if (result == 0) {
@@ -33,32 +37,36 @@ public class BinarySearchTreeMap<K extends Comparable<K>, V> extends AbstractIte
             } else {
                 current.right = put(current.right, newNode, oldNode);
             }
-            return current;
+            res = current;
         }
+        return res;
     }
 
     @Override
     public V get(Object key) {
-        TreeNode<K, V> result =  getNode(overallRoot, key);
-        if (result == null) {
-            return null;
+        V res = null;
+        TreeNode<K, V> result = getNode(overallRoot, key);
+        if (result != null) {
+            res = result.value;
         }
-        return result.value;
+        return res;
     }
 
     private TreeNode<K, V> getNode(TreeNode<K, V> current, Object key) {
+        TreeNode<K, V> res;
         if (current == null) {
-            return null;
+            res = null;
         } else {
             int result = compare(key, current.key);
             if (result == 0) {
-                return current;
+                res = current;
             } else if (result < 0) {
-                return getNode(current.left, key);
+                res = getNode(current.left, key);
             } else {
-                return getNode(current.right, key);
+                res = getNode(current.right, key);
             }
         }
+        return res;
     }
 
     @Override
@@ -76,13 +84,14 @@ public class BinarySearchTreeMap<K extends Comparable<K>, V> extends AbstractIte
         return size;
     }
 
+    @NotNull
     @Override
     public Iterator<Entry<K, V>> iterator() {
         throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("unchecked")
-    final int compare(Object k1, Object k2) {
+    int compare(Object k1, Object k2) {
         return ((Comparable<? super K>) k1).compareTo((K) k2);
     }
 

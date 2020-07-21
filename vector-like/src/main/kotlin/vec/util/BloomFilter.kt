@@ -6,10 +6,8 @@ package com.github.lovasoa.bloomfilter
 
 package vec.util
 
-import java.lang.Math.*
+import java.lang.Math.round
 import java.util.*
-import kotlin.math.log
-import kotlin.math.log2
 
 /**
  *  bloom filter.
@@ -17,10 +15,10 @@ import kotlin.math.log2
  * @param m Desired size of the container in bits
  */
 
-public class BloomFilter(n: Int, m: Int =n*11  /* good for 31 bit ints*/  ): Cloneable {
+public class BloomFilter(n: Int, m: Int = n * 11  /* good for 31 bit ints*/) : Cloneable {
     private var k // Number of hash functions
             : Int = round(LN2 * m / n).toInt().let { if (it <= 0) 1 else it }
-    private val hashes: BitSet = BitSet(m).also { logDebug {  "bloomfilter for $n using $m bits"} }
+    private val hashes: BitSet = BitSet(m).also { logDebug { "bloomfilter for $n using $m bits" } }
     private val prng: RandomInRange = RandomInRange(m, k)
 
 

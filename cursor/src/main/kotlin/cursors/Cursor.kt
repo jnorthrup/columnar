@@ -73,7 +73,7 @@ import kotlin.coroutines.CoroutineContext
 typealias Cursor = Vect0r<RowVec>
 
 // infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
- infix fun < T : Int> Cursor.at(t: T) = second.invoke(t)
+infix fun <T : Int> Cursor.at(t: T) = second.invoke(t)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.reify() =
@@ -169,10 +169,10 @@ fun Cursor.pivot(
 /**
  * this is a helper for comparing keys.
  */
- fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
+fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
         o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
- fun Cursor.ordered(
+fun Cursor.ordered(
         axis: IntArray,
         comparator: Comparator<List<Any?>> = Comparator(::cmpAny)
 ): Cursor = combine(

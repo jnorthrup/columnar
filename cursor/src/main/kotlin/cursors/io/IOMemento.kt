@@ -73,13 +73,15 @@ val floatSum: (Any?, Any?) -> Any? = { acc: Any?, any2: Any? ->
 
 
 val sumReducer: Map<IOMemento, (Any?, Any?) -> Any?> = mapOf(
-    IOMemento.IoInt to { acc: Any?, any2: Any? -> ((acc as? Int) ?: 0) + ((any2 as? Int) ?: 0) },
-    IOMemento.IoLong to { acc: Any?, any2: Any? -> ((acc as? Long) ?: 0.toLong()) + ((any2 as? Long) ?: 0.toLong()) },
-    IOMemento.IoFloat to floatSum,
-    IOMemento.IoDouble to { acc: Any?, any2: Any? ->
-        ((acc as? Double) ?: 0.toDouble()) + ((any2 as? Double) ?: 0.toDouble())
-    },
-    IOMemento.IoString to { acc: Any?, any2: Any? ->
-        ((acc as? String) ?: 0.toString()) + ((any2 as? String) ?: 0.toString())
-    }
+        IOMemento.IoInt to { acc: Any?, any2: Any? -> ((acc as? Int) ?: 0) + ((any2 as? Int) ?: 0) },
+        IOMemento.IoLong to { acc: Any?, any2: Any? ->
+            ((acc as? Long) ?: 0.toLong()) + ((any2 as? Long) ?: 0.toLong())
+        },
+        IOMemento.IoFloat to floatSum,
+        IOMemento.IoDouble to { acc: Any?, any2: Any? ->
+            ((acc as? Double) ?: 0.toDouble()) + ((any2 as? Double) ?: 0.toDouble())
+        },
+        IOMemento.IoString to { acc: Any?, any2: Any? ->
+            ((acc as? String) ?: 0.toString()) + ((any2 as? String) ?: 0.toString())
+        }
 )

@@ -1,16 +1,12 @@
 package cursors
 
-import cursors.io.*
+import cursors.io.left
+import cursors.io.scalars
 import cursors.macros.α
-import org.roaringbitmap.RoaringBitmap
-import org.roaringbitmap.RoaringBitmapSupplier
-import org.roaringbitmap.longlong.ImmutableLongBitmapDataProvider
-import org.roaringbitmap.longlong.Roaring64Bitmap
-
-import vec.macros.*
+import vec.macros.get
+import vec.macros.size
+import vec.macros.t2
 import java.util.*
-import kotlin.coroutines.CoroutineContext
-
 
 
 fun Cursor.asRBitSet(): Cursor = run {

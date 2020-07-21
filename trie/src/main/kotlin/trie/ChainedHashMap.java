@@ -1,5 +1,7 @@
 package trie;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -9,7 +11,7 @@ import java.util.NoSuchElementException;
  * @see Map
  */
 public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
-    private static final double DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD = 5;
+    private static final double DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD = 5.0;
     private static final int DEFAULT_INITIAL_CHAIN_COUNT = 5;
     private static final int DEFAULT_INITIAL_CHAIN_CAPACITY = 5;
 
@@ -50,10 +52,11 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
     /**
      * This method will return a new, empty array of the given size that can contain
      * {@code AbstractIterableMap<K, V>} objects.
-     *
+     * <p>
      * Note that each element in the array will initially be null.
-     *
+     * <p>
      * Note: You do not need to modify this method.
+     *
      * @see ArrayMap createArrayOfEntries method for more background on why we need this method
      */
     @SuppressWarnings("unchecked")
@@ -63,10 +66,10 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
 
     /**
      * Returns a new chain.
-     *
+     * <p>
      * This method will be overridden by the grader so that your ChainedHashMap implementation
      * is graded using our solution ArrayMaps.
-     *
+     * <p>
      * Note: You do not need to modify this method.
      */
     protected AbstractIterableMap<K, V> createChain(int initialSize) {
@@ -74,7 +77,7 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
     }
 
 
-    private int hashCode(Object key, int length) {
+    private static int hashCode(Object key, int length) {
         int hash = 0;
         if (key != null) {
             hash = Math.abs(key.hashCode() % length);
@@ -84,11 +87,12 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
 
     @Override
     public V get(Object key) {
+        V result = null;
         int hash = hashCode(key, chains.length);
-        if (chains[hash] == null) {
-            return null;
+        if (chains[hash] != null) {
+            result = chains[hash].get(key);
         }
-        return chains[hash].get(key);
+        return result;
     }
 
     @Override
@@ -123,15 +127,15 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
 
     @Override
     public V remove(Object key) {
+        V result = null;
         V removeKey = null;
         int hash = hashCode(key, chains.length);
-        if (chains[hash] == null) {
-            return null;
-        } else {
+        if (chains[hash] != null) {
             removeKey = chains[hash].remove(key);
             size--;
+            result = removeKey;
         }
-        return removeKey;
+        return result;
     }
 
     @Override
@@ -157,16 +161,11 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
         return size;
     }
 
+    @NotNull
     @Override
     public Iterator<Entry<K, V>> iterator() {
         // Note: you won't need to change this method (unless you add more constructor parameters)
         return new ChainedHashMapIterator<>(this.chains);
-    }
-
-    // Doing so will give you a better string representation for assertion errors the debugger.
-    @Override
-    public String toString() {
-        return super.toString();
     }
 
     /*
@@ -177,7 +176,8 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
         // You may add more fields and constructor parameters
         private Iterator<Entry<K, V>> currentChain; //which chain we are on
         private int tracker; //track which chain
-        public ChainedHashMapIterator(AbstractIterableMap<K, V>[] chains) {
+
+        private ChainedHashMapIterator(AbstractIterableMap<K, V>[] chains) {
             this.chains = chains;
             this.tracker = 0;
             if (this.chains[tracker] != null) {
@@ -196,21 +196,28 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
         // and then iterating through the currentChain ???
         // only add to tracker after we get through every value in each chain
         public boolean hasNext() {
+            boolean result = true;
+            boolean finished = false;
             boolean hello = false;
             while (tracker <= chains.length - 1) { //loop through chains
                 if (currentChain != null && currentChain.hasNext()) {
                     //if the current chain we are on isn't null and it has a .next value return true;
-                    return true;
+                    finished = true;
+                    break;
                 } else if (currentChain == null) {
                     while (this.chains[tracker] == null) {
                         tracker++;
                         if (tracker == chains.length || tracker == chains.length - 1) { /////////////
-                            return false;
+                            result = false;
+                            finished = true;
+                            break;
                         }
                     }
+                    if (finished) break;
                     currentChain = this.chains[tracker].iterator();
                     if (currentChain.hasNext()) {
-                        return true;
+                        finished = true;
+                        break;
                     }
                 } else {
                     tracker++;
@@ -221,7 +228,10 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
                     }
                 }
             }
-            return hello;
+            if (!finished) {
+                result = hello;
+            }
+            return result;
         }
 
         @Override

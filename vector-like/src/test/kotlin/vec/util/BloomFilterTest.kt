@@ -51,6 +51,7 @@ class TestBloomFilter {
         val expectedRate = Math.exp(-ln2 * ln2 * bitsize / elements)
         assert(rate <= expectedRate * 1.10) { "error rate p = e^(-ln2^2*m/n)" }
     }
+
     @Test
 
     fun testInsertion() {
@@ -72,6 +73,7 @@ class TestBloomFilter {
                 elements / (time * 1e-9)
         )
     }
+
     @Test
 
     fun testQuery() {
@@ -119,20 +121,20 @@ class TestBloomFilter {
         println("Done.\n")
     }
 
-/*
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val test = TestBloomFilter ()
-            if (args.size >= 1) test.elements = args[0].toInt()
-            if (args.size >= 2) test.bitsize = args[1].toInt()
-            test.testCorrectness()
-            test.testInsertion()
-            test.testQuery()
+    /*
+        companion object {
+            @JvmStatic
+            fun main(args: Array<String>) {
+                val test = TestBloomFilter ()
+                if (args.size >= 1) test.elements = args[0].toInt()
+                if (args.size >= 2) test.bitsize = args[1].toInt()
+                test.testCorrectness()
+                test.testInsertion()
+                test.testQuery()
+            }
         }
-    }
 
-*/
+    */
     init {
         System.out.format(
                 """

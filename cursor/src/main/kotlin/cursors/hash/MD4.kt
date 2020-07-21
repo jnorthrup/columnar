@@ -3,7 +3,8 @@ package cursors.hash
 import org.bouncycastle.crypto.digests.MD4Digest
 
 
-val Any?.md4a :ByteArray get() {
+val Any?.md4a: ByteArray
+    get() {
         val s = toString()
         val ba = s.toByteArray()
         val d: MD4Digest = MD4Digest() // this overhead doesn't look worth pooling or threadlocal
@@ -13,7 +14,7 @@ val Any?.md4a :ByteArray get() {
         return o
     }
 
-val Any?.md4 get() =   this.md4a.hex
+val Any?.md4 get() = this.md4a.hex
 fun xlate(v: Int) = if (v < 0xa) '0' + v
 else 'a' + (v - 0xa)
 

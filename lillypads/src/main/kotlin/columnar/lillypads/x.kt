@@ -21,7 +21,8 @@ fun main() {
 object HashUtils {
     fun sha1(input: String) = hashString("SHA-1", input)
     fun sha256(input: String) = hashString("SHA-256", input)
-//    fun sha3(input: String) = hashString("SHA-3", input)
+
+    //    fun sha3(input: String) = hashString("SHA-3", input)
     fun sha512(input: String) = hashString("SHA-512", input)
     fun md5sum(input: String) = hashString("MD5", input)
 
@@ -39,8 +40,8 @@ object HashUtils {
     private fun hashString(type: String, input: String): String {
         val HEX_CHARS = "0123456789ABCDEF"
         val bytes = MessageDigest
-            .getInstance(type)
-            .digest(input.toByteArray())
+                .getInstance(type)
+                .digest(input.toByteArray())
         val result = StringBuilder(bytes.size * 2)
 
         bytes.forEach {

@@ -21,7 +21,7 @@ val activeAddresses
 @OptIn(ExperimentalStdlibApi::class)
 fun main(args: Array<String>) {
     val receiver = InetSocketAddress(allBroadcastAddresses.last(), 2112)
-    Executors.newCachedThreadPool().invokeAll(_l [
+    Executors.newCachedThreadPool().invokeAll(_l[
             Callable {
                 println(allBroadcastAddresses)
                 println("is anylocal   ${activeAddresses.map { it.address to it.address.isAnyLocalAddress }}")

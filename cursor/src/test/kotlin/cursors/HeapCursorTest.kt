@@ -64,18 +64,22 @@ class HeapCursorTest {
         val resample = cursor.resample(0)
         resample.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
         println("---")
         val grp = resample.group((1))
         grp.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
         println("---")
@@ -83,9 +87,11 @@ class HeapCursorTest {
         val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
         join.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
     }

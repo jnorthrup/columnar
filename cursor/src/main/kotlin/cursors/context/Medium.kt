@@ -1,6 +1,6 @@
 package cursors.context
 
-import cursors.*
+import cursors.TypeMemento
 import cursors.io.*
 import vec.macros.*
 import vec.util.*
@@ -60,7 +60,7 @@ class NioMMap(
             mappedFile.mappedByteBuffer.let {
                 it t2 (0L t2 it.remaining().toLong())
             }
-) : Medium() { 
+) : Medium() {
     lateinit var fixedWidth: FixedWidth
 
     @Suppress("UNCHECKED_CAST")
@@ -148,7 +148,7 @@ class NioMMap(
     }
     val windowSize: Long by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-    fun remap(rafchannel: FileChannel, window: MMapWindow):  ByteBuffer = window.let { (offsetToMap: Long, sizeToMap: Long) ->
+    fun remap(rafchannel: FileChannel, window: MMapWindow): ByteBuffer = window.let { (offsetToMap: Long, sizeToMap: Long) ->
         rafchannel.map(mappedFile.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
     }
 
@@ -283,7 +283,8 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                         8,
                         { it.long `→` Instant::ofEpochMilli },
                         { a, b: Instant -> a.putLong(b.toEpochMilli()) }),
-                IOMemento.IoString to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString] ?: error(""))
+                IOMemento.IoString to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
+                        ?: error(""))
         )
     }
 }

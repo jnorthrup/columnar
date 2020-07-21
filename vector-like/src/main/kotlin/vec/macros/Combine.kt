@@ -4,7 +4,7 @@ import kotlin.math.absoluteValue
 
 @JvmName("combine_VecVec")
 inline fun <reified T> combine(vargs: Vect0r<Vect0r<T>>): Vect0r<T> =
-    combine(*vargs.toArray())
+        combine(*vargs.toArray())
 
 @JvmName("combine_Vect0r")
 

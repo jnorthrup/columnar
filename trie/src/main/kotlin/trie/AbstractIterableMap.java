@@ -1,39 +1,20 @@
 package trie;
 
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.AbstractMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Stack;
- 
-import java.util.Iterator;
-import java.util.Map;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  * A map that additionally implements the Iterable interface.
- *
+ * <p>
  * Iterating over the map is equivalent to iterating over {@code map.entrySet()}, so having the map
  * be Iterable is technically redundant, but we've chosen to specify the class this way because
  * the iterator is simpler to implement than the entrySet method.
- *
+ * <p>
  * This class inherits default method implementations for almost all Map methods, most of which
  * delegate all work to the iterator. For better efficiency, implementers of this class should
  * provide their own implementations of the basic Map methods included in this file.
- *
+ * <p>
  * For the most part, the documentation in this class is copied from {@link Map}, but without a few
  * extra exceptions and edge cases that you should not need to worry about in your implementations.
  */
@@ -56,7 +37,7 @@ public abstract class AbstractIterableMap<K, V> extends AbstractMap<K, V> implem
      *
      * @param key the key whose associated value is to be returned
      * @return the value to which the specified key is mapped, or
-     *         {@code null} if this map contains no mapping for the key
+     * {@code null} if this map contains no mapping for the key
      */
     @Override
     public V get(Object key) {
@@ -71,13 +52,13 @@ public abstract class AbstractIterableMap<K, V> extends AbstractMap<K, V> implem
      * if {@link #containsKey(Object) m.containsKey(k)} would return
      * {@code true}.)
      *
-     * @param key key with which the specified value is to be associated
+     * @param key   key with which the specified value is to be associated
      * @param value value to be associated with the specified key
      * @return the previous value associated with {@code key}, or
-     *         {@code null} if there was no mapping for {@code key}.
-     *         (A {@code null} return can also indicate that the map
-     *         previously associated {@code null} with {@code key},
-     *         if the implementation supports {@code null} values.)
+     * {@code null} if there was no mapping for {@code key}.
+     * (A {@code null} return can also indicate that the map
+     * previously associated {@code null} with {@code key},
+     * if the implementation supports {@code null} values.)
      */
     @Override
     public V put(K key, V value) {
@@ -103,64 +84,23 @@ public abstract class AbstractIterableMap<K, V> extends AbstractMap<K, V> implem
      *
      * @param key key whose mapping is to be removed from the map
      * @return the previous value associated with {@code key}, or
-     *         {@code null} if there was no mapping for {@code key}.
+     * {@code null} if there was no mapping for {@code key}.
      */
     @Override
     public V remove(Object key) {
         return super.remove(key);
     }
 
-    /**
-     * Removes all of the mappings from this map (optional operation).
-     * The map will be empty after this call returns.
-     */
-    @Override
-    public void clear() {
-        super.clear();
-    }
-
-    /**
-     * Returns {@code true} if this map contains a mapping for the specified
-     * key.  More formally, returns {@code true} if and only if
-     * this map contains a mapping for a key {@code k} such that
-     * {@code Objects.equals(key, k)}.  (There can be
-     * at most one such mapping.)
-     *
-     * @param key key whose presence in this map is to be tested
-     * @return {@code true} if this map contains a mapping for the specified
-     *         key
-     */
-    @Override
-    public boolean containsKey(Object key) {
-        return super.containsKey(key);
-    }
-
-
-    /**
-     * Returns the number of key-value mappings in this map.
-     *
-     * @return the number of key-value mappings in this map
-     */
-    @Override
-    public int size() {
-        return super.size();
-    }
-
-    /**
-     * Returns an iterator that, when used, will yield all key-value mappings contained within this
-     * map.
-     */
-    @Override
-    public abstract Iterator<Map.Entry<K, V>> iterator();
 
     /**
      * An entrySet implementation that delegates all work to the map's iterator.
-     *
+     * <p>
      * Contrary to the base Map interface, the set returned is not mutable, so it is not possible
      * to remove items from the map through the entrySet.
      *
      * @return a set view of the mappings contained in this map
      */
+    @NotNull
     @Override
     public Set<Entry<K, V>> entrySet() {
         return new AbstractSet<>() {

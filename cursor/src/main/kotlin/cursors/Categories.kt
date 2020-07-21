@@ -1,13 +1,13 @@
 package cursors
 
-import cursors.context.Columnar
 import cursors.context.Scalar
-import cursors.io.*
 import cursors.io.IOMemento.IoInt
+import cursors.io.colIdx
+import cursors.io.left
+import cursors.io.scalars
 import cursors.macros.join
 import cursors.macros.α
 import cursors.ml.DummySpec
-
 import vec.macros.*
 import vec.util.fib
 import vec.util.logDebug

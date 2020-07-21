@@ -25,7 +25,7 @@ class XPathTest {
         val xmlDocument: Document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(FileInputStream("src/test/resources/List_of_largest_cities.html"))
         val xPath: XPath = XPathFactory.newInstance().newXPath()
         val expression = """//*[@id="mw-content-text"]/div/table[2]/tbody/tr[position() >= 3]/td[1]/a/text()"""
-        val nodeList  = xPath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET) as NodeList
+        val nodeList = xPath.compile(expression).evaluate(xmlDocument, XPathConstants.NODESET) as NodeList
 
 
         val cities = Vect0r(nodeList.length) { ix: Int ->

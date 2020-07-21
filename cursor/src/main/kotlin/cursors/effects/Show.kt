@@ -22,13 +22,14 @@ fun Cursor.showValues(range: IntProgression) {
         (range).forEach {
             println((this at it).left.toList())
         }
-    } catch (e: NoSuchElementException ) {
-        e  debug   "cannot fully access range $range"
+    } catch (e: NoSuchElementException) {
+        e debug "cannot fully access range $range"
     }
 }
 
 fun Cursor.head(last: Int = 5) = show(0 until (min(last, size)))
 
 
-fun Cursor.showRandom(n: Int = 5)  { head(0);repeat(n) { showValues(Random.nextInt(size).let { it..it }) }
+fun Cursor.showRandom(n: Int = 5) {
+    head(0);repeat(n) { showValues(Random.nextInt(size).let { it..it }) }
 }

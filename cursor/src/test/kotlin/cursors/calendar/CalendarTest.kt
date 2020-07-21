@@ -1,9 +1,11 @@
 package cursors.calendar
 
 
-import cursors.*
+import cursors.Cursor
 import cursors.TypeMemento
+import cursors.at
 import cursors.context.*
+import cursors.get
 import cursors.io.*
 import cursors.macros.join
 import org.junit.jupiter.api.Test

@@ -13,7 +13,8 @@ operator fun Cursor.get(vararg skip: NegateColumn): Cursor {
     logDebug { "solving for direct-reindexing negation ${skip.map { it.negated }}" }
     val indexes = this.colIdx.get(*skip)
     logDebug { "direct-reindexing negation indexes are ${indexes.toList()}" }
-   return  this[indexes]
+    return this[indexes]
 }
+
 operator fun String.unaryMinus() = NegateColumn(this)
 

@@ -1,10 +1,15 @@
 package trie;
 
-import java.util.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Stack;
 
 /**
  * AVL-tree implementation of the map ADT.
- *
+ * <p>
  * Does not allow null keys.
  */
 public class AVLTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<K, V> {
@@ -12,33 +17,35 @@ public class AVLTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<
     private int size;
 
     public AVLTreeMap() {
-        this.size = 0;
+        size = 0;
     }
 
     @Override
     public V get(Object key) {
+        V result = null;
         if (key == null) {
             throw new NullPointerException();
         }
-        AVLNode<K, V> node = getNode(key, this.overallRoot);
-        if (node == null) {
-            return null;
+        AVLNode<K, V> node = getNode(key, overallRoot);
+        if (node != null) {
+            result = node.value;
         }
-        return node.value;
+        return result;
     }
 
     /**
      * Returns the node with the given key or null if no such node is found.
      */
     private AVLNode<K, V> getNode(Object key, AVLNode<K, V> current) {
+        AVLNode<K, V> result = current;
         if (current == null) {
-            return null;
+            result = null;
         } else if (compare(key, current.key) < 0) {
-            return getNode(key, current.left);
+            result = getNode(key, current.left);
         } else if (compare(key, current.key) > 0) {
-            return getNode(key, current.right);
+            result = getNode(key, current.right);
         }
-        return current;
+        return result;
     }
 
 
@@ -46,7 +53,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<
      * Compares two keys; assumes that they have proper Comparable types.
      */
     @SuppressWarnings("unchecked")
-    final int compare(Object k1, Object k2) {
+    int compare(Object k1, Object k2) {
         return ((Comparable<? super K>) k1).compareTo((K) k2);
     }
 
@@ -61,46 +68,54 @@ public class AVLTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<
             throw new NullPointerException();
         }
         AVLNode<K, V> output = new AVLNode<>(null, null);
-        this.overallRoot = put(key, value, this.overallRoot, output);
+        overallRoot = put(key, value, overallRoot, output);
         return output.value;
     }
 
     private AVLNode<K, V> put(K key, V value, AVLNode<K, V> current, AVLNode<K, V> output) {
+        AVLNode<K, V> result = null;
+        boolean finished = false;
         if (current == null) {
-            this.size++;
-            return new AVLNode<>(key, value);
+            size++;
+            result = new AVLNode<>(key, value);
+        } else {
+            if (key.compareTo(current.key) < 0) {
+                current.left = put(key, value, current.left, output);
+            } else if (key.compareTo(current.key) > 0) {
+                current.right = put(key, value, current.right, output);
+            } else {
+                output.value = current.value;
+                current.value = value;
+                result = current;
+                finished = true;
+            }
+            if (!finished) {
+                updateHeight(current);
+                result = balanceTree(current);
+            }
         }
 
-        if (key.compareTo(current.key) < 0) {
-            current.left = put(key, value, current.left, output);
-        } else if (key.compareTo(current.key) > 0) {
-            current.right = put(key, value, current.right, output);
-        } else {
-            output.value = current.value;
-            current.value = value;
-            return current;
-        }
-        updateHeight(current);
-        return balanceTree(current);
+        return result;
     }
 
     /**
      * Maintains AVL balance invariant. Returns the balanced subtree.
      */
     private AVLNode<K, V> balanceTree(AVLNode<K, V> root) {
-        int heightDiff = getHeightDiff(root);
+        AVLNode<K, V> root1 = root;
+        int heightDiff = getHeightDiff(root1);
         if (heightDiff > 1) {  // left-heavy, do right rotation
-            if (getHeightDiff(root.left) < 0) {  // kink case, do left-right rotation
-                root.left = rotateLeft(root.left);
+            if (getHeightDiff(root1.left) < 0) {  // kink case, do left-right rotation
+                root1.left = rotateLeft(root1.left);
             }
-            root = rotateRight(root);
+            root1 = rotateRight(root1);
         } else if (heightDiff < -1) {  // right-heavy, do left rotation
-            if (getHeightDiff(root.right) > 0) {  // kink case, do right-left rotation
-                root.right = rotateRight(root.right);
+            if (getHeightDiff(root1.right) > 0) {  // kink case, do right-left rotation
+                root1.right = rotateRight(root1.right);
             }
-            root = rotateLeft(root);
+            root1 = rotateLeft(root1);
         }
-        return root;
+        return root1;
     }
 
     /**
@@ -159,22 +174,23 @@ public class AVLTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<
 
     @Override
     public boolean containsKey(Object key) {
-        return getNode(key, this.overallRoot) != null;
+        return getNode(key, overallRoot) != null;
     }
 
     @Override
     public int size() {
-        return this.size;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        return this.overallRoot == null;
+        return overallRoot == null;
     }
 
+    @NotNull
     @Override
     public Iterator<Entry<K, V>> iterator() {
-        return new AVLIterator<>(this.overallRoot);
+        return new AVLIterator<>(overallRoot);
     }
 
     /**
@@ -185,38 +201,39 @@ public class AVLTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<
         final K key;
         V value;
         int height;
+        @Nullable
         AVLNode<K, V> left;
+        @Nullable
         AVLNode<K, V> right;
 
         AVLNode(K key, V value) {
             this.key = key;
             this.value = value;
-            this.height = 0;
-            this.left = null;
-            this.right = null;
+            height = 0;
+            left = null;
+            right = null;
         }
     }
 
     private static class AVLIterator<K, V> implements Iterator<Entry<K, V>> {
         private final Stack<Entry<K, V>> stack;
 
-        public AVLIterator(AVLNode<K, V> overallRoot) {
-            this.stack = new Stack<>();
+        private AVLIterator(AVLNode<K, V> overallRoot) {
+            stack = new Stack<>();
             reverseOrderFill(overallRoot);
         }
 
-        private void reverseOrderFill(AVLNode<K, V> root) {
-            if (root == null) {
-                return;
+        private void reverseOrderFill(AVLNode<K, ? extends V> root) {
+            if (root != null) {
+                reverseOrderFill(root.right);
+                stack.push(new SimpleEntry<>(root.key, root.value));
+                reverseOrderFill(root.left);
             }
-            reverseOrderFill(root.right);
-            this.stack.push(new SimpleEntry<>(root.key, root.value));
-            reverseOrderFill(root.left);
         }
 
         @Override
         public boolean hasNext() {
-            return this.stack.size() > 0;
+            return stack.size() > 0;
         }
 
         @Override
@@ -224,7 +241,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> extends AbstractIterableMap<
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return this.stack.pop();
+            return stack.pop();
         }
     }
 }

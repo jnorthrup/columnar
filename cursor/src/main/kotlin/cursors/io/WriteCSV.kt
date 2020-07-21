@@ -4,10 +4,8 @@ import cursors.Cursor
 import vec.macros.size
 import vec.macros.toList
 import vec.util.fib
-import vec.util.logDebug
 import vec.util.path
-import java.io.FileWriter
-import java.lang.System.*
+import java.lang.System.err
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant

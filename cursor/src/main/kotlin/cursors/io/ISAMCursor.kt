@@ -85,7 +85,7 @@ fun Cursor.writeISAM(
         Columnar.of(scalars) t2 mementos
     }
     /** create context columns */
-    val (_: Arity, ioMemos ) = vec
+    val (_: Arity, ioMemos) = vec
     val sizes = varcharSizes ?: let { curs ->
         sequence {
             (curs at 0).right.toList().mapIndexed { index, it ->

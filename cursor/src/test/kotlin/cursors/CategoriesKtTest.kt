@@ -1,7 +1,6 @@
 package cursors
 
 import cursors.context.TokenizedRow
-import cursors.effects.head
 import cursors.effects.show
 import cursors.ml.DummySpec
 import org.junit.jupiter.api.Test
@@ -30,6 +29,7 @@ internal class CategoriesKtTest {
         curs.categories(DummySpec.Last).show()
         curs.categories(1).show()
     }
+
     @Test
     fun testCategories1() {
         curs.categories().asBitSet().show()

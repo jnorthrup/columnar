@@ -1,8 +1,10 @@
 package cursors
 
-import cursors.io.right
 import cursors.io.colIdx
-import vec.macros.*
+import cursors.io.right
+import vec.macros.Vect02
+import vec.macros.size
+import vec.macros.toList
 
 /**
  * colIdx lands here

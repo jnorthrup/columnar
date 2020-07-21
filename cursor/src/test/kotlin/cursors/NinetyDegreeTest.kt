@@ -26,10 +26,10 @@ class NinetyDegreeTest {
     @org.junit.jupiter.api.Test
     fun rewriteBinFwfRowMajor() {
         val coords = intArrayOf(
-            0, 10,
-            10, 84,
-            84, 124,
-            124, 164
+                0, 10,
+                10, 84,
+                84, 124,
+                124, 164
         ).zipWithNext()
         val mf = MappedFile("src/test/resources/caven20.fwf")
         val nio = NioMMap(mf)
@@ -37,18 +37,18 @@ class NinetyDegreeTest {
         val indexable: Addressable = indexableOf(nio, fixedWidth)
         //we resample and pivot a source cursor
         val piv: Cursor = cursorOf(
-            RowMajor().fromFwf(
-                fixedWidth, indexable as Indexable, nio, Columnar(
-                    vect0rOf(
-                        IoLocalDate as TypeMemento,
-                        IoString,
-                        IoFloat,
-                        IoFloat
-                    ).zip(
-                        vect0rOf<String?>("date", "channel", "delivered", "ret")
-                    )
+                RowMajor().fromFwf(
+                        fixedWidth, indexable as Indexable, nio, Columnar(
+                        vect0rOf(
+                                IoLocalDate as TypeMemento,
+                                IoString,
+                                IoFloat,
+                                IoFloat
+                        ).zip(
+                                vect0rOf<String?>("date", "channel", "delivered", "ret")
+                        )
                 )
-            )
+                )
         ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3)) α floatFillNa(0f)
         val defaultVarcharSize = 64
 
@@ -66,29 +66,29 @@ class NinetyDegreeTest {
     @org.junit.jupiter.api.Test
     fun shardCursor() {
         val coords = intArrayOf(
-            0, 10,
-            10, 84,
-            84, 124,
-            124, 164
+                0, 10,
+                10, 84,
+                84, 124,
+                124, 164
         ).zipWithNext()
         val mf = MappedFile("src/test/resources/caven20.fwf")
         val nio = NioMMap(mf)
         val fixedWidth = fixedWidthOf(nio, coords)
-        val indexable: Addressable = indexableOf (nio, fixedWidth)
+        val indexable: Addressable = indexableOf(nio, fixedWidth)
         //we resample and pivot a source cursor
         val piv: Cursor = cursorOf(
-            RowMajor().fromFwf(
-                fixedWidth, indexable as Indexable, nio, Columnar(
-                    vect0rOf(
-                        IoLocalDate as TypeMemento,
-                        IoString,
-                        IoFloat,
-                        IoFloat
-                    ).zip(
-                        vect0rOf<String?>("date", "channel", "delivered", "ret")
-                    )
+                RowMajor().fromFwf(
+                        fixedWidth, indexable as Indexable, nio, Columnar(
+                        vect0rOf(
+                                IoLocalDate as TypeMemento,
+                                IoString,
+                                IoFloat,
+                                IoFloat
+                        ).zip(
+                                vect0rOf<String?>("date", "channel", "delivered", "ret")
+                        )
                 )
-            )
+                )
         ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3)) α floatFillNa(0f)
 
         val defaultVarcharSize = 64
@@ -101,11 +101,11 @@ class NinetyDegreeTest {
              * open destination file
              */
             val createTempFile = File.createTempFile(
-                "shardedPiv-" + scalar.name.replace(
-                    "\\W+".toRegex(),
-                    "_"
-                ),
-                ".bin"
+                    "shardedPiv-" + scalar.name.replace(
+                            "\\W+".toRegex(),
+                            "_"
+                    ),
+                    ".bin"
             )
             System.err.println("tmpfile is " + createTempFile.toPath())
             val pathname = createTempFile.absolutePath
@@ -115,7 +115,7 @@ class NinetyDegreeTest {
         System.err.println(fnList)
 
         val handleMapThing: Vect02<FileChannel, Cursor> = fnList.α {
-            val fc = FileChannel.open(Paths.get(it),StandardOpenOption.READ)
+            val fc = FileChannel.open(Paths.get(it), StandardOpenOption.READ)
             fc t2 ISAMCursor(Paths.get(it), fc)
         }
 
@@ -141,12 +141,12 @@ class NinetyDegreeTest {
         val s1 = "ninetyDegreesTest19334425141920886859.bin"
         val s2 = s1 + ".meta"
         val binpath = Paths.get(
-            "src",
-            "test",
-            "resources", s1
+                "src",
+                "test",
+                "resources", s1
         )
 
-        FileChannel.open(binpath ,StandardOpenOption.READ).use { mf ->
+        FileChannel.open(binpath, StandardOpenOption.READ).use { mf ->
             val cursr = ISAMCursor(binpath, mf)
 
             System.err.println((cursr at (0)).left.toList())

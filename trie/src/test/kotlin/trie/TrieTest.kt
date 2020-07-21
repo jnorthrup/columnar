@@ -13,7 +13,7 @@ class TrieTest {
 
     @Test
     fun stringTrie() {
-        val trie = Trie ()
+        val trie = Trie()
         assertFalse(trie.contains(*emptyArray()))
 
         trie.add(d, "a", "b", "c")

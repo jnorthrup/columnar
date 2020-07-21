@@ -128,8 +128,6 @@ class VectorLikeKtTest {
         val theTwInt: Tw1nt = Tw1nt(_a[0, 1])
 
 
-
-
 //        #### isomorphisms:   Vect0r<Pai2<T,T>>,Vect0r<Tw1n<T>>, Vect02<T>
 
 //        these are all interchangable casts of the same Pai2:

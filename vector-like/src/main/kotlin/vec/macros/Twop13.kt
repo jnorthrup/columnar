@@ -38,7 +38,8 @@ interface Pai2<F, S> {
 
         /**
          * Pair copy ctor conversion
-         */   @JvmStatic
+         */
+        @JvmStatic
         operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P): R =
                 p.run { (first t2 second) as R }
     }
@@ -101,7 +102,7 @@ typealias Tw1n<X> = XY<X, X>
 /**
  * a factory method
  */
-inline fun <reified T > Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar  ->
+inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
     object : Pai2<T, T> {
         override val first get() = ar[0]
         override val second get() = ar[1]
@@ -123,6 +124,7 @@ class Twln(val ia: LongArray) : Tw1n<Long> {
     override val first get() = ia[0]
     override val second get() = ia[1]
 }
+
 @JvmName("twinint")
 fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(intArrayOf(first, second))
 

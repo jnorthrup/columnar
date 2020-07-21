@@ -15,8 +15,10 @@ import vec.util.*
 import java.io.File
 import java.io.FileInputStream
 import java.nio.channels.FileChannel
-import java.nio.file.*
-
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPath
@@ -139,7 +141,7 @@ class DayJobTest {
         }
         System.err.println("transcription took: " + nanos)
 
-        FileChannel.open(Paths.get(pathname.toString()),StandardOpenOption.READ).use { fc ->
+        FileChannel.open(Paths.get(pathname.toString()), StandardOpenOption.READ).use { fc ->
             val binaryCursor = ISAMCursor(pathname, fc = fc)
             val filtered = binaryCursor.resample(0).pivot(
                     intArrayOf(0),
@@ -182,8 +184,8 @@ class DayJobTest {
 
         System.err.println("isam digest: " + fileSha256Sum)
 
-        FileChannel.open( pathname ,StandardOpenOption.READ).use { mf ->
-            val binaryCursor = ISAMCursor(pathname,   mf)
+        FileChannel.open(pathname, StandardOpenOption.READ).use { mf ->
+            val binaryCursor = ISAMCursor(pathname, mf)
             val filtered = binaryCursor.resample(0).pivot(
                     intArrayOf(0),
                     intArrayOf(1, 2),
@@ -256,7 +258,7 @@ class DayJobTest {
         }
         System.err.println("transcription took: $nanos")
 
-        FileChannel.open(pathname ,StandardOpenOption.READ).use { mf ->
+        FileChannel.open(pathname, StandardOpenOption.READ).use { mf ->
             val piv = ISAMCursor(pathname, fc = mf).resample(0).pivot(
                     intArrayOf(0),
                     intArrayOf(1, 2),
@@ -328,6 +330,7 @@ class DayJobTest {
             "seeks:$seeks misses:$misses %${misses.toFloat() / seeks.toFloat() * 100.0}" //11 bits is ~ 1%
         }
     }
+
     /**
      * index based column substitution by gathering a cluster of the target column and bloom filtering the indexes.
      */
