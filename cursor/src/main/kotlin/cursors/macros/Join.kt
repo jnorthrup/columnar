@@ -41,5 +41,5 @@ fun join(c: Vect0r<Cursor>): Cursor {
         }
         xsize t2 distortColumnIndex
     }
-    return  c[0].size t2 distortRowIndex
+    return c[0].size t2 distortRowIndex
 }

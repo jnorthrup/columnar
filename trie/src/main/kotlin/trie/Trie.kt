@@ -6,7 +6,7 @@ import java.util.*
 /**
  * Created by kenny on 6/6/16.
  */
-class Trie(val root: SortedMap<String, Node> = sortedMapOf()) {
+class Trie(val root: MutableMap<String, Node> = mutableMapOf()) {
     fun add(v: Int, vararg values: String) {
         var children = root
         var parent = root
