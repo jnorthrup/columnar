@@ -1,20 +1,18 @@
 package trie
 
-
 /**
  * Created by kenny on 6/6/16.
  */
-class Trie(val root: MutableMap<String, Node> = mutableMapOf()) {
+class Trie(var root: Map<String, Node> = sortedMapOf()) {
+    var freeze: Boolean = false
     fun add(v: Int, vararg values: String) {
         var children = root
-        var parent = root
         for ((i, value) in values.withIndex()) {
-
             val isLeaf = i == values.size - 1
             // add new node
             if (!children.contains(value)) {
                 val node = Node(value, isLeaf, v)
-                children[value] = node as Node
+                (children as MutableMap)[value] = node as Node
                 children = node.children
 
             } else {
@@ -34,18 +32,34 @@ class Trie(val root: MutableMap<String, Node> = mutableMapOf()) {
 
     operator fun get(vararg key: String) = search(*key)?.payload
 
+    fun frez(n: Node) {
+        if (n.leaf) return
+        (n.children.entries).let { cnodes ->
+            n.children = ArrayMap(cnodes.toTypedArray()) as Map<String, Node>
+            for ((_, v) in cnodes) frez(v)
+        }
+    }
+
+    public fun freeze() {
+        if(!freeze) {
+            freeze = true
+            root.values.forEach { frez(it) }
+            root = ArrayMap(root.entries.toTypedArray()) as Map<String, Node>
+        }
+    }
+
     fun search(vararg segments: String): Node? {
         var children = root// exist, so traverse current path, ending if is last value, and is leaf node
         // not at end, continue traversing
         // add new node
         if (children.isNotEmpty()) {
             for ((i, value) in segments.withIndex()) {
-                val isLeaf = i == segments.lastIndex
+                val atLeaf = i == segments.lastIndex
                 // add new node
                 if (children.contains(value)) {
                     // exist, so traverse current path, ending if is last value, and is leaf node
                     val node = children[value]!!
-                    if (isLeaf) if (node.leaf) {
+                    if (atLeaf) if (node.leaf) {
                         return node
                     } else {
                         return null

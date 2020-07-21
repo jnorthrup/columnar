@@ -164,6 +164,7 @@ fun Cursor.trieOnColumns(vararg colNames: String) = let {
         repeat(size) { iy ->
             add(iy, *(index at iy).left.α(Any?::toString).toArray())
         }
-    }
+    }/* only for short paths...*/
+        .also {it.freeze()  }
 }
 
