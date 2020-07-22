@@ -13,7 +13,8 @@
     <dependencies>
         <dependency>
             <groupId>columnar</groupId>
-            <artifactId>vector-like</artifactId>
+            <artifactId>lillypads</artifactId>
             <version>${project.parent.version}</version>
-        </dependency></dependencies>
+        </dependency>
+    </dependencies>
 </project>

@@ -45,13 +45,13 @@
                     <groupId>org.jetbrains.kotlin</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency><!--
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-script-runtime</artifactId>
             <version>${kotlin.version}</version>
             <scope>compile</scope>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
