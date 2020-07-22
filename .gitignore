@@ -15,3 +15,8 @@ build
 superannuate
 target*.ipr
 *.iws
+/cursor/pom.xml.versionsBackup
+/lillypads/pom.xml.versionsBackup
+/trie/pom.xml.versionsBackup
+/vector-like/pom.xml.versionsBackup
+/pom.xml.versionsBackup
