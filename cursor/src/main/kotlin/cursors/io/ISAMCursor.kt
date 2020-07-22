@@ -13,13 +13,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import java.util.AbstractMap
 
 
 @Suppress("USELESS_CAST")
 fun ISAMCursor(
         binpath: Path,
         fc: FileChannel,
-        metapath: Path = Paths.get(binpath.toString() + ".meta"),
+        metapath: Path = Paths.get(binpath.toString() + ".meta")
 ): Cursor = fc.let { fileChannel ->
     val lines = Files.readAllLines(metapath)
     lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
@@ -78,7 +79,7 @@ fun Cursor.writeISAM(
                 column*/
                 Int,
                 /**length*/
-                Int>? = null,
+                Int>? = null
 ) {
     val mementos = scalars α Scalar::first
     val vec = scalars `→` { scalars: Vect0r<Scalar> ->
@@ -87,19 +88,20 @@ fun Cursor.writeISAM(
     /** create context columns */
     val (_: Arity, ioMemos) = vec
     val sizes = varcharSizes ?: let { curs ->
-        sequence {
+
+      linkedMapOf<Int,Int>().apply {
             (curs at 0).right.toList().mapIndexed { index, it ->
 
                 //our blackboard CoroutineCOntext  metadata function.
                 val cc = it.invoke()
                 (cc[Arity.arityKey] as? Scalar)?.let { (a) ->
                     if (a == IOMemento.IoString)
-                        (cc[RecordBoundary.boundaryKey] as? FixedWidth)?.let { fw ->
-                            yield((index to fw.recordLen))
+                        (cc[RecordBoundary.boundaryKey] as? FixedWidth)?.let { fw: FixedWidth ->
+                             this.entries.add(AbstractMap.SimpleEntry(index , fw.recordLen))
                         }
                 }
             }
-        }.toMap()
+        }
     }
     val wcoords: Vect02<Int, Int> = networkCoords(ioMemos.toArray(), defaultVarcharSize, sizes)
     val reclen = wcoords.right.last()
@@ -132,7 +134,7 @@ fun Cursor.writeISAM(
 fun Cursor.writeISAMMeta(
         pathname: String,
         //wrecordlen: Int,
-        wcoords: Vect02<Int, Int>,
+        wcoords: Vect02<Int, Int>
 ) {
     Files.newOutputStream(
             Paths.get(pathname + ".meta")

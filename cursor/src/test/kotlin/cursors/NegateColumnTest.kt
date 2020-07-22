@@ -21,7 +21,7 @@ internal class NegateColumnTest {
                                 "1,2,3",
                                 "1,2,3",
                                 "1,2,3",
-                                "1,2,3",
+                                "1,2,3"
                         ])
         csvLines1.head()
         csvLines1[-"One"].size shouldBe 8

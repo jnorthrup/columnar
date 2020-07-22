@@ -42,7 +42,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
         fun CsvArraysCursor(
                 csvLines1: Iterable<String>,
                 dt1: Vect0r<TypeMemento> = Vect0r(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString },
-                overrides: Map<String, TypeMemento>? = null,
+                overrides: Map<String, TypeMemento>? = null
         ): Cursor {
             lateinit var longest: IntArray
             var colnames = _a[""]
@@ -75,7 +75,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                             recordLen = longest[ix],
                             coords = dummy,
                             endl = { null },
-                            pad = { null },
+                            pad = { null }
                     ) //TODO: review whether using FixedWidth here is is a bad thing and we need a new Context Class for this feature.
 
                 } else Scalar(dt, colnames[ix])).`⟲`
@@ -96,5 +96,5 @@ class FixedWidth(
         val recordLen: Int,
         val coords: Vect02<Int, Int>,
         val endl: () -> Byte? = '\n'::toByte,
-        val pad: () -> Byte? = ' '::toByte,
+        val pad: () -> Byte? = ' '::toByte
 ) : RecordBoundary()

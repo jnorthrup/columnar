@@ -21,7 +21,7 @@ fun Cursor.writeCSV(fn: String) {
     Files.newOutputStream(fn.path).bufferedWriter().use { fileWriter ->
         var begin = Instant.now()
         val xsize = colIdx.size
-        fileWriter.appendLine(colIdx.right.toList().joinToString(","))
+        fileWriter.appendln(colIdx.right.toList().joinToString(","))
         for (iy in 0 until size) {
             val (_, cell) = second(iy).left
             val r = StringBuilder()

@@ -211,7 +211,7 @@ class DayJobTest {
 
     fun varcharMappings(
             theCursor: Cursor,
-            theCoords: Vect0r<Pai2<Int, Int>>,
+            theCoords: Vect0r<Pai2<Int, Int>>
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
         index t2 typeMemento
     }.filter { (_, b) -> b == IoString }.map { (a, _) ->

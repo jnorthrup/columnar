@@ -33,7 +33,7 @@ enum class JvmCal(val jvmProxy: Chronology) {
 
             val dateEpochDay: ChronoLocalDate,// jvmProxy.dateEpochDay(   0) ,
             val dateNow: ChronoLocalDate,// jvmProxy.dateNow(),
-            val eras: MutableList<Era>,  // jvmProxy.eras()
+            val eras: MutableList<Era>   // jvmProxy.eras()
     )
 
     fun info() = dinfo(
@@ -69,7 +69,7 @@ enum class JvmCal(val jvmProxy: Chronology) {
 
     open
     fun dateWiseCategories(
-            localDate: LocalDate,
+            localDate: LocalDate
     ) =
             date(localDate).let { it: ChronoLocalDate? ->
 

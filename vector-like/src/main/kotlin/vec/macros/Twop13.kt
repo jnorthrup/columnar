@@ -170,7 +170,7 @@ interface Qu4d<F, S, T, Z> {
                 first: F,
                 second: S,
                 third: T,
-                fourth: Z,
+                fourth: Z
         ): Qu4d<F, S, T, Z> =
                 object : Qu4d<F, S, T, Z> {
                     override val first get() = first

@@ -32,7 +32,7 @@ fun Cursor.categories(
         /**
         if this is a index value, that value is omitted from columns. by default null is an omitted value.  if this is a DummySpec, the DummySpec specifies the index.
          */
-        dummySpec: Any? = null,
+        dummySpec: Any? = null
 ): Cursor {
     var c = 1;
     var trigger = 0
