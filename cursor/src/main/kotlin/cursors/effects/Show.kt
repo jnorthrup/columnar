@@ -8,10 +8,13 @@ import cursors.io.right
 import vec.macros.size
 import vec.macros.toList
 import vec.util.debug
+
+import kotlin.NoSuchElementException
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.random.Random
 
+//import kotlin.random.Random breaks graalvm
+val random = java.util.Random()
 /*simple printout macro*/
 fun Cursor.show(range: IntProgression = 0 until size) {
     val right = colIdx.right
@@ -33,5 +36,6 @@ fun Cursor.head(last: Int = 5) = show(0 until (max(0,min(last, size))))
 
 
 fun Cursor.showRandom(n: Int = 5) {
-    head(0);repeat(n) { showValues(Random.nextInt(size).let { it..it }) }
+    head(0);repeat(n) {
+        showValues(random.nextInt(size).let { it..it }) }
 }
