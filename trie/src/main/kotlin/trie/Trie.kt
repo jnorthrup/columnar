@@ -41,7 +41,7 @@ class Trie(var root: Map<String, Node> = sortedMapOf()) {
     }
 
     public fun freeze() {
-        if(!freeze) {
+        if (!freeze) {
             freeze = true
             root.values.forEach { frez(it) }
             root = ArrayMap(root.entries.toTypedArray()) as Map<String, Node>

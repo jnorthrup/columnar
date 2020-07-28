@@ -13,7 +13,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.util.AbstractMap
+import java.util.*
 
 
 @Suppress("USELESS_CAST")
@@ -89,7 +89,7 @@ fun Cursor.writeISAM(
     val (_: Arity, ioMemos) = vec
     val sizes = varcharSizes ?: let { curs ->
 
-      linkedMapOf<Int,Int>().apply {
+        linkedMapOf<Int, Int>().apply {
             (curs at 0).right.toList().mapIndexed { index, it ->
 
                 //our blackboard CoroutineCOntext  metadata function.
@@ -97,7 +97,7 @@ fun Cursor.writeISAM(
                 (cc[Arity.arityKey] as? Scalar)?.let { (a) ->
                     if (a == IOMemento.IoString)
                         (cc[RecordBoundary.boundaryKey] as? FixedWidth)?.let { fw: FixedWidth ->
-                             this.entries.add(AbstractMap.SimpleEntry(index , fw.recordLen))
+                            this.entries.add(AbstractMap.SimpleEntry(index, fw.recordLen))
                         }
                 }
             }

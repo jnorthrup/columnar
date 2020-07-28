@@ -87,4 +87,4 @@ fun gilbertCurve2D(xPrime: Int, yPrime: Int, ax: Int, ay: Int, bx: Int, by: Int,
 
 fun audit(x: Int, y: Int) = x to y `→` ::println
 
-fun main(vararg args: String) = gilbertCurve( 16,   33, ::audit)
+fun main(vararg args: String) = gilbertCurve(16, 33, ::audit)

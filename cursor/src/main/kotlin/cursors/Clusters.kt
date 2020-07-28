@@ -4,13 +4,11 @@ import cursors.context.Scalar
 import cursors.hash.md4
 import cursors.io.*
 import trie.ArrayMap
-
 import vec.macros.*
 import vec.util.BloomFilter
 import vec.util.logDebug
 import java.util.*
 import kotlin.Comparator
-import kotlin.collections.Map.Entry
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -168,7 +166,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
     val index = this[kix]
     val scalars: Vect0r<Scalar> = index.scalars
     val map = (scalars as Vect02<TypeMemento, String?>).left.toArray().map { IOMemento.cmp(it) }
-    val cmp = Comparator{ l1: List<*>, l2: List<*> ->
+    val cmp = Comparator { l1: List<*>, l2: List<*> ->
         var res = 0
         var ix = 0
         while (res == 0) {
@@ -190,13 +188,13 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
     }.toSortedSet(comparator).toTypedArray()
 
 
-    val entre: Array< Map.Entry<List<Any?>, Int>> = toTypedArray.map { (a, b) ->
+    val entre: Array<Map.Entry<List<Any?>, Int>> = toTypedArray.map { (a, b) ->
         object : Map.Entry<List<Any?>, Int> {
             override val key get() = a
             override val value get() = b
         }
     }.toTypedArray()
-    ArrayMap(entre,cmp)
+    ArrayMap(entre, cmp)
 }
 
 /**

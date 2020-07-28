@@ -7,8 +7,6 @@ import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.*
-import kotlin.Comparator
 
 const val SPACE: Byte = ' '.toByte()
 const val ZERO: Float = 0.toFloat()
@@ -54,7 +52,7 @@ enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
     ;
 
     companion object {
-        var cmpMap: MutableMap<TypeMemento, (Any?,Any?)->Int> = linkedMapOf(
+        var cmpMap: MutableMap<TypeMemento, (Any?, Any?) -> Int> = linkedMapOf(
                 IoLocalDate to { o1, o2 -> (o1 as LocalDate).compareTo(o2 as LocalDate) },
                 IoInstant to { o1, o2 -> (o1 as Instant).compareTo(o2 as Instant) },
                 IoBoolean to { o1, o2 -> (o1 as Boolean).compareTo(o2 as Boolean) },
