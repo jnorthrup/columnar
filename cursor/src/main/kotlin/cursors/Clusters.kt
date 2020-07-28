@@ -1,12 +1,16 @@
 package cursors
 
+import cursors.context.Scalar
 import cursors.hash.md4
 import cursors.io.*
+import trie.ArrayMap
 
 import vec.macros.*
 import vec.util.BloomFilter
 import vec.util.logDebug
 import java.util.*
+import kotlin.Comparator
+import kotlin.collections.Map.Entry
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -146,11 +150,53 @@ fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> = run {
 fun Cursor.mapOnColumns(vararg colNames: String) = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
-    Array(size) {
-        (index at it).run {
-            index.left.toList() to it
+    val scalars: Vect0r<Scalar> = index.scalars
+    val map = (scalars as Vect02<TypeMemento, String?>).left.toArray().map { IOMemento::cmp }
+    Array(size) { iy ->
+        (index at iy).let { row: RowVec ->
+            row.left.toList() to iy
         }
     }.toMap()
+}
+
+/**
+ * /primary/ key mapping.  collision behaviors are map-defined
+ *
+ */
+fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
+    val kix = colIdx.get(*colNames)
+    val index = this[kix]
+    val scalars: Vect0r<Scalar> = index.scalars
+    val map = (scalars as Vect02<TypeMemento, String?>).left.toArray().map { IOMemento.cmp(it) }
+    val cmp = Comparator{ l1: List<*>, l2: List<*> ->
+        var res = 0
+        var ix = 0
+        while (res == 0) {
+            res = map[ix].invoke(l1[ix], l2[ix]);
+            ix++
+        }
+        res
+    }
+    val comparator = Comparator<Pair<List<*>, Int>> { o1, o2 ->
+        val (l1) = o1
+        val (l2) = o2
+        cmp.compare(l1, l2)
+    }
+
+    val toTypedArray: Array<Pair<List<Any?>, Int>> = Array(size) { iy ->
+        (index at iy).let { row: RowVec ->
+            row.left.toList() to iy
+        }
+    }.toSortedSet(comparator).toTypedArray()
+
+
+    val entre: Array< Map.Entry<List<Any?>, Int>> = toTypedArray.map { (a, b) ->
+        object : Map.Entry<List<Any?>, Int> {
+            override val key get() = a
+            override val value get() = b
+        }
+    }.toTypedArray()
+    ArrayMap(entre,cmp)
 }
 
 /**
@@ -165,6 +211,6 @@ fun Cursor.trieOnColumns(vararg colNames: String) = let {
             add(iy, *(index at iy).left.α(Any?::toString).toArray())
         }
     }/* only for short paths...*/
-        .also {it.freeze()  }
+            .also { it.freeze() }
 }
 
