@@ -24,23 +24,23 @@ fun Cursor.writeCSV(fn: String) {
         fileWriter.appendln(colIdx.right.toList().joinToString(","))
         for (iy in 0 until size) {
             val (_, cell) = second(iy).left
-            val r = StringBuilder()
-            for (ix in 0 until xsize) {
-                if (0 < ix) r.append(sep)
+            repeat (xsize) {ix->
+                if (0 < ix) fileWriter.append(sep)
                 val cell1 = cell(ix)
 
                 //ignore 0's
                 when (cell1) {
-                    is Boolean -> if (cell1) r.append('1'.toChar())
-                    is Int -> if (cell1 != 0) r.append("$cell1")
-                    is Long -> if (cell1 != 0) r.append("$cell1")
-                    is Double -> if (cell1 != 0.0) r.append("$cell1")
-                    is Float -> if (cell1 != 0f) r.append("$cell1")
-                    else r.append("$cell1")
+                    is Boolean -> if (cell1) fileWriter.append('1'.toChar())
+                    is Byte -> if (cell1 !=0.toByte()) fileWriter.append("$cell1")
+                    is Int -> if (cell1 != 0) fileWriter.append("$cell1")
+                    is Long -> if (cell1 != 0) fileWriter.append("$cell1")
+                    is Double -> if (cell1 != 0.0) fileWriter.append("$cell1")
+                    is Float -> if (cell1 != 0f) fileWriter.append("$cell1")
+                    else -> fileWriter.append("$cell1")
                 }
             }
-            r.append(eol)
-            fileWriter.write(r.toString()).also {
+            fileWriter.append(eol)
+             .also {
                 if (--countdown == 0) {
                     //without -ea this benchmark only costs a unused variable decrement.
                     countdown = fib(++trigger)
