@@ -23,10 +23,10 @@ fun Cursor.writeCSV(fn: String) {
         val xsize = colIdx.size
         fileWriter.appendln(colIdx.right.toList().joinToString(","))
         for (iy in 0 until size) {
-            val (_, cell) = second(iy).left
+            val (_, row) = second(iy).left
             repeat (xsize) {ix->
                 if (0 < ix) fileWriter.append(sep)
-                val cell1 = cell(ix)
+                val cell1 = row(ix)
 
                 //ignore 0's
                 when (cell1) {

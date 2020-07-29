@@ -2,6 +2,7 @@ package cursors
 
 import cursors.context.TokenizedRow
 import cursors.effects.show
+import cursors.io.IOMemento
 import cursors.ml.DummySpec
 import org.junit.jupiter.api.Test
 import vec.util._l
@@ -19,7 +20,7 @@ internal class CategoriesKtTest {
                     "john,32,below me",
                     "john,64,below me",
                     "john,128,below me",
-                    "phillip,256,below me"].map { it.toString() }
+                    "phillip,256,below me"].map { it.toString() },overrides = linkedMapOf(  "notsomething" to IOMemento.IoInt )
     )
 
 

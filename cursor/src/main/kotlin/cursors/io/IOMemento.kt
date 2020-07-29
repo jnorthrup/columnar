@@ -2,11 +2,14 @@ package cursors.io
 
 import cursors.TypeMemento
 import vec.macros.Vect0r
+import vec.macros.get
+import vec.macros.map
 import vec.macros.α
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 const val SPACE: Byte = ' '.toByte()
 const val ZERO: Float = 0.toFloat()
@@ -65,6 +68,20 @@ enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
         fun cmp(t: TypeMemento) = cmpMap[t] ?: { o1: Any?, o2: Any? ->
             o1.toString().compareTo(o2.toString())
         }
+
+        fun listComparator (progression: Vect0r<out TypeMemento>) = Comparator<List<*>> { o1, o2 ->
+            val comp = progression .map< TypeMemento, (Any?, Any?) -> Int, Vect0r<out TypeMemento>>( ::cmp)
+            var res = 0;
+            var idx = 0
+            while (res == 0 && idx < o1.size) {
+                val compare = comp[idx]
+                res = compare(o1[idx], o2[idx])
+                idx++
+            }
+            res
+        }
+
+
     }
 }
 

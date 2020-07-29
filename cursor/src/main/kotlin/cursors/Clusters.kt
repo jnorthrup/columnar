@@ -169,7 +169,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
     val cmp = Comparator { l1: List<*>, l2: List<*> ->
         var res = 0
         var ix = 0
-        while (res == 0) {
+        while (res == 0&&ix<map.size) {
             res = map[ix].invoke(l1[ix], l2[ix]);
             ix++
         }
