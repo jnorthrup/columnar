@@ -9,6 +9,7 @@ import cursors.macros.join
 import cursors.ml.featureRange
 import cursors.ml.normalize
 import vec.macros.*
+import vec.util._v
 import java.util.*
 import kotlin.Comparator
 import kotlin.coroutines.CoroutineContext
@@ -208,9 +209,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
     val seq = this.let { curs ->
         sequence {
             for (iy in 0 until curs.size) {
-                val any = (colCurs at iy).left[0]
-                any.also { }
-                yield(any as T)
+                yield((colCurs at iy).left[0] as T)
             }
         }
     }
@@ -219,7 +218,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
 
     val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
 
-    val nprices = join(this[-colName], this[colName].let { c ->
+    val nprices = join( this[-colName], this[colName].let { c ->
         c.size t2 { iy: Int ->
             val row = (c at iy)
             RowVec(row.size) { ix: Int ->
@@ -227,7 +226,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
                 normalizedRange.normalize(v as T) t2 ctx
             }
         }
-    })
+    } )
     return nprices
 }
 

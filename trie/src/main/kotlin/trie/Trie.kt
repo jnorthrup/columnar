@@ -3,7 +3,7 @@ package trie
 /**
  * Created by kenny on 6/6/16.
  */
-class Trie(var root: Map<String, Node> = sortedMapOf()) {
+class Trie(var root: Map<String, Node> = linkedMapOf()) {
     var freeze: Boolean = false
     fun add(v: Int, vararg values: String) {
         var children = root
@@ -33,9 +33,9 @@ class Trie(var root: Map<String, Node> = sortedMapOf()) {
     operator fun get(vararg key: String) = search(*key)?.payload
 
     fun frez(n: Node) {
-        if (n.leaf) return
+//        if (n.leaf) return
         (n.children.entries).let { cnodes ->
-            n.children = ArrayMap(cnodes.toTypedArray()) as Map<String, Node>
+            n.children = ArrayMap.sorting(n.children )
             for ((_, v) in cnodes) frez(v)
         }
     }
@@ -44,7 +44,7 @@ class Trie(var root: Map<String, Node> = sortedMapOf()) {
         if (!freeze) {
             freeze = true
             root.values.forEach { frez(it) }
-            root = ArrayMap(root.entries.toTypedArray()) as Map<String, Node>
+            root = ArrayMap.sorting(root  )
         }
     }
 

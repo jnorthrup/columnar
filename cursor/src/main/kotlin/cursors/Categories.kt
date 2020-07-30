@@ -60,10 +60,8 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
                             else -> 0
                         }]
             }
-
         }
-
-    }.let { join(*it) }
+    }.let { join( it.size t2 it::get) }
 }
 
 fun Cursor.asBitSet(): Cursor = run {
@@ -76,9 +74,11 @@ fun Cursor.asBitSet(): Cursor = run {
             }
         }
     }
+    val (_,b)=scalars
+    val prep: Array<() ->CoroutineContext> =Array(xsize){ (b(it)).`⟲`  }
     size t2 { iy: Int ->
         xsize t2 { ix: Int ->
-            r[iy * xsize + ix] t2 { scalars[ix] }/* sc[ix] *///weirdness, if this is scalars[ix] this optimizes much better
+             r[iy * xsize + ix] t2 prep[ix]
         }
     }
 }

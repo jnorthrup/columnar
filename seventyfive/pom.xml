@@ -13,7 +13,7 @@
         <dependency>
             <groupId>columnar</groupId>
             <artifactId>cursor</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

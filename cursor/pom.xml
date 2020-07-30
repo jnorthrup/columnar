@@ -13,12 +13,12 @@
         <dependency>
             <groupId>columnar</groupId>
             <artifactId>vector-like</artifactId>
-            <version>${parent.version}</version>
+            <version>${version}</version>
         </dependency>
         <dependency>
             <groupId>columnar</groupId>
             <artifactId>trie</artifactId>
-            <version>${parent.version}</version>
+            <version>${version}</version>
         </dependency>
     </dependencies>
 </project>

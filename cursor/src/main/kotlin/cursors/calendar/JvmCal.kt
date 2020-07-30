@@ -24,11 +24,7 @@ enum class JvmCal(val jvmProxy: Chronology) {
     ThaiBuddhist(ThaiBuddhistChronology.INSTANCE),
     Minguo(MinguoChronology.INSTANCE),
     Japanese(JapaneseChronology.INSTANCE),
-    Hijrah(HijrahChronology.INSTANCE){
-        init {
-
-        }
-    }
+    Hijrah(HijrahChronology.INSTANCE)
     ;
 
     data class dinfo(

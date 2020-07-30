@@ -15,7 +15,8 @@ class ArrayMap<K, V>(val entre: Array<Map.Entry<K, V>>, val cmp: Comparator<K> =
     override val size get() = entre.size
     override val keys get() = entre.map(Map.Entry<K, *>::key).toSet()
     override val values get() = entre.map(Map.Entry<K, V>::value)
-    val comparator = Comparator<Map.Entry<K, *>> { (o1: K), (o2: K) -> cmp.compare(o1, o2) }
+    val comparator = entryComparator<K, V>(cmp)
+
     override fun containsKey(key1: K) = 0 <= binIndexOf(key1)
 
     override fun containsValue(value: V) = entre.any { (_, v) -> Objects.equals(value, v) }
@@ -26,6 +27,16 @@ class ArrayMap<K, V>(val entre: Array<Map.Entry<K, V>>, val cmp: Comparator<K> =
     fun comparatorKeyShim(key1: K): Map.Entry<K, V> = KVEntry(key1)
 
     override fun isEmpty() = run(entre::isEmpty)
+
+    companion object {
+        fun <K, V> entryComparator(comparator1: Comparator<K>): Comparator<Map.Entry<K, *>> = Comparator<Map.Entry<K, *>> { (o1: K), (o2: K) -> comparator1.compare(o1, o2) }
+
+        /**
+         * if there aren't guarantees about ordered constructor entries, we can doa quick sort first on the comparator
+         */
+        fun <K, V> sorting(map: Map<K, V>, cmp: Comparator<K> = Comparator<K> { o1, o2 -> o1.toString().compareTo(o2.toString()) }): ArrayMap<K, V> =
+                ArrayMap(map.entries.sortedWith(entryComparator<K, V>(cmp)).toTypedArray(), cmp)
+    }
 }
 
 class KVEntry<K, V>(private val key1: K) : Map.Entry<K, V> {

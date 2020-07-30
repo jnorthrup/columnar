@@ -117,7 +117,7 @@ class CursorKtTest {
 
 
         val resample = cursor.resample(0)
-        val join = join(resample[0, 1], resample[2, 3])
+        val join = join(_v[resample[0, 1], resample[2, 3]])
         for (i in 0 until resample.first) {
             (resample at (i)).left.toList() shouldBe (join at (i)).left.toList()
             println(
@@ -260,7 +260,7 @@ class CursorKtTest {
         }
         println("---")
         val pai2 = grp[2, 3]
-        val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
+        val join: Cursor = join(_v[grp[0, 1], pai2.`∑`(floatSum)])
         join.forEach { it ->
             println(it.map { vec ->
                 "${
