@@ -4,5 +4,5 @@ package cursors.ml
  * if you specify first or last categories to be the Dummy, this is
  */
 enum class DummySpec {
-    /*Dummy --  None,*/ First, Last
+    /*Dummy --  */KeepAll, First, Last
 }

@@ -14,19 +14,19 @@ import kotlin.math.min
 "rwd"  	Open for reading and writing, as with "rw", and also require that every update to the file's content be written synchronously to the underlying storage device.
  */
 open class MappedFile(
-    filename: String,
-    val mode: String = "r",
-    val mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
-    val randomAccessFile: RandomAccessFile = RandomAccessFile(
-        filename,
-        mode
-    ),
-    val channel: FileChannel = randomAccessFile.channel,
-    val length: Long = randomAccessFile.length(),
-    val mappedByteBuffer: ByteBuffer = channel.map(
-        mapMode,
-        0,
-        min(Int.MAX_VALUE.toLong(), length)
-    )
+        filename: String,
+        val mode: String = "r",
+        val mapMode: FileChannel.MapMode = FileChannel.MapMode.READ_ONLY,
+        val randomAccessFile: RandomAccessFile = RandomAccessFile(
+                filename,
+                mode
+        ),
+        val channel: FileChannel = randomAccessFile.channel,
+        val length: Long = randomAccessFile.length(),
+        val mappedByteBuffer: ByteBuffer = channel.map(
+                mapMode,
+                0,
+                min(Int.MAX_VALUE.toLong(), length)
+        )
 
 ) : FileAccess(filename), Closeable by randomAccessFile

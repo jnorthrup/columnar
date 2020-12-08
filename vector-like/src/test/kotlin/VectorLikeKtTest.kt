@@ -9,7 +9,7 @@ import vec.util._l
 
 class VectorLikeKtTest {
     @Test
-    fun combinevec() {
+    fun testCombineVec() {
         val c: Vect0r<Int> = combine(
                 (0..2).toVect0r(),
                 (3..5).toVect0r(),
@@ -21,7 +21,7 @@ class VectorLikeKtTest {
     }
 
     @Test
-    fun div() {
+    fun testDiv() {
         val intRange = 0..11
         fun IntRange.split(nSubRanges: Int) = run {
             val subSize = (last - first + (1 - first)) / nSubRanges
@@ -126,8 +126,6 @@ class VectorLikeKtTest {
 
         val theTwinInt: Tw1nt = Tw1n<Int>(0, 1)
         val theTwInt: Tw1nt = Tw1nt(_a[0, 1])
-
-
 
 
 //        #### isomorphisms:   Vect0r<Pai2<T,T>>,Vect0r<Tw1n<T>>, Vect02<T>

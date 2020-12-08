@@ -1,12 +1,14 @@
 package cursors
 
 import cursors.context.Scalar
-import cursors.io.IOMemento.*
 import cursors.io.*
 import cursors.macros.join
-import cursors.ml.onehot_mask
-import vec.macros.t2
+import cursors.ml.DummySpec
 import vec.macros.*
+import vec.util._a
+import vec.util._v
+import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 /***
  *
@@ -19,55 +21,64 @@ import vec.macros.*
  *
  * maybe this is faster if each (column,value) pair was a seperate 1-column cursor.  first fit for now.
  *
+ * allocates IntArray per column, row length
+ *
  */
-fun Cursor.categories(
-    /**
-    if this is a value, that value is omitted from columns. by default null is an omitted value.  if this is a DummySpec, the DummySpec specifies the index
-     */
-    dummySpec: Any? = null
-): Cursor = let { curs ->
-    val origScalars = curs.scalars
-    val xSize = origScalars.size
-    val ySize = curs.size
-/* todo: vector */
-    val sequence = sequence<Cursor> {
-        for (catx in 0 until xSize) {
-            val cat2 = sequence/* todo: vector */ {
-                for (iy in 0 until ySize)
-                    yield((curs at (iy))[0].first)
-            }.distinct().toList().let { cats ->
-                val noDummies = onehot_mask(dummySpec, cats)
-                if (noDummies.first > -1)
-                    cats - cats[noDummies.first]
-                else
-                    cats
-            }
+fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
+    val colIdx = this.colIdx
+    val (csize) = colIdx
+    val typeMementos: Vect0r<TypeMemento> = colIdx.left.map { it -> it as TypeMemento }
+    val cnames = colIdx.right
+    val alwaysZero = _a[0]
 
 
-            val catxScalar = origScalars[catx]
-            yield(Cursor(curs.size) { iy: Int ->
-                RowVec(cat2.size) { ix: Int ->
-                    val cell = (curs at (iy))[catx]
-                    val rowValue = cell.first
-                    val diagonalValue = cat2[ix]
-                    val cardinal = if (rowValue == diagonalValue) 1 else 0
-                    cardinal t2 {
-                        /**
-                         * there may be context data other than simple scalars in this cell, so we will just replace the scalar key and pass it along.
-                         */
-                        /**
-                         * there may be context data other than simple scalars in this cell, so we will just replace the scalar key and pass it along.
-                         */
-                        cell.second() + Scalar(
-                             IoInt,
-                            origScalars[catx].second + "_" + diagonalValue.toString()
-                        )
-                    }
+    Array<Cursor>(csize) { ix: Int ->
+
+        val narrowed = this[ix]
+        val (osize, oval) = narrowed.ordered(alwaysZero, IOMemento.listComparator(_v[typeMementos[ix]]))
+
+        (0 until osize).map { oval(it).second(0).first }.distinct()./*toTypedArray().*/let { v ->
+
+            Cursor(psize) { iy: Int ->
+
+                val element = (narrowed at (iy))[0].first
+                val useIndex = v.indexOf(element)
+
+                RowVec(v.size) { vx: Int ->
+                    (useIndex == vx) as Any? t2 { -> Scalar(IOMemento.IoBoolean, "${narrowed.scalars[0].second}=${v[vx]}") as CoroutineContext }
                 }
-            })
+            }
+        }.let { curs ->
+            val s = curs.colIdx.size
+            when {
+                s == 1 || dummySpec == DummySpec.KeepAll -> curs
+                else -> curs[(0 until s) -
+                        when (dummySpec) {
+                            is String -> curs.colIdx[dummySpec][0]
+                            is Int -> dummySpec
+                            DummySpec.Last -> curs.scalars.size - 1
+                            else -> 0
+                        }]
+            }
+        }
+    }.let { join( it.size t2 it::get) }
+}
+
+fun Cursor.asBitSet(): Cursor = run {
+    val xsize = colIdx.size
+    val r = BitSet(size * xsize)
+    repeat(size) { iy ->
+        (this at iy).let { (_, function) ->
+            repeat(xsize) { ix ->
+                if(true==(function(ix).first  as? Boolean))  { r[iy * xsize + ix] = true }
+            }
         }
     }
-
-    //widthwize join (90 degrees of combine, right?)
-    join(sequence.toVect0r())
+    val (_,b)=scalars
+    val prep: Array<() ->CoroutineContext> =Array(xsize){ (b(it)).`⟲`  }
+    size t2 { iy: Int ->
+        xsize t2 { ix: Int ->
+             r[iy * xsize + ix] t2 prep[ix]
+        }
+    }
 }

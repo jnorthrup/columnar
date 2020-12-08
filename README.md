@@ -11,25 +11,53 @@ extractions using function assignment and deferred reification instead of in-mem
 so far, these are the fundamaental composable Unary Operators:  (val newcursor = oldcursor.operator) 
 
  * Resampling time-series datasets on LocalDate/LocatlTime columns
-    
+
     `cursor.resample(indexes)`
+
  * Pivot any columns into any collection of other columns
-    
+
     `cursor.pivot(preservedcolumns,newcolumnheaders,expansiontargets)`
- * Group with reducers
+
+ * Value Replacement, Aliasing, and Reducers
+   * Synthetic "3" Cursor 
+        ```kotlin
+            
+             //three rows of threes
+             Cursor(3){rownum:Int-> 
+                RowVec(3){colIndex:Int->
+                   3 t2 {Scalar(IoInt,"Three")}
+              }
+             }
+           
+        ```
+   * Column-wise value replacement
+   
+        ```kotlin
+                
+                   val cities: Vect0r<String> = cities()
+        
+                   val cityCursor:Cursor= Cursor(curs.size) { rowNum: Int ->
+                    RowVec(1) { ix: Int ->
+                        val cindex = bloomIndex.indexOfFirst {  (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum )> -1)}
+                        cities[cindex] t2 {Scalar(IoString, "City")}
+                    }
+                } 
+        ```
+   * Group with reducers  
+        `cursor.group(columns,{reducer})`
+      
     
-    `cursor.group(columns,{reducer})`
  * slice,reorder, and join columns 
      * `cursor[0]` -slice first column only
      * `cursor[0,1,2]` -slice first three columns
      * `cursor[(0 until 3).painfulKotlinCastFunctions]` -slice first three columns
      * `cursor[3,2,1,3,2, 1,1,1,1,2]` -remap 3 source columns into 10 columns  
      * `join(cursor[0],cursor[2],othercursor[0],...)` -join any permutation of source cursor/columns as one cursor.  boundschecking is not done upfront here.  know your row sizes. 
- * random access across combined rows from different sources
-   
-     `combine(cursor1,cursor..n,)` - a binary-searched column dispatch into n cursors.  column boundschecking is not done here.  non-uniform column meta-models per are built into the blackboard driver design to arrive at spreadsheet functionality (todo: formalization of cells functions ).
+
+ * random access across combined rows from different sources   
+     `combine(cursor1,cursor..n,)` - creates a new aggregate cursor with rows in the order combined
      
-     
+
  * Simplified one-hot encoding
    
    `cursor[0,1].categories([DummySpec.last])`
@@ -37,6 +65,10 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
      
       ...almost
       *  todo: Javanese + Balinese Calendars   
+ 
+ * Column remapping 
+ 
+  
  
  
  ###   runtime objects
@@ -46,6 +78,9 @@ so far, these are the fundamaental composable Unary Operators:  (val newcursor =
  **Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by Vector of column 
  pairs (value,type) on x axis.  This Row is a typealias called RowVec.  Future implementations will include more 
  complex arrangements of x,y,z and more, as described in the CoroutineContext at creationtime.
+ 
+ Since Cursor is a typealias of several Pai2 typaliases, the kotlin type spec in intellij shows up as ![image](https://user-images.githubusercontent.com/73514/86093079-9d1f5500-bad8-11ea-9a68-5d58863c37a0.png) until you specify it explicitly. kotlin destructuring syntax tends to tame these loose representations quickly as needed as well as explicit typing.  
+ 
  
  **Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and
   heterogenous backing stores.  
@@ -87,7 +122,7 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] groupby n columns
   - [X] cursor.group(n..){reducer} 
   - [X] One-hot Encodings 
-  - [ ] min/max scaling (same premise as resampling above)
+  - [X] min/max scaling (applying the reverse conversion using code from resampling)
   - [ ] support Numerics, Linear Algebra libraries
   - [X] support for (resampling) Calendar, Time and Units conversion libraries
   - [X] orthogonal offheap and indirect IO component taxonomy
@@ -96,8 +131,8 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] large file access: JVM NIO mmap window addressability beyond MAXINT bytes   
   - [X] Algebraic Vector aggregate operations with lazy runtime execution on contents
   - [ ] Mapper Buffer pools 
-  - [ ] Access (named) Columns by name 
-  - [ ] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
+  - [X] Access (named) Columns by name 
+  - [X] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
   - [X] Review as Java lib via maven.  what is available, what's not.  
   - [X] a token amount of jvm switch testing.
   - [X] textual field format IO/mapping
@@ -106,13 +141,13 @@ a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate le
   - [X] idempotent ISAM - ISAM volumes can be cryptographically digested to give a placeholder of the contents in
          operator expressions of transforms
   - [X] sharded \[de]hydration - unit test to shard dayjob sample by column 
-         
-  
+  - [X] bloom filter indexes for clusters       
+  - [X] csv Cursors
+
 ### lower priorities (as-yet unimplemented orthogonals)
  - [ ] gossip mesh addressable cursor iterators (this branch) [2]
  - [ ] json    field format IO/mapping
  - [ ] CBOR    field format IO/mapping
- - [ ] csv IO tokenization +- headers
  - [ ] columnstore access patterns +- apache arrow compatibility
  - [ ] matrix math integrations with adjacent ecosystem libraries
  - [ ] key-value associative cursor indexes

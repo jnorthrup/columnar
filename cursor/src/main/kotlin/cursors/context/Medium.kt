@@ -1,6 +1,6 @@
 package cursors.context
 
-import cursors.*
+import cursors.TypeMemento
 import cursors.io.*
 import vec.macros.*
 import vec.util.*
@@ -11,7 +11,16 @@ import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.min
 
+/**
+ *
+ */
 typealias  MMapWindow = Tw1n<Long>
+/**
+ *
+ */
+/**
+ *
+ */
 typealias  NioCursorState = Pai2<ByteBuffer, MMapWindow>
 
 sealed class Medium : CoroutineContext.Element {
@@ -51,7 +60,7 @@ class NioMMap(
             mappedFile.mappedByteBuffer.let {
                 it t2 (0L t2 it.remaining().toLong())
             }
-) : Medium() { 
+) : Medium() {
     lateinit var fixedWidth: FixedWidth
 
     @Suppress("UNCHECKED_CAST")
@@ -68,9 +77,9 @@ class NioMMap(
 
         val asContextVect0r: Vect02<ByteBuffer, Pai2<Long, Long>> =
                 asContextVect0r(addressable as Indexable, fixedWidth)
-        (asContextVect0r t2 { y: ByteBuffer ->
+        (asContextVect0r t2 { _: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
-                (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].size
+                (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].span
             }
         }).let { (row: Vect0r<NioCursorState>, col: (ByteBuffer) -> Vect0r<NioMeta>) ->
             NioCursor(intArrayOf(drivers.size, row.size)) { (x: Int, y: Int): IntArray ->
@@ -137,9 +146,9 @@ class NioMMap(
 
         fixedWidth.recordLen
     }
-    val windowSize by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
+    val windowSize: Long by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-    fun remap(rafchannel: FileChannel, window: MMapWindow) = window.let { (offsetToMap: Long, sizeToMap: Long) ->
+    fun remap(rafchannel: FileChannel, window: MMapWindow): ByteBuffer = window.let { (offsetToMap: Long, sizeToMap: Long) ->
         rafchannel.map(mappedFile.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
     }
 
@@ -208,8 +217,8 @@ open class CellDriver<B, R>(
         open val read: readfn<B, R>,
         open val write: writefn<B, R>
 ) {
-    operator fun component1() = read
-    operator fun component2() = write
+    operator fun component1(): (B) -> R = read
+    operator fun component2(): (B, R) -> Unit = write
 }
 
 class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, R>(read, write) {
@@ -217,9 +226,9 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
         /**coroutineContext derived map of Medium access drivers
          */
 
-        val mapped = mapOf(
+        val mapped: Map<TypeMemento, Tokenized<ByteBuffer, out Any>> = mapOf(
                 IOMemento.IoInt as TypeMemento to Tokenized(
-                        ::bb2ba `→` ::btoa `→` ::trim * String::toInt,
+                        (::bb2ba `→` ::btoa `→` ::trim * String::toInt) as readfn<ByteBuffer, Int>,
                         { a, b: Int -> a.putInt(b) }),
                 IOMemento.IoLong to Tokenized(
                         ::bb2ba `→` ::btoa `→` ::trim * String::toLong,
@@ -249,7 +258,7 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
         /**coroutineContext derived map of Medium access drivers
          *
          */
-        val mapped = mapOf(
+        val mapped: Map<TypeMemento, CellDriver<ByteBuffer, out Any>> = mapOf(
                 IOMemento.IoInt as TypeMemento to Fixed(
                         4,
                         ByteBuffer::getInt
@@ -274,7 +283,8 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                         8,
                         { it.long `→` Instant::ofEpochMilli },
                         { a, b: Instant -> a.putLong(b.toEpochMilli()) }),
-                IOMemento.IoString to /*Array-like has no constant bound. */ Tokenized.mapped[IOMemento.IoString]!!
+                IOMemento.IoString to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
+                        ?: error(""))
         )
     }
 }

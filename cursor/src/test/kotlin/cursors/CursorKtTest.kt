@@ -7,10 +7,9 @@ import cursors.context.FixedWidth
 import cursors.context.NioMMap
 import cursors.context.RowMajor
 import cursors.context.RowMajor.Companion.fixedWidthOf
-import cursors.io.cursorOf
-import cursors.io.IOMemento
-import cursors.io.IOMemento.*
 import cursors.io.*
+import cursors.io.IOMemento.IoFloat
+import cursors.io.IOMemento.IoString
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.ml.DummySpec
@@ -18,24 +17,26 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import shouldBe
 import vec.macros.*
+import vec.util._a
+import vec.util._v
 
 
 class CursorKtTest {
-    val coords = intArrayOf(
-        0, 10,
-        10, 84,
-        84, 124,
-        124, 164
-    ).zipWithNext()
+    val coords = _a[
+            0, 10,
+            10, 84,
+            84, 124,
+            124, 164
+    ].zipWithNext()
 
-    val drivers = vect0rOf(
-        IOMemento.IoLocalDate as TypeMemento,
-        IoString,
-        IoFloat,
-        IoFloat
-    )
+    val drivers = _v[
+            IOMemento.IoLocalDate,
+            IoString,
+            IoFloat,
+            IoFloat
+    ]
 
-    val names = vect0rOf("date", "channel", "delivered", "ret")
+    val names = _v["date", "channel", "delivered", "ret"]
     val mf = MappedFile("src/test/resources/caven4.fwf")
     val nio = NioMMap(mf)
     val fixedWidth: FixedWidth
@@ -43,10 +44,10 @@ class CursorKtTest {
 
     @Suppress("UNCHECKED_CAST")
     val root = RowMajor().fromFwf(
-        fixedWidth,
-        RowMajor.indexableOf(nio, fixedWidth),
-        nio,
-        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+            fixedWidth,
+            RowMajor.indexableOf(nio, fixedWidth),
+            nio,
+            Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
     )
 
 
@@ -91,18 +92,18 @@ class CursorKtTest {
 
             val resample = cursor.resample(0)
             val toList = resample
-                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
-                .toList()
+                    /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
+                    .toList()
             resample.toList()[3][2].first shouldBe 820f
             toList.forEach { System.err.println(it) }
         }
         System.err.println("ordered\n\n")
         run {
             val ordered = cursor.resample(0)
-                .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
+                    .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
 
             val toList = ordered.narrow()
-                .toList()
+                    .toList()
 
             toList.forEach { System.err.println(it) }
             ordered.toList()[9][1].first shouldBe "0102211/0101010212/13-14/01"
@@ -116,11 +117,11 @@ class CursorKtTest {
 
 
         val resample = cursor.resample(0)
-        val join = join(resample[0, 1], resample[2, 3])
+        val join = join(_v[resample[0, 1], resample[2, 3]])
         for (i in 0 until resample.first) {
             (resample at (i)).left.toList() shouldBe (join at (i)).left.toList()
             println(
-                (resample at (i)).left.toList() to (join at (i)).left.toList()
+                    (resample at (i)).left.toList() to (join at (i)).left.toList()
             )
         }
 
@@ -174,16 +175,20 @@ class CursorKtTest {
         val piv = cursor.group((0))
         cursor.forEach { it ->
             println(it.map { pai2 ->
-                "${pai2.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    pai2.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
         piv.forEach { it ->
             println(it.map { pai2 ->
-                "${pai2.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    pai2.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
     }
@@ -197,9 +202,11 @@ class CursorKtTest {
         println()
         piv.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
     }
@@ -210,16 +217,18 @@ class CursorKtTest {
         val cursor: Cursor = cursorOf(root)
         println(cursor.narrow().toList())
         val piv = cursor.pivot(
-            intArrayOf(0),
-            intArrayOf(1),
-            intArrayOf(2, 3)
+                intArrayOf(0),
+                intArrayOf(1),
+                intArrayOf(2, 3)
         ).group((0)).`∑`(sumReducer[IOMemento.IoFloat]!!)
 
         piv.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
     }
@@ -231,29 +240,36 @@ class CursorKtTest {
         val resample = cursor.resample(0)
         resample.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
         println("---")
         val grp = resample.group((1))
         grp.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
         println("---")
         val pai2 = grp[2, 3]
-        val join: Cursor = join(grp[0, 1], pai2.`∑`(floatSum))
+        val join: Cursor = join(_v[grp[0, 1], pai2.`∑`(floatSum)])
         join.forEach { it ->
             println(it.map { vec ->
-                "${vec.component1().let {
-                    (it as? Vect0r<*>)?.toList() ?: it
-                }}"
+                "${
+                    vec.component1().let {
+                        (it as? Vect0r<*>)?.toList() ?: it
+                    }
+                }"
             }.toList())
         }
     }
+
 }

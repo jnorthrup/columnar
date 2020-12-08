@@ -1,19 +1,18 @@
-@file:Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
+@file:Suppress("UNCHECKED_CAST", "NOTHING_TO_")
 
 package cursors
 
-import cursors.calendar.daySeq
-import cursors.calendar.feature_range
-import cursors.context.*
+import cursors.context.NormalizedRange
+import cursors.context.Scalar
 import cursors.io.*
- import vec.macros.*
-import vec.util.logDebug
-import java.time.LocalDate
+import cursors.macros.join
+import cursors.ml.featureRange
+import cursors.ml.normalize
+import vec.macros.*
+import vec.util._v
 import java.util.*
 import kotlin.Comparator
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.max
-import kotlin.math.sqrt
 
 /**
  * cursor is approximately the pandas Dataframe with some shortcuts
@@ -74,16 +73,19 @@ import kotlin.math.sqrt
  */
 typealias Cursor = Vect0r<RowVec>
 
-inline infix fun <reified T : Int> Cursor.at(t: T) = second.invoke(t)
+// infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
+infix fun <T : Int> Cursor.at(t: T) = second.invoke(t)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.reify() =
-    this α RowVec::toList
+        this α RowVec::toList
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
 fun Cursor.narrow() =
-    ( reify()) α { list: List<Pai2<*, *>> -> list.map(
-        Pai2<*, *>::first) }
+        (reify()) α { list: List<Pai2<*, *>> ->
+            list.map(
+                    Pai2<*, *>::first)
+        }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -96,49 +98,30 @@ operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
 
-fun Cursor.resample(indexcol: Int): Cursor = let {
-    val curs = this[indexcol]
-    val indexValues = curs.narrow().map { it.first() as LocalDate }.toSequence()
-    val (min, max) = feature_range<LocalDate>(indexValues, LocalDate.MAX t2 LocalDate.MIN)
-    val scalars = this.scalars
-    val sequence = daySeq(min, max) - indexValues
-    val indexVec = sequence.toVect0r()
-    val cursor: Cursor = Cursor(indexVec.first) { iy: Int ->
-        RowVec(scalars.first) { ix: Int ->
-            val any = when (ix == indexcol) {
-                true -> indexVec[iy]
-                else -> null
-            }
-            any t2 (scalars[ix] as CoroutineContext).`⟲`
-        }
-    }
-    combine(this, cursor)
-}
-
 /**
 synthesize pivot columns by key(axis) columns present.
  */
 fun Cursor.pivot(
-    /**
-    lhs columns are unmodified from original index inclusive of
-    axis and fanout columns
-     */
-    lhs: IntArray,
-    /**
-     * these will be used to synthesize columns from values, in order indexed. no dupe limitations apply.
-     * using fanout columns in here is a bad idea.
-     */
-    axis: IntArray,
-    /**
-     * these will be mapped underneath the axis keys of the source column in the order specified. no dupe limitations apply.
-     * using axis columns in here also is a bad idea.
-     */
-    fanOut: IntArray
+        /**
+        lhs columns are unmodified from original index inclusive of
+        axis and fanout columns
+         */
+        lhs: IntArray,
+        /**
+         * these will be used to synthesize columns from values, in order indexed. no dupe limitations apply.
+         * using fanout columns in here is a bad idea.
+         */
+        axis: IntArray,
+        /**
+         * these will be mapped underneath the axis keys of the source column in the order specified. no dupe limitations apply.
+         * using axis columns in here also is a bad idea.
+         */
+        fanOut: IntArray
 ): Cursor = let { cursr ->
     val keys: LinkedHashMap<List<Any?>, Int> =
-        (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left.toList() })
-            .toList()
-            .distinct().mapIndexed { xIndex: Int, any -> any to xIndex }.toMap(linkedMapOf())
+            (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left.toList() })
+                    .toList()
+                    .distinct().mapIndexed { xIndex: Int, any -> any to xIndex }.toMap(linkedMapOf())
 
     val synthSize: Int = fanOut.size * keys.size
     val xsize: Int = lhs.size + synthSize
@@ -175,7 +158,7 @@ fun Cursor.pivot(
                             original(fanOut[whichFanoutIndex(ix)]).first
                         else null
 
-                        cellVal t2 synthScalars[ix - lhs.size].`⟲`
+                        cellVal t2 { synthScalars[ix - lhs.size] }
                     }
                 }
             }
@@ -184,97 +167,97 @@ fun Cursor.pivot(
 }
 
 
-inline fun Cursor.group(
-    /**these columns will be preserved as the cluster key.
-     * the remaining indexes will be aggregate
-     */
-    vararg axis: Int
-): Cursor = let { orig ->
-    val clusters =  groupClusters(axis)
-    val masterScalars = orig.scalars
-    Cursor(clusters.size) { cy ->
-        val cluster = clusters[cy]
-        val cfirst = cluster.first()
-        RowVec(masterScalars.first) { ix: Int ->
-            when (ix) {
-                in axis -> (orig at (cfirst))[ix]
-                else -> Vect0r(cluster.size) { iy: Int -> (orig at (cluster[iy]))[ix].first } t2 masterScalars[ix].`⟲`
-            }
-        }
-    }
-}
-
-inline fun Cursor.group(
-    /**these columns will be preserved as the cluster key.
-     * the remaining indexes will be aggregate
-     */
-    axis: IntArray,
-    crossinline reducer: ((Any?, Any?) -> Any?)
-): Cursor = run {
-    val clusters =  groupClusters(axis)
-    val masterScalars = scalars
-    val xSize = masterScalars.first
-    Cursor(clusters.size) { cy ->
-        val acc1 = arrayOfNulls<Any?>(xSize)
-        val cluster = clusters[cy]
-        val keyIndex = cluster.first()
-        val valueIndices = acc1.indices - axis.toTypedArray()
-
-        for (i in cluster) {
-            val value = (this at (i)).left
-            for (valueIndex in valueIndices)
-                acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
-        }
-        RowVec(masterScalars.first) { ix: Int ->
-            if (ix in axis) {
-                (this at (keyIndex))[ix]
-            } else acc1[ix] t2 masterScalars[ix].`⟲`
-        }
-    }
-}
-
-inline fun Cursor.groupClusters(
-    axis: IntArray,
-    clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf()
-) = run {
-    System.err.println("--- groupClusters")
-    keyClusters(axis, clusters)
-    clusters.values α MutableList<Int>::toIntArray
-}
-
-inline fun Cursor.keyClusters(
-    axis: IntArray,
-    clusters: MutableMap<List<Any?>, MutableList<Int>>
-): MutableMap<List<Any?>, MutableList<Int>> = clusters.apply {
-    val cap = max(8, sqrt(size.toDouble()).toInt())
-
-    forEachIndexed { iy: Int, row: RowVec ->
-        row[axis].left.toList().let {
-            getOrPut(it) { ArrayList(cap) } += iy
-        }
-    }
-    logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
-}
-
 /**
  * this is a helper for comparing keys.
  */
-inline fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
-    o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
+fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
+        o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
-inline fun Cursor.ordered(
-    axis: IntArray,
-    comparator: Comparator<List<Any?>> = Comparator(::cmpAny)
+fun Cursor.ordered(
+        axis: IntArray,
+        comparator: Comparator<List<Any?>> = Comparator(::cmpAny)
 ): Cursor = combine(
-    ( keyClusters(
-        axis,
-        comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
-            (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()
-).let {
+        (keyClusters(
+                axis,
+                comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
+                (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()).let {
     Cursor(it.size) { iy: Int ->
         val ix2 = it[iy]
         this at ix2
     }
 }
 
+@JvmName("NormalizeF1")
+fun <T : Float> Cursor.normalizeFloatColumn(colName: String) = run {
+    val ptype = IOMemento.IoFloat
+    val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
+    inner_normalize<Float>(colName, maxMinTwin, ptype)
+}
 
+@JvmName("NormalizeD1")
+fun <T : Double> Cursor.normalizeDoubleColumn(colName: String) = run {
+    val ptype = IOMemento.IoDouble
+    val maxMinTwin: Tw1n<Double> = Double.POSITIVE_INFINITY t2 Double.NEGATIVE_INFINITY
+    inner_normalize<Double>(colName, maxMinTwin, ptype)
+}
+
+@JvmName("NormalizeF2")
+
+fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
+    val colIdx = colIdx[colName][0]
+    val colCurs = this[colIdx]
+    val seq = this.let { curs ->
+        sequence {
+            for (iy in 0 until curs.size) {
+                yield((colCurs at iy).left[0] as T)
+            }
+        }
+    }
+
+    val normalizedRange = featureRange<Float>(seq, maxMinTwin as Tw1n<Float>)
+
+    val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
+
+    val nprices = join( this[-colName], this[colName].let { c ->
+        c.size t2 { iy: Int ->
+            val row = (c at iy)
+            RowVec(row.size) { ix: Int ->
+                val (v) = row[ix]
+                normalizedRange.normalize(v as T) t2 ctx
+            }
+        }
+    } )
+    return nprices
+}
+
+
+@JvmName("NormalizeD2")
+
+fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
+    val colIdx = colIdx[colName][0]
+    val colCurs = this[colIdx]
+    val seq = this.let { curs ->
+        sequence {
+            for (iy in 0 until curs.size) {
+                val any = (colCurs at iy).left[0]
+                any.also { }
+                yield(any as T)
+            }
+        }
+    }
+
+    val normalizedRange = featureRange<Double>(seq, maxMinTwin as Tw1n<Double>)
+
+    val ctx = { Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange) }
+
+    val nprices = join(this[-colName], this[colName].let { c ->
+        c.size t2 { iy: Int ->
+            val row = (c at iy)
+            RowVec(row.size) { ix: Int ->
+                val (v) = row[ix]
+                normalizedRange.normalize(v as T) t2 ctx
+            }
+        }
+    })
+    return nprices
+}

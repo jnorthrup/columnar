@@ -4,7 +4,6 @@ import cursors.Cursor
 import cursors.context.Arity
 import cursors.context.Columnar
 import cursors.context.Scalar
-import cursors.get
 import vec.macros.*
 import kotlin.collections.*
 import kotlin.collections.component2
@@ -18,11 +17,11 @@ fun cursorOf(root: TableRoot): Cursor = root.let { (nioc: NioCursor, crt: Corout
             val (a: () -> Any?) = mapper(intArrayOf(ix, iy))
             a() t2 {
                 val cnar: Columnar =
-                    crt[Arity.arityKey] as Columnar
+                        crt[Arity.arityKey] as Columnar
                 //todo define spreadsheet context linkage; insert a matrix of (Any?)->Any? to crt as needed
                 // and call in a cell through here
                 val name =
-                    cnar.right[ix] ?: throw(InstantiationError("Tableroot's Columnar has no names"))
+                        cnar.right[ix] ?: throw(InstantiationError("Tableroot's Columnar has no names"))
                 val type = cnar.left[ix]
                 Scalar(type, name)
             }

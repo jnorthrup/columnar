@@ -2,21 +2,23 @@ package cursors.io
 
 import cursors.Cursor
 import cursors.TypeMemento
-import cursors.context.*
 import cursors.context.Arity.Companion.arityKey
+import cursors.context.Scalar
 import vec.macros.*
 
-inline val Cursor.scalars: Vect0r<Scalar>
+val Cursor.scalars: Vect0r<Scalar>
     get() = toSequence().first().right.map {
         it.invoke() `→` {
             it[arityKey] as Scalar
         }
     }
+val Cursor.width get() = this.scalars.size
+val Cursor.colIdx: Vect02<IOMemento, String?> get() = scalars α { sc: Scalar -> sc as Pai2<IOMemento, String?> }
 
 fun networkCoords(
-    ioMemos: Vect0r<TypeMemento>,
-    defaultVarcharSize: Int,
-    varcharSizes: Map<Int, Int>?
+        ioMemos: Array<TypeMemento>,
+        defaultVarcharSize: Int,
+        varcharSizes: Map<Int, Int>?
 ): Vect02<Int, Int> = run {
     val sizes = networkSizes(ioMemos, defaultVarcharSize, varcharSizes)
     //todo: make IntArray Tw1nt Matrix
@@ -35,10 +37,11 @@ fun networkCoords(
 }
 
 fun networkSizes(
-    ioMemos: Vect0r<TypeMemento>,
-    defaultVarcharSize: Int,
-    varcharSizes: Map<Int, Int>?
-): Vect0r<Int> = ioMemos.mapIndexed { ix, memento: TypeMemento ->
+        ioMemos: Array<TypeMemento>,
+        defaultVarcharSize: Int,
+        varcharSizes: Map<Int, Int>?
+) = ioMemos.mapIndexed { ix, memento: TypeMemento ->
     val sz = varcharSizes?.get(ix)
     memento.networkSize ?: (sz ?: defaultVarcharSize)
 }
+

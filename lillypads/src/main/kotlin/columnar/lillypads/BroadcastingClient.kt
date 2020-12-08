@@ -1,5 +1,6 @@
-package cursors.lillypads
+package columnar.lillypads
 
+import vec.util._l
 import java.lang.Thread.sleep
 import java.net.*
 import java.nio.ByteBuffer
@@ -20,15 +21,12 @@ val activeAddresses
 @OptIn(ExperimentalStdlibApi::class)
 fun main(args: Array<String>) {
     val receiver = InetSocketAddress(allBroadcastAddresses.last(), 2112)
-    Executors.newCachedThreadPool().invokeAll(
-
-        listOf(
-
+    Executors.newCachedThreadPool().invokeAll(_l[
             Callable {
                 println(allBroadcastAddresses)
-                println("is anylocal   " + activeAddresses.map { it.address to it.address.isAnyLocalAddress })
-                println("is sitelocal  " + activeAddresses.map { it.address to it.address.isSiteLocalAddress })
-                println("is loop       " + activeAddresses.map { it.address to it.address.isLoopbackAddress })
+                println("is anylocal   ${activeAddresses.map { it.address to it.address.isAnyLocalAddress }}")
+                println("is sitelocal  ${activeAddresses.map { it.address to it.address.isSiteLocalAddress }}")
+                println("is loop       ${activeAddresses.map { it.address to it.address.isLoopbackAddress }}")
 
                 val channel = DatagramChannel.open(StandardProtocolFamily.INET)
 
@@ -49,11 +47,10 @@ fun main(args: Array<String>) {
                     allocate.flip().get(byteArray).clear()
                     println(String(byteArray))
                 }
-            }
-            , Callable {
+            },
+            Callable {
 
                 val channel = DatagramChannel.open(StandardProtocolFamily.INET)
-
                 channel.setOption(StandardSocketOptions.SO_BROADCAST, true)
                 channel.bind(InetSocketAddress(allBroadcastAddresses.last(), 0))
                 println(channel.localAddress)
@@ -62,13 +59,12 @@ fun main(args: Array<String>) {
                 var c = 0
                 while (true) {//nc -b -u 192.168.1.255 2112
                     sleep(1000)
-
-
                     channel.send(ByteBuffer.wrap("item ${c++}".encodeToByteArray()), receiver)
-
                 }
-            }
-
-        )
+            }]
     )
 }
+
+
+
+
