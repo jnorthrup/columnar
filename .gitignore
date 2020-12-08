@@ -20,3 +20,5 @@ target*.ipr
 /trie/pom.xml.versionsBackup
 /vector-like/pom.xml.versionsBackup
 /pom.xml.versionsBackup
+/.mvn/wrapper/maven-wrapper.jar
+/superannuate/superannuated1909.fwf
