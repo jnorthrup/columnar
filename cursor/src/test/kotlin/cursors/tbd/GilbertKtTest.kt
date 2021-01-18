@@ -1,9 +1,7 @@
 package cursors.tbd
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
-
+import junit.framework.Assert.*
+import org.junit.*
 typealias IntIntPair = Pair<Int, Int>
 
 /** TODO more exhasutive tests  */
@@ -19,7 +17,7 @@ internal class GilbertCurveTest {
             val pointsOrdered = mutableListOf<IntIntPair>()
             gilbertCurve(w, h) { x, y -> pointsOrdered += (x to y) }
 
-            assertEquals(w * h, pointsOrdered.distinct().size, "expected # of unique points")
+            assertEquals(w * h, pointsOrdered.distinct().size/*, "expected # of unique points"*/)
 
             //test that each sequential point has manhattan distance <= 2 from previous
             for (i in 0 until pointsOrdered.size - 1) {

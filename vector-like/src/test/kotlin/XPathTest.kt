@@ -1,5 +1,6 @@
 package cursors
 
+import org.junit.Test
 import org.w3c.dom.Document
 import org.w3c.dom.NodeList
 import vec.macros.Vect0r
@@ -15,7 +16,7 @@ import javax.xml.xpath.XPathFactory
  * the simplest possible Vect0r array of an xpath query
  */
 class XPathTest {
-    @org.junit.jupiter.api.Test
+    @Test
 
     fun remap() {
         // curl -s 'https://en.wikipedia.org/wiki/List_of_largest_cities' >List_of_largest_cities.html

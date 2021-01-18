@@ -13,8 +13,7 @@ import cursors.io.IOMemento.IoString
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.ml.DummySpec
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import org.junit.*
 import shouldBe
 import vec.macros.*
 import vec.util._a
@@ -134,7 +133,7 @@ class CursorKtTest {
         val lhs_size = 2
         fun whichKey(ix: Int) = (ix - lhs_size) / fanOut_size
         whichKey(702) shouldBe 350
-        Assertions.assertEquals(349, whichKey(700))
+        Assert.assertEquals(349, whichKey(700))
     }
 
     @Test

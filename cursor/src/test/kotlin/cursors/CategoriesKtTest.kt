@@ -4,7 +4,7 @@ import cursors.context.TokenizedRow
 import cursors.effects.show
 import cursors.io.IOMemento
 import cursors.ml.DummySpec
-import org.junit.jupiter.api.Test
+import org.junit.*
 import vec.util._l
 
 internal class CategoriesKtTest {

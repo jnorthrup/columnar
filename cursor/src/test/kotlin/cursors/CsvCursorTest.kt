@@ -5,14 +5,14 @@ import cursors.context.TokenizedRow.Companion.CsvArraysCursor
 import cursors.io.IOMemento.*
 import cursors.io.RowVec
 import cursors.io.left
-import org.junit.jupiter.api.Test
+import junit.framework.Assert.assertEquals
+import org.junit.*
 import vec.macros.get
 import vec.util._v
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
 import kotlin.streams.asSequence
-import kotlin.test.assertEquals
 
 
 class CsvCursorTest {

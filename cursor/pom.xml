@@ -20,5 +20,6 @@
             <artifactId>trie</artifactId>
             <version>${version}</version>
         </dependency>
+
     </dependencies>
 </project>

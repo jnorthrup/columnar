@@ -133,7 +133,7 @@ operator fun <T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSeque
 @JvmName("vlike_Flow_1")
 
 @OptIn(ExperimentalTypeInference::class)
-suspend fun <T> Flow<T>.get(vararg index: Int) = get(index)
+suspend fun <T> Flow <T>.get(vararg index: Int) = get(index)
 
 @Suppress("USELESS_CAST")
 @JvmName("vlike_Flow_Iterable2")

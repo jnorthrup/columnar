@@ -1,5 +1,5 @@
-import org.junit.jupiter.api.Assertions
+import org.junit.Assert
 
 infix fun Any?.shouldBe(that: Any?) {
-    Assertions.assertEquals(that, this)
+     Assert.assertEquals(that, this)
 }

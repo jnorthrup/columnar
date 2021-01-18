@@ -7,7 +7,7 @@ import cursors.io.IOMemento.*
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.macros.α
-import org.junit.jupiter.api.Test
+import org.junit.*
 import org.w3c.dom.Document
 import org.w3c.dom.NodeList
 import vec.macros.*
@@ -128,7 +128,7 @@ class DayJobTest {
 
     inline fun measureNanoTimeStr(block: () -> Unit): String = Duration.ofNanos(measureNanoTime(block)).toString()
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun `reorder+rewrite+pivot+pgroup+reduce`() {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
@@ -166,7 +166,7 @@ class DayJobTest {
         }
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun `rewrite+pivot+pgroup+reduce`() {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
@@ -218,7 +218,7 @@ class DayJobTest {
         a to theCoords[a].span
     }.toMap()
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun `pivot+group+reduce`() {
         val piv: Cursor = curs[2, 1, 3, 5].resample(0).pivot(
                 intArrayOf(0),
@@ -243,7 +243,7 @@ class DayJobTest {
         println(message)
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun `rorw+pivot+group+reduce`() {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()

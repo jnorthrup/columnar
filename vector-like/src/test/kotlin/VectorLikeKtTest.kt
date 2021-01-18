@@ -1,8 +1,7 @@
 package cursors
 
-import org.junit.Assert
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import org.junit.*
+import org.junit.Assert.*
 import vec.macros.*
 import vec.util._a
 import vec.util._l
@@ -16,7 +15,7 @@ class VectorLikeKtTest {
                 (6..9).toVect0r()
         )
         val toList = c.toList()
-        Assertions.assertEquals("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]", toList.toString())
+      assertEquals("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]", toList.toString())
         System.err.println(toList)
     }
 
@@ -34,10 +33,10 @@ class VectorLikeKtTest {
         val toList = intRange.split(3).toList()
         val toList1 = (intRange / 3).toList()
         System.err.println(toList to toList1)
-        Assertions.assertEquals(toList1, toList)
+        assertEquals(toList1, toList)
     }
 
-    infix fun Any?.shouldBe(that: Any?) = Assert.assertEquals(this, that)
+    infix fun Any?.shouldBe(that: Any?) = assertEquals(this, that)
 
     @Test
     fun `WhatCanVect0rDo`() {

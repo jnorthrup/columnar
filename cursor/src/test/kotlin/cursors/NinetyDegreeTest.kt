@@ -8,7 +8,7 @@ import cursors.io.*
 import cursors.io.IOMemento.*
 import cursors.macros.join
 import cursors.macros.α
-import org.junit.jupiter.api.Test
+import org.junit.*
 import shouldBe
 import vec.macros.*
 import vec.util.toArray
@@ -23,7 +23,7 @@ class NinetyDegreeTest {
     /**
      * wrtie a fixed length networkendian binary fwf of a cursor.
      */
-    @org.junit.jupiter.api.Test
+    @Test
     fun rewriteBinFwfRowMajor() {
         val coords = intArrayOf(
                 0, 10,
@@ -63,7 +63,7 @@ class NinetyDegreeTest {
     /**
      * wrtie a fixed length networkendian binary fwf of a cursor.
      */
-    @org.junit.jupiter.api.Test
+    @Test
     fun shardCursor() {
         val coords = intArrayOf(
                 0, 10,

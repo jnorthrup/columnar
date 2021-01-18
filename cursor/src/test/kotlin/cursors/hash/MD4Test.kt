@@ -1,13 +1,14 @@
 package cursors.hash
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+
+import junit.framework.Assert.*
+import org.junit.*
 import vec.util._a
 
 class MD4Test {
     @Test
     fun testxlate() {
-        assertEquals(_a[0xa.toByte()].hex, "0a")
+        Assert.assertEquals(_a[0xa.toByte()].hex, "0a")
         assertEquals(_a[0x1.toByte()].hex, "01")
     }
 

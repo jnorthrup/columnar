@@ -1,6 +1,6 @@
 package vec.util
 
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadMXBean
 import java.util.*

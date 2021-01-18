@@ -7,7 +7,7 @@ import cursors.io.left
 import cursors.io.right
 import cursors.macros.join
 import cursors.row
-import org.junit.jupiter.api.Test
+import org.junit.*
 import vec.macros.*
 import vec.util._l
 import vec.util._m
