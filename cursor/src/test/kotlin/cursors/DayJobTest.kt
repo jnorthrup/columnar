@@ -85,7 +85,7 @@ class DayJobTest {
         ]
 
         if (!Files.exists(rowFwfFname)) {
-            val s = "git@github.com:jnorthrup/superannuate"
+            val s = "https://github.com/jnorthrup/superannuate"
             System.err.println("fetching $s")
             val parentDir = Paths.get("..").toFile()
             Runtime.getRuntime().exec(_a["git", "clone", "--depth=1", s], null, parentDir).also {
