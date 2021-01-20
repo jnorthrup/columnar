@@ -79,7 +79,7 @@ class DayJobTest {
         )
 
         val fetchDayjobData = _l[
-                "git clone --depth=1 git@github.com:jnorthrup/superannuate",
+                "git clone --depth=1 https://github.com/jnorthrup/superannuate",
                 "zstd -d --memory=268MB --rm superannuated1909.fwf.zst"
 
         ]
