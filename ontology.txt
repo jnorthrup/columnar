@@ -1,0 +1,168 @@
+//addition minimal
+<(*,1,1,2) --> addition>.
+<(*,1,2,3) --> addition>.
+<(*,1,3,4) --> addition>.
+<(*,1,4,5) --> addition>.
+<(*,2,1,3) --> addition>.
+<(*,2,2,4) --> addition>.
+<(*,2,3,5) --> addition>.
+<(*,3,1,4) --> addition>.
+<(*,3,2,5) --> addition>.
+<(*,4,1,5) --> addition>.
+<(*,4,2,6) --> addition>.
+<(*,4,3,7) --> addition>.
+<(*,4,4,8) --> addition>.
+<(*,4,5,9) --> addition>.
+<(*,5,1,6) --> addition>.
+<(*,5,2,7) --> addition>.
+<(*,5,3,8) --> addition>.
+<(*,5,4,9) --> addition>.
+<(*,6,1,7) --> addition>.
+<(*,6,2,8) --> addition>.
+<(*,6,3,9) --> addition>.
+<(*,7,1,8) --> addition>.
+<(*,7,2,9) --> addition>.
+<furniture --> thing>.
+<animal --> thing>.
+//#HUMANS
+//human and people are similar
+<human <-> people>.
+//human have the following properties
+<human --> [silly,intelligent,working]>.
+<{pei,patrick,sebastian,thomas,mariella,stefanie,sophia,minadeja} --> human>.
+//#ANIMALS
+//what things are animals?
+<cat --> animal>.
+<human --> animal>.
+<fish --> animal>.
+//first evidence for the meaning of the concept of eating: human eat fish
+<(*,animal,(|,food,animal)) --> eat>.
+<<(*,$1,$2) --> eat> ==> <$2 --> food>>.
+<pet --> [fast,small,cute]>.
+<(|,dog,cat) --> (&,animal,pet)>.
+<lion --> cat>.
+<animal --> food>.
+<animal --> [eat,drink,reproduce,sleep,alive,breathe]>.
+//#DEVICES
+<(&,pc,car,toaster,aircraft,ladder,keyboard,glas) --> device>.
+<car --> [driving]>.
+<car --> (/,has,_,tires)>.
+<(*,human,car) --> drive>.
+<(*,human,keyboard) --> type>.
+<(|,voice,brush,cdplayer,opportunity,mixer,dustbin) --> device>.
+//something that has tires is a car
+<<$blub --> (/,has,_,tires)> <=> <$blub --> [driving]>>.
+//those things are  to driving things
+<(|,car,bus,truck,skateboard,rollerskates,scooter) --> [driving]>.
+//#FURNITURE
+<chair --> furniture>.
+<desk --> furniture>.
+<plant --> decoration>.
+<table --> acounterment>.
+<(*,human,furniture) --> buy>.
+//#CITY
+<(*,tree,forest) --> isin>.
+<(*,tree,park) --> isin>.
+<(*,church,city) --> isin>.
+<cathedrale <-> chruch>.
+<(|,skyscraper,house,church,library) --> building>.
+<skyscraper --> [high]>.
+<<$something --> [high]> <=> (--,<$something --> [low]>)>.
+<(*,street,city) --> isin>.
+//#SOCIAL_THINGS
+<(|,friends,fiends,family,relatives) --> human>.
+<(|,talk,call,hear,see) --> interaction>.
+<human <-> (&,(/,has,_,job),(/,has,_,house),(/,has,_,religion),(/,isin,_,country),(/,has,_,name),(/,has,_,parent)]>.
+<human <-> (&,self,ego,thought,spirit,mind)>.
+//everything was created by something we dont neccessary know about
+<<$1 --> thing> ==> <(*,$1,#2) --> created>>.
+//however we know that all devices were created by human
+<<$1 --> device>  ==> <(*,human,$1) --> created>>.
+<[cold,warm,sad,happy] <-> [sentiment]>.
+<animal --> [sentiment]>.
+<religion --> [belief,community]>.
+(--, <belief --> [religion]>).
+//#SOCIAL_INTERACTION
+<message <-> information>.
+<message --> (&,content,relation,selfrevealing,gestures,facial_expression)>.
+<interaction --> [purposeful,social,medical,private,public,insightful]>.
+<(|,help,talk,write,greet) --> interaction>.
+<talk <-> greet>.
+<conversation --> (&,[rhetoric],(/,has,_,word),(/,has,_,greet),(/,has,_,talk),(/,has,_,message),[insightful],(/,has,_,listener))>.
+<(&,greatheartedness,magnanimity,gratefulness,mercy,cheerfulness, kindness) --> principle>.
+//#PLANTS
+<(&,strawberry,tree,avocado,aloe) --> plant>.
+//not always: only about 50 percent
+<plant --> food>.  %0.50;0.90%
+//animals cannot eat trees: (and thus also humans cant)
+(--,<(*,animal,tree) --> eat>).
+//#LITERATURE
+//TODO: LITERATURE has no links to other topics yet
+<(|,horror,fantasy,detectivestory,recipebook,magicalbook) --> genres>.
+// NOT LIVING NATURE
+//art, entertainment, hobby knowledge
+<(|,music,draw,movie) --> art>.
+<art --> entertainment>.
+// colors
+<(|,mint, beige, green, purpur, black, white) --> color>.
+//#UNSEEN_THINGS
+<{rahm,bakhdi,brigid,krishna,zoroaster} --> god>.
+<{allah,shiva,jesu,buddha,allah,zeus,thegreatspirit} --> god>.
+<{newspaper,television,internet,telephone}--> media>.
+<{time,guilt,honour,grammar,onthology}    --> thougtconstruct>.
+<{english,german,latin,greek,french,russian,mandarin,arabian} --> language>.
+<(&,insight,perception,knowledge,cognition) --> wisdom>.
+//#SIMILARITIES:
+<ship <-> boat>.
+<brush <-> standish>.
+<aircraft <-> helicopter>.
+<ocean <-> lake>.
+<(|,melon,orange,apple) --> fruit>.
+<fruit <-> food>.
+<country <-> continent>.
+<forest <-> wood>.
+<{africa,europe,australia,russia,america} --> continent>.
+<(*,continent,earth) --> isin>.
+<music <-> sound>.
+//#CONNECTIONS
+<swim --> isin>.
+<(*,ship,oceans) --> swim>.
+<(*,painter,artwork) --> paint>.
+<(*,africa,water) --> need>.
+<(*,{africa,europe,australia,russia,america},peace) --> need>.
+<(*,(&,apple,{jesu},human,plant,car,animal),europe) --> isin>.
+<(*,(orange,{allah},melon,plant,car,animal),africa) --> isin>.
+<(*,helicopter,human) --> lookfor>.
+<icecream --> food>.
+<(*,human,icecream) --> eat>.
+//SATZ
+<(|,human,skyscramper,church) --> (/,isin,_,city)>.
+<(*,human,city) --> isin>.
+<dog --> animal>.
+<(*,dog,sleep) --> like>.
+//SATZ4
+//BEDEUTET:
+<dog --> animal>.
+<(*,dog,sleep) --> like>.
+//#SENTIMENT
+<(|,happiness,sadness,joy,grief,serenity,anger) --> sentiment>.
+<(|,love,hatred,confidence,faith,fear) --> sentiment>.
+(--, <happiness <-> sadness>).
+(--, <joy <-> grief>).
+(--, <serenity <-> anger>).
+(--, <love <-> hatred>).
+(--, <{confidence,faith} <-> fear>).
+<joy <-> happiness>.
+<grief <-> sadness>.
+<confidence <-> faith>.
+<[happy] --> [smiling,calm]>.
+<[sad] --> [crying]>.
+<[joyful] <-> [smiling,sprawling]>.
+<[have-grief] --> [crying,loosing]>.
+<[have-serenity] --> [calm,easy]>.
+(--,<anger --> [calm,easy]>).
+<love --> [smile]>.
+<hatred --> [cry]>.
+<faith <-> (|,belief,religion)>.
+<fear --> [uneasy]>.
+(--,<[easy] <-> [uneasy]>).
