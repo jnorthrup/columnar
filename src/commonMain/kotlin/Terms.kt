@@ -6,7 +6,7 @@ open class Omega
 
 object nd_ : Omega()
 
-val `Ω` = nd_
+val Ω = nd_
 
 
 val period        by lazy { lit('.') }

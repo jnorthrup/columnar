@@ -10,9 +10,10 @@ import vec.macros.toList
 import vec.util.debug
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.random.Random
 
 //import kotlin.random.Random breaks graalvm
-val random = java.util.Random()
+val random = Random.Default
 
 /*simple printout macro*/
 fun Cursor.show(range: IntProgression = 0 until size) {

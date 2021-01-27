@@ -3,8 +3,8 @@ plugins {
 //    id 'org.jetbrains.kotlin.multiplatform'
 //    id 'com.android.library'
 //    id 'kotlin-kapt'
-    id 'org.jetbrains.kotlin.multiplatform' version '1.3.50' // or any other kotlin plugin
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.3.50'
+    id 'org.jetbrains.kotlin.multiplatform' version '1.4.30-RC' // or any other kotlin plugin
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.4.30-RC'
 }
 repositories {
 
@@ -16,8 +16,8 @@ repositories {
     }
 group 'com.example'
 version '0.0.1'
-def coroutinesVersion = "1.3.2"
-def kotlin_version  = "1.3.50"
+def coroutinesVersion = "1.4.7"
+def kotlin_version  = "1.4.30-RC"
 
 apply plugin: 'maven-publish'
 
@@ -35,8 +35,8 @@ kotlin {
             dependencies {
                 implementation kotlin('stdlib-common')
                 implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version" //used in Log implementation
-                 implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2"
-                implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-common:1.3.2"
+                 implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion"
+                implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-common:$coroutinesVersion"
         }
         }
         commonTest {
@@ -49,7 +49,7 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation kotlin('stdlib-jdk8')
-                implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.2"
+                implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutinesVersion"
   }
         }
         jvmTest {
@@ -62,7 +62,7 @@ kotlin {
         jsMain {
             dependencies {
                 implementation kotlin('stdlib-js')
-                implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.3.2"
+                implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-js:$coroutinesVersion"
         }
         }
         jsTest {
@@ -71,7 +71,7 @@ kotlin {
             }
         }
         linuxMain {   dependencies {
-             implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-linuxx64:1.3.2"
+             implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-linuxx64:$coroutinesVersion"
         }
         }
         linuxTest {
