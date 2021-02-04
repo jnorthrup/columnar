@@ -10,6 +10,7 @@
     </parent>
     <artifactId>cursor</artifactId>
     <dependencies>
+
         <dependency>
             <groupId>columnar</groupId>
             <artifactId>vector-like</artifactId>

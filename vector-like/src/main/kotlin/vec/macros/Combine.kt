@@ -5,7 +5,6 @@ import kotlin.math.absoluteValue
 @JvmName("combine_Vect0r ")
 inline fun <reified T> combine(vargs: Vect0r<Vect0r<T>>) = combine(*vargs.toArray())
 
-
 @JvmName("combine_VecVa")
 inline fun <reified T> combine(vararg vargs: Vect0r<T>): Vect0r<T> =
         muxIndexes(vargs.size t2 { it: Int -> vargs[it] }).let { (isize, tails) ->
@@ -29,4 +28,3 @@ inline fun demuxIndex(tails: IntArray, ix: Int) =
             source t2 (if (source != 0) (ix % tails[source]) - tails[source - 1]
             else ix % tails[0])
         }
-

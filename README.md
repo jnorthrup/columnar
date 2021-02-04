@@ -1,5 +1,9 @@
 # big dataframes 
 
+##build requirements
+
+ * columnar uses the zstd compression tool during unit tests.
+
 ## description
 
 This is an idiomatic kotlin dataframe toolkit to support data engineering 
