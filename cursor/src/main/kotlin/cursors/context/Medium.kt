@@ -9,6 +9,7 @@ import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
+import kotlin.experimental.and
 import kotlin.math.min
 
 /**
@@ -230,6 +231,9 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 IOMemento.IoInt as TypeMemento to Tokenized(
                         (::bb2ba `→` ::btoa `→` ::trim * String::toInt) as readfn<ByteBuffer, Int>,
                         { a, b: Int -> a.putInt(b) }),
+            IOMemento.IoByte as TypeMemento to Tokenized(
+                        (::bb2ba `→` ::btoa `→` ::trim * String::toInt * Int::toUByte *  UByte::toByte) as readfn<ByteBuffer,Byte>,
+                        { a, b: Byte -> a.put((b.toInt() and 0xff).toByte()) }),
                 IOMemento.IoLong to Tokenized(
                         ::bb2ba `→` ::btoa `→` ::trim * String::toLong,
                         { a, b: Long -> a.putLong(b) }),
@@ -263,6 +267,10 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                         4,
                         ByteBuffer::getInt
                 ) { a, b -> a.putInt(b);Unit },
+            IOMemento.IoByte as TypeMemento to Fixed(
+                        1,
+                        ByteBuffer::get
+                ) { a, b -> a.put((b.toInt() and  0xff.toInt()).toByte() );Unit },
                 IOMemento.IoLong to Fixed(
                         8,
                         ByteBuffer::getLong

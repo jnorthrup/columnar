@@ -44,6 +44,7 @@ val instantMapper = { s: String ->
 
 enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
     IoBoolean(1),
+    IoByte(1),
     IoInt(4),
     IoLong(8),
     IoFloat(4),
@@ -59,6 +60,7 @@ enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
                 IoLocalDate to { o1, o2 -> (o1 as LocalDate).compareTo(o2 as LocalDate) },
                 IoInstant to { o1, o2 -> (o1 as Instant).compareTo(o2 as Instant) },
                 IoBoolean to { o1, o2 -> (o1 as Boolean).compareTo(o2 as Boolean) },
+                IoByte to { o1, o2 -> (o1 as Int and 0xff).compareTo(o2 as Int and 0xff) },
                 IoInt to { o1, o2 -> (o1 as Int).compareTo(o2 as Int) },
                 IoLong to { o1, o2 -> (o1 as Long).compareTo(o2 as Long) },
                 IoFloat to { o1, o2 -> (o1 as Float).compareTo(o2 as Float) },
