@@ -1,7 +1,7 @@
 package trie;
 
 import junit.framework.Assert.*;
-import org.junit.Test;
+import org.junit.*;
 
 
 /**
