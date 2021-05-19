@@ -5,7 +5,7 @@
 
     <parent>
         <groupId>columnar</groupId>
-        <artifactId>columnar-parent</artifactId>
+        <artifactId>meta-columnar</artifactId>
         <version>1.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>lillypads</artifactId>

@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>columnar-parent</artifactId>
+        <artifactId>meta-columnar</artifactId>
         <groupId>columnar</groupId>
         <version>1.0.1-SNAPSHOT</version>
     </parent>
