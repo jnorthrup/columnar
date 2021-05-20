@@ -2,10 +2,7 @@ package exch
 
 import cursors.Cursor
 import cursors.context.Scalar
-import cursors.io.IOMemento
-import cursors.io.ISAMCursor
-import cursors.io.RowVec
-import cursors.io.writeISAM
+import cursors.io.*
 import exchg.PlotThing
 import org.junit.Test
 import vec.macros.get
@@ -75,7 +72,10 @@ class SeedTesting {
         ) = seeds.map { r -> DoubleArray(assetCount) { r.nextDouble() } }
 
         val alg =
-            (0 until assetCount).map { Array(seeds[0].nextInt(1, curveMotif.values().size)) { curveMotif.values()[seeds[0].nextInt( curveMotif.values().size)] } }
+            (0 until assetCount).map {
+                Array(seeds[0].nextInt(1,
+                    curveMotif.values().size)) { curveMotif.values()[seeds[0].nextInt(curveMotif.values().size)] }
+            }
 
         val exchCursors: Cursor = cursors.Cursor(assetCount) { assetRow: Int ->
 
@@ -91,19 +91,20 @@ class SeedTesting {
                 (assetLaunch + seeds[1].nextDouble() * assetPerformance + sqrt(assetVigor * dateCol)) * arrayOfCurveMotifs.fold(
                     dateCol.toDouble()) { acc, curveMotif ->
                     curveMotif.motif(acc)
-                } t2 { Scalar(IOMemento.IoDouble, "amt_" + String.format( "amt_%6d",dateCol )) }
+                } t2 { Scalar(IOMemento.IoDouble, "amt_" + String.format("amt_%6d", dateCol)) }
             }
         }
 
         val path = "/tmp/myExchange".path
-        if (!Files.exists(path))
+
             exchCursors.writeISAM(path.toString())
 
 
         FileChannel.open(path)!!.use { fc ->
 
             val isamCursor = ISAMCursor(path, fc)
-
+            if (!Files.exists("/tmp/myExchange.csv".path))
+            isamCursor.writeCSV("/tmp/myExchange.csv" )
 
             val fg = PlotThing()
             var assetRow = 0
@@ -112,20 +113,22 @@ class SeedTesting {
                 override fun actionPerformed(p0: ActionEvent?) {
 
                     val rv: RowVec = isamCursor[assetRow]
-                    fg.caption = "asset: $assetRow ${
+                    "asset: ${String.format("%05d", assetRow)} ${
                         _l[launch[assetRow],
                                 performance[assetRow],
                                 vigor[assetRow],
                                 alg[assetRow].toList().toString()]
-                    }"
+                    }".also { fg.caption = it }
                     fg.payload = rv
                     fg.repaint()
                     ++assetRow
                 }
             }
             (fg.nextAction as AbstractAction).actionPerformed(ActionEvent(this, assetRow, toString()))
-            Thread.sleep(999999999999L)
 
+            while (true) {
+                Thread.sleep(999999999999L)
+            }
         }
 
     }
