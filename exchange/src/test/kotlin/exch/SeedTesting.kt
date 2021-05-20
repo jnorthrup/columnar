@@ -10,11 +10,12 @@ import exchg.PlotThing
 import org.junit.Test
 import vec.macros.get
 import vec.macros.t2
-import vec.macros.t3
 import vec.util._l
 import vec.util.path
+import java.awt.event.ActionEvent
 import java.nio.channels.FileChannel
 import java.nio.file.Files
+import javax.swing.AbstractAction
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -76,22 +77,26 @@ class SeedTesting {
         val alg =
             (0..assetCount).map { Array(seeds[0].nextInt(1, curveMotif.values().size)) { curveMotif.values()[it] } }
 
-        val exchCursors: Cursor = cursors.Cursor(assetCount) { date: Int ->
+        val exchCursors: Cursor = cursors.Cursor(assetCount) { assetRow: Int ->
 
-            val colDef = { Scalar(IOMemento.IoDouble, "amt_" + date) }
             //sometimes cheaper
-            //  =  Scalar(IOMemento.IoDouble, "amt_" + date).`⟲`
+            //  =  Scalar(IOMemento.IoDouble, "amt_" + y).`⟲`
 
-            RowVec(assetCount) { asset: Int ->
-                (launch[asset] + seeds[1].nextDouble(-performance[asset],
-                    performance[asset]) + sqrt(vigor[asset] * date)) * alg[asset].fold(date.toDouble()) { acc, curveMotif ->
+            val assetLaunch = launch[assetRow]
+            val assetPerformance = performance[assetRow]
+            val assetVigor = vigor[assetRow]
+            val arrayOfCurveMotifs = alg[assetRow]
+
+            RowVec(assetCount) { dateCol: Int ->
+                (assetLaunch + seeds[1].nextDouble() * assetPerformance + sqrt(assetVigor * dateCol)) * arrayOfCurveMotifs.fold(
+                    dateCol.toDouble()) { acc, curveMotif ->
                     curveMotif.motif(acc)
-                } t2 colDef
+                } t2 { Scalar(IOMemento.IoDouble, "amt_" + String.format( "amt_%6d",dateCol )) }
             }
         }
 
         val path = "/tmp/myExchange".path
-        if(!Files.exists(path))
+        if (!Files.exists(path))
             exchCursors.writeISAM(path.toString())
 
 
@@ -99,16 +104,29 @@ class SeedTesting {
 
             val isamCursor = ISAMCursor(path, fc)
 
-            val rv:RowVec = isamCursor[0]
 
-            val fg=PlotThing()
+            val fg = PlotThing()
+            var assetRow = 0
 
-            fg.caption= _l[launch[0] , performance[0] , vigor   ,alg[0].toString()].toString()
-            fg.payload=rv
-            fg.repaint()
+            fg.nextAction = object : AbstractAction() {
+                override fun actionPerformed(p0: ActionEvent?) {
+
+                    val rv: RowVec = isamCursor[assetRow]
+                    fg.caption = "asset: $assetRow ${
+                        _l[launch[assetRow],
+                                performance[assetRow],
+                                vigor[assetRow],
+                                alg[assetRow].toList().toString()]
+                    }"
+                    fg.payload = rv
+                    fg.repaint()
+                    ++assetRow
+                }
+            }
+            (fg.nextAction as AbstractAction).actionPerformed(ActionEvent(this, assetRow, toString()))
+            Thread.sleep(999999999999L)
 
         }
-Thread.sleep(999999999999L)
 
     }
 }

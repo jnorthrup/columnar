@@ -8,10 +8,9 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
 import javax.swing.*
 import kotlin.math.min
+
 
 class PlotThing : JFrame() {
     var caption: String? = null
@@ -20,19 +19,16 @@ class PlotThing : JFrame() {
 
     init {
         jMenuBar = JMenuBar()
-        jMenuBar.add(object : AbstractButton() {init {
-            text = "Next"
 
-            addActionListener(object : ActionListener {
-                override fun actionPerformed(p0: ActionEvent?) = nextAction?.actionPerformed(p0) ?: Unit
-            })
-        }
-        })
+        val menu = JMenuItem("Next")
+        jMenuBar.add(menu)
+        menu.addActionListener { nextAction?.actionPerformed(it) }
+
         defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
         preferredSize = Dimension(1000, 1000)
 
-        size=preferredSize
-        isVisible=true
+        size = preferredSize
+        isVisible = true
         contentPane.add(
             object : JComponent() {
 
@@ -50,12 +46,15 @@ class PlotThing : JFrame() {
                     payload?.let { row ->
                         g.color = Color.red
                         val left = row.left
-                        val plotc = min(300, row.size)
+                        val plotc = min(365, row.size)
                         val plotxy = (0 until plotc).map { x ->
-                            (+500 + x).toInt() t2 (500 - left[x] as Double).toInt()
+
+                            (x).toDouble() t2 ((left[x] as Double))
                         }.toVect0r()
-                        g.drawPolyline(plotxy.left.toArray().toIntArray(),
-                            plotxy.right.toArray().toIntArray(),
+
+                        g.drawPolyline(
+                            (plotxy.left α { i -> (i + 500.0 ).toInt()}).toArray().toIntArray(),
+                            (plotxy.right α { i -> (500.0 - i*10.0 ).toInt()}).toArray().toIntArray(),
                             plotc)
                     }
                 }
@@ -67,5 +66,5 @@ class PlotThing : JFrame() {
 }
 
 fun main(args: Array<String>) {
-    PlotThing().isVisible=true
+    PlotThing().isVisible = true
 }
