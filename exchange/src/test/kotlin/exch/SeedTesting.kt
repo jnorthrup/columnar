@@ -75,7 +75,7 @@ class SeedTesting {
         ) = seeds.map { r -> DoubleArray(assetCount) { r.nextDouble() } }
 
         val alg =
-            (0..assetCount).map { Array(seeds[0].nextInt(1, curveMotif.values().size)) { curveMotif.values()[it] } }
+            (0 until assetCount).map { Array(seeds[0].nextInt(1, curveMotif.values().size)) { curveMotif.values()[seeds[0].nextInt( curveMotif.values().size)] } }
 
         val exchCursors: Cursor = cursors.Cursor(assetCount) { assetRow: Int ->
 
