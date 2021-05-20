@@ -1,8 +1,17 @@
 package exch
 
-import org.junit.*
-import vec.util._a
-import kotlin.math.*
+import cursors.Cursor
+import cursors.context.Scalar
+import cursors.io.IOMemento
+import cursors.io.RowVec
+import cursors.io.writeISAM
+import org.junit.Test
+import vec.macros.t2
+import vec.util._l
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
+import kotlin.math.tan
 import kotlin.random.Random
 
 
@@ -23,45 +32,57 @@ interface adjFun
 
 
  */
-enum class curveMotifs(val motif: (Double) -> Double) {
+enum class curveMotif(val motif: (Double) -> Double) {
 
-//    sinX(Math::sin),
-//    cosX(Math::cos),
-//    tanX(Math::tan),
+    sinX(Math::sin),
+    cosHalfX({ cos(it) / 2.0 }),
+/*
+    //    tanX(Math::tan),
+    byHalf({ it / 2.0 }),*/
 
-    /**
-    (sin(x)-cos ( (sqrt x)))+ (sqrt x)/2
-     */
+    /** (sin(x)-cos ( (sqrt x)))+ (sqrt x)/2 */
     wobble1({ sqrt(it).let { (sin(it) - cos(it)) + it / 2 } }),
 
-    /**
-     * (sin( tan( x)))+sqrt ( x)
-     */
-    gallup1(
-        { (sin(tan(it))) + sqrt(it) }),
-    /**(4+sqrt( (x)))+(sin(x) - cos(x )-cos(x*2)-cos(x*3)-cos(x*4) ) */
-    heartbeat({x->
-        4.01+ (sqrt( (x))) +(sin(x) - cos(x )-cos(x*2)-cos(x*3)-cos(x*4) )
-        })
+    /** (sin( tan( x)))+sqrt ( x) */
+    gallup1({ (sin(tan(it))) + sqrt(it) }),
+    heartbeat({ x ->
+        4.01 + (sqrt((x))) + (sin(x) - cos(x) - cos(x * 2) - cos(x * 3) - cos(x * 4))
+    })
     ;
-
 }
 
 class SeedTesting {
     @Test
     fun testSeed() {
         val days = 2000
+        val assetCount = 10000
+        val seeds = _l[3, 14, 11].map(::Random)
+        val (
+                /**initial*/
+            launch,
+                /**y+-*/
+            performance,
+                /**x+=sqrt(it)*/
+            vigor,
+        ) = seeds.map { r -> DoubleArray(assetCount) { r.nextDouble() } }
 
-        val rlist = _a[3, 14, 11].map(::Random)// x,y and z
+        val alg =
+            (0..assetCount).map { Array(seeds[0].nextInt(1, curveMotif.values().size)) { curveMotif.values()[it] } }
 
-        val cache: Array<DoubleArray> = rlist.map { r ->
-            (0..days).map {
-                r.nextDouble()
-            }.toDoubleArray()
-        }.toTypedArray()
+        val exchCursors: Cursor = cursors.Cursor(assetCount) { date: Int ->
 
-//        Cursor(days) {}
+            val colDef = { Scalar(IOMemento.IoDouble, "amt_" + date) }
+            //sometimes cheaper
+            //  =  Scalar(IOMemento.IoDouble, "amt_" + date).`⟲`
 
+            RowVec(assetCount) { asset: Int ->
+                (launch[asset] + seeds[1].nextDouble(-performance[asset],
+                    performance[asset]) + sqrt(vigor[asset])) * alg[asset].fold(date.toDouble()) { acc, curveMotif ->
+                    curveMotif.motif(acc)
+                } t2 colDef
+            }
+        }
+
+        exchCursors.writeISAM("/tmp/myExchange")
     }
-
 }
