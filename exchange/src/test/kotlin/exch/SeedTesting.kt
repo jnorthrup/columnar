@@ -91,7 +91,7 @@ class SeedTesting {
                 (assetLaunch + seeds[1].nextDouble() * assetPerformance + sqrt(assetVigor * dateCol)) * arrayOfCurveMotifs.fold(
                     dateCol.toDouble()) { acc, curveMotif ->
                     curveMotif.motif(acc)
-                } t2 { Scalar(IOMemento.IoDouble, "amt_" + String.format("amt_%6d", dateCol)) }
+                } t2 { Scalar(IOMemento.IoDouble, String.format("amt_%6d", dateCol)) }
             }
         }
 
@@ -100,55 +100,65 @@ class SeedTesting {
         exchCursors.writeISAM(path.toString())
 
         var keepalive = true
+
+        val classedName = "/tmp/myExchange5.isam"
         FileChannel.open(path)!!.use { fc ->
             val isamCursor = ISAMCursor(path, fc)
             if (!Files.exists("/tmp/myExchange.csv".path))
                 isamCursor.writeCSV("/tmp/myExchange.csv")
-            if (!Files.exists("/tmp/myExchange5.csv".path)) {
-                //write multiclass csv
-                val fiveClasses: Cursor = Cursor(isamCursor.size) { y: Int ->
-                    val baseRowVec = isamCursor at y
-                    val influence by lazy { seeds[2].nextDouble() }
-                    val classRowVec by lazy { isamCursor.at(y.rem(5)) }
 
-                    (when {
-                        y > 5 -> {
-                            baseRowVec.left.mapIndexedToList { i, any -> (classRowVec.left[i] as Double) * ((any as Double) * influence) }
-                                .toVect0r()
-                        }
-                        else -> baseRowVec.left
-                    } as Vect0r<*>).zip(baseRowVec.right)
-                }
-                fiveClasses.writeCSV("/tmp/myExchange5.csv")
-            }
-            val fg = PlotThing()
-            var assetRow = 0
-            fg.addWindowListener(
-                object : WindowAdapter() {
-                    override fun windowClosing(e: WindowEvent) {
-                        println("Closed")
-                        e.window.dispose()
-                        keepalive = false
+            val fiveClasses = Cursor(isamCursor.size) { y: Int ->
+                val baseRowVec = isamCursor at y
+                val influence by lazy { seeds[2].nextDouble() }
+                val classRowVec by lazy { isamCursor.at(y.rem(5)) }
+
+                (when {
+                    y > 5 -> {
+                        baseRowVec.left.mapIndexedToList { i, any ->
+                            (any as Double) +
+                                    (classRowVec.left[i] as Double) * (influence)
+                        }.toVect0r()
                     }
-                })
+                    else -> baseRowVec.left
+                } as Vect0r<*>).zip(baseRowVec.right)
+            }
+            //write multiclass csv
+            if (!Files.exists(classedName.path)) fiveClasses.writeISAM(classedName)
+        }
+        val fg = PlotThing()
+        var assetRow = 0
+        fg.addWindowListener(
+            object : WindowAdapter() {
+                override fun windowClosing(e: WindowEvent) {
+                    println("Closed")
+                    e.window.dispose()
+                    keepalive = false
+                }
+            })
 
+
+        FileChannel.open(classedName.path)!!.use {
+            val displayCurs = ISAMCursor(classedName.path, it)
             fg.nextAction =
                 object : AbstractAction() {
                     override fun actionPerformed(p0: ActionEvent?) {
-                        val rv: RowVec = isamCursor[assetRow]
+                        val rv: RowVec = displayCurs[assetRow]
                         "asset: ${String.format("%05d", assetRow)} ${
                             _l[launch[assetRow],
                                     performance[assetRow],
                                     vigor[assetRow],
                                     alg[assetRow].toList().toString()]
                         }".also { fg.caption = it }
-                        fg.payload = rv
+
+                        fg.payload = when {
+                            assetRow < 5 -> Cursor(1) { y -> rv }
+                            else -> combine(Cursor(1) { y -> rv }, Cursor(1) { y -> displayCurs at assetRow.rem(5) })
+                        }
                         fg.repaint()
                         ++assetRow
                     }
                 }
             (fg.nextAction as AbstractAction).actionPerformed(ActionEvent(this, assetRow, toString()))
-
             while (keepalive) Thread.sleep(1000)
         }
     }
