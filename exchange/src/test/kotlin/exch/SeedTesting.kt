@@ -1,12 +1,12 @@
 package exch
 
 import cursors.Cursor
+import cursors.at
 import cursors.context.Scalar
 import cursors.io.*
 import exchg.PlotThing
 import org.junit.Test
-import vec.macros.get
-import vec.macros.t2
+import vec.macros.*
 import vec.util._l
 import vec.util.path
 import java.awt.event.ActionEvent
@@ -99,41 +99,57 @@ class SeedTesting {
 
         exchCursors.writeISAM(path.toString())
 
-        var keepalive = true;
+        var keepalive = true
         FileChannel.open(path)!!.use { fc ->
-
             val isamCursor = ISAMCursor(path, fc)
             if (!Files.exists("/tmp/myExchange.csv".path))
                 isamCursor.writeCSV("/tmp/myExchange.csv")
+            if (!Files.exists("/tmp/myExchange5.csv".path)) {
+                //write multiclass csv
+                val fiveClasses: Cursor = Cursor(isamCursor.size) { y: Int ->
+                    val baseRowVec = isamCursor at y
+                    val influence by lazy { seeds[2].nextDouble() }
+                    val classRowVec by lazy { isamCursor.at(y.rem(5)) }
 
+                    (when {
+                        y > 5 -> {
+                            baseRowVec.left.mapIndexedToList { i, any -> (classRowVec.left[i] as Double) * ((any as Double) * influence) }
+                                .toVect0r()
+                        }
+                        else -> baseRowVec.left
+                    } as Vect0r<*>).zip(baseRowVec.right)
+                }
+                fiveClasses.writeCSV("/tmp/myExchange5.csv")
+            }
             val fg = PlotThing()
             var assetRow = 0
-            fg.addWindowListener(object : WindowAdapter() {
-                override fun windowClosing(e: WindowEvent) {
-                    println("Closed")
-                    e.window.dispose()
-                    keepalive = false
-                }
-            })
-            fg.nextAction = object : AbstractAction() {
-                override fun actionPerformed(p0: ActionEvent?) {
+            fg.addWindowListener(
+                object : WindowAdapter() {
+                    override fun windowClosing(e: WindowEvent) {
+                        println("Closed")
+                        e.window.dispose()
+                        keepalive = false
+                    }
+                })
 
-                    val rv: RowVec = isamCursor[assetRow]
-                    "asset: ${String.format("%05d", assetRow)} ${
-                        _l[launch[assetRow],
-                                performance[assetRow],
-                                vigor[assetRow],
-                                alg[assetRow].toList().toString()]
-                    }".also { fg.caption = it }
-                    fg.payload = rv
-                    fg.repaint()
-                    ++assetRow
+            fg.nextAction =
+                object : AbstractAction() {
+                    override fun actionPerformed(p0: ActionEvent?) {
+                        val rv: RowVec = isamCursor[assetRow]
+                        "asset: ${String.format("%05d", assetRow)} ${
+                            _l[launch[assetRow],
+                                    performance[assetRow],
+                                    vigor[assetRow],
+                                    alg[assetRow].toList().toString()]
+                        }".also { fg.caption = it }
+                        fg.payload = rv
+                        fg.repaint()
+                        ++assetRow
+                    }
                 }
-            }
             (fg.nextAction as AbstractAction).actionPerformed(ActionEvent(this, assetRow, toString()))
 
             while (keepalive) Thread.sleep(1000)
         }
-
     }
 }
