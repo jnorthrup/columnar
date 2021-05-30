@@ -19,16 +19,14 @@ class PlotThing : JFrame() {
 
     init {
         jMenuBar = JMenuBar()
-
         val menu = JMenuItem("Next")
         jMenuBar.add(menu)
         menu.addActionListener { nextAction?.actionPerformed(it) }
-
         defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
         preferredSize = Dimension(1000, 1000)
-
         size = preferredSize
         isVisible = true
+
         contentPane.add(
             object : JComponent() {
 
@@ -48,21 +46,17 @@ class PlotThing : JFrame() {
                         val left = row.left
                         val plotc = min(365, row.size)
                         val plotxy = (0 until plotc).map { x ->
-
                             (x).toDouble() t2 ((left[x] as Double))
                         }.toVect0r()
 
                         g.drawPolyline(
-                            (plotxy.left α { i -> (i + 500.0 ).toInt()}).toArray().toIntArray(),
-                            (plotxy.right α { i -> (500.0 - i*10.0 ).toInt()}).toArray().toIntArray(),
+                            (plotxy.left α { i -> (i + 500.0).toInt() }).toArray().toIntArray(),
+                            (plotxy.right α { i -> (500.0 - i * 10.0).toInt() }).toArray().toIntArray(),
                             plotc)
                     }
                 }
             }, BorderLayout.CENTER)
-
-
     }
-
 }
 
 fun main(args: Array<String>) {

@@ -10,6 +10,8 @@ import vec.macros.t2
 import vec.util._l
 import vec.util.path
 import java.awt.event.ActionEvent
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import javax.swing.AbstractAction
@@ -19,8 +21,6 @@ import kotlin.math.sqrt
 import kotlin.math.tan
 import kotlin.random.Random
 
-
-interface adjFun
 
 /**
  * some curves that seem non-trivial for a learning challenge
@@ -97,18 +97,24 @@ class SeedTesting {
 
         val path = "/tmp/myExchange".path
 
-            exchCursors.writeISAM(path.toString())
+        exchCursors.writeISAM(path.toString())
 
-
+        var keepalive = true;
         FileChannel.open(path)!!.use { fc ->
 
             val isamCursor = ISAMCursor(path, fc)
             if (!Files.exists("/tmp/myExchange.csv".path))
-            isamCursor.writeCSV("/tmp/myExchange.csv" )
+                isamCursor.writeCSV("/tmp/myExchange.csv")
 
             val fg = PlotThing()
             var assetRow = 0
-
+            fg.addWindowListener(object : WindowAdapter() {
+                override fun windowClosing(e: WindowEvent) {
+                    println("Closed")
+                    e.window.dispose()
+                    keepalive = false
+                }
+            })
             fg.nextAction = object : AbstractAction() {
                 override fun actionPerformed(p0: ActionEvent?) {
 
@@ -126,9 +132,7 @@ class SeedTesting {
             }
             (fg.nextAction as AbstractAction).actionPerformed(ActionEvent(this, assetRow, toString()))
 
-            while (true) {
-                Thread.sleep(999999999999L)
-            }
+            while (keepalive) Thread.sleep(1000)
         }
 
     }
