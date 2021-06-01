@@ -52,7 +52,11 @@ enum class curveMotif(val motif: (Double) -> Double) {
     gallup1({ (sin(tan(it))) + sqrt(it) }),
     heartbeat({ x ->
         4.01 + (sqrt((x))) + (sin(x) - cos(x) - cos(x * 2.0) - cos(x * 3.0) - cos(x * 4.0))
-    })
+    }),
+    sinc1({x->sin(x)/x}),
+    sinc2({x->
+        val x2 = x * kotlin.math.PI
+        sin(x2)/x2})
     ;
 }
 
