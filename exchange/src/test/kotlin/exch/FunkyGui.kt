@@ -45,20 +45,22 @@ class PlotThing : JFrame() {
                     payload?.let { paload ->
                         (0 until paload.size).forEach {
                             g.color = colors[(it).rem(colors.size)]
-                            val rowVect0r = paload at  it
+                            val rowVect0r = paload at it
                             val left = rowVect0r.left
                             val plotc = min(1000, rowVect0r.size)
                             val plotxy = (0 until plotc).map { x ->
-                                x.toDouble() t2 left[x]as Double
+                                x.toDouble() t2 (left[x] as Number).toDouble()
                             }.toVect0r()
                             g.drawPolyline(
                                 (plotxy.left α { i -> i.toInt() }).toArray().toIntArray(),
                                 (plotxy.right α { i -> (500.0 - i * 10.0).toInt() }).toArray().toIntArray(),
-                                plotc)
+                                plotc
+                            )
                         }
                     }
                 }
-            }, BorderLayout.CENTER)
+            }, BorderLayout.CENTER
+        )
     }
 }
 
