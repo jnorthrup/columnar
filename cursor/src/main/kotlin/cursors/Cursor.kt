@@ -261,3 +261,12 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
     })
     return nprices
 }
+
+/**
+ * returns cursor with x reversed
+ */
+fun Cursor.mirror() = first t2 { y: Int ->
+       second(y).let { (xsz, fn) ->
+           xsz t2 { x: Int -> fn(xsz - x) }
+       }
+}
