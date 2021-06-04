@@ -3,10 +3,7 @@ package exch
 import cursors.Cursor
 import cursors.at
 import cursors.context.Scalar
-import cursors.get
 import cursors.io.*
-import cursors.macros.join
-import cursors.unaryMinus
 import exchg.PlotThing
 import org.junit.Test
 import vec.macros.*
@@ -27,9 +24,8 @@ import kotlin.random.Random
 
 class SeedTesting {
     val modelPoints = 2000
-
-
     private val scalar = Scalar(IOMemento.IoInt, "non")
+    val pixels = 500
 
     @Test
     fun variablecoil() {
@@ -54,20 +50,20 @@ class SeedTesting {
                     (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 },
                     (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 },
                     (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 }
-            ] t3 assetLengths[y]
+            ]
         }
 
         val scalar1 = Scalar(
             IOMemento.IoDouble,
             "v"/*_${String.format("%05d", x)}*/
         ).`⟲`
-        val scalar2 = Scalar(IOMemento.IoInt, "non").`⟲`
+
+        val scalar2 = Scalar(IOMemento.IoDouble, "non").`⟲`
         lateinit var underlying: Cursor
 
-        val solidBase: Cursor =
+        val c1: Cursor =
             Cursor(arraySeeds.size) { y: Int ->
                 val (start, magnitude, frequency) = arraySeeds[y].first
-                val alen = arraySeeds[y].third
                 fun standingwave(x: Int) = start + sin(x.toDouble() / frequency) * magnitude
                 fun relink(x: Int, y1: Int, d: Double): Double {
                     var d1 = d
@@ -80,43 +76,20 @@ class SeedTesting {
                             d1 += d2
                         }
                     }
-/*
-                    d1 = linkAdd?.let { d1 +  linkAdd) } ?: d1
-                    d1 = linkSub?.let { d1 + (underlying at linkSub)[x].first as Double } ?: d1
-                    d1 = linkMul?.let { d1 + (underlying at linkMul)[x].first as Double } ?: d1
-*/
                     return d1
                 }
 
-/*                    linkAdd?.let { i: Int -> ((underlying at i)[x].first as? Double)?.plus(d1) }
-//                        ?.also { v1 -> logDebug { "$d1 plussed $linkAdd /${((underlying at linkAdd)[x]).first} as $v1" } }
-                        ?: d1  .let { d2 ->
-                                linkSub?.let { i: Int -> ((underlying at i)[x].first as? Double)?.plus(-d2) }
-//                                    ?.also { v2 -> logDebug { "$d2 minussed $linkSub /${((underlying at linkSub)[x]).first} to $v2" } }
-                                    ?: d2
-                            }
-                            .let { d3 ->
-                                linkMul?.let { i: Int -> ((underlying at i)[x].first as? Double)?.times(d3) }
-//                                    ?.also { v3 -> logDebug { "$d3 mult $linkMul /${((underlying at linkMul)[x]).first} to $v3" } }
-                                    ?: d3
-                            }.also { v4 -> "returning $v4 originally $d1 " }*/
-
                 RowVec(modelPoints) { x: Int ->
-                    when {
-                        x == 0 -> alen t2 { Scalar(IOMemento.IoInt, "ct") }
-                        x <= alen -> {
-                            val d = standingwave(x)
-                            val relink = relink(x, y, d)
-                            relink t2 scalar1
-                        }
-                        else -> Random.nextDouble() t2 scalar2
-
+                    val newX = /*pixels - */x
+                    if (newX > assetLengths[y]) Random.nextDouble() t2 scalar2
+                    else {
+                        val d = standingwave(newX)
+                        val relink = relink(newX, y, d)
+                        relink t2 scalar1
                     }
                 }
             }
-        underlying = solidBase
-
-//        solidBase.showRandom()
+        underlying = c1
         var assetRow = -1
         val fg = PlotThing()
         fg.addWindowListener(
@@ -127,7 +100,7 @@ class SeedTesting {
                     keepalive = false
                 }
             })
-        val displayCurs = solidBase
+        val displayCurs = c1
         fg.nextAction =
             object : AbstractAction() {
                 override fun actionPerformed(p0: ActionEvent?) {
@@ -141,13 +114,22 @@ class SeedTesting {
                         fg.caption = it
                     }
 
-                    val j = join(displayCurs[displayCurs.colIdx[-"ct"]])
-                    val j1 = Cursor(1) { y: Int -> j at assetRow }
+                    val j1 = Cursor(1) { y: Int -> (displayCurs at assetRow) }
                     val supt = arraySeeds[assetRow].second.map {
-                        it?.let { j at it } ?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
+                        it?.let {
+                            displayCurs at it
+                        } ?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
                     }.toVect0r() as Cursor
 
-                    fg.payload = combine(j1, supt)
+                    val combine = combine(j1, supt)
+                    val inverted = Cursor(combine.first) { y: Int ->
+                        val rv = combine at y
+                        RowVec(rv.first) { x: Int ->
+                            rv.second(pixels - x)
+                        }
+                    }
+                    fg.payload = inverted
+
                     fg.repaint()
                 }
             }
@@ -155,16 +137,6 @@ class SeedTesting {
         while (keepalive) Thread.sleep(1000)
     }
 
-
-    //            val  (tdp,startingY:Double,interval:Double)=   datapoints t2 rand_y.nextDouble() t3 rand_z.nextDouble(0.1,7.0)
-//            RowVec(500){x->
-//
-//            }
-//        }
-//
-//        Cursor(assetCount){
-//
-//        }
 
     var keepalive = true
 
@@ -193,8 +165,6 @@ class SeedTesting {
 
         val exchCursors: Cursor = cursors.Cursor(assetCount) { assetRow: Int ->
 
-            //sometimes cheaper
-            //  =  Scalar(IOMemento.IoDouble, "amt_" + y).`⟲`
 
             val assetLaunch = launch[assetRow]
             val assetPerformance = performance[assetRow]
