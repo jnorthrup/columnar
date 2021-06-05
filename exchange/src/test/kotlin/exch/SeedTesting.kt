@@ -4,6 +4,7 @@ import cursors.Cursor
 import cursors.at
 import cursors.context.Scalar
 import cursors.io.*
+import cursors.mirror
 import exchg.PlotThing
 import org.junit.Test
 import vec.macros.*
@@ -28,7 +29,7 @@ class SeedTesting {
     @Test
     fun variablecoil() {
         val seeds = _l[3, 14, 11].map(::Random)
-        val pixels = 1000
+        val pixels = 100
         val datapoints = pixels*5
 
         val assetCount = 250
@@ -119,12 +120,12 @@ class SeedTesting {
                     }.toVect0r() as Cursor
 
                     val combine = combine(j1, supt)
-                    val inverted = Cursor(combine.first) { y: Int ->
+                    val inverted =combine.mirror() /*Cursor(combine.first) { y: Int ->
                         val rv = combine at y
                         RowVec(rv.first) { x: Int ->
                             rv.second(pixels - x)
                         }
-                    }
+                    }*/
                     fg.payload = inverted
 
                     fg.repaint()
