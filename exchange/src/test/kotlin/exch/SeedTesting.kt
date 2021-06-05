@@ -23,22 +23,20 @@ import kotlin.random.Random
 
 
 class SeedTesting {
-    val modelPoints = 2000
     private val scalar = Scalar(IOMemento.IoInt, "non")
-    val pixels = 500
 
     @Test
     fun variablecoil() {
         val seeds = _l[3, 14, 11].map(::Random)
+        val pixels = 1000
+        val datapoints = pixels*5
 
         val assetCount = 250
         val (rand_x, rand_y: Random, rand_z: Random) = (seeds)
 
-        var datapoints = 10000
-
 
         val assetLengths = Array(assetCount) {
-            rand_x.nextInt(125, 445)
+            rand_x.nextInt(1, 10)
         }
 
         val arraySeeds = Array(assetCount) { y ->
@@ -61,8 +59,7 @@ class SeedTesting {
         val scalar2 = Scalar(IOMemento.IoDouble, "non").`⟲`
         lateinit var underlying: Cursor
 
-        val c1: Cursor =
-            Cursor(arraySeeds.size) { y: Int ->
+        val c1: Cursor =    (arraySeeds.size) t2 { y: Int ->
                 val (start, magnitude, frequency) = arraySeeds[y].first
                 fun standingwave(x: Int) = start + sin(x.toDouble() / frequency) * magnitude
                 fun relink(x: Int, y1: Int, d: Double): Double {
@@ -79,12 +76,12 @@ class SeedTesting {
                     return d1
                 }
 
-                RowVec(modelPoints) { x: Int ->
-                    val newX = /*pixels - */x
-                    if (newX > assetLengths[y]) Random.nextDouble() t2 scalar2
+                RowVec(datapoints) { x: Int ->
+                    if (x > assetLengths[y])
+                        Random.nextDouble() t2 scalar2
                     else {
-                        val d = standingwave(newX)
-                        val relink = relink(newX, y, d)
+                        val d = standingwave(x)
+                        val relink = relink(x, y, d)
                         relink t2 scalar1
                     }
                 }
