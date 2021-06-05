@@ -26,18 +26,22 @@ import kotlin.random.Random
 class SeedTesting {
     private val scalar = Scalar(IOMemento.IoInt, "non")
 
+
+    val showinfluence = false
+
     @Test
     fun variablecoil() {
         val seeds = _l[3, 14, 11].map(::Random)
         val pixels = 100
-        val datapoints = pixels*5
+        val datapoints = pixels *2
 
-        val assetCount = 250
+        val assetCount = 10
         val (rand_x, rand_y: Random, rand_z: Random) = (seeds)
 
 
+        val until = (datapoints * 0.80).toInt()
         val assetLengths = Array(assetCount) {
-            rand_x.nextInt(1, 10)
+            rand_x.nextInt(1, until)
         }
 
         val arraySeeds = Array(assetCount) { y ->
@@ -60,47 +64,52 @@ class SeedTesting {
         val scalar2 = Scalar(IOMemento.IoDouble, "non").`⟲`
         lateinit var underlying: Cursor
 
-        val c1: Cursor =    (arraySeeds.size) t2 { y: Int ->
-                val (start, magnitude, frequency) = arraySeeds[y].first
-                fun standingwave(x: Int) = start + sin(x.toDouble() / frequency) * magnitude
-                fun relink(x: Int, y1: Int, d: Double): Double {
-                    var d1 = d
-                    arraySeeds[y1].second.forEach {
-                        it?.also {
-                            val pai21 = underlying at it
-                            val pai2 = pai21[x]
-                            val first = pai2.first
-                            val d2 = first as Double
-                            d1 += d2
-                        }
-                    }
-                    return d1
+        val c1: Cursor = (arraySeeds.size) t2 { y: Int ->
+            val (start, magnitude, frequency) = arraySeeds[y].first
+            fun standingwave(x: Int) = start + sin(x.toDouble() / frequency) * magnitude
+            fun relink(x: Int, y1: Int, d: Double): Double {
+                var d1 = d
+                arraySeeds[y1].second.forEach { it?.also { d1 += (underlying at it)[x].first as Double }
                 }
+                return d1
+            }
 
-                RowVec(datapoints) { x: Int ->
-                    if (x > assetLengths[y])
-                        Random.nextDouble() t2 scalar2
-                    else {
-                        val d = standingwave(x)
-                        val relink = relink(x, y, d)
-                        relink t2 scalar1
-                    }
+            RowVec(datapoints) { x: Int ->
+                if (x > assetLengths[y])
+                    Random.nextDouble() t2 scalar2
+                else {
+                    val d = standingwave(x)
+                    val relink = relink(x, y, d)
+                    relink t2 scalar1
                 }
             }
+        }
         underlying = c1
         var assetRow = -1
         val fg = PlotThing()
-        fg.addWindowListener(
-            object : WindowAdapter() {
-                override fun windowClosing(e: WindowEvent) {
-                    println("Closed")
-                    e.window.dispose()
-                    keepalive = false
-                }
-            })
+        fg.addWindowListener(closer)
         val displayCurs = c1
-        fg.nextAction =
-            object : AbstractAction() {
+        if (!showinfluence) {
+            val c2 = c1.mirror()
+            fg.nextAction = object : AbstractAction() {
+                override fun actionPerformed(p0: ActionEvent?) {
+                    val yspan = 1000.toDouble()
+                    val yincrement = yspan / datapoints * .95
+                    fg.payload = Cursor(assetCount) { rownum: Int ->
+                        val ypos = yincrement * (1 + rownum)-0
+                        (c1 at rownum).let { (a, b) ->
+                            a t2 { x: Int ->
+                                b(x).let { (a1, sc) -> ((a1 as? Double)?.plus(ypos) ?: a1) t2 sc }
+                            }
+                        }
+                    }.mirror()
+
+
+                    fg.repaint()
+                }
+            }
+        } else {
+            fg.nextAction = object : AbstractAction() {
                 override fun actionPerformed(p0: ActionEvent?) {
                     ++assetRow
                     "asset: ${
@@ -113,30 +122,30 @@ class SeedTesting {
                     }
 
                     val j1 = Cursor(1) { y: Int -> (displayCurs at assetRow) }
-                    val supt = arraySeeds[assetRow].second.map {
-                        it?.let {
-                            displayCurs at it
-                        } ?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
+                    val supt = arraySeeds[assetRow].second.mapNotNull {
+                        it?.let { displayCurs at it }
+                          //?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
                     }.toVect0r() as Cursor
 
                     val combine = combine(j1, supt)
-                    val inverted =combine.mirror() /*Cursor(combine.first) { y: Int ->
-                        val rv = combine at y
-                        RowVec(rv.first) { x: Int ->
-                            rv.second(pixels - x)
-                        }
-                    }*/
+                    val inverted = combine.mirror() /*Cursor(combine.first) { y: Int ->
+                            val rv = combine at y
+                            RowVec(rv.first) { x: Int ->
+                                rv.second(pixels - x)
+                            }
+                        }*/
                     fg.payload = inverted
 
                     fg.repaint()
                 }
             }
+        }
         (fg.nextAction as AbstractAction).actionPerformed(ActionEvent(this, assetRow, toString()))
         while (keepalive) Thread.sleep(1000)
     }
 
 
-    var keepalive = true
+
 
     @Test
     fun testSeed() {
@@ -161,7 +170,7 @@ class SeedTesting {
                 ) { curveMotif.values()[seeds[0].nextInt(curveMotif.values().size)] }
             }
 
-        val exchCursors: Cursor = cursors.Cursor(assetCount) { assetRow: Int ->
+        val exchCursors: Cursor = Cursor(assetCount) { assetRow: Int ->
 
 
             val assetLaunch = launch[assetRow]
@@ -209,14 +218,7 @@ class SeedTesting {
         }
         val fg = PlotThing()
         var assetRow = 0
-        fg.addWindowListener(
-            object : WindowAdapter() {
-                override fun windowClosing(e: WindowEvent) {
-                    println("Closed")
-                    e.window.dispose()
-                    keepalive = false
-                }
-            })
+        fg.addWindowListener(closer)
 
 
         FileChannel.open(classedName.path)!!.use {
@@ -244,4 +246,13 @@ class SeedTesting {
             while (keepalive) Thread.sleep(1000)
         }
     }
+    var keepalive = true
+   val closer=object: WindowAdapter() {
+        override fun windowClosing(e: WindowEvent) {
+            println("Closed")
+            e.window.dispose()
+            keepalive = false
+        }
+    }
 }
+
