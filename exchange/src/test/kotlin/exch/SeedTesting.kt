@@ -26,9 +26,25 @@ import kotlin.random.Random
 class SeedTesting {
     private val scalar = Scalar(IOMemento.IoInt, "non")
 
-
+    /**
+     * if this is true then the mode of the swing gui plotter shows each asset singularly as red line, accompanied by
+     * the potential 3 dependencies 1 link deep
+     *
+     * when false this shows all the assets stacked
+     */
     val showinfluence = false
 
+    /**
+     * this produces sin waves
+     *
+     * each of these "assets" has 0-3 random links to previous rows.   the asset in question is additive of the linked
+     * assets, which may themselves be linked.
+     *
+     * the "standing wave" and "relink" lambda function
+     * handle the instantiation magic of defining functions on an inner scope that has not yet been populated.
+     *
+     * there is some instantiation magic to
+     */
     @Test
     fun variablecoil() {
         val seeds = _l[3, 14, 11].map(::Random)
@@ -145,8 +161,19 @@ class SeedTesting {
     }
 
 
-
-
+    /**
+     * testSeed was an initial attempt at simulating an exchange of assets which are plot functions with perturbance
+     * and parental link relationships.
+     *
+     * the initial goal was to write a serialization to isam and csv
+     *
+     * the FunkyGui class was added to view the data one asset at a time
+     *
+     * the data ppears good enough to train a system on one exchange to predict momentum, and to have an unending
+     * source of new exchanges to prove model convergences of the generalized rules which are an artist's
+     * tunable approximation of how crypto in particular has asset correlation based on marktecap trickle-down
+     *
+     */
     @Test
     fun testSeed() {
         val seeds = _l[3, 14, 11].map(::Random)
