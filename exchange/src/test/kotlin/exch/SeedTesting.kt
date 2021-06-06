@@ -70,14 +70,14 @@ class SeedTesting {
 
         val arraySeeds: V3ct0r<DoubleArray, Array<Int?>, Int> = Array(assetCount) { y ->
             _a[
-                    rand_y.nextDouble(1.0, 10.0),
-                    rand_y.nextDouble(1.0, 10.0),
-                    rand_y.nextDouble(1.0, 10.0)
+                    rand_y.nextDouble(-1.0, 40.0),
+                    rand_y.nextDouble(-1.0, 40.0),
+                    rand_y.nextDouble(-1.0, 40.0)
             ] t2 _a[// 1/6 probability of at least one link
-                    (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 },
-                    (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 },
-                    (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 }
-            ] t3 rand_x.nextInt(1, maxX)
+                    (rand_y.nextInt(-2 * max(1, y), y - 1)).takeIf { it >= 0 },
+                    (rand_y.nextInt(-2 * max(1, y), y - 1)).takeIf { it >= 0 },
+                    (rand_y.nextInt(-2 * max(1, y), y - 1)).takeIf { it >= 0 }
+            ] t3 rand_x.nextInt(19001, datapoints)
         }.toVect0r()
 
         val scalar1 = Scalar(
@@ -92,21 +92,18 @@ class SeedTesting {
             val (va, vb, assetLengths) = arraySeeds.left t2 arraySeeds.mid t3 arraySeeds.right
             val (start, magnitude, frequency) = va[y]
             fun standingwave(x: Int) = start + sin(x.toDouble() / frequency) * magnitude
-            fun relink(x: Int, y1: Int, d: Double): Double {
-                var d1 = d
-                vb[y1].forEach {
-                    it?.also { d1 += (underlying at it)[x].first as Double }
-                }
-                return d1
-            }
 
             RowVec(datapoints) { x: Int ->
-                if (x > assetLengths[y])
-                    Random.nextDouble() t2 scalar2
-                else {
-                    val d = standingwave(x)
-                    val relink = relink(x, y, d)
-                    relink t2 scalar1
+                fun relink( y1: Int, d: Double): Double {
+                    var d1 = d
+                    vb[y1].forEach {
+                        it?.also { d1 +=( (underlying at it)[x]).first as Double }
+                    }
+                    return d1
+                }
+                when {
+                    x > assetLengths[y] -> Random.nextDouble() t2 scalar2
+                    else -> relink(y, standingwave(x)) t2 scalar1
                 }
             }
         }
@@ -116,19 +113,18 @@ class SeedTesting {
         fg.addWindowListener(closer)
         val displayCurs = c1
         if (!showinfluence) {
-            val c2 = c1.mirror()
             fg.nextAction = object : AbstractAction() {
                 override fun actionPerformed(p0: ActionEvent?) {
-                    val yspan = 1000.toDouble()
-                    val yincrement = yspan / datapoints * .95
+                    val yspan = 1000.0
+                    val yincrement =2.5// assetCount.toDouble()/yspan
                     fg.payload = Cursor(assetCount) { rownum: Int ->
                         val ypos = yincrement * (1 + rownum) - 0
-                        (c1 at rownum).let { (a, b) ->
+                        (displayCurs at rownum).let { (a, b) ->
                             a t2 { x: Int ->
-                                b(x).let { (a1, sc) -> ((a1 as? Double)?.plus(ypos) ?: a1) t2 sc }
+                                b(x).let { (a1, sc) -> ((a1 as? Double)?.plus(ypos-50 ) ?: a1) t2 sc }
                             }
                         }
-                    }.mirror()
+                    }//.mirror()
                     fg.repaint()
                 }
             }
@@ -136,17 +132,18 @@ class SeedTesting {
             fg.nextAction = object : AbstractAction() {
                 override fun actionPerformed(p0: ActionEvent?) {
                     ++assetRow
+                    val tripl3 = arraySeeds[assetRow]
                     "asset: ${
                         String.format(
                             "%05d",
                             assetRow
                         )
-                    } ${arraySeeds[assetRow].first.toList()} ${arraySeeds[assetRow].second.toList()}".also {
+                    } ${tripl3.first.toList()} ${tripl3.second.toList()}".also {
                         fg.caption = it
                     }
 
                     val j1 = Cursor(1) { y: Int -> (displayCurs at assetRow) }
-                    val supt = arraySeeds[assetRow].second.mapNotNull {
+                    val supt = tripl3.second.mapNotNull {
                         it?.let { displayCurs at it }
                         //?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
                     }.toVect0r()
@@ -206,8 +203,6 @@ class SeedTesting {
             }
 
         val exchCursors: Cursor = Cursor(assetCount) { assetRow: Int ->
-
-
             val assetLaunch = launch[assetRow]
             val assetPerformance = performance[assetRow]
             val assetVigor = vigor[assetRow]
