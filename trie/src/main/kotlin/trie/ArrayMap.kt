@@ -1,9 +1,11 @@
 package trie
 
 import java.util.*
-import kotlin.Comparator
 
-class ArrayMap<K, V>(val entre: Array<Map.Entry<K, V>>, val cmp: Comparator<K> = Comparator<K> { o1, o2 -> o1.toString().compareTo(o2.toString()) }) : Map<K, V> {
+class ArrayMap<K, V>(
+    val entre: Array<Map.Entry<K, V>>,
+    val cmp: Comparator<K> = Comparator<K> { o1, o2 -> o1.toString().compareTo(o2.toString()) },
+) : Map<K, V> {
 
     override val entries: Set<Map.Entry<K, V>>
         get() = map { (k, v) ->
@@ -29,13 +31,17 @@ class ArrayMap<K, V>(val entre: Array<Map.Entry<K, V>>, val cmp: Comparator<K> =
     override fun isEmpty() = run(entre::isEmpty)
 
     companion object {
-        fun <K, V> entryComparator(comparator1: Comparator<K>): Comparator<Map.Entry<K, *>> = Comparator<Map.Entry<K, *>> { (o1: K), (o2: K) -> comparator1.compare(o1, o2) }
+        fun <K, V> entryComparator(comparator1: Comparator<K>): Comparator<Map.Entry<K, *>> =
+            Comparator<Map.Entry<K, *>> { (o1: K), (o2: K) -> comparator1.compare(o1, o2) }
 
         /**
          * if there aren't guarantees about ordered constructor entries, we can doa quick sort first on the comparator
          */
-        fun <K, V> sorting(map: Map<K, V>, cmp: Comparator<K> = Comparator<K> { o1, o2 -> o1.toString().compareTo(o2.toString()) }): ArrayMap<K, V> =
-                ArrayMap(map.entries.sortedWith(entryComparator<K, V>(cmp)).toTypedArray(), cmp)
+        fun <K, V> sorting(
+            map: Map<K, V>,
+            cmp: Comparator<K> = Comparator<K> { o1, o2 -> o1.toString().compareTo(o2.toString()) },
+        ): ArrayMap<K, V> =
+            ArrayMap(map.entries.sortedWith(entryComparator<K, V>(cmp)).toTypedArray(), cmp)
     }
 }
 

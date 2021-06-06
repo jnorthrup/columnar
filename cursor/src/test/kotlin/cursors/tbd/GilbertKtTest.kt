@@ -1,7 +1,9 @@
 package cursors.tbd
 
-import junit.framework.Assert.*
-import org.junit.*
+import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertTrue
+import org.junit.Test
+
 typealias IntIntPair = Pair<Int, Int>
 
 /** TODO more exhasutive tests  */

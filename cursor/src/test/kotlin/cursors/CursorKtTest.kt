@@ -10,10 +10,13 @@ import cursors.context.RowMajor.Companion.fixedWidthOf
 import cursors.io.*
 import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString
+import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.Companion.right
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.ml.DummySpec
-import org.junit.*
+import org.junit.Assert
+import org.junit.Test
 import shouldBe
 import vec.macros.*
 import vec.util._a
@@ -43,10 +46,10 @@ class CursorKtTest {
 
     @Suppress("UNCHECKED_CAST")
     val root = RowMajor().fromFwf(
-            fixedWidth,
-            RowMajor.indexableOf(nio, fixedWidth),
-            nio,
-            Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+        fixedWidth,
+        RowMajor.indexableOf(nio, fixedWidth),
+        nio,
+        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
     )
 
 
@@ -91,18 +94,18 @@ class CursorKtTest {
 
             val resample = cursor.resample(0)
             val toList = resample
-                    /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
-                    .toList()
+                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
+                .toList()
             resample.toList()[3][2].first shouldBe 820f
             toList.forEach { System.err.println(it) }
         }
         System.err.println("ordered\n\n")
         run {
             val ordered = cursor.resample(0)
-                    .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
+                .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
 
             val toList = ordered.narrow()
-                    .toList()
+                .toList()
 
             toList.forEach { System.err.println(it) }
             ordered.toList()[9][1].first shouldBe "0102211/0101010212/13-14/01"
@@ -120,7 +123,7 @@ class CursorKtTest {
         for (i in 0 until resample.first) {
             (resample at (i)).left.toList() shouldBe (join at (i)).left.toList()
             println(
-                    (resample at (i)).left.toList() to (join at (i)).left.toList()
+                (resample at (i)).left.toList() to (join at (i)).left.toList()
             )
         }
 
@@ -216,9 +219,9 @@ class CursorKtTest {
         val cursor: Cursor = cursorOf(root)
         println(cursor.narrow().toList())
         val piv = cursor.pivot(
-                intArrayOf(0),
-                intArrayOf(1),
-                intArrayOf(2, 3)
+            intArrayOf(0),
+            intArrayOf(1),
+            intArrayOf(2, 3)
         ).group((0)).`∑`(sumReducer[IOMemento.IoFloat]!!)
 
         piv.forEach { it ->

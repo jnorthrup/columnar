@@ -80,8 +80,8 @@ public class BloomFilter(n: Int, m: Int = n * 11  /* good for 31 bit ints*/) : C
 
     inner class RandomInRange internal constructor(
 // Maximum value returned + 1
-            private val max: Int, // Number of random elements to generate
-            private val count: Int, val seed: Long = Runtime.getRuntime().freeMemory()
+        private val max: Int, // Number of random elements to generate
+        private val count: Int, val seed: Long = Runtime.getRuntime().freeMemory(),
     ) : Iterable<RandomInRange>, MutableIterator<RandomInRange> {
         private val prng: Random = Random(seed).also {
             logDebug { "using randomSeeed $seed" }

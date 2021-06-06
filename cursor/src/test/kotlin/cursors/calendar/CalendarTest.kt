@@ -7,8 +7,10 @@ import cursors.at
 import cursors.context.*
 import cursors.get
 import cursors.io.*
+import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.Companion.right
 import cursors.macros.join
-import org.junit.*
+import org.junit.Test
 import vec.macros.*
 import java.time.LocalDate
 import java.time.ZoneId
@@ -26,17 +28,17 @@ import java.time.temporal.TemporalAdjusters
 @Suppress("UNCHECKED_CAST")
 class CalendarTest {
     val coords = intArrayOf(
-            0, 10,
-            10, 84,
-            84, 124,
-            124, 164
+        0, 10,
+        10, 84,
+        84, 124,
+        124, 164
     ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
 
     val drivers = vect0rOf(
-            IOMemento.IoLocalDate as TypeMemento,
-            IOMemento.IoString,
-            IOMemento.IoFloat,
-            IOMemento.IoFloat
+        IOMemento.IoLocalDate as TypeMemento,
+        IOMemento.IoString,
+        IOMemento.IoFloat,
+        IOMemento.IoFloat
     )
 
     val names = vect0rOf("date", "channel", "delivered", "ret")
@@ -47,10 +49,10 @@ class CalendarTest {
 
     @Suppress("UNCHECKED_CAST")
     val caven4Root = RowMajor().fromFwf(
-            fixedWidth,
-            RowMajor.indexableOf(nio, fixedWidth),
-            nio,
-            Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+        fixedWidth,
+        RowMajor.indexableOf(nio, fixedWidth),
+        nio,
+        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
     )
 
 
@@ -121,7 +123,7 @@ class CalendarTest {
         val localDate = LocalDate.of(1970, 1, 1)
 
         val zonedDateTime =
-                ZonedDateTime.ofInstant(localDate.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneId.systemDefault())
+            ZonedDateTime.ofInstant(localDate.atStartOfDay().toInstant(ZoneOffset.UTC), ZoneId.systemDefault())
         JvmCal.values().forEach { jvmCal: JvmCal ->
             System.err.println("$jvmCal")
             System.err.println("$jvmCal ${jvmCal.jvmProxy.date(zonedDateTime)}")

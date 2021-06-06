@@ -1,7 +1,7 @@
 package cursors.ml
 
 import junit.framework.Assert.assertEquals
-import org.junit.*
+import org.junit.Test
 import vec.macros.Tw1n
 
 class FeatureRangeKtTest {

@@ -3,12 +3,13 @@ package cursors
 import cursors.context.Scalar
 import cursors.hash.md4
 import cursors.io.*
+import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.Companion.right
 import trie.ArrayMap
 import vec.macros.*
 import vec.util.BloomFilter
 import vec.util.logDebug
 import java.util.*
-import kotlin.Comparator
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -31,20 +32,20 @@ fun bloomAccess(groupClusters: List<IntArray>): List<Pai2<BloomFilter, IntArray>
  *
  */
 fun Cursor.group(
-        /**these columns will be preserved as the cluster key.
-         * the remaining indexes will be aggregate.
-         *
-         * setting the precedent here where curs[[-]foo"] is adequate to convey a longer scala2s extraction
-         */
-        axis: Cursor
+    /**these columns will be preserved as the cluster key.
+     * the remaining indexes will be aggregate.
+     *
+     * setting the precedent here where curs[[-]foo"] is adequate to convey a longer scala2s extraction
+     */
+    axis: Cursor,
 ): Cursor = group(*colIdx.get(*axis.colIdx.right.toList().filterNotNull().toTypedArray()).toTypedArray().toIntArray())
 
 
 fun Cursor.group(
-        /**these columns will be preserved as the cluster key.
-         * the remaining indexes will be aggregate
-         */
-        vararg axis: Int
+    /**these columns will be preserved as the cluster key.
+     * the remaining indexes will be aggregate
+     */
+    vararg axis: Int,
 ): Cursor = let { orig ->
     val clusters = groupClusters(axis)
     val masterScalars = orig.scalars
@@ -61,11 +62,11 @@ fun Cursor.group(
 }
 
 inline fun Cursor.group(
-        /**these columns will be preserved as the cluster key.
-         * the remaining indexes will be aggregate
-         */
-        axis: IntArray,
-        crossinline reducer: ((Any?, Any?) -> Any?)
+    /**these columns will be preserved as the cluster key.
+     * the remaining indexes will be aggregate
+     */
+    axis: IntArray,
+    crossinline reducer: ((Any?, Any?) -> Any?),
 ): Cursor = run {
     val clusters = groupClusters(axis)
     val masterScalars = scalars
@@ -94,8 +95,8 @@ inline fun Cursor.group(
  * Performs  [Cursor.keyClusters] and returns trimmed values for group clusters
  */
 fun Cursor.groupClusters(
-        axis: IntArray,
-        clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf()
+    axis: IntArray,
+    clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf(),
 ): List<IntArray> = run {
     System.err.println("--- groupClusters")
     keyClusters(axis, clusters)
@@ -106,8 +107,8 @@ fun Cursor.groupClusters(
  * grows a list for each cluster key using a bit of a guess on median capacity -- does not trim the clusters.
  */
 fun Cursor.keyClusters(
-        axis: IntArray,
-        clusters: MutableMap<List<Any?>, MutableList<Int>>
+    axis: IntArray,
+    clusters: MutableMap<List<Any?>, MutableList<Int>>,
 ): MutableMap<List<Any?>, MutableList<Int>> = clusters.apply {
     val cap = max(8, sqrt(size.toDouble()).toInt())
     forEachIndexed { iy: Int, row: RowVec ->
@@ -122,9 +123,9 @@ fun Cursor.keyClusters(
  * ordered keys of ordered cluster indexes trimmed.
  */
 fun Cursor.mapClusters(axis: IntArray) =
-        keyClusters(axis, linkedMapOf()).entries.map { (k: List<Any?>, v: MutableList<Int>) ->
-            k to v.toIntArray()
-        }.toMap(linkedMapOf())
+    keyClusters(axis, linkedMapOf()).entries.map { (k: List<Any?>, v: MutableList<Int>) ->
+        k to v.toIntArray()
+    }.toMap(linkedMapOf())
 
 
 /**
@@ -169,7 +170,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
     val cmp = Comparator { l1: List<*>, l2: List<*> ->
         var res = 0
         var ix = 0
-        while (res == 0&&ix<map.size) {
+        while (res == 0 && ix < map.size) {
             res = map[ix].invoke(l1[ix], l2[ix]);
             ix++
         }
@@ -209,6 +210,6 @@ fun Cursor.trieOnColumns(vararg colNames: String) = let {
             add(iy, *(index at iy).left.α(Any?::toString).toArray())
         }
     }/* only for short paths...*/
-            .also { it.freeze() }
+        .also { it.freeze() }
 }
 

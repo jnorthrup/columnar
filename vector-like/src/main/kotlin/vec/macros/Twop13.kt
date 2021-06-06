@@ -30,10 +30,10 @@ interface Pai2<F, S> {
     companion object {
         @JvmStatic
         operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
-                object : Pai2<F, S> {
-                    override val first get() = first
-                    override val second get() = second
-                }
+            object : Pai2<F, S> {
+                override val first get() = first
+                override val second get() = second
+            }
 
 
         /**
@@ -41,7 +41,7 @@ interface Pai2<F, S> {
          */
         @JvmStatic
         operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P): R =
-                p.run { (first t2 second) as R }
+            p.run { (first t2 second) as R }
     }
 }
 /*
@@ -63,15 +63,15 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
     companion object {
         @JvmStatic
         operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
-                object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
-                    override val first get() = first
-                    override val second get() = second
-                    override val third get() = third
-                }
+            object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
+                override val first get() = first
+                override val second get() = second
+                override val third get() = third
+            }
 
         @JvmStatic
         operator fun <F, S, T> invoke(p: Triple<F, S, T>) =
-                p.let { (f, s, t) -> Tripl3(f, s, t) }
+            p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 
 }
@@ -134,17 +134,17 @@ fun <T : Long> Tw1n(first: T, second: T) = Twln(longArrayOf(first, second))
 infix fun <F, S> F.t2(s: S) = Pai2(this, s)
 infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
-            f,
-            s,
-            t
+        f,
+        s,
+        t
     )
 }
 
 infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T) =
-        let { (a, b) -> Tripl3(a, b, t) }
+    let { (a, b) -> Tripl3(a, b, t) }
 
 infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D) =
-        let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
+    let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
 
 
 /**inheritable version of quad that also provides its first three as a triple. */
@@ -161,29 +161,29 @@ interface Qu4d<F, S, T, Z> {
      */
     val quad: Quad<F, S, T, Z>
         get() = Quad(
-                first, second, third, fourth
+            first, second, third, fourth
         )
 
     companion object {
         @JvmStatic
         operator fun <F, S, T, Z> invoke(
-                first: F,
-                second: S,
-                third: T,
-                fourth: Z
+            first: F,
+            second: S,
+            third: T,
+            fourth: Z,
         ): Qu4d<F, S, T, Z> =
-                object : Qu4d<F, S, T, Z> {
-                    override val first get() = first
-                    override val second get() = second
-                    override val third get() = third
-                    override val fourth get() = fourth
-                }
+            object : Qu4d<F, S, T, Z> {
+                override val first get() = first
+                override val second get() = second
+                override val third get() = third
+                override val fourth get() = fourth
+            }
 
         @JvmStatic
         operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) =
-                p.let { (f, s, t, z) ->
-                    Qu4d(f, s, t, z)
-                }
+            p.let { (f, s, t, z) ->
+                Qu4d(f, s, t, z)
+            }
 
         @JvmStatic
         operator fun <F, S, T, Z> invoke(p: Array<*>) = p.let { (f, s, t, z) ->

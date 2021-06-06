@@ -1,8 +1,9 @@
 package cursors.hash
 
 
-import junit.framework.Assert.*
-import org.junit.*
+import junit.framework.Assert.assertEquals
+import org.junit.Assert
+import org.junit.Test
 import vec.util._a
 
 class MD4Test {

@@ -4,7 +4,6 @@ import org.junit.Test
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadMXBean
 import java.util.*
-import kotlin.collections.HashSet
 
 
 class TestBloomFilter {
@@ -16,10 +15,12 @@ class TestBloomFilter {
 
     @Test
     fun testCorrectness() {
-        println("""
+        println(
+            """
     Testing correctness.
     Creating a Set and filling it together with our filter...
-    """.trimIndent())
+    """.trimIndent()
+        )
         filter.clear()
         val inside: MutableSet<Int> = HashSet((elements / 0.75).toInt())
         while (inside.size < elements) {
@@ -41,8 +42,8 @@ class TestBloomFilter {
             rate = found.toFloat() / total.toDouble()
             if (total % 1000 == 0 || total == elements) {
                 System.out.format(
-                        "\rElements incorrectly found to be inside: %8d/%-8d (%3.2f%%)",
-                        found, total, 100 * rate
+                    "\rElements incorrectly found to be inside: %8d/%-8d (%3.2f%%)",
+                    found, total, 100 * rate
                 )
             }
         }
@@ -62,15 +63,15 @@ class TestBloomFilter {
         val end = bean.currentThreadCpuTime
         val time = end - start
         System.out.format(
-                """
+            """
                     Inserted %d elements in %d ns.
                     Insertion speed: %g elements/second
                     
                     
                     """.trimIndent(),
-                elements,
-                time,
-                elements / (time * 1e-9)
+            elements,
+            time,
+            elements / (time * 1e-9)
         )
     }
 
@@ -86,15 +87,15 @@ class TestBloomFilter {
         val end = bean.currentThreadCpuTime
         val time = end - start
         System.out.format(
-                """
+            """
                     Queried %d elements in %d ns.
                     Query speed: %g elements/second
                     
                     
                     """.trimIndent(),
-                elements,
-                time,
-                elements / (time * 1e-9)
+            elements,
+            time,
+            elements / (time * 1e-9)
         )
     }
 
@@ -137,12 +138,12 @@ class TestBloomFilter {
     */
     init {
         System.out.format(
-                """
+            """
                     Testing a bloom filter containing n=%d elements in a bit array of m=%d bits (=%.1fMib) 
                     
                     
                     """.trimIndent(),
-                elements, bitsize, bitsize.toFloat() / (1024 * 1024 * 8)
+            elements, bitsize, bitsize.toFloat() / (1024 * 1024 * 8)
         )
         bean = ManagementFactory.getThreadMXBean()
         prng = Random()

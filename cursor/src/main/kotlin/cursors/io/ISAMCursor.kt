@@ -4,6 +4,8 @@ import cursors.Cursor
 import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
+import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.Companion.right
 import vec.macros.*
 import vec.util.logDebug
 import vec.util.span
@@ -18,9 +20,9 @@ import java.util.*
 
 @Suppress("USELESS_CAST")
 fun ISAMCursor(
-        binpath: Path,
-        fc: FileChannel,
-        metapath: Path = Paths.get(binpath.toString() + ".meta")
+    binpath: Path,
+    fc: FileChannel,
+    metapath: Path = Paths.get(binpath.toString() + ".meta"),
 ): Cursor = fc.let { fileChannel ->
     val lines = Files.readAllLines(metapath)
     lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
@@ -72,14 +74,14 @@ fun ISAMCursor(
  *
  */
 fun Cursor.writeISAM(
-        pathname: String,
-        defaultVarcharSize: Int = 128,
-        varcharSizes: Map<
-                /**
-                column*/
-                Int,
-                /**length*/
-                Int>? = null
+    pathname: String,
+    defaultVarcharSize: Int = 128,
+    varcharSizes: Map<
+            /**
+            column*/
+            Int,
+            /**length*/
+            Int>? = null,
 ) {
     val mementos = scalars α Scalar::first
     val vec = scalars `→` { scalars: Vect0r<Scalar> ->
@@ -110,10 +112,20 @@ fun Cursor.writeISAM(
     val bounceyBuff = ByteBuffer.allocate(reclen + 1)
     val drivers: List<CellDriver<ByteBuffer, *>> = colIdx.left.map(Fixed.mapped::get).toList().filterNotNull()
     try {
-        FileChannel.open(Paths.get(pathname), /*ExtendedOpenOption.DIRECT, */StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+        FileChannel.open(
+            Paths.get(pathname), /*ExtendedOpenOption.DIRECT, */
+            StandardOpenOption.TRUNCATE_EXISTING,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE
+        )
     } catch (x: Exception) {
         logDebug { "falling back to non-direct file open. " + x.localizedMessage }
-        FileChannel.open(Paths.get(pathname), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+        FileChannel.open(
+            Paths.get(pathname),
+            StandardOpenOption.TRUNCATE_EXISTING,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE
+        )
     }.use { fchannel ->
 
         val xsize = width
@@ -132,22 +144,22 @@ fun Cursor.writeISAM(
 }
 
 fun Cursor.writeISAMMeta(
-        pathname: String,
-        //wrecordlen: Int,
-        wcoords: Vect02<Int, Int>
+    pathname: String,
+    //wrecordlen: Int,
+    wcoords: Vect02<Int, Int>,
 ) {
     Files.newOutputStream(
-            Paths.get(pathname + ".meta")
+        Paths.get(pathname + ".meta")
     ).bufferedWriter().use {
 
-        fileWriter ->
+            fileWriter ->
 
         val s = this.scalars as Vect02<TypeMemento, String?>
 
         val coords = wcoords.toList()
-                .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
+            .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right
-                .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
+            .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left.toArray().mapIndexed<TypeMemento, Any> { ix, it ->
             if (it is IOMemento)
                 it.name else {
@@ -156,13 +168,13 @@ fun Cursor.writeISAMMeta(
             }
         }.toList()
 
-                .joinToString(" ")
+            .joinToString(" ")
         listOf(
-                "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
-                "# last coord is the recordlen",
-                coords,
-                nama,
-                mentos
+            "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
+            "# last coord is the recordlen",
+            coords,
+            nama,
+            mentos
         ).forEach { line ->
             fileWriter.write(line)
             fileWriter.newLine()

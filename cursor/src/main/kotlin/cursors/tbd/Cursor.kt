@@ -14,18 +14,18 @@ class MonoVal(val cell: Pai2<Any?, () -> CoroutineContext>) {
 }
 
 class MonoRow(val row: Vect02<Any?, () -> CoroutineContext>) :
-        Vect0r<MonoVal> {
+    Vect0r<MonoVal> {
     override val first: Int get() = row.first
     override val second: (Int) -> MonoVal
         get() = { ix: Int ->
             MonoVal(
-                    row.second(ix)
+                row.second(ix)
             )
         }
 }
 
 class MonoCursor(val curs: Cursor) :
-        Vect0r<MonoRow> {
+    Vect0r<MonoRow> {
     override val first: Int get() = curs.first
     override val second: (Int) -> MonoRow
         get() = { iy: Int ->

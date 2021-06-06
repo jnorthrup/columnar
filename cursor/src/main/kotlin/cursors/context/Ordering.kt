@@ -1,7 +1,7 @@
 package cursors.context
 
 import cursors.io.TableRoot
-import cursors.io.right
+import cursors.io.Vect02_.Companion.right
 import vec.macros.*
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
@@ -29,15 +29,15 @@ sealed class Ordering : CoroutineContext.Element {
 class RowMajor : Ordering() {
     companion object {
         fun fixedWidthOf(
-                nio: NioMMap,
-                coords: Vect02<Int, Int>,
-                defaulteol: () -> Byte = '\n'::toByte
+            nio: NioMMap,
+            coords: Vect02<Int, Int>,
+            defaulteol: () -> Byte = '\n'::toByte,
         ) = fixedWidth(nio, coords, defaulteol)
 
         fun fixedWidth(
-                nio: NioMMap,
-                coords: Vect02<Int, Int>,
-                defaulteol: () -> Byte
+            nio: NioMMap,
+            coords: Vect02<Int, Int>,
+            defaulteol: () -> Byte,
         ): FixedWidth {
             return FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
                 nio.mappedFile.mappedByteBuffer.duplicate().clear().run {
@@ -49,15 +49,15 @@ class RowMajor : Ordering() {
 
 
         fun indexableOf(
-                nio: NioMMap, fixedWidth: FixedWidth,
-                mappedByteBuffer: ByteBuffer = nio.mappedFile.mappedByteBuffer
+            nio: NioMMap, fixedWidth: FixedWidth,
+            mappedByteBuffer: ByteBuffer = nio.mappedFile.mappedByteBuffer,
         ): Indexable =
-                Indexable(size = (nio.mappedFile.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
-                    val lim = { b: ByteBuffer -> b.limit(fixedWidth.recordLen) }
-                    val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
-                    val sl = { b: ByteBuffer -> b.slice() }
-                    mappedByteBuffer `⟲` (lim `⚬` sl `⚬` pos)
-                }
+            Indexable(size = (nio.mappedFile.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
+                val lim = { b: ByteBuffer -> b.limit(fixedWidth.recordLen) }
+                val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
+                val sl = { b: ByteBuffer -> b.slice() }
+                mappedByteBuffer `⟲` (lim `⚬` sl `⚬` pos)
+            }
 
 //todo: move to rowMajor
 
@@ -74,12 +74,12 @@ class RowMajor : Ordering() {
      * this builds a context and launches a cursor in the given NioMMap frame of reference
      */
     fun fromFwf(
-            fixedWidth: FixedWidth,
-            indexable: Indexable,
-            nio: NioMMap,
-            columnarArity: Columnar
+        fixedWidth: FixedWidth,
+        indexable: Indexable,
+        nio: NioMMap,
+        columnarArity: Columnar,
 
-    ): TableRoot = (
+        ): TableRoot = (
             this +
                     fixedWidth +
                     indexable +
@@ -91,12 +91,12 @@ class RowMajor : Ordering() {
      * this builds a context and launches a cursor in the given NioMMap frame of reference
      */
     fun fromBinary(
-            fixedWidth: FixedWidth,
-            indexable: Indexable,
-            nio: NioMMap,
-            columnarArity: Columnar
+        fixedWidth: FixedWidth,
+        indexable: Indexable,
+        nio: NioMMap,
+        columnarArity: Columnar,
 
-    ): TableRoot = (
+        ): TableRoot = (
             this +
                     fixedWidth +
                     indexable +

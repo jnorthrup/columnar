@@ -4,6 +4,11 @@ import cursors.Cursor
 import cursors.at
 import cursors.context.Scalar
 import cursors.io.*
+import cursors.io.V3ct0r_.Companion.left
+import cursors.io.V3ct0r_.Companion.mid
+import cursors.io.V3ct0r_.Companion.right
+import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.Companion.right
 import cursors.mirror
 import exchg.PlotThing
 import org.junit.Test
@@ -17,6 +22,7 @@ import java.awt.event.WindowEvent
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import javax.swing.AbstractAction
+import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -25,6 +31,10 @@ import kotlin.random.Random
 
 class SeedTesting {
     private val scalar = Scalar(IOMemento.IoInt, "non")
+    fun squash(a2: Int, datapoints: Int, viewPoints: Int) = max(
+        a2.toInt(),
+        (datapoints.toDouble() - sin(((viewPoints.toDouble() - a2) / viewPoints.toDouble()) * (PI / 2.0)) * datapoints.toDouble()).toInt()
+    )
 
     /**
      * if this is true then the mode of the swing gui plotter shows each asset singularly as red line, accompanied by
@@ -48,19 +58,17 @@ class SeedTesting {
     @Test
     fun variablecoil() {
         val seeds = _l[3, 14, 11].map(::Random)
-        val pixels = 100
-        val datapoints = pixels *2
+        val pixels = 1000
+        val datapoints = 20000
 
         val assetCount = 10
         val (rand_x, rand_y: Random, rand_z: Random) = (seeds)
 
 
-        val until = (datapoints * 0.80).toInt()
-        val assetLengths = Array(assetCount) {
-            rand_x.nextInt(1, until)
-        }
+        val maxX = (datapoints * 0.80).toInt()
 
-        val arraySeeds = Array(assetCount) { y ->
+
+        val arraySeeds: V3ct0r<DoubleArray, Array<Int?>, Int> = Array(assetCount) { y ->
             _a[
                     rand_y.nextDouble(1.0, 10.0),
                     rand_y.nextDouble(1.0, 10.0),
@@ -69,8 +77,8 @@ class SeedTesting {
                     (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 },
                     (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 },
                     (rand_y.nextInt(-6 * max(1, y), y - 1)).takeIf { it >= 0 }
-            ]
-        }
+            ] t3 rand_x.nextInt(1, maxX)
+        }.toVect0r()
 
         val scalar1 = Scalar(
             IOMemento.IoDouble,
@@ -81,11 +89,13 @@ class SeedTesting {
         lateinit var underlying: Cursor
 
         val c1: Cursor = (arraySeeds.size) t2 { y: Int ->
-            val (start, magnitude, frequency) = arraySeeds[y].first
+            val (va, vb, assetLengths) = arraySeeds.left t2 arraySeeds.mid t3 arraySeeds.right
+            val (start, magnitude, frequency) = va[y]
             fun standingwave(x: Int) = start + sin(x.toDouble() / frequency) * magnitude
             fun relink(x: Int, y1: Int, d: Double): Double {
                 var d1 = d
-                arraySeeds[y1].second.forEach { it?.also { d1 += (underlying at it)[x].first as Double }
+                vb[y1].forEach {
+                    it?.also { d1 += (underlying at it)[x].first as Double }
                 }
                 return d1
             }
@@ -112,15 +122,13 @@ class SeedTesting {
                     val yspan = 1000.toDouble()
                     val yincrement = yspan / datapoints * .95
                     fg.payload = Cursor(assetCount) { rownum: Int ->
-                        val ypos = yincrement * (1 + rownum)-0
+                        val ypos = yincrement * (1 + rownum) - 0
                         (c1 at rownum).let { (a, b) ->
                             a t2 { x: Int ->
                                 b(x).let { (a1, sc) -> ((a1 as? Double)?.plus(ypos) ?: a1) t2 sc }
                             }
                         }
                     }.mirror()
-
-
                     fg.repaint()
                 }
             }
@@ -140,8 +148,8 @@ class SeedTesting {
                     val j1 = Cursor(1) { y: Int -> (displayCurs at assetRow) }
                     val supt = arraySeeds[assetRow].second.mapNotNull {
                         it?.let { displayCurs at it }
-                          //?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
-                    }.toVect0r() as Cursor
+                        //?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
+                    }.toVect0r()
 
                     val combine = combine(j1, supt)
                     val inverted = combine.mirror() /*Cursor(combine.first) { y: Int ->
@@ -273,8 +281,9 @@ class SeedTesting {
             while (keepalive) Thread.sleep(1000)
         }
     }
+
     var keepalive = true
-   val closer=object: WindowAdapter() {
+    val closer = object : WindowAdapter() {
         override fun windowClosing(e: WindowEvent) {
             println("Closed")
             e.window.dispose()

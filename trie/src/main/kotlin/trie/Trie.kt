@@ -35,7 +35,7 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
     fun frez(n: Node) {
 //        if (n.leaf) return
         (n.children.entries).let { cnodes ->
-            n.children = ArrayMap.sorting(n.children )
+            n.children = ArrayMap.sorting(n.children)
             for ((_, v) in cnodes) frez(v)
         }
     }
@@ -44,7 +44,7 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
         if (!freeze) {
             freeze = true
             root.values.forEach { frez(it) }
-            root = ArrayMap.sorting(root  )
+            root = ArrayMap.sorting(root)
         }
     }
 

@@ -40,9 +40,9 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
          * this does no quote escapes, handles no padding, and assumes row 0 is the header names
          */
         fun CsvArraysCursor(
-                csvLines1: Iterable<String>,
-                dt1: Vect0r<TypeMemento> = Vect0r(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString },
-                overrides: Map<String, TypeMemento>? = null
+            csvLines1: Iterable<String>,
+            dt1: Vect0r<TypeMemento> = Vect0r(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString },
+            overrides: Map<String, TypeMemento>? = null,
         ): Cursor {
             lateinit var longest: IntArray
             var colnames = _a[""]
@@ -72,10 +72,10 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
             val sdt = dt.mapIndexed { ix, dt ->
                 (if (IOMemento.IoString == dt) {
                     Scalar(type = dt, name = colnames[ix]) + FixedWidth(
-                            recordLen = longest[ix],
-                            coords = dummy,
-                            endl = { null },
-                            pad = { null }
+                        recordLen = longest[ix],
+                        coords = dummy,
+                        endl = { null },
+                        pad = { null }
                     ) //TODO: review whether using FixedWidth here is is a bad thing and we need a new Context Class for this feature.
 
                 } else Scalar(dt, colnames[ix])).`⟲`
@@ -93,8 +93,8 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
 private val dummy = vect0rOf<Pai2<Int, Int>>()
 
 class FixedWidth(
-        val recordLen: Int,
-        val coords: Vect02<Int, Int>,
-        val endl: () -> Byte? = '\n'::toByte,
-        val pad: () -> Byte? = ' '::toByte
+    val recordLen: Int,
+    val coords: Vect02<Int, Int>,
+    val endl: () -> Byte? = '\n'::toByte,
+    val pad: () -> Byte? = ' '::toByte,
 ) : RecordBoundary()

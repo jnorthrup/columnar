@@ -9,15 +9,16 @@ sealed class Addressable : CoroutineContext.Element {
 
     companion object {
         val addressableKey = object :
-                CoroutineContext.Key<Addressable> {}
+            CoroutineContext.Key<Addressable> {}
     }
 }
 
 abstract class Forward<T> : Iterable<T>, Addressable()
 
 class Indexable(
-        /**count of records*/
-        val size: () -> Int, val seek: (Int) -> Unit
+    /**count of records*/
+    val size: () -> Int,
+    val seek: (Int) -> Unit,
 ) : Addressable()
 
 open class Abstract<T, Q>(val size: () -> Q, val seek: (T) -> Unit) : Addressable()

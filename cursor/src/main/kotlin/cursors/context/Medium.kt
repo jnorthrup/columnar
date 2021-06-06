@@ -2,6 +2,7 @@ package cursors.context
 
 import cursors.TypeMemento
 import cursors.io.*
+import cursors.io.Vect02_.Companion.left
 import vec.macros.*
 import vec.util.*
 import java.nio.ByteBuffer
@@ -9,7 +10,6 @@ import java.nio.channels.FileChannel
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
-import kotlin.experimental.and
 import kotlin.math.min
 
 /**
@@ -49,25 +49,25 @@ class Kxio(override var recordLen: () -> Int) : Medium() {
 }
 
 val canary = ByteBuffer.allocate(
-        0
+    0
 ) t2 (-1L t2 -1L)
 
 class NioMMap(
-        val mappedFile: MappedFile,
-        /**by default this will fetch text but other Mementos can be passed in as non-default
-         */
-        var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
-        var state: Pai2<ByteBuffer, Pai2<Long, Long>> = if (mappedFile.length.toLong() > Integer.MAX_VALUE.toLong()) canary else
-            mappedFile.mappedByteBuffer.let {
-                it t2 (0L t2 it.remaining().toLong())
-            }
+    val mappedFile: MappedFile,
+    /**by default this will fetch text but other Mementos can be passed in as non-default
+     */
+    var drivers: Array<CellDriver<ByteBuffer, Any?>>? = null,
+    var state: Pai2<ByteBuffer, Pai2<Long, Long>> = if (mappedFile.length.toLong() > Integer.MAX_VALUE.toLong()) canary else
+        mappedFile.mappedByteBuffer.let {
+            it t2 (0L t2 it.remaining().toLong())
+        },
 ) : Medium() {
     lateinit var fixedWidth: FixedWidth
 
     @Suppress("UNCHECKED_CAST")
             /*suspend*/ fun values(coroutineContext: CoroutineContext): NioCursor = this.run {
         val ordering =
-                coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
+            coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
         val arity = coroutineContext[Arity.arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         fixedWidth = coroutineContext[RecordBoundary.boundaryKey]!! as FixedWidth
@@ -77,7 +77,7 @@ class NioMMap(
              propogate the null as a hard error for now. */
 
         val asContextVect0r: Vect02<ByteBuffer, Pai2<Long, Long>> =
-                asContextVect0r(addressable as Indexable, fixedWidth)
+            asContextVect0r(addressable as Indexable, fixedWidth)
         (asContextVect0r t2 { _: ByteBuffer ->
             Vect0r(drivers.size) { x: Int ->
                 (drivers[x] t2 (arity as Columnar).left[x]) t3 coords[x].span
@@ -91,11 +91,11 @@ class NioMMap(
 
     @Suppress("UNCHECKED_CAST")
     fun mappedDriver(
-            row: Vect0r<NioCursorState>,
-            y: Int,
-            col: (ByteBuffer) -> Vect0r<NioMeta>,
-            x: Int,
-            coords: Vect02<Int, Int>
+        row: Vect0r<NioCursorState>,
+        y: Int,
+        col: (ByteBuffer) -> Vect0r<NioMeta>,
+        x: Int,
+        coords: Vect02<Int, Int>,
     ): Tripl3<() -> Any, (Any?) -> Unit, NioMeta> = let {
         val (start: Int, end: Int) = coords[x]
         val (outbuff: ByteBuffer) = row[y]
@@ -115,24 +115,24 @@ class NioMMap(
 
     companion object {
         fun text(m: Vect0r<TypeMemento>): Array<CellDriver<ByteBuffer, Any?>> =
-                Tokenized.mapped[m] as Array<CellDriver<ByteBuffer, Any?>>
+            Tokenized.mapped[m] as Array<CellDriver<ByteBuffer, Any?>>
 
         fun binary(m: Vect0r<IOMemento>): Array<CellDriver<ByteBuffer, Any?>> =
-                m.toList().map {
-                    Fixed.mapped[it]
-                }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
+            m.toList().map {
+                Fixed.mapped[it]
+            }.toTypedArray() as Array<CellDriver<ByteBuffer, Any?>>
     }
 
     fun asContextVect0r(
-            indexable: Indexable,
-            fixedWidth: FixedWidth
+        indexable: Indexable,
+        fixedWidth: FixedWidth,
     ): Vect02<ByteBuffer, MMapWindow> =
-            Vect0r(indexable.size()) { ix: Int ->
-                translateMapping(
-                        ix,
-                        fixedWidth.recordLen
-                )
-            }
+        Vect0r(indexable.size()) { ix: Int ->
+            translateMapping(
+                ix,
+                fixedWidth.recordLen
+            )
+        }
 
     /**
      * seek to record offset
@@ -149,9 +149,11 @@ class NioMMap(
     }
     val windowSize: Long by lazy { Int.MAX_VALUE.toLong() - (Int.MAX_VALUE.toLong() % recordLen()) }
 
-    fun remap(rafchannel: FileChannel, window: MMapWindow): ByteBuffer = window.let { (offsetToMap: Long, sizeToMap: Long) ->
-        rafchannel.map(mappedFile.mapMode, offsetToMap, sizeToMap).also { System.err.println("remap:" + window.pair) }
-    }
+    fun remap(rafchannel: FileChannel, window: MMapWindow): ByteBuffer =
+        window.let { (offsetToMap: Long, sizeToMap: Long) ->
+            rafchannel.map(mappedFile.mapMode, offsetToMap, sizeToMap)
+                .also { System.err.println("remap:" + window.pair) }
+        }
 
     /**
      * any seek on a large volume (over MAXINT size) need to be sure there is a mapped extent.
@@ -163,8 +165,8 @@ class NioMMap(
      */
 
     fun translateMapping(
-            rowIndex: Int,
-            rowsize: Int
+        rowIndex: Int,
+        rowsize: Int,
     ): NioCursorState = run {
 
         var reuse = false
@@ -188,15 +190,15 @@ class NioMMap(
         }
         pbuf = buf1
         val rowBuf =
-                buf1.position(seekTo.toInt() - first.toInt())
-                        .slice().limit(recordLen())
+            buf1.position(seekTo.toInt() - first.toInt())
+                .slice().limit(recordLen())
         (rowBuf t2 window1).also {
             when {
                 reuse ->
                     try {
                         if (logReuseCountdown > 0)
                             logDebug { "reuse( $memo1, ${memo2.pair})" }
-                                    .also { logReuseCountdown-- }
+                                .also { logReuseCountdown-- }
                     } catch (a: AssertionError) {
                     }
                 else -> it.let { (_, window) ->
@@ -215,8 +217,8 @@ class NioMMap(
  * and passed into the context-based machinery for various transforms
  */
 open class CellDriver<B, R>(
-        open val read: readfn<B, R>,
-        open val write: writefn<B, R>
+    open val read: readfn<B, R>,
+    open val write: writefn<B, R>,
 ) {
     operator fun component1(): (B) -> R = read
     operator fun component2(): (B, R) -> Unit = write
@@ -228,71 +230,71 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
          */
 
         val mapped: Map<TypeMemento, Tokenized<ByteBuffer, out Any>> = mapOf(
-                IOMemento.IoInt as TypeMemento to Tokenized(
-                        (::bb2ba `→` ::btoa `→` ::trim * String::toInt) as readfn<ByteBuffer, Int>,
-                        { a, b: Int -> a.putInt(b) }),
+            IOMemento.IoInt as TypeMemento to Tokenized(
+                (::bb2ba `→` ::btoa `→` ::trim * String::toInt) as readfn<ByteBuffer, Int>,
+                { a, b: Int -> a.putInt(b) }),
             IOMemento.IoByte as TypeMemento to Tokenized(
-                        (::bb2ba `→` ::btoa `→` ::trim * String::toInt * Int::toUByte *  UByte::toByte) as readfn<ByteBuffer,Byte>,
-                        { a, b: Byte -> a.put((b.toInt() and 0xff).toByte()) }),
-                IOMemento.IoLong to Tokenized(
-                        ::bb2ba `→` ::btoa `→` ::trim * String::toLong,
-                        { a, b: Long -> a.putLong(b) }),
-                IOMemento.IoFloat to Tokenized(
-                        ::bb2ba `→` ::btoa `→` ::trim `→` String::toFloat,
-                        { a, b: Float -> a.putFloat(b) }),
-                IOMemento.IoDouble to Tokenized(
-                        ::bb2ba `→` ::btoa `→` ::trim `→` String::toDouble,
-                        { a, b: Double -> a.putDouble(b) }),
-                IOMemento.IoString to Tokenized(
-                        ::bb2ba `→` ::btoa `→` ::trim, xInsertString
-                ),
-                IOMemento.IoLocalDate to Tokenized(
-                        dateMapper `⚬` ::trim `⚬` ::btoa `⚬` ::bb2ba,
-                        { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
-                IOMemento.IoInstant to Tokenized(
-                        ::bb2ba `→` ::btoa `→` ::trim `→` instantMapper,
-                        { a, b: Instant -> a.putLong(b.toEpochMilli()) })
+                (::bb2ba `→` ::btoa `→` ::trim * String::toInt * Int::toUByte * UByte::toByte) as readfn<ByteBuffer, Byte>,
+                { a, b: Byte -> a.put((b.toInt() and 0xff).toByte()) }),
+            IOMemento.IoLong to Tokenized(
+                ::bb2ba `→` ::btoa `→` ::trim * String::toLong,
+                { a, b: Long -> a.putLong(b) }),
+            IOMemento.IoFloat to Tokenized(
+                ::bb2ba `→` ::btoa `→` ::trim `→` String::toFloat,
+                { a, b: Float -> a.putFloat(b) }),
+            IOMemento.IoDouble to Tokenized(
+                ::bb2ba `→` ::btoa `→` ::trim `→` String::toDouble,
+                { a, b: Double -> a.putDouble(b) }),
+            IOMemento.IoString to Tokenized(
+                ::bb2ba `→` ::btoa `→` ::trim, xInsertString
+            ),
+            IOMemento.IoLocalDate to Tokenized(
+                dateMapper `⚬` ::trim `⚬` ::btoa `⚬` ::bb2ba,
+                { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
+            IOMemento.IoInstant to Tokenized(
+                ::bb2ba `→` ::btoa `→` ::trim `→` instantMapper,
+                { a, b: Instant -> a.putLong(b.toEpochMilli()) })
         )
     }
 }
 
 class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
-        CellDriver<B, R>(read, write) {
+    CellDriver<B, R>(read, write) {
     companion object {
         /**coroutineContext derived map of Medium access drivers
          *
          */
         val mapped: Map<TypeMemento, CellDriver<ByteBuffer, out Any>> = mapOf(
-                IOMemento.IoInt as TypeMemento to Fixed(
-                        4,
-                        ByteBuffer::getInt
-                ) { a, b -> a.putInt(b);Unit },
+            IOMemento.IoInt as TypeMemento to Fixed(
+                4,
+                ByteBuffer::getInt
+            ) { a, b -> a.putInt(b);Unit },
             IOMemento.IoByte as TypeMemento to Fixed(
-                        1,
-                        ByteBuffer::get
-                ) { a, b -> a.put((b.toInt() and  0xff.toInt()).toByte() );Unit },
-                IOMemento.IoLong to Fixed(
-                        8,
-                        ByteBuffer::getLong
-                ) { a, b -> a.putLong(b);Unit },
-                IOMemento.IoFloat to Fixed(
-                        4,
-                        ByteBuffer::getFloat
-                ) { a, b -> a.putFloat(b);Unit },
-                IOMemento.IoDouble to Fixed(
-                        8,
-                        ByteBuffer::getDouble
-                ) { a, b -> a.putDouble(b);Unit },
-                IOMemento.IoLocalDate to Fixed(
-                        8,
-                        { it.long `→` LocalDate::ofEpochDay },
-                        { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
-                IOMemento.IoInstant to Fixed(
-                        8,
-                        { it.long `→` Instant::ofEpochMilli },
-                        { a, b: Instant -> a.putLong(b.toEpochMilli()) }),
-                IOMemento.IoString to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
-                        ?: error(""))
+                1,
+                ByteBuffer::get
+            ) { a, b -> a.put((b.toInt() and 0xff.toInt()).toByte());Unit },
+            IOMemento.IoLong to Fixed(
+                8,
+                ByteBuffer::getLong
+            ) { a, b -> a.putLong(b);Unit },
+            IOMemento.IoFloat to Fixed(
+                4,
+                ByteBuffer::getFloat
+            ) { a, b -> a.putFloat(b);Unit },
+            IOMemento.IoDouble to Fixed(
+                8,
+                ByteBuffer::getDouble
+            ) { a, b -> a.putDouble(b);Unit },
+            IOMemento.IoLocalDate to Fixed(
+                8,
+                { it.long `→` LocalDate::ofEpochDay },
+                { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
+            IOMemento.IoInstant to Fixed(
+                8,
+                { it.long `→` Instant::ofEpochMilli },
+                { a, b: Instant -> a.putLong(b.toEpochMilli()) }),
+            IOMemento.IoString to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
+                ?: error(""))
         )
     }
 }

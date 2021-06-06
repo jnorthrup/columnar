@@ -2,9 +2,9 @@ package cursors.effects
 
 import cursors.Cursor
 import cursors.at
+import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.Companion.right
 import cursors.io.colIdx
-import cursors.io.left
-import cursors.io.right
 import vec.macros.size
 import vec.macros.toList
 import vec.util.debug

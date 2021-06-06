@@ -13,7 +13,15 @@ import kotlin.math.abs
  */
 
 fun gilbertCurve(width: Int, height: Int, next: (Int, Int) -> Unit) =
-        if (width >= height) gilbertCurve2D(0, 0, width, 0, 0, height, next) else gilbertCurve2D(0, 0, 0, height, width, 0, next)
+    if (width >= height) gilbertCurve2D(0, 0, width, 0, 0, height, next) else gilbertCurve2D(
+        0,
+        0,
+        0,
+        height,
+        width,
+        0,
+        next
+    )
 
 fun gilbertCurve2D(xPrime: Int, yPrime: Int, ax: Int, ay: Int, bx: Int, by: Int, next: (Int, Int) -> Unit) {
 
@@ -76,8 +84,10 @@ fun gilbertCurve2D(xPrime: Int, yPrime: Int, ax: Int, ay: Int, bx: Int, by: Int,
                     //standard case: one step up, one long horizontal, one step down
                     gilbertCurve2D(x, y, bx2, by2, ax2, ay2, next)
                     gilbertCurve2D(x + bx2, y + by2, ax, ay, bx - bx2, by - by2, next)
-                    gilbertCurve2D(x + (ax - dax) + (bx2 - dbx), y + (ay - day) + (by2 - dby),
-                            -bx2, -by2, -(ax - ax2), -(ay - ay2), next)
+                    gilbertCurve2D(
+                        x + (ax - dax) + (bx2 - dbx), y + (ay - day) + (by2 - dby),
+                        -bx2, -by2, -(ax - ax2), -(ay - ay2), next
+                    )
                 }
             }
         }

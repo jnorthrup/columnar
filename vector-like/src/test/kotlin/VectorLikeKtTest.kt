@@ -10,12 +10,12 @@ class VectorLikeKtTest {
     @Test
     fun testCombineVec() {
         val c: Vect0r<Int> = combine(
-                (0..2).toVect0r(),
-                (3..5).toVect0r(),
-                (6..9).toVect0r()
+            (0..2).toVect0r(),
+            (3..5).toVect0r(),
+            (6..9).toVect0r()
         )
         val toList = c.toList()
-      assertEquals("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]", toList.toString())
+        assertEquals("[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]", toList.toString())
         System.err.println(toList)
     }
 

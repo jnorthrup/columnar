@@ -114,14 +114,14 @@
                 </executions>
                 <configuration>
                     <args>
-<!--                        <arg>-Xuse-ir</arg>-->
-<!--                        <arg>-Xopt-in=kotlin.RequiresOptIn</arg>-->
-<!--                        <arg>-Xjvm-enable-preview</arg>-->
-<!--                        <arg>&#45;&#45;enable-preview</arg>-->
-<!--                        <arg>-language-version 1.5</arg>-->
+                        <!--                        <arg>-Xuse-ir</arg>-->
+                        <!--                        <arg>-Xopt-in=kotlin.RequiresOptIn</arg>-->
+                        <!--                        <arg>-Xjvm-enable-preview</arg>-->
+                        <!--                        <arg>&#45;&#45;enable-preview</arg>-->
+                        <!--                        <arg>-language-version 1.5</arg>-->
                     </args>
-<!--                    <jvmTarget>${maven.compiler.source}</jvmTarget>-->
-<!--                    <useIrBackend>true</useIrBackend>-->
+                    <!--                    <jvmTarget>${maven.compiler.source}</jvmTarget>-->
+                    <!--                    <useIrBackend>true</useIrBackend>-->
 
                 </configuration>
             </plugin>
@@ -134,47 +134,47 @@
                 <!-- To define the plugin version in your parent POM -->
                 <pluginManagement>
                     <plugins>
-<!--
-                        <plugin>
-                            <groupId>com.github.wvengen</groupId>
-                            <artifactId>proguard-maven-plugin</artifactId>
-                            <version>2.2.0</version>
-                        </plugin>
--->
+                        <!--
+                                                <plugin>
+                                                    <groupId>com.github.wvengen</groupId>
+                                                    <artifactId>proguard-maven-plugin</artifactId>
+                                                    <version>2.2.0</version>
+                                                </plugin>
+                        -->
                     </plugins>
                 </pluginManagement>
                 <plugins>
-<!--
-                    <plugin>
-                        <groupId>com.github.wvengen</groupId>
-                        <artifactId>proguard-maven-plugin</artifactId>
-                        <version>2.2.0</version>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>proguard</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <obfuscate>false</obfuscate>
-                            <includeDependency>true</includeDependency>
+                    <!--
+                                        <plugin>
+                                            <groupId>com.github.wvengen</groupId>
+                                            <artifactId>proguard-maven-plugin</artifactId>
+                                            <version>2.2.0</version>
+                                            <executions>
+                                                <execution>
+                                                    <phase>package</phase>
+                                                    <goals>
+                                                        <goal>proguard</goal>
+                                                    </goals>
+                                                </execution>
+                                            </executions>
+                                            <configuration>
+                                                <obfuscate>false</obfuscate>
+                                                <includeDependency>true</includeDependency>
 
-                            <options>
-                                <option>-optimizationpasses 99</option>
-                                <option>-injars classes</option>
-                                <option>-allowaccessmodification</option>
-                                <option>-mergeinterfacesaggressively</option>
-                                <option>-allowaccessmodification</option>
-                                <option>-ignorewarnings</option>
-                            </options>
-                            <libs>
-                                <lib>${java.home}/lib/rt.jar</lib>
-                            </libs>
-                        </configuration>
-                    </plugin>
--->
+                                                <options>
+                                                    <option>-optimizationpasses 99</option>
+                                                    <option>-injars classes</option>
+                                                    <option>-allowaccessmodification</option>
+                                                    <option>-mergeinterfacesaggressively</option>
+                                                    <option>-allowaccessmodification</option>
+                                                    <option>-ignorewarnings</option>
+                                                </options>
+                                                <libs>
+                                                    <lib>${java.home}/lib/rt.jar</lib>
+                                                </libs>
+                                            </configuration>
+                                        </plugin>
+                    -->
                 </plugins>
             </build>
         </profile>

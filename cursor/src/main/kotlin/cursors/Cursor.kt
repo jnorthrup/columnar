@@ -5,6 +5,7 @@ package cursors
 import cursors.context.NormalizedRange
 import cursors.context.Scalar
 import cursors.io.*
+import cursors.io.Vect02_.Companion.left
 import cursors.macros.join
 import cursors.ml.featureRange
 import cursors.ml.normalize
@@ -82,7 +83,8 @@ fun Cursor.reify() =
 fun Cursor.narrow() =
     (reify()) α { list: List<Pai2<*, *>> ->
         list.map(
-            Pai2<*, *>::first)
+            Pai2<*, *>::first
+        )
     }
 
 @JvmName("vlike_RSequence_11")
@@ -178,7 +180,8 @@ fun Cursor.ordered(
     (keyClusters(
         axis,
         comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
-            (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()).let {
+            (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)).toVect0r()
+).let {
     Cursor(it.size) { iy: Int ->
         val ix2 = it[iy]
         this at ix2
@@ -263,7 +266,7 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
 /**
  * returns cursor with x reversed
  */
-fun Cursor.mirror():Cursor = Cursor(first) { y: Int ->
+fun Cursor.mirror(): Cursor = Cursor(first) { y: Int ->
     second(y).let { (xsz, fn) ->
         xsz t2 { x: Int -> fn(xsz - x) }
     }

@@ -107,8 +107,8 @@ infix fun Any?.println(x: Any?) {
 
 @JvmOverloads
 tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
-        when (n) {
-            0 -> a
-            1 -> b
-            else -> fib(n - 1, b, a + b)
-        }
+    when (n) {
+        0 -> a
+        1 -> b
+        else -> fib(n - 1, b, a + b)
+    }
