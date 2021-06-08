@@ -12,6 +12,9 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import java.nio.file.Paths
+import kotlin.math.PI
+import kotlin.math.max
+import kotlin.math.sin
 import kotlin.text.Charsets.UTF_8
 
 
@@ -112,3 +115,7 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
         1 -> b
         else -> fib(n - 1, b, a + b)
     }
+
+
+/** gradually compressed index accessor to underlying Cursor x values. */
+fun horizon(a2: Int, datapoints: Int, viewPoints: Int) = max(a2.toInt(), (datapoints.toDouble() - sin(((viewPoints.toDouble() - a2) / viewPoints.toDouble()) * (PI / 2.0)) * datapoints.toDouble()).toInt())

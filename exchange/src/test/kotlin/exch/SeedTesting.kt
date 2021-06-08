@@ -31,10 +31,7 @@ import kotlin.random.Random
 
 class SeedTesting {
     private val scalar = Scalar(IOMemento.IoInt, "non")
-    fun squash(a2: Int, datapoints: Int, viewPoints: Int) = max(
-        a2.toInt(),
-        (datapoints.toDouble() - sin(((viewPoints.toDouble() - a2) / viewPoints.toDouble()) * (PI / 2.0)) * datapoints.toDouble()).toInt()
-    )
+
 
     /**
      * if this is true then the mode of the swing gui plotter shows each asset singularly as red line, accompanied by
