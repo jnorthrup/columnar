@@ -10,7 +10,6 @@
         <version>1.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>columnar</groupId>
     <artifactId>exchange</artifactId>
     <version>1.0.1-SNAPSHOT</version>
 
@@ -20,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>columnar</groupId>
-            <artifactId>cursor</artifactId>
+            <artifactId>lillypads</artifactId>
             <version>1.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
