@@ -61,7 +61,7 @@ class CacheMgr {
                                 IoLocalDate
                             value.lowercase() in _l["true", "false"] ->
                                 IoBoolean
-                            "^[-+]\\d{1,19}$".toRegex().matches(value) ->
+                            "^[-+]?[0-9]{1,19}$".toRegex().matches(value) ->
                                 IoLong
                             "^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$".toRegex().matches(value) ->
                                 IoDouble
