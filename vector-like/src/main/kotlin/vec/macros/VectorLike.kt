@@ -1,10 +1,7 @@
-@file:Suppress("NOTHING_TO_")
-
 package vec.macros
 
 import kotlinx.coroutines.flow.*
 import java.util.*
-import kotlin.experimental.ExperimentalTypeInference
 
 /**
  * semigroup
@@ -22,17 +19,14 @@ typealias Matrix<T> = Pai2<
 
 operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 
-@OptIn(ExperimentalTypeInference::class)
 
 infix fun <O, R, F : (O) -> R> O.`→`(f: F) = this.let(f)
 
 
-@OptIn(ExperimentalTypeInference::class)
 operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R =
     { a: A -> a `→` this `→` (b) }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
     b: G,
 ): R1 = (this * b) as R1
@@ -40,8 +34,6 @@ infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
 /**
  * G follows F
  */
-@OptIn(ExperimentalTypeInference::class)
-
 infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
     f: F,
 ): R = { a: A -> a `→` f `→` this } as R
@@ -50,52 +42,41 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-@OptIn(ExperimentalTypeInference::class)
-
 infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(fn = m)
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B): List<C> =
     this.map { it: A -> it `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B): Sequence<C> =
     this.map { it: A -> it `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B): Flow<C> =
     this.map { it: A -> it `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
@@ -105,75 +86,73 @@ a left identity and f is a right identity, then f=ef=e.
 */
 
 /**right identity*/
-
-@OptIn(ExperimentalTypeInference::class)
 val <T> T.`⟲`
     get() = { this }
 
 /**right identity*/
 
-@OptIn(ExperimentalTypeInference::class)
+
 infix fun <T, R> T.`⟲`(f: (T) -> R) = run { f(this) }
 
 @JvmName("vlike_Sequence_1")
 
-@OptIn(ExperimentalTypeInference::class)
+
 operator fun <T> Sequence<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_Sequence_Iterable2")
 
-@OptIn(ExperimentalTypeInference::class)
+
 operator fun <T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Sequence_IntArray3")
 
-@OptIn(ExperimentalTypeInference::class)
+
 operator fun <T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
 
 @JvmName("vlike_Flow_1")
 
-@OptIn(ExperimentalTypeInference::class)
+
 suspend fun <T> Flow<T>.get(vararg index: Int) = get(index)
 
 @Suppress("USELESS_CAST")
 @JvmName("vlike_Flow_Iterable2")
 
-@OptIn(ExperimentalTypeInference::class)
+
 suspend fun <T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
 
 @JvmName("vlike_Flow_IntArray3")
 
-@OptIn(ExperimentalTypeInference::class)
+
 suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()
 
 @JvmName("vlike_List_1")
 
-@OptIn(ExperimentalTypeInference::class)
+
 operator fun <T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
 
-@OptIn(ExperimentalTypeInference::class)
+
 operator fun <T> List<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_List_IntArray3")
 
-@OptIn(ExperimentalTypeInference::class)
+
 operator fun <T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
 
 @JvmName("vlike_Array_1")
 
-@OptIn(ExperimentalTypeInference::class)
+
 inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_Array_Iterable2")
 
-@OptIn(ExperimentalTypeInference::class)
+
 inline operator fun <reified T> Array<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Array_IntArray3")
 
-@OptIn(ExperimentalTypeInference::class)
+
 inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
 /*
 
@@ -260,35 +239,29 @@ fun <T, O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =
     Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) }
 
 
-@OptIn(ExperimentalTypeInference::class)
 fun <T> Array<T>.toVect0r(): Vect0r<T> =
     Vect0r(size) { ix: Int -> this[ix] }
 
-@OptIn(ExperimentalTypeInference::class)
 
 fun IntArray.toVect0r(): Vect0r<Int> =
     Vect0r(size) { ix: Int -> get(ix) }
 
 
-@OptIn(ExperimentalTypeInference::class)
 fun <T> List<T>.toVect0r(): Vect0r<T> =
     Vect0r(size) { ix: Int -> this[ix] }
 
 
-@OptIn(ExperimentalTypeInference::class)
 suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 
-@OptIn(ExperimentalTypeInference::class)
 fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 
-@OptIn(ExperimentalTypeInference::class)
 fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
 
-@OptIn(ExperimentalTypeInference::class)
+
 fun <T> combine(vararg s: Flow<T>): Flow<T> = flow {
 
     for (f: Flow<T> in s) {
@@ -300,7 +273,7 @@ fun <T> combine(vararg s: Flow<T>): Flow<T> = flow {
 
 @JvmName("combine_Sequence")
 
-@OptIn(ExperimentalTypeInference::class)
+
 fun <T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
 
     for (sequence: Sequence<T> in s) {
@@ -367,22 +340,19 @@ fun Vect0r<Long>.zipWithNext() =
 
 //array-like mapped map
 
-@OptIn(ExperimentalTypeInference::class)
+
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>): Array<V> =
     this.get(*ks.toList().toTypedArray())
 
 
-@OptIn(ExperimentalTypeInference::class)
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>): Array<V> =
     this.get(*ks.toList().toTypedArray())
 
 
-@OptIn(ExperimentalTypeInference::class)
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K): Array<V> =
     Array(ks.size) { ix: Int -> ks[ix].let(this::get)!! }
 
 
-@OptIn(ExperimentalTypeInference::class)
 infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
     (this t2 (last - first + (1 - first)) / denominator).let { (_: IntRange, subSize: Int): Pai2<IntRange, Int> ->
         Vect0r(denominator) { x: Int ->

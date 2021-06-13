@@ -1,22 +1,17 @@
-import CacheMgr.cvtfmt.*
+import CacheMgr.cvtfmt.csv
+import CacheMgr.cvtfmt.isam
 import cursors.TypeMemento
 import cursors.at
 import cursors.context.TokenizedRow
 import cursors.io.*
 import cursors.io.IOMemento.*
 import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
 import vec.macros.*
 import vec.util._l
-import vec.util._v
 import vec.util.logDebug
 import vec.util.path
-import java.io.File
-import java.io.RandomAccessFile
-import java.nio.channels.Channels
 import java.nio.channels.FileChannel
 import java.nio.file.Files
-import kotlin.io.path.pathString
 
 class CacheMgr {
     enum class cvtfmt { csv, isam }
@@ -35,7 +30,7 @@ class CacheMgr {
     companion object {
         val convertFn = { parm: Vect0r<String> ->
 
-            val infile = parm.get(0)
+            val infile = parm[0]
             logDebug { ("sourcefile: $infile") }
             val infmt: cvtfmt = cvtfmt.valueOf(infile.split(".").last().lowercase())
             val ofmt: cvtfmt = if (infmt == csv) isam else csv
@@ -47,7 +42,7 @@ class CacheMgr {
                 val csvLines1: List<String> = lines.subList(0, 2)
                 val curs = TokenizedRow.CsvArraysCursor(csvLines1)
                 val replacementMementos: Vect0r<TypeMemento> = (curs at 0).let { rv: RowVec ->
- 
+
                     val vv = rv.left
 
                     List(rv.size) { i: Int ->
@@ -96,7 +91,6 @@ class CacheMgr {
                     convertFn(drop.toVect0r())
                 }
             }
-
         }
     }
 }

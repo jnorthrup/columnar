@@ -3,7 +3,7 @@ package vec.util
 import org.junit.Test
 import vec.macros.*
 
-class BikeShedKtTest  {
+class BikeShedKtTest {
     @Test
     fun horizonTest() {
         val v = Vect0r(5000) { x: Int -> x }
@@ -34,7 +34,8 @@ class BikeShedKtTest  {
         System.err.println(v2[0 until 200].toList())
         System.err.println("...")
         System.err.println(v2[(v2.size - 50) until v2.size].toList())
-    }}
+    }
+}
 /*
 wc -l `find -name *csv`|sort -n
         52 ./BTC/GYEN/final-BTC-GYEN-1m.csv

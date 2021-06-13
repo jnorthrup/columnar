@@ -5,16 +5,9 @@ import vec.macros.Vect0r
 import vec.macros.get
 import vec.macros.map
 import vec.macros.α
-import java.lang.RuntimeException
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatter.ISO_DATE_TIME
-import java.time.temporal.TemporalAccessor
-import java.time.temporal.TemporalQuery
 
 const val SPACE: Byte = ' '.toByte()
 const val ZERO: Float = 0.toFloat()
@@ -27,11 +20,11 @@ val xInsertString = { a: ByteBuffer, b: String? ->
 }
 val dateMapper = { s: String ->
     s.let {
-        val res  = try {
+        val res = try {
             LocalDate.parse(it)
-        } catch (e: RuntimeException ) {
+        } catch (e: RuntimeException) {
             Unit
-        } catch (e: Throwable ) {
+        } catch (e: Throwable) {
             Unit
         } finally {
         }
@@ -42,10 +35,10 @@ val instantMapper = { s: String ->
     s.let {
         val res = try {
             Instant.parse(it)
-        } catch (e: RuntimeException ) {
-           Unit
-        } catch (e: Throwable ) {
-           Unit
+        } catch (e: RuntimeException) {
+            Unit
+        } catch (e: Throwable) {
+            Unit
         } finally {
         }
         res as? Instant

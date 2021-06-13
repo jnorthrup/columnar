@@ -22,7 +22,6 @@ import java.awt.event.WindowEvent
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import javax.swing.AbstractAction
-import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -91,10 +90,10 @@ class SeedTesting {
             fun standingwave(x: Int) = start + sin(x.toDouble() / frequency) * magnitude
 
             RowVec(datapoints) { x: Int ->
-                fun relink( y1: Int, d: Double): Double {
+                fun relink(y1: Int, d: Double): Double {
                     var d1 = d
                     vb[y1].forEach {
-                        it?.also { d1 +=( (underlying at it)[x]).first as Double }
+                        it?.also { d1 += ((underlying at it)[x]).first as Double }
                     }
                     return d1
                 }
@@ -113,12 +112,12 @@ class SeedTesting {
             fg.nextAction = object : AbstractAction() {
                 override fun actionPerformed(p0: ActionEvent?) {
                     val yspan = 1000.0
-                    val yincrement =2.5// assetCount.toDouble()/yspan
+                    val yincrement = 2.5// assetCount.toDouble()/yspan
                     fg.payload = Cursor(assetCount) { rownum: Int ->
                         val ypos = yincrement * (1 + rownum) - 0
                         (displayCurs at rownum).let { (a, b) ->
                             a t2 { x: Int ->
-                                b(x).let { (a1, sc) -> ((a1 as? Double)?.plus(ypos-50 ) ?: a1) t2 sc }
+                                b(x).let { (a1, sc) -> ((a1 as? Double)?.plus(ypos - 50) ?: a1) t2 sc }
                             }
                         }
                     }//.mirror()
