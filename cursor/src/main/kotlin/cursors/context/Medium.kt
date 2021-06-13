@@ -252,8 +252,8 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 dateMapper `⚬` ::trim `⚬` ::btoa `⚬` ::bb2ba,
                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
-                ::bb2ba `→` ::btoa `→` ::trim `→` instantMapper,
-                { a, b: Instant -> a.putLong(b.toEpochMilli()) })
+                instantMapper `⚬` ::trim `⚬` ::btoa `⚬` ::bb2ba,
+                { a, b: Instant -> a.putLong(b.epochSecond ).putInt(b.nano) })
         )
     }
 }
@@ -290,9 +290,16 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                 { it.long `→` LocalDate::ofEpochDay },
                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Fixed(
-                8,
-                { it.long `→` Instant::ofEpochMilli },
-                { a, b: Instant -> a.putLong(b.toEpochMilli()) }),
+                12,
+                { byteBuffer ->
+                    val (esec,ens) =byteBuffer.long t2 byteBuffer.int ;
+                    Instant.ofEpochSecond (esec,ens.toLong())
+                },
+                { a, b: Instant ->
+                    val epochSecond = b.epochSecond
+                    val nano = b.nano
+                    a.putLong(epochSecond) .putInt(nano)
+                }),
             IOMemento.IoString to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
                 ?: error(""))
         )
