@@ -2,7 +2,7 @@ package exch
 
 import cursors.Cursor
 import cursors.at
-import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
 import cursors.io.V3ct0r_.Companion.left
 import cursors.io.V3ct0r_.Companion.mid

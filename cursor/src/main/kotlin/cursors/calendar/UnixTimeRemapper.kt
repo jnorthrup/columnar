@@ -4,6 +4,7 @@ package cursors.calendar
 import cursors.Cursor
 import cursors.context.Arity
 import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import cursors.get
 import cursors.io.IOMemento.IoInstant
 import cursors.io.RowVec

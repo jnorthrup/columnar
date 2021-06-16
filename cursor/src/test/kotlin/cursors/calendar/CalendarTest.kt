@@ -5,6 +5,7 @@ import cursors.Cursor
 import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
+import cursors.context.Scalar.Companion.Scalar
 import cursors.get
 import cursors.io.*
 import cursors.io.Vect02_.Companion.left

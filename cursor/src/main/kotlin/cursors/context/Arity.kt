@@ -5,7 +5,7 @@ import cursors.io.IOMemento
 import vec.macros.*
 import kotlin.coroutines.CoroutineContext
 
-sealed class Arity : CoroutineContext.Element {
+sealed interface Arity : CoroutineContext.Element {
     override val key get() = arityKey
 
     companion object {
@@ -14,26 +14,23 @@ sealed class Arity : CoroutineContext.Element {
     }
 }
 
-open class Scalar(type: TypeMemento, name: String? = null) : Pai2<TypeMemento, String?> by Pai2(
-    type,
-    name
-), Arity() {
+open interface Scalar : Arity  ,Pai2<TypeMemento, String?>  {
     companion object {
-        fun create(type: TypeMemento, name: String? = null) = Scalar(type, name)
-        fun create(p: Pai2<TypeMemento, String?>) = Scalar(p.first, p.second)
+  public    fun Scalar(type: TypeMemento, name: String? = null) =  (type t2 name) as Scalar
+  public    fun Scalar(p: Pai2<TypeMemento, String?>) = p as Scalar
     }
 
     val name: String
-        get() = this.second
+        get() =  second
             ?: "generic${(first as? IOMemento)?.name ?: first::class.java.simpleName}:${first.networkSize}"
 }
 
 
-/**Borg reference*/
-class UniMatrix(type: TypeMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar(type, name)
+///**Borg reference*/
+//class UniMatrix(type: TypeMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar
 
 class Columnar(cols: Vect02<TypeMemento, String?>) :
-    Vect02<TypeMemento, String?> by cols, Arity() {
+    Vect02<TypeMemento, String?> by cols, Arity {
     companion object {
         fun of(vararg type: TypeMemento): Columnar = Columnar(type α { t: TypeMemento -> t t2 null as String? })
 
@@ -49,4 +46,4 @@ class Columnar(cols: Vect02<TypeMemento, String?>) :
     }
 }
 
-class Variadic(val types: () -> Vect0r<TypeMemento>) : Arity()
+class Variadic(val types: () -> Vect0r<TypeMemento>) : Arity

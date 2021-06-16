@@ -2,7 +2,7 @@
 
 package cursors
 
-import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
 import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString

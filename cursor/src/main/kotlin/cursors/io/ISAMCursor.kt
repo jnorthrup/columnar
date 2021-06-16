@@ -4,6 +4,8 @@ import cursors.Cursor
 import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
+import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import cursors.io.Vect02_.Companion.left
 import cursors.io.Vect02_.Companion.right
 import vec.macros.*

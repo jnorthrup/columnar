@@ -2,7 +2,7 @@ package cursors.io
 
 import cursors.Cursor
 import cursors.at
-import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import vec.macros.`⟲`

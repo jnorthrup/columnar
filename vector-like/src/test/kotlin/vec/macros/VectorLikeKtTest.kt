@@ -1,8 +1,7 @@
 package vec.macros
 
-import  org.junit.Test
-
-import org.junit.Assert.*
+import org.junit.Assert.assertArrayEquals
+import org.junit.Test
 import vec.util._l
 import vec.util._v
 

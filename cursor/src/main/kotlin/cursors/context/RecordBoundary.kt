@@ -2,6 +2,7 @@ package cursors.context
 
 import cursors.Cursor
 import cursors.TypeMemento
+import cursors.context.Scalar.Companion.Scalar
 import cursors.io.IOMemento
 import cursors.io.RowVec
 import vec.macros.*
@@ -83,7 +84,8 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
             return Cursor(csvArrays.size - 1) { iy: Int ->
                 val row = csvArrays[iy + 1]
                 RowVec(xSize) { ix: Int ->
-                    row[ix] t2 sdt[ix]
+                    val function = sdt[ix]
+                    row[ix] t2 function
                 }
             }
         }

@@ -3,7 +3,7 @@ package cursors.io
 import cursors.Cursor
 import cursors.context.Arity
 import cursors.context.Columnar
-import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import cursors.io.Vect02_.Companion.left
 import cursors.io.Vect02_.Companion.right
 import vec.macros.*

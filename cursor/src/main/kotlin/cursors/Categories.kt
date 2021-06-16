@@ -1,6 +1,6 @@
 package cursors
 
-import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
 import cursors.io.Vect02_.Companion.left
 import cursors.io.Vect02_.Companion.right
@@ -47,8 +47,7 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
                 val useIndex = v.indexOf(element)
 
                 RowVec(v.size) { vx: Int ->
-                    (useIndex == vx) as Any? t2 { ->
-                        Scalar(
+                    (useIndex == vx) as Any? t2 { Scalar(
                             IOMemento.IoBoolean,
                             "${narrowed.scalars[0].second}=${v[vx]}"
                         ) as CoroutineContext

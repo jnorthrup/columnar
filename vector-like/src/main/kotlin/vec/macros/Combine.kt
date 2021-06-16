@@ -1,6 +1,5 @@
 package vec.macros
 
-import vec.util._a
 import kotlin.math.absoluteValue
 
 @JvmName("combine_Vect0r ")

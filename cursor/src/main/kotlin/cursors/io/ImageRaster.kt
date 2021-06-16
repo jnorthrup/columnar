@@ -1,5 +1,5 @@
 import cursors.Cursor
-import cursors.context.Scalar
+import cursors.context.Scalar.Companion.Scalar
 import cursors.io.IOMemento
 import vec.macros.t2
 import java.io.File
