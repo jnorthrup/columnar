@@ -14,6 +14,8 @@ Tuples also occur in relational algebra; when programming the semantic web with 
 
 package vec.macros
 
+import vec.util._a
+
 /**inheritable version of pair  */
 interface Pai2<F, S> {
     val first: F
@@ -112,7 +114,7 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
 /**
  * int-type specific twin with primitive array backing store.
  */
-class Tw1nt(val ia: IntArray) : Tw1n<Int> {
+inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
     override val first get() = ia[0]
     override val second get() = ia[1]
 }
@@ -120,16 +122,16 @@ class Tw1nt(val ia: IntArray) : Tw1n<Int> {
 /**
  * long-type specific twin with primitive array backing store.
  */
-class Twln(val ia: LongArray) : Tw1n<Long> {
+inline class Twln(val ia: LongArray) : Tw1n<Long> {
     override val first get() = ia[0]
     override val second get() = ia[1]
 }
 
 @JvmName("twinint")
-fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(intArrayOf(first, second))
+fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 
 @JvmName("twinlong")
-fun <T : Long> Tw1n(first: T, second: T) = Twln(longArrayOf(first, second))
+fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
 infix fun <F, S> F.t2(s: S) = Pai2(this, s)
 infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->

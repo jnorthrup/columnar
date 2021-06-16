@@ -1,5 +1,6 @@
 package vec.macros
 
+import vec.util._a
 import kotlin.math.absoluteValue
 
 @JvmName("combine_Vect0r ")
@@ -23,9 +24,8 @@ inline fun <reified T> muxIndexes(vargs: Vect0r<Vect0r<T>>) =
             }
         }
 
-@Suppress("NOTHING_TO_INLINE")
-inline fun demuxIndex(tails: IntArray, ix: Int) =
+fun demuxIndex(tails: IntArray, ix: Int)  =
     (1 + tails.binarySearch(ix)).absoluteValue.let { source ->
-        source t2 (if (source != 0) (ix % tails[source]) - tails[source - 1]
+        Tw1n(source, if (source != 0) (ix % tails[source]) - tails[source - 1]
         else ix % tails[0])
     }
