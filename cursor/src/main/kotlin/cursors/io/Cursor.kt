@@ -2,13 +2,14 @@ package cursors.io
 
 import cursors.Cursor
 import cursors.TypeMemento
+import cursors.at
 import cursors.context.Arity.Companion.arityKey
 import cursors.context.Scalar
 import cursors.io.Vect02_.Companion.right
 import vec.macros.*
 
 val Cursor.scalars: Vect0r<Scalar>
-    get() = toSequence().first().right.map {
+    get() =(this at  0 ).right.map {
         it.invoke() `→` {
             it[arityKey] as Scalar
         }

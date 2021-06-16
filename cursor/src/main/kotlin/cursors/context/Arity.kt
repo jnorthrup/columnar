@@ -18,10 +18,16 @@ open class Scalar(type: TypeMemento, name: String? = null) : Pai2<TypeMemento, S
     type,
     name
 ), Arity() {
+    companion object {
+        fun create(type: TypeMemento, name: String? = null) = Scalar(type, name)
+        fun create(p: Pai2<TypeMemento, String?>) = Scalar(p.first, p.second)
+    }
+
     val name: String
         get() = this.second
             ?: "generic${(first as? IOMemento)?.name ?: first::class.java.simpleName}:${first.networkSize}"
 }
+
 
 /**Borg reference*/
 class UniMatrix(type: TypeMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar(type, name)

@@ -18,52 +18,62 @@ import java.nio.file.StandardOpenOption
 import java.util.*
 
 
-
 @Suppress("USELESS_CAST")
-fun ISAMCursor(
+class ISAMCursor(
     binpath: Path,
-    fc: FileChannel,
+    val fc: FileChannel,
     metapath: Path = Paths.get(binpath.toString() + ".meta"),
-): Cursor = fc.let { fileChannel ->
-    val lines = Files.readAllLines(metapath)
-    lines.removeIf { it.startsWith("# ") || it.isNullOrBlank() }
-    val rcoords = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext() as Vect02<Int, Int>
-    val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
-    val typeVec = lines[2].split("\\s+".toRegex()).α(IOMemento::valueOf)
-    val recordlen = rcoords.last().second
-    val drivers: Array<CellDriver<ByteBuffer, Any?>> = NioMMap.binary(typeVec)
+) : Cursor {
 
-    Cursor((fc.size() / recordlen).toInt()) { iy: Int ->
-        /**
-         * this is a departure from the original windowed
-         * ByteBuffer Nio harnasss
-         */
+    override val first get() = size
+    override val second: (Int) -> RowVec
+    val width get() =drivers.size
+    val drivers get() = NioMMap.binary(scalars.map(Scalar::first) as Vect0r<IOMemento>)
+    val recordlen :Int get()= rcoords.last().second
+    val rcoords: Vect0r<Tw1nt>
+    val scalars: Vect0r<Scalar>
 
-        val row = ByteBuffer.allocate(recordlen)
-        val read = fc.read(row.clear(), iy.toLong() * recordlen.toLong())
 
-        RowVec(drivers.size) { ix: Int ->
-            rcoords.get(ix).let { (b, e) ->
-                val slice = row.limit(e).position(b).slice()
-                val read1 = drivers[ix].read(slice)
-                read1 t2 { Scalar(typeVec[ix], rnames[ix]) }
+
+
+    val size get() = (fc.size() / recordlen).toInt()
+
+    init {
+        val lines = Files.readAllLines(metapath).apply { removeIf { it.startsWith("# ") || it.isNullOrBlank() } }
+        rcoords = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
+        val typeVec = run {
+            val s = lines[2]
+            val split = s.split("\\s+".toRegex())
+            val res = split.α(IOMemento::valueOf)
+
+            res
+        }
+        val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
+        scalars= (typeVec).zip(rnames).map { Scalar(it.first, it.second) }.toList().toTypedArray().toVect0r()
+
+        fc.let { fileChannel ->
+
+            second = { iy: Int ->
+                /**
+                 * this is a departure from the original windowed
+                 * ByteBuffer Nio harnasss
+                 */
+
+                val row = ByteBuffer.allocate(recordlen)
+                val read = fc.read(row.clear(), iy.toLong() * recordlen.toLong())
+
+                RowVec(drivers.size) { ix: Int ->
+                    rcoords.get(ix).let { (b, e) ->
+                        val slice = row.limit(e).position(b).slice()
+                        val read1 = drivers[ix].read(slice)
+                        read1 t2 { this@ISAMCursor.scalars[ix] }
+                    }
+                }
             }
+
+
         }
     }
-
-
-    /*  val nio = NioMMap(this, drivers)
-      val fixedWidth = FixedWidth(recordlen, rcoords, { null }, { null })
-      val indexable: Addressable =
-              RowMajor.indexableOf(nio, fixedWidth)
-      cursorOf(
-              RowMajor().fromFwf(
-                      fixedWidth,
-                      indexable as Indexable,
-                      nio,
-                      Columnar(typeVec.zip(rnames) as Vect02<TypeMemento, String?>)
-              )
-      )*/
 }
 
 /**
@@ -159,8 +169,7 @@ fun Cursor.writeISAMMeta(
 
         val coords = wcoords.toList()
             .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
-        val nama = s.right
-            .map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
+        val nama = s.right.map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left.toArray().mapIndexed<TypeMemento, Any> { ix, it ->
             if (it is IOMemento)
                 it.name else {

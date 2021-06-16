@@ -363,3 +363,5 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
     }
 
 fun <T> Vect0r<T>.last(): T = get(size - 1)
+
+fun <T> Vect0r<T>.reverse(): Vect0r<T> = size t2 { x -> second(size - 1 - x) }
