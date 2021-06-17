@@ -14,21 +14,25 @@ sealed interface Arity : CoroutineContext.Element {
     }
 }
 
-open interface Scalar : Arity  ,Pai2<TypeMemento, String?>  {
-    companion object {  @JvmOverloads
+open interface Scalar : Arity, Pai2<TypeMemento, String?> {
+    companion object {
+        @JvmOverloads
 
-fun   Scalar(p: Pai2<TypeMemento, String?> ): Scalar =   object : Scalar by p  as Scalar{}
+        fun Scalar(p: Pai2<TypeMemento, String?>): Scalar {
+            val (a, b) = p
+            return Scalar(a, b)
+        }
 
-  fun Scalar(type: TypeMemento, name: String? = null) = object : Scalar {
-      override val first: TypeMemento
-          get() = type
-      override val second: String?
-          get() =name
-  }
+        fun Scalar(type: TypeMemento, name: String? = null) = object : Scalar {
+            override val first: TypeMemento
+                get() = type
+            override val second: String?
+                get() = name
+        }
     }
 
     val name: String
-        get() =  second
+        get() = second
             ?: "generic${(first as? IOMemento)?.name ?: first::class.java.simpleName}:${first.networkSize}"
 }
 

@@ -17,7 +17,8 @@ val random = java.util.Random()
 /*simple printout macro*/
 fun Cursor.show(range: IntProgression = 0 until size) {
     val right = colIdx.right
-    println("rows:$size" to right.toList())
+    val     toList = right.toList()
+    println("rows:$size" to toList)
     showValues(range)
 }
 
