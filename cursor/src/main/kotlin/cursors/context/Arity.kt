@@ -15,9 +15,16 @@ sealed interface Arity : CoroutineContext.Element {
 }
 
 open interface Scalar : Arity  ,Pai2<TypeMemento, String?>  {
-    companion object {
-  public    fun Scalar(type: TypeMemento, name: String? = null) =  (type t2 name) as Scalar
-  public    fun Scalar(p: Pai2<TypeMemento, String?>) = p as Scalar
+    companion object {  @JvmOverloads
+
+fun   Scalar(p: Pai2<TypeMemento, String?> ): Scalar =   object : Scalar by p  as Scalar{}
+
+  fun Scalar(type: TypeMemento, name: String? = null) = object : Scalar {
+      override val first: TypeMemento
+          get() = type
+      override val second: String?
+          get() =name
+  }
     }
 
     val name: String
