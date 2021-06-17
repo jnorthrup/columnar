@@ -273,23 +273,23 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                 1,
                 ByteBuffer::get
             ) { a, b -> a.put((b.toInt() and 0xff.toInt()).toByte());Unit },
-            IOMemento.IoLong to Fixed(
+            IOMemento.IoLong  as TypeMemento to Fixed(
                 8,
                 ByteBuffer::getLong
             ) { a, b -> a.putLong(b);Unit },
-            IOMemento.IoFloat to Fixed(
+            IOMemento.IoFloat  as TypeMemento to Fixed(
                 4,
                 ByteBuffer::getFloat
-            ) { a, b -> a.putFloat(b);Unit },
-            IOMemento.IoDouble to Fixed(
+            ) { a, b:Any? -> a.putFloat((b as? Float)?:(b as? String )?.toFloatOrNull()?:Float.NaN);Unit },
+            IOMemento.IoDouble  as TypeMemento to Fixed(
                 8,
                 ByteBuffer::getDouble
-            ) { a, b -> a.putDouble(b);Unit },
-            IOMemento.IoLocalDate to Fixed(
+            ) { a, b:Any? -> a.putDouble((b as? Double)?:(b  as? String)?.toDoubleOrNull()?:Double.NaN );Unit },
+            IOMemento.IoLocalDate  as TypeMemento to Fixed(
                 8,
                 { it.long `→` LocalDate::ofEpochDay },
                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
-            IOMemento.IoInstant to Fixed(
+            IOMemento.IoInstant  as TypeMemento to Fixed(
                 12,
                 { byteBuffer ->
                     val (esec,ens) =byteBuffer.long t2 byteBuffer.int ;
@@ -300,7 +300,7 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                     val nano = b.nano
                     a.putLong(epochSecond) .putInt(nano)
                 }),
-            IOMemento.IoString to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
+            IOMemento.IoString  as TypeMemento to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
                 ?: error(""))
         )
     }
