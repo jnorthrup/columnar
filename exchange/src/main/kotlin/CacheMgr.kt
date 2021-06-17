@@ -38,7 +38,7 @@ class CacheMgr {
             logDebug { "output filename: $ofname" }
             val path = infile.path
             if (infmt == csv) {
-                val lines: List<String> = Files.lines(path).toList()
+                val lines = Files.readAllLines( path)
                 val csvLines1: List<String> = lines.subList(0, 2)
                 val curs = TokenizedRow.CsvArraysCursor(csvLines1)
                 val replacementMementos: Vect0r<TypeMemento> = (curs at 0).let { rv: RowVec ->
