@@ -53,7 +53,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                 if (index == 0) {
                     longest = IntArray(res.size) { 0 }
                     colnames = res
-                    dt = (Array<TypeMemento>(colnames.size) { i ->
+                    dt = (Array(colnames.size) { i ->
                         overrides?.let { overrides[colnames[i]] } ?: dt1[i]
                     })
                     res
@@ -97,6 +97,6 @@ private val dummy = vect0rOf<Pai2<Int, Int>>()
 class FixedWidth(
     val recordLen: Int,
     val coords: Vect02<Int, Int>,
-    val endl: () -> Byte? = '\n'::toByte,
-    val pad: () -> Byte? = ' '::toByte,
+    val endl: () -> Byte? = { '\n'.toByte() } ,
+    val pad: () -> Byte? = { ' '.toByte() }
 ) : RecordBoundary()

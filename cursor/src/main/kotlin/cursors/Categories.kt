@@ -34,7 +34,7 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
     val alwaysZero = _a[0]
 
 
-    Array<Cursor>(csize) { ix: Int ->
+    Array(csize) { ix: Int ->
 
         val narrowed = this[ix]
         val (osize, oval) = narrowed.ordered(alwaysZero, IOMemento.listComparator(_v[typeMementos[ix]]))

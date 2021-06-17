@@ -15,6 +15,7 @@ import org.junit.Test
 import vec.macros.*
 import vec.util._a
 import vec.util._l
+import vec.util._v
 import vec.util.path
 import java.awt.event.ActionEvent
 import java.awt.event.WindowAdapter
@@ -138,7 +139,7 @@ class SeedTesting {
                         fg.caption = it
                     }
 
-                    val j1 = Cursor(1) { y: Int -> (displayCurs at assetRow) }
+                    val j1 = _v[displayCurs at assetRow]
                     val supt = tripl3.second.mapNotNull {
                         it?.let { displayCurs at it }
                         //?: RowVec(0) { x: Int -> 0.0 t2 Scalar(IOMemento.IoDouble).`⟲` }
@@ -261,8 +262,9 @@ class SeedTesting {
                         }".also { fg.caption = it }
 
                         fg.payload = when {
-                            assetRow < 5 -> Cursor(1) { y -> rv }
-                            else -> combine(Cursor(1) { y -> rv }, Cursor(1) { y -> displayCurs at assetRow.rem(5) })
+                            assetRow < 5 -> _v[   rv ]
+                            else -> combine(_v[   rv ],
+                                            _v[   displayCurs at assetRow.rem(5) ])
                         }
                         fg.repaint()
                         ++assetRow

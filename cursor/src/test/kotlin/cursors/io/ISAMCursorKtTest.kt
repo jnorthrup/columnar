@@ -9,6 +9,7 @@ import vec.macros.`⟲`
 import vec.macros.get
 import vec.macros.size
 import vec.macros.t2
+import vec.util._v
 import vec.util.path
 import java.nio.channels.FileChannel
 import java.time.Instant
@@ -20,12 +21,8 @@ class ISAMCursorKtTest {
 
         val testInstant = Instant.now()
         System.err.println(testInstant)
-        val c0: Cursor = cursors.Cursor(1) { y: Int ->
-            RowVec(1) { x: Int ->
-                testInstant t2 Scalar(IOMemento.IoInstant, "ASDF").`⟲`
-            }
-        }
-
+        val c0: Cursor = _v[_v[              testInstant t2 Scalar(IOMemento.IoInstant, "ASDF").`⟲`
+]]
         val fname = "target/IoInstant.isam"
         c0.also { c: Cursor ->
             c.writeISAM(fname)
