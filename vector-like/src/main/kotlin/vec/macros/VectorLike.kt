@@ -20,11 +20,11 @@ typealias Matrix<T> = Pai2<
 operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 
 
-infix fun <O, R, F : (O) -> R> O.`→`(f: F) = this.let(f)
+infix fun <O, R, F : (O) -> R> O.`→`(f: F) = f(this)
 
 
 operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R =
-    { a: A -> a `→` this `→` (b) }
+    { a: A -> a `→` this `→` b }
 
 
 infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
