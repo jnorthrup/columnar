@@ -12,7 +12,8 @@ import vec.macros.toList
 operator fun <X, T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
     s.map {
         val indexOf = this.indexOf(it)
-        if (-1 == indexOf) throw Exception("$it not found in meta")
+        if (-1 == indexOf)
+            throw Exception("$it not found in meta")
         indexOf
     }.toIntArray()
 }
