@@ -5,15 +5,16 @@ import cursors.io.colIdx
 import vec.macros.Vect02
 import vec.macros.size
 import vec.macros.toList
+import javax.management.openmbean.InvalidKeyException
 
 /**
  * colIdx lands here
  */
-operator fun <X, T> Vect02<X, T?>.get(vararg s: T) = right.toList().run {
+operator fun <X, T> Vect02<X, T?>.get(vararg s: T) = right.toList().let { list ->
     s.map {
-        val indexOf = this.indexOf(it)
+        val indexOf = list.indexOf(it)
         if (-1 == indexOf)
-            throw Exception("$it not found in meta")
+            throw InvalidKeyException("$it not found in meta among ${list.toString()}" )
         indexOf
     }.toIntArray()
 }

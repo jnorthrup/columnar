@@ -34,10 +34,6 @@ class ISAMCursor(
     val recordlen :Int get()= rcoords.last().second
     val rcoords: Vect0r<Tw1nt>
     val scalars: Vect0r<Scalar>
-
-
-
-
     val size get() = (fc.size() / recordlen).toInt()
 
     init {

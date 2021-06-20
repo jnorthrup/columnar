@@ -6,7 +6,7 @@ import java.util.*
 /**
  * semigroup
  */
-typealias Vect0r<T> = Pai2<Int, (Int) -> T>
+typealias Vect0r<T> =  Pai2<Int, (Int) -> T>
 
 val <T>Vect0r<T>.size: Int get() = first
 
