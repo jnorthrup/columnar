@@ -116,7 +116,7 @@ fun Cursor.keyClusters(
             getOrPut(it) { ArrayList(cap) } += iy
         }
     }
-    logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" }
+//    logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" } been stable for a while
 }
 
 /**
