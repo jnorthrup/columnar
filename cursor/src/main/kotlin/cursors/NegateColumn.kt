@@ -10,9 +10,9 @@ class NegateColumn(val negated: String)
  */
 operator fun Cursor.get(vararg skip: NegateColumn): Cursor {
 
-    logDebug { "solving for direct-reindexing negation ${skip.map { it.negated }}" }
+//    logDebug { "solving for direct-reindexing negation ${skip.map { it.negated }}" }//noisey, seemingly stable now
     val indexes = this.colIdx.get(*skip)
-    logDebug { "direct-reindexing negation indexes are ${indexes.toList()}" }
+//    logDebug { "direct-reindexing negation indexes are ${indexes.toList()}" }  //noisey, seemingly stable now
     return this[indexes]
 }
 
