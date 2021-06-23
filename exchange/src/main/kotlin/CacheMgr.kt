@@ -81,7 +81,7 @@ class CacheMgr {
             0
         }
 
-        @JvmStatic
+        
         fun main(vararg args: String) {
 
             var cmd = args[0]

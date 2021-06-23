@@ -265,7 +265,7 @@ fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 fun <T> combine(vararg s: Flow<T>): Flow<T> = flow {
 
     for (f: Flow<T> in s) {
-        f.collect {
+        f.collect<T> {
             emit(it)
         }
     }
@@ -362,6 +362,10 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
         }
     }
 
+/**
+ * this is an unfortunate discriminator between Pai2.first..second and Vect0r.first..last
+ */
+fun <T> Vect0r<T>.f1rst(): T = get(0)
 fun <T> Vect0r<T>.last(): T = get(size - 1)
 
 fun <T> Vect0r<T>.reverse(): Vect0r<T> = size t2 { x -> second(size - 1 - x) }

@@ -33,7 +33,7 @@ val ByteArray.hex: String
 /*
 object RosettaMD4 {
     @Throws(Exception::class)
-    @JvmStatic
+    
     fun main(argv: Array<String>) {
         val r = "test".toByteArray(charset("US-ASCII"))
         val d = MD4Digest()

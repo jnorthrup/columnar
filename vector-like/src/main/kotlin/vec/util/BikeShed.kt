@@ -44,7 +44,7 @@ var logReuseCountdown = 0
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _v {
-    @JvmStatic
+    
     operator fun <T> get(vararg t: T): Vect0r<T> = (t as Array<T>).toVect0r()
 }
 
@@ -52,7 +52,7 @@ object _v {
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _l {
-    @JvmStatic
+    
     operator fun <T> get(vararg t: T) = listOf(*t)
 }
 
@@ -60,25 +60,25 @@ object _l {
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-    @JvmStatic
+    
     operator fun get(vararg t: Int) = t
 
-    @JvmStatic
+    
     operator fun get(vararg t: Double) = t
 
-    @JvmStatic
+    
     operator fun get(vararg t: Short) = t
 
-    @JvmStatic
+    
     operator fun get(vararg t: Byte) = t
 
-    @JvmStatic
+    
     operator fun get(vararg t: Boolean) = t
 
-    @JvmStatic
+    
     operator fun get(vararg t: Long) = t
 
-    @JvmStatic
+    
     operator fun <T> get(vararg t: T) = t as Array<T>
 }
 
@@ -86,7 +86,7 @@ object _a {
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-    @JvmStatic
+    
     operator fun <T> get(vararg t: T) = setOf(*t)
 }
 
@@ -94,10 +94,10 @@ object _s {
  * missing stdlib map convenience operator
  */
 object _m {
-    @JvmStatic
+    
     operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
 
-    @JvmStatic
+    
     operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
 

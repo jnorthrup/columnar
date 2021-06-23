@@ -30,7 +30,7 @@ interface Pai2<F, S> {
 
     @Suppress("OVERRIDE_BY_")
     companion object {
-        @JvmStatic
+        
         operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
             object : Pai2<F, S> {
                 override val first get() = first
@@ -41,7 +41,7 @@ interface Pai2<F, S> {
         /**
          * Pair copy ctor conversion
          */
-        @JvmStatic
+        
         operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P): R =
             p.run { (first t2 second) as R }
     }
@@ -63,7 +63,7 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
     val triple get() = Triple(first, second, third)
 
     companion object {
-        @JvmStatic
+        
         operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
             object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
                 override val first get() = first
@@ -71,7 +71,7 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
                 override val third get() = third
             }
 
-        @JvmStatic
+        
         operator fun <F, S, T> invoke(p: Triple<F, S, T>) =
             p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
@@ -167,7 +167,7 @@ interface Qu4d<F, S, T, Z> {
         )
 
     companion object {
-        @JvmStatic
+        
         operator fun <F, S, T, Z> invoke(
             first: F,
             second: S,
@@ -181,19 +181,19 @@ interface Qu4d<F, S, T, Z> {
                 override val fourth get() = fourth
             }
 
-        @JvmStatic
+        
         operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) =
             p.let { (f, s, t, z) ->
                 Qu4d(f, s, t, z)
             }
 
-        @JvmStatic
+        
         operator fun <F, S, T, Z> invoke(p: Array<*>) = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST")
             (Qu4d(f as F, s as S, t as T, z as Z))
         }
 
-        @JvmStatic
+        
         operator fun <F, S, T, Z> invoke(p: List<*>) = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST")
             (Qu4d(f as F, s as S, t as T, z as Z))

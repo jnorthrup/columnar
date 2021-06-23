@@ -124,7 +124,7 @@ class TestBloomFilter {
 
     /*
         companion object {
-            @JvmStatic
+            
             fun main(args: Array<String>) {
                 val test = TestBloomFilter ()
                 if (args.size >= 1) test.elements = args[0].toInt()

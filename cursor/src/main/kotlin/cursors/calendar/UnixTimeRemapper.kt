@@ -23,7 +23,7 @@ class UnixTimeRemapper {
          * with the original cursor
          */
 
-        @JvmStatic
+        
         fun timestampFromIoLong(vararg timestampColumnNames: String): (Cursor) -> Cursor = { c0: Cursor ->
             val newKeys: IntArray = c0.colIdx.get(*timestampColumnNames)
             val thinned: IntArray = c0.colIdx.get(*timestampColumnNames.map(String::unaryMinus).toTypedArray()) //-"column"
