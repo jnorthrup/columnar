@@ -48,9 +48,10 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
             lateinit var longest: IntArray
             var colnames = _a[""]
             lateinit var dt: Array<TypeMemento>
+            val regex = "\\s*,\\s*".toRegex()
             val csvArrays = csvLines1.mapIndexed { index, s ->
-                val res = s.split(",").map { java.lang.String(it) as kotlin.String }.toTypedArray()
                 if (index == 0) {
+                    val res = s.split(regex).map { java.lang.String(it) as kotlin.String }.toTypedArray()
                     longest = IntArray(res.size) { 0 }
                     colnames = res
                     dt = (Array(colnames.size) { i ->
@@ -58,7 +59,8 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                     })
                     res
                 } else
-                    res.mapIndexed { i, s ->
+               s.split (regex, dt.size ).map { java.lang.String(it) as kotlin.String }.toTypedArray().let{res->
+                res.mapIndexed { i, s ->
                         val ioMemento = dt[i]
                         if (ioMemento == IOMemento.IoString) {
                             longest[i] = max(longest[i], s.length)
@@ -67,7 +69,7 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                             Tokenized.mapped[ioMemento]!!.read(ByteBuffer.wrap(s.toByteArray()).rewind())
                         }
                     }.toTypedArray()
-            }
+            }}
             val xSize = colnames.size
 
             val sdt = dt.mapIndexed { ix, dt ->

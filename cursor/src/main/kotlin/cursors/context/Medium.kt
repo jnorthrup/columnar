@@ -231,7 +231,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
 
         val mapped: Map<TypeMemento, Tokenized<ByteBuffer, out Any>> = mapOf(
             IOMemento.IoInt as TypeMemento to Tokenized(
-                (::bb2ba `→` ::btoa `→` ::trim * String::toInt) as readfn<ByteBuffer, Int>,
+                (::bb2ba `→` ::btoa `→` ::trim * { it.toIntOrNull() ?: 0 }) as readfn<ByteBuffer, Int>,
                 { a, b: Int -> a.putInt(b) }),
             IOMemento.IoByte as TypeMemento to Tokenized(
                 (::bb2ba `→` ::btoa `→` ::trim * String::toInt * Int::toUByte * UByte::toByte) as readfn<ByteBuffer, Byte>,
@@ -243,7 +243,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 ::bb2ba `→` ::btoa `→` ::trim `→` String::toFloat,
                 { a, b: Float -> a.putFloat(b) }),
             IOMemento.IoDouble to Tokenized(
-                ::bb2ba `→` ::btoa `→` ::trim `→` String::toDouble,
+                ::bb2ba `→` ::btoa `→` ::trim * { it.toDoubleOrNull()?:0.0 },
                 { a, b: Double -> a.putDouble(b) }),
             IOMemento.IoString to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim, xInsertString
