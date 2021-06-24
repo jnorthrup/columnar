@@ -51,9 +51,12 @@ fun Cursor.writeCSV(fn: String) {
                         val perUnit = sofar.dividedBy(max(iy, 1).toLong())
                         val remaining = perUnit.multipliedBy(size.toLong()).minus(sofar)
                         err.println(
+                            "written $iy rows in ${sofar} remaining: $remaining est ${LocalDateTime.now().plus(remaining)} "
+/* "times have changed"
                             "written $iy rows in ${sofar} ${
-                                Duration.ofSeconds(1).dividedBy(perUnit)
+                                Duration.ofSeconds(1).dividedBy(max (1,perUnit.))
                             }/s remaining: $remaining est ${LocalDateTime.now().plus(remaining)} "
+*/
                         )
                     }
                 }
