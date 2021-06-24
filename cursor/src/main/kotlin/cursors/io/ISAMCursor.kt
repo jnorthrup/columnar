@@ -32,13 +32,13 @@ class ISAMCursor(
     val width get() =drivers.size
     val drivers get() = NioMMap.binary(scalars.map(Scalar::first) as Vect0r<IOMemento>)
     val recordlen :Int get()= rcoords.last().second
-    val rcoords: Vect0r<Tw1nt>
+    val rcoords: Vect02<Int,Int>
     val scalars: Vect0r<Scalar>
     val size get() = (fc.size() / recordlen).toInt()
 
     init {
         val lines = Files.readAllLines(metapath).apply { removeIf { it.startsWith("# ") || it.isNullOrBlank() } }
-        rcoords = lines[0].split("\\s+".toRegex()).α(String::toInt).zipWithNext()
+        rcoords =( lines[0].split("\\s+".toRegex()) α (String::toInt )).zipWithNext()
         val typeVec = run {
             val s = lines[2]
             val split = s.split("\\s+".toRegex())

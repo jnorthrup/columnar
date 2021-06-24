@@ -29,6 +29,10 @@ class CirQlar<T>(
         else -> al
     }
 
+
+    /**
+     * this is a mutable Vect0r that is going to violate reverse,combine,join repeatability.
+     */
     fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
             override val first by al::size
 

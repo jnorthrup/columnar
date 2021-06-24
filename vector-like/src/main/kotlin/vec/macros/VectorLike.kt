@@ -6,7 +6,7 @@ import java.util.*
 /**
  * semigroup
  */
-typealias Vect0r<T> =  Pai2<Int, (Int) -> T>
+typealias Vect0r<T> = Pai2<Int, (Int) -> T>
 
 val <T>Vect0r<T>.size: Int get() = first
 
@@ -235,8 +235,7 @@ infix fun <T, R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
     zip(other.toList()) { a: T, b: R -> a t2 b }
 
 @Suppress("UNCHECKED_CAST")
-fun <T, O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =
-    Vect0r(this.first) { i: Int -> (this[i] t2 o[i]) }
+fun <T, O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> = size t2 { this[it] t2 o[it] }
 
 
 fun <T> Array<T>.toVect0r(): Vect0r<T> =
@@ -263,32 +262,22 @@ fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 
 fun <T> combine(vararg s: Flow<T>): Flow<T> = flow {
-
-    for (f: Flow<T> in s) {
-        f.collect<T> {
-            emit(it)
-        }
-    }
+    for (f: Flow<T> in s)
+        f.collect(this::emit)
 }
 
 @JvmName("combine_Sequence")
-
-
 fun <T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
-
-    for (sequence: Sequence<T> in s) {
-        for (t in sequence) {
-            yield(t)
-        }
-    }
+    for (sequence: Sequence<T> in s)
+        for (t in sequence) yield(t)
 }
 
 @JvmName("combine_List")
 fun <T> combine(vararg a: List<T>): List<T> =
-    a.sumBy(List<T>::size).let { size: Int ->
+    a.sumOf (List<T>::size).let { size: Int ->
         var x = 0
         var y = 0
-        List(size) { i ->
+        List(size) {
             if (y >= a[x].size) {
                 ++x
                 y = 0
@@ -298,7 +287,7 @@ fun <T> combine(vararg a: List<T>): List<T> =
     }
 
 @JvmName("combine_Array")
-inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumBy(Array<T>::size).let { size: Int ->
+inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf (Array<T>::size).let { size: Int ->
     var x = 0
     var y = 0
     Array(size) { i: Int ->
@@ -316,22 +305,31 @@ fun IntArray.zipWithNext(): Vect02<Int, Int> = Vect0r(
     Tw1n(this[c], this[c + 1])
 }
 
+/**
+ * pairwise zip result
+ */
 @JvmName("zwnT")
-inline fun <reified T> Vect0r<T>.zipWithNext() =
+inline fun <reified T> Vect0r<T>.zipWithNext(): Vect02<T, T> =
     Vect0r(size / 2) { i: Int ->
         val c = i * 2
         Tw1n(this[c], this[c + 1])
     }
 
+/**
+ * pairwise int zip
+ */
 @JvmName("zwnInt")
-fun Vect0r<Int>.zipWithNext() =
+fun Vect0r<Int>.zipWithNext(): Vect02<Int, Int> =
     Vect0r(size / 2) { i: Int ->
         val c = i * 2
         Tw1n(this[c], this[c + 1])
     }
 
+/**
+ * pairwise long zip
+ */
 @JvmName("zwnLong")
-fun Vect0r<Long>.zipWithNext() =
+fun Vect0r<Long>.zipWithNext(): Vect02<Long, Long> =
     Vect0r(size / 2) { i: Int ->
         val c = i * 2
         Tw1n(this[c], this[c + 1])
@@ -340,19 +338,28 @@ fun Vect0r<Long>.zipWithNext() =
 
 //array-like mapped map
 
-
+/**
+ * forwarding syntactic sugar
+ */
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>): Array<V> =
     this.get(*ks.toList().toTypedArray())
 
-
+/**
+ * forwarding syntactic sugar
+ */
 inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>): Array<V> =
     this.get(*ks.toList().toTypedArray())
 
-
+/**
+ * pulls out an array of Map values for an vararg array of keys
+ */
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K): Array<V> =
     Array(ks.size) { ix: Int -> ks[ix].let(this::get)!! }
 
 
+/**splits a range into multiple parts for upstream reindexing utility
+ * 0..11 / 3 produces [0..3, 4..7, 8..11].toVect0r()
+ */
 infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
     (this t2 (last - first + (1 - first)) / denominator).let { (_: IntRange, subSize: Int): Pai2<IntRange, Int> ->
         Vect0r(denominator) { x: Int ->
@@ -366,6 +373,14 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
  * this is an unfortunate discriminator between Pai2.first..second and Vect0r.first..last
  */
 fun <T> Vect0r<T>.f1rst(): T = get(0)
+
+/**
+ * the last element of the Vect0r
+ */
 fun <T> Vect0r<T>.last(): T = get(size - 1)
 
+/**
+ * this will create a point in time Vect0r of the current window of (0 until size)
+ * however the source Vect0r needs to have a repeatable 0 (nonmutable)
+ */
 fun <T> Vect0r<T>.reverse(): Vect0r<T> = size t2 { x -> second(size - 1 - x) }
