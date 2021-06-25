@@ -18,7 +18,7 @@ val evens=    args.map(String::toInt).zipWithNext();
     val intRange =  (0 .. evens.lastIndex   step  2).map {
         x->
         val (a,b)=evens[ x]
-        _a[::horizon , ::hzInvSqr ].map {fn->
+        _a[::horizon /*, ::hzInvSqr*/ ].map {fn->
             println("--------$fn")
             println("showing $a of $b ${
                 (0 until a ).map {

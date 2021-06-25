@@ -21,7 +21,7 @@ internal class CategoriesKtTest {
                 "john,64,below me",
                 "john,128,below me",
                 "phillip,256,below me"].map { it.toString() },
-        overrides = linkedMapOf("notsomething" to IOMemento.IoInt)
+        overides = linkedMapOf("notsomething" to IOMemento.IoInt)
     )
 
 
