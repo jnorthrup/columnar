@@ -9,7 +9,7 @@ class BikeShedKtTest {
         val v = Vect0r(5000) { x: Int -> x }
         val v2size = 100
         val v2: Vect0r<Int> = v2size t2 { x: Int ->
-            horizon(x, v.size, v2size)
+            horizon (x, v2size, v.size)
         }
         System.err.println(v2.toList())
     }
@@ -19,7 +19,7 @@ class BikeShedKtTest {
         val v = Vect0r(50000) { x: Int -> x }
         val v2size = 1000
         val v2: Vect0r<Int> = v2size t2 { x: Int ->
-            horizon(x, v.size, v2size)
+            horizon (x, v2size, v.size)
         }
         System.err.println(v2[0 until 100].toList())
     }
@@ -29,7 +29,7 @@ class BikeShedKtTest {
         val v = Vect0r(2034190) { x: Int -> x }
         val v2size = 5000
         val v2: Vect0r<Int> = v2size t2 { x: Int ->
-            horizon(x, v.size, v2size)
+            horizon (x, v2size, v.size)
         }
         System.err.println(v2[0 until 200].toList())
         System.err.println("...")
