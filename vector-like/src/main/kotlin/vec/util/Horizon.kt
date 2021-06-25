@@ -27,9 +27,6 @@ val evens=    args.map(String::toInt).zipWithNext();
                     fn(  it, viewPoints, datapoints)
                 }
             }")
-
         }
-
     }
-
 }
