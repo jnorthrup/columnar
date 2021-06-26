@@ -6,7 +6,7 @@ import kotlin.math.sin
 
 /** gradually compressed index accessor to underlying Cursor x values. */
 fun horizon(index: Int, viewPoints: Int, datapoints: Int) = max(index,
-    (datapoints.toDouble() - sin(((viewPoints.toDouble() - index-1) / (viewPoints.toDouble()-1)) * (PI / 2.0)) *( datapoints.toDouble()  )).toInt())
+    (datapoints.toDouble() -1 - sin(((viewPoints.toDouble() - index-1) / (viewPoints.toDouble() )) * (PI / 2.0)) *( datapoints.toDouble()  )).toInt())
 
 /** gradually compressed index accessor to underlying Cursor x values. */
 fun hzInvSqr(index: Int, viewPoints: Int, datapoints: Int) = max(index,
