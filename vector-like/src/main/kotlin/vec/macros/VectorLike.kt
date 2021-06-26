@@ -384,3 +384,16 @@ fun <T> Vect0r<T>.last(): T = get(size - 1)
  * however the source Vect0r needs to have a repeatable 0 (nonmutable)
  */
 fun <T> Vect0r<T>.reverse(): Vect0r<T> = size t2 { x -> second(size - 1 - x) }
+
+/**
+ * direct increment x offset for a cheaper slice than binary search
+ */
+@JvmOverloads
+inline fun<T>  Vect0r<Vect0r<T>>.slicex(
+    range: IntArray,
+    bounds: IntRange = ((range.first())..(range.last())),
+) = this.first t2 { y: Int ->
+    this.second(y).let { (_, b) ->
+        (1 + bounds.last - bounds.first) t2 { x: Int -> b(x + range.first()) }
+    }
+}

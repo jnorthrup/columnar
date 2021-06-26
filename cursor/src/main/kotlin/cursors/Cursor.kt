@@ -91,6 +91,7 @@ fun Cursor.narrow() =
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
 
+
 @JvmName("vlike_RSequence_Iterable21")
 operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
