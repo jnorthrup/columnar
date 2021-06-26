@@ -34,6 +34,14 @@ class BikeShedKtTest {
         System.err.println(v2[0 until 200].toList())
         System.err.println("...")
         System.err.println(v2[(v2.size - 50) until v2.size].toList())
+    }    @Test
+    fun horizonTest4() {
+        val v = Vect0r(3_000_000) { x: Int -> x }
+        val v2size = 20
+        val v2: Vect0r<Int> = v2size t2 { x: Int ->
+            horizon (x, v2size, v.size)
+        }
+        System.err.println(v2[0 until 20].toList())
     }
 }
 /*
