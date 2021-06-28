@@ -274,7 +274,7 @@ fun <T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
 
 @JvmName("combine_List")
 fun <T> combine(vararg a: List<T>): List<T> =
-    a.sumOf (List<T>::size).let { size: Int ->
+    a.sumOf(List<T>::size).let { size: Int ->
         var x = 0
         var y = 0
         List(size) {
@@ -287,7 +287,7 @@ fun <T> combine(vararg a: List<T>): List<T> =
     }
 
 @JvmName("combine_Array")
-inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf (Array<T>::size).let { size: Int ->
+inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf(Array<T>::size).let { size: Int ->
     var x = 0
     var y = 0
     Array(size) { i: Int ->
@@ -389,11 +389,19 @@ fun <T> Vect0r<T>.reverse(): Vect0r<T> = size t2 { x -> second(size - 1 - x) }
  * direct increment x offset for a cheaper slice than binary search
  */
 @JvmOverloads
-inline fun<T>  Vect0r<Vect0r<T>>.slicex(
-    range: IntArray,
-    bounds: IntRange = ((range.first())..(range.last())),
+inline fun <T> Vect0r<Vect0r<T>>.slicex(
+    sta: Int = 0, end: Int = this.size,
 ) = this.first t2 { y: Int ->
     this.second(y).let { (_, b) ->
-        (1 + bounds.last - bounds.first) t2 { x: Int -> b(x + range.first()) }
+        (1 + end - sta) t2 { x: Int -> b(x + sta) }
     }
+}
+/**
+ * direct increment offset for a cheaper slice than binary search
+ */
+@JvmOverloads
+inline fun <T>  Vect0r<T> .slice (
+    sta: Int = 0, end: Int = this.size,
+) = end-sta t2 { y: Int ->
+    this    [y+sta]
 }
