@@ -57,7 +57,7 @@ class VectorLikeKtTest {
         //we can make a lazy vector of ints from the array of strings.
         val intVec = strVec α String::toInt
 
-        intVec.last() shouldBe 2
+        intVec.last shouldBe 2
 
         //we can combine them to create new indexed vet0r's
         val doubleLength = combine(intVec, intVec)

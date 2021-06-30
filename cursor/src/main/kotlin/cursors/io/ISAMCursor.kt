@@ -31,7 +31,7 @@ class ISAMCursor(
     override val second: (Int) -> RowVec
     val width get() =drivers.size
     val drivers get() = NioMMap.binary(scalars.map(Scalar::first) as Vect0r<IOMemento>)
-    val recordlen :Int get()= rcoords.last().second
+    val recordlen :Int get()= rcoords.last.second
     val rcoords: Vect02<Int,Int>
     val scalars: Vect0r<Scalar>
     val size get() = (fc.size() / recordlen).toInt()
@@ -113,7 +113,7 @@ fun Cursor.writeISAM(
         }
     }
     val wcoords: Vect02<Int, Int> = networkCoords(ioMemos.toArray(), defaultVarcharSize, sizes)
-    val reclen = wcoords.right.last()
+    val reclen = wcoords.right.last
     writeISAMMeta(pathname, wcoords)
     val rowBuf = ByteBuffer.allocateDirect(reclen + 1)
     val bounceyBuff = ByteBuffer.allocate(reclen + 1)

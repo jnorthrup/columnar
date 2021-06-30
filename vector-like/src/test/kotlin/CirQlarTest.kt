@@ -33,8 +33,8 @@ class CirQlarTest : TestCase() {
         }
         val vec = cirQ.toVect0r()
         System.err.println(vec.toList())
-        assertEquals(6, vec.last())
-        assertEquals(4, vec.f1rst())
+        assertEquals(6, vec.last)
+        assertEquals(4, vec.f1rst)
     }
 
 

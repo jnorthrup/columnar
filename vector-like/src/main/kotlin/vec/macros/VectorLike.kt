@@ -372,18 +372,21 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
 /**
  * this is an unfortunate discriminator between Pai2.first..second and Vect0r.first..last
  */
-fun <T> Vect0r<T>.f1rst(): T = get(0)
+val <T> Vect0r<T>.f1rst: T
+    get() = get(0)
 
 /**
  * the last element of the Vect0r
  */
-fun <T> Vect0r<T>.last(): T = get(size - 1)
+val <T> Vect0r<T>.last: T
+    get() = get(size - 1)
 
 /**
  * this will create a point in time Vect0r of the current window of (0 until size)
  * however the source Vect0r needs to have a repeatable 0 (nonmutable)
  */
-fun <T> Vect0r<T>.reverse(): Vect0r<T> = size t2 { x -> second(size - 1 - x) }
+val <T> Vect0r<T>.reverse: Vect0r<T>
+    get() = size t2 { x -> second(size - 1 - x) }
 
 /**
  * direct increment x offset for a cheaper slice than binary search
