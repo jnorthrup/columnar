@@ -407,3 +407,6 @@ inline fun <T>  Vect0r<T> .slice (
 ) = end-sta t2 { y: Int ->
     this    [y+sta]
 }
+
+/** plus operator*/
+inline infix operator fun <reified T,P:Vect0r<T>>  P.plus(p:P):P= combine(this,p) as P
