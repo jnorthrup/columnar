@@ -42,10 +42,17 @@ interface Pai2<F, S> {
          * Pair copy ctor conversion
          */
         
-        operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P): R =
-            p.run { (first t2 second) as R }
+        operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P)  = object:  Pai2<F, S > {
+            override val first: F by p::first
+            override val second: S by p::second
+        }
+        operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P)  = object:  Pai2<F, S > {
+            override val first: F by p::key
+            override val second: S by p::value
+        }
     }
 }
+
 /*
  operator fun < F,  S> Pai2<F, S>.component2(): S = second
  operator fun < F,  S> Pai2<F, S>.component1(): F = first*/

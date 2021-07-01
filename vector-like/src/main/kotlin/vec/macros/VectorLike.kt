@@ -9,7 +9,6 @@ import java.util.*
 typealias Vect0r<T> = Pai2<Int, (Int) -> T>
 
 val <T>Vect0r<T>.size: Int get() = first
-
 @Suppress("NonAsciiCharacters")
 typealias Matrix<T> = Pai2<
         /**shape*/

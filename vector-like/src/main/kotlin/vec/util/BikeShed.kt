@@ -132,3 +132,5 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
         else -> fib(n - 1, b, a + b)
     }
 
+@Deprecated ("uncertainty about this one")
+fun<T,P:Pai2<T,T>,R:Vect0r<T>>  Vect0r (p:P)=    _v[p.first,p.second]  as R

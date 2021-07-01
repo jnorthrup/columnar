@@ -14,6 +14,10 @@
             <groupId>columnar</groupId>
             <artifactId>cursor</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency><dependency>
+  <groupId>org.apache.arrow</groupId>
+  <artifactId>arrow-vector</artifactId>
+  <version>4.0.1</version>
+</dependency>
     </dependencies>
 </project>
