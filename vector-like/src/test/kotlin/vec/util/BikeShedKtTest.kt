@@ -8,7 +8,7 @@ class BikeShedKtTest {
     fun horizonTest() {
         val v = Vect0r(5000) { x: Int -> x }
         val v2size = 100
-        val v2: Vect0r<Int> = v2size t2 { x: Int ->
+        val v2: Vect0r<Int> = v2size t2  { x: Int ->
             horizon (x, v2size, v.size)
         }
         System.err.println(v2.toList())

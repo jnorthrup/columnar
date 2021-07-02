@@ -218,7 +218,7 @@ fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
 
 
 fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
-    for (ix in (0 until size)) fn(ix, ix `→` second)
+repeat(size ){i->fn(i,second(i))}
 }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> =
