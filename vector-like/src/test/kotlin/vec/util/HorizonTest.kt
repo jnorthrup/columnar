@@ -2,16 +2,48 @@ package vec.util
 
 import org.junit.Test
 import vec.macros.*
+import java.time.Duration
+import kotlin.time.ExperimentalTime
 
-class BikeShedKtTest {
+@ExperimentalTime
+class HorizonTest {
     @Test
     fun horizonTest() {
         val v = Vect0r(5000) { x: Int -> x }
         val v2size = 100
-        val v2: Vect0r<Int> = v2size t2  { x: Int ->
-            horizon (x, v2size, v.size)
+        val v2: Vect0r<Int> = v2size t2 { x: Int ->
+            horizon(x, v2size, v.size)
         }
         System.err.println(v2.toList())
+        horizonRatioHunt(v2size, v.size)
+
+    }
+
+    fun horizonRatioHunt(viewSize: Int, modelSize: Int) = run {
+        var acc = 0
+        for (i in 0 until viewSize) {
+            val horizon = horizon(i, viewSize, modelSize)//.also { logDebug { "$it,$acc" } }
+            if ((horizon - acc) > 1) break
+            acc = i
+
+        }
+        val res = _l[
+                acc.toDouble() / viewSize.toDouble(),
+                acc.toDouble() / modelSize.toDouble(),
+                viewSize.toDouble() / modelSize.toDouble(),
+        ]
+        val res2 = res.let {
+            res + _l[
+                    it[0] * it[1],
+                    it[1] *it[2],
+                    acc.toDouble()*it[1],
+            (viewSize-acc).toDouble()*it[1],
+            (viewSize-acc).toDouble()*it[2],
+            ]
+        }
+        logDebug { ("ratio ascends at($acc, $viewSize,${modelSize})=${res2}") }
+
+        res2
     }
 
     @Test
@@ -19,9 +51,10 @@ class BikeShedKtTest {
         val v = Vect0r(50000) { x: Int -> x }
         val v2size = 1000
         val v2: Vect0r<Int> = v2size t2 { x: Int ->
-            horizon (x, v2size, v.size)
+            horizon(x, v2size, v.size)
         }
         System.err.println(v2[0 until 100].toList())
+        horizonRatioHunt(v2size, v.size)
     }
 
     @Test
@@ -29,19 +62,28 @@ class BikeShedKtTest {
         val v = Vect0r(2034190) { x: Int -> x }
         val v2size = 5000
         val v2: Vect0r<Int> = v2size t2 { x: Int ->
-            horizon (x, v2size, v.size)
+            horizon(x, v2size, v.size)
         }
         System.err.println(v2[0 until 200].toList())
         System.err.println("...")
         System.err.println(v2[(v2.size - 50) until v2.size].toList())
-    }    @Test
+        horizonRatioHunt(v2size, v.size)
+    }
+
+    @Test
     fun horizonTest4() {
         val v = Vect0r(3_000_000) { x: Int -> x }
         val v2size = 20
         val v2: Vect0r<Int> = v2size t2 { x: Int ->
-            horizon (x, v2size, v.size)
+            horizon(x, v2size, v.size)
         }
         System.err.println(v2[0 until 20].toList())
+        horizonRatioHunt(v2size, v.size)
+        horizonRatioHunt(100,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(200,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(300,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(500,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(3000,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
     }
 }
 /*

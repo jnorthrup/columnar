@@ -10,7 +10,7 @@ fun horizon(index: Int, viewPoints: Int, datapoints: Int) = max(index,
 
 /** gradually compressed index accessor to underlying Cursor x values. */
 fun hzInvSqr(index: Int, viewPoints: Int, datapoints: Int) = max(index,
-    (1/(((viewPoints.toDouble()-index).toDouble()*datapoints.toDouble() )) *Math.pow( datapoints.toDouble(),2.0)).toInt())
+    (1/((viewPoints.toDouble()-index).toDouble()*datapoints.toDouble()) *Math.pow( datapoints.toDouble(),2.0)).toInt())
 
 fun main(args: Array<String>) {
 

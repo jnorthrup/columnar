@@ -5,13 +5,12 @@
 
 package vec.util
 
-import vec.macros.Pai2
-import vec.macros.Vect0r
-import vec.macros.toVect0r
+import vec.macros.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import java.nio.file.Paths
+import kotlin.math.min
 import kotlin.text.Charsets.UTF_8
 
 
@@ -132,5 +131,19 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
         else -> fib(n - 1, b, a + b)
     }
 
-@Deprecated ("uncertainty about this one")
-fun<T,P:Pai2<T,T>,R:Vect0r<T>>  Vect0r (p:P)=    _v[p.first,p.second]  as R
+@Deprecated("uncertainty about this one")
+fun <T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
+
+//the values repeat until the lower limit is reached providing cheap dummy row context.
+@JvmOverloads
+inline fun <reified T> moireValues(
+    inVec: Vect0r<T>,
+    limit: Int ,
+    initialOneOrMore: Int= inVec.first,
+    noinline x: (Int) -> T = inVec.second,
+) = min(initialOneOrMore, limit).let { min ->
+    combine(_v[min t2 x,
+            (limit - min) t2 { i: Int ->x(i.rem(min))
+            } //dummy loop rows
+    ])
+}
