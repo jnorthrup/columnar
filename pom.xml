@@ -57,7 +57,7 @@
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
+                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
                         <phase>install</phase>
