@@ -1,6 +1,6 @@
 package cursors
 
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.right
 import cursors.io.colIdx
 import vec.macros.Vect02
 import vec.macros.size

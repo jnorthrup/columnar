@@ -5,7 +5,7 @@ import cursors.context.*
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
 import cursors.io.IOMemento.*
-import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.left
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.macros.α

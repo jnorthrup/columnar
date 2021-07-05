@@ -2,7 +2,7 @@ package cursors.context
 
 import cursors.TypeMemento
 import cursors.io.*
-import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.left
 import vec.macros.*
 import vec.util.*
 import java.nio.ByteBuffer

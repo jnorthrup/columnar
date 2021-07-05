@@ -429,3 +429,12 @@ inline fun <T> Vect0r<T>.slice(
 
 /** plus operator*/
 inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P): P = combine(this, p) as P
+
+
+
+/**cloning and reifying Vect0r to ByteArray*/   fun Vect0r<Byte>.toByteArray() = ByteArray(size) { i -> get(i) }
+/**cloning and reifying Vect0r to CharArray*/   fun Vect0r<Char>.toCharArray() = CharArray(size) { i -> get(i) }
+/**cloning and reifying Vect0r to IntArray*/   fun Vect0r<Int>.toIntArray() = IntArray(size) { i -> get(i) }
+/**cloning and reifying Vect0r to LongArray*/   fun Vect0r<Long>.toLongArray() = LongArray(size) { i -> get(i) }
+/**cloning and reifying Vect0r to FloatArray*/   fun Vect0r<Float>.toFloatArray() = FloatArray(size) { i -> get(i) }
+/**cloning and reifying Vect0r to DoubleArray*/   fun Vect0r<Double>.toDoubleArray() = DoubleArray(size) { i -> get(i) }

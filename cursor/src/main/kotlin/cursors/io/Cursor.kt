@@ -5,7 +5,7 @@ import cursors.TypeMemento
 import cursors.at
 import cursors.context.Arity.Companion.arityKey
 import cursors.context.Scalar
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.right
 import vec.macros.*
 
 val Cursor.scalars: Vect0r<Scalar>

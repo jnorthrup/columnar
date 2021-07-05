@@ -6,8 +6,8 @@ import cursors.context.RowMajor.Companion.fixedWidthOf
 import cursors.context.RowMajor.Companion.indexableOf
 import cursors.io.*
 import cursors.io.IOMemento.*
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import cursors.macros.join
 import cursors.macros.α
 import org.junit.Test

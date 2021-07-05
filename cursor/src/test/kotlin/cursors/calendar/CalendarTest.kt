@@ -8,8 +8,8 @@ import cursors.context.*
 import cursors.context.Scalar.Companion.Scalar
 import cursors.get
 import cursors.io.*
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import cursors.macros.join
 import org.junit.Test
 import vec.macros.*

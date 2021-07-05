@@ -4,7 +4,7 @@ import cursors.context.TokenizedRow
 import cursors.context.TokenizedRow.Companion.CsvArraysCursor
 import cursors.io.IOMemento.*
 import cursors.io.RowVec
-import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.left
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import vec.macros.get

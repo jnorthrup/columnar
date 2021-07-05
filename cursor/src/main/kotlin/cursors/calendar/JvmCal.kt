@@ -5,7 +5,7 @@ import cursors.at
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.IOMemento
 import cursors.io.RowVec
-import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.left
 import vec.macros.*
 import java.time.LocalDate
 import java.time.ZoneId

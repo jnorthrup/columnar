@@ -3,8 +3,8 @@ package cursors
 import cursors.context.Scalar
 import cursors.hash.md4
 import cursors.io.*
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import trie.ArrayMap
 import vec.macros.*
 import vec.util.BloomFilter

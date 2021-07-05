@@ -4,8 +4,8 @@ import cursors.Cursor
 import cursors.context.Arity
 import cursors.context.Columnar
 import cursors.context.Scalar.Companion.Scalar
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import vec.macros.*
 import kotlin.collections.*
 import kotlin.collections.component2

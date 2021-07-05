@@ -6,8 +6,8 @@ import cursors.at
 import cursors.context.*
 import cursors.context.Scalar
 import cursors.context.Scalar.Companion.Scalar
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import vec.macros.*
 import vec.util.logDebug
 import vec.util.span

@@ -5,7 +5,7 @@ import cursors.at
 import cursors.context.TokenizedRow
 import cursors.io.*
 import cursors.io.IOMemento.*
-import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.left
 import vec.macros.*
 import vec.util._l
 import vec.util.logDebug

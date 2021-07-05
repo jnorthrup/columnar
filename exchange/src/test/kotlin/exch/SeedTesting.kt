@@ -4,11 +4,11 @@ import cursors.Cursor
 import cursors.at
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
-import cursors.io.V3ct0r_.Companion.left
-import cursors.io.V3ct0r_.Companion.mid
-import cursors.io.V3ct0r_.Companion.right
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.V3ct0r_.left
+import cursors.io.V3ct0r_.mid
+import cursors.io.V3ct0r_.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import cursors.mirror
 import exchg.PlotThing
 import org.junit.Test
@@ -262,9 +262,9 @@ class SeedTesting {
                         }".also { fg.caption = it }
 
                         fg.payload = when {
-                            assetRow < 5 -> _v[   rv ]
-                            else -> combine(_v[   rv ],
-                                            _v[   displayCurs at assetRow.rem(5) ])
+                            assetRow < 5 -> _v[rv]
+                            else -> combine(_v[rv],
+                                _v[displayCurs at assetRow.rem(5)])
                         }
                         fg.repaint()
                         ++assetRow

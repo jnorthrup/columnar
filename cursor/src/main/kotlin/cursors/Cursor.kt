@@ -6,7 +6,7 @@ import cursors.context.NormalizedRange
 import cursors.context.Scalar
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
-import cursors.io.Vect02_.Companion.left
+import cursors.io.Vect02_.left
 import cursors.macros.join
 import cursors.ml.featureRange
 import cursors.ml.normalize

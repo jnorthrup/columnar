@@ -3,8 +3,8 @@ package cursors.macros
 import cursors.Cursor
 import cursors.at
 import cursors.io.RowVec
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import vec.macros.*
 
 /**

@@ -1,8 +1,8 @@
 package cursors.io
 
 import cursors.Cursor
-import cursors.io.Vect02_.Companion.left
-import cursors.io.Vect02_.Companion.right
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import vec.macros.size
 import vec.macros.toList
 import vec.util.fib
