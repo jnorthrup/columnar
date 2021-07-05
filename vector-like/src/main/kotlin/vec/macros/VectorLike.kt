@@ -1,6 +1,7 @@
 package vec.macros
 
 import kotlinx.coroutines.flow.*
+import java.nio.ByteBuffer
 import java.util.*
 
 /**
@@ -218,7 +219,7 @@ fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
 
 
 fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
-repeat(size ){i->fn(i,second(i))}
+    repeat(size) { i -> fn(i, second(i)) }
 }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> =
@@ -237,18 +238,35 @@ infix fun <T, R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
 fun <T, O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> = size t2 { this[it] t2 o[it] }
 
 
-fun <T> Array<T>.toVect0r(): Vect0r<T> =
-    Vect0r(size) { ix: Int -> this[ix] }
+fun <T> Array<T>.toVect0r() =/* when (this) {
+    is IntArray -> this.toVect0r()
+    is LongArray -> this.toVect0r()
+    is DoubleArray -> this.toVect0r()
+    is FloatArray -> this.toVect0r()
+    is BitSet -> this.toVect0r()
+    is String -> this.toVect0r()
+    is CharSequence -> this.toVect0r()
+    is ByteArray -> this.toVect0r()
+    is CharArray -> this.toVect0r()
+    is ByteBuffer -> this.toVect0r()
+    else ->*/ Vect0r(size) { ix: Int -> this[ix] }
+/*}*/
 
 
-fun IntArray.toVect0r(): Vect0r<Int> =
-    Vect0r(size) { ix: Int -> get(ix) }
+fun IntArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
+fun LongArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
+fun DoubleArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
+fun FloatArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
+fun BitSet.toVect0r() = Vect0r(this.length()) { ix: Int -> get(ix) }
+fun String.toVect0r() = Vect0r(this.length) { ix: Int -> get(ix) }
+fun CharSequence.toVect0r() = Vect0r(this.length) { ix: Int -> get(ix) }
+fun ByteArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
+fun CharArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
+fun ByteBuffer.toVect0r(): Vect0r<Byte> {
+    val slice = slice();return Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) }
+}
 
-
-fun <T> List<T>.toVect0r(): Vect0r<T> =
-    Vect0r(size) { ix: Int -> this[ix] }
-
-
+fun <T> List<T>.toVect0r() = Vect0r(size) { ix: Int -> this[ix] }
 suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 
@@ -398,15 +416,16 @@ inline fun <T> Vect0r<Vect0r<T>>.slicex(
         (1 + end - sta) t2 { x: Int -> b(x + sta) }
     }
 }
+
 /**
  * direct increment offset for a cheaper slice than binary search
  */
 @JvmOverloads
-inline fun <T>  Vect0r<T> .slice (
+inline fun <T> Vect0r<T>.slice(
     sta: Int = 0, end: Int = this.size,
-) = end-sta t2 { y: Int ->
-    this    [y+sta]
+) = end - sta t2 { y: Int ->
+    this[y + sta]
 }
 
 /** plus operator*/
-inline infix operator fun <reified T,P:Vect0r<T>>  P.plus(p:P):P= combine(this,p) as P
+inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P): P = combine(this, p) as P
