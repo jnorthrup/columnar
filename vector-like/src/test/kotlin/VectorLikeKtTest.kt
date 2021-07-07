@@ -42,7 +42,7 @@ class VectorLikeKtTest {
     fun `WhatCanVect0rDo`() {
 
         // we can create an array from bikeshed util
-        val ar: Array<String> = _a["0", "1", "2"]
+        val ar  = _a["0", "1", "2"]
 
         //we can make a lazy vector from the array of strings
         val strVec = ar.toVect0r()
@@ -77,14 +77,14 @@ class VectorLikeKtTest {
         (a === doubleLength.size) shouldBe (doubleLength.size === doubleLength.first)
 
         //we can reorder them as a new Vect0r,  lazily.  the bikeshed  util extends this to Any convertables above
-        val reordered1 = doubleLength[2, 1, 3, 4, 4, 4, 4, 4]
+        val reordered1 = doubleLength[2, 1, 3, 4, 4, 4, 4, 4] as Vect0r<Int>
         System.err.println(reordered1.toList())
         System.err.println()
 
         //#### zip
         // same as the stdlib zip except the Vect0r result uses an interface instead of a data class
         // the pairwise construction uses the simplest possible `pair` interface named `Pai2`
-        val zip: Vect02<Int, Int> = reordered1.zip(reordered1)
+        val zip: Vect02<Int, Int> = reordered1.zip (reordered1)
 
         // these are pure functional interfaces without toString, but have a pair conversion
         val z1 = zip α Pai2<Int, Int>::pair
@@ -134,7 +134,7 @@ class VectorLikeKtTest {
         val pai2: Pai2<Int, (Int) -> Pai2<Int, Int>> = reordered1.zip(reordered1)
         val vect02: Vect02<Int, Int> = reordered1.zip(reordered1)
         val vectTwin: Vect0r<Tw1n<Int>> = reordered1.zip(reordered1)
-        val vectTwint: Vect0r<Tw1nt> = reordered1.zip(reordered1) as Vect0r<Tw1nt>
+        val vectTwint: Vect0r<Tw1nt> = reordered1.zip(reordered1)
 
     }
 

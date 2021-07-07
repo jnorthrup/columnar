@@ -12,7 +12,8 @@ typealias NioCursor = Matrix<Tripl3<() -> Any?, (Any?) -> Unit, NioMeta>>
 typealias TableRoot = Pai2<NioCursor, CoroutineContext>
 typealias ColMeta = Pai2<String, IOMemento>
 typealias RowMeta = Vect0r<ColMeta>
-typealias RowVec = Vect02<Any?, () -> CoroutineContext>
+typealias CellMeta = () -> CoroutineContext
+typealias RowVec = Vect02<Any?, CellMeta>
 
 typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>

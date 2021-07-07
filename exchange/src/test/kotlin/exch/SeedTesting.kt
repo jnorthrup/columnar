@@ -230,6 +230,7 @@ class SeedTesting {
                 val influence by lazy { seeds[2].nextDouble() }
                 val classRowVec by lazy { isamCursor.at(y.rem(5)) }
 
+                val o:Vect0r<CellMeta> = baseRowVec.right
                 (when {
                     y > 5 -> {
                         baseRowVec.left.mapIndexedToList { i, any ->
@@ -238,8 +239,8 @@ class SeedTesting {
                         }.toVect0r()
                     }
                     else -> baseRowVec.left
-                } as Vect0r<*>).zip(baseRowVec.right)
-            }
+                } as Vect0r<*>).zip<Any?, CellMeta, RowVec>(o)
+            } as Cursor
             //write multiclass csv
             if (!Files.exists(classedName.path)) fiveClasses.writeISAM(classedName)
         }

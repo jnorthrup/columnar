@@ -86,7 +86,7 @@ a left identity and f is a right identity, then f=ef=e.
 */
 
 /**right identity*/
-val <T> T.`⟲`
+inline val <reified T> T.`⟲`
     get() = { this }
 
 /**right identity*/
@@ -105,29 +105,19 @@ operator fun <T> Sequence<T>.get(vararg index: Int) = get(index)
 operator fun <T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Sequence_IntArray3")
-
-
 operator fun <T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
 
 @JvmName("vlike_Flow_1")
-
-
 suspend fun <T> Flow<T>.get(vararg index: Int) = get(index)
 
 @Suppress("USELESS_CAST")
 @JvmName("vlike_Flow_Iterable2")
-
-
 suspend fun <T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
 
 @JvmName("vlike_Flow_IntArray3")
-
-
 suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()
 
 @JvmName("vlike_List_1")
-
-
 operator fun <T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
@@ -234,50 +224,31 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> =
 infix fun <T, R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
     zip(other.toList()) { a: T, b: R -> a t2 b }
 
+
+@JvmOverloads
+@JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
-fun <T, O> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> = size t2 { this[it] t2 o[it] }
+inline fun <reified T,reified O,reified R> Vect0r< T>.zip(o: Vect0r<O>, crossinline f: (T, O) -> R = { a, b -> (a t2 b)  as R }):Vect0r<R> =
+    size t2 { x: Int -> f(this[x], o[x])  }
 
+fun <T> Array<T>.toVect0r() = (size t2 ::get )as Vect0r<T>
+fun IntArray.toVect0r() = (size t2 ::get )as Vect0r<Int>
+fun LongArray.toVect0r() = (size t2 ::get )as Vect0r<Long>
+fun DoubleArray.toVect0r() = (size t2 ::get )as Vect0r<Double>
+fun FloatArray.toVect0r() = (size t2 ::get )as Vect0r<Float>
+fun ByteArray.toVect0r() = (size t2 ::get )as Vect0r<Byte>
+fun CharArray.toVect0r() = (size t2 ::get )as Vect0r<Char>
+fun String.toVect0r() = (length t2 ::get )as Vect0r<String>
+fun CharSequence.toVect0r() = (length t2 ::get )as Vect0r<Char>
+fun <T> List<T>.toVect0r()  = (size t2 ::get) as Vect0r<T>
+fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) }) as Vect0r<Boolean>
 
-fun <T> Array<T>.toVect0r() =/* when (this) {
-    is IntArray -> this.toVect0r()
-    is LongArray -> this.toVect0r()
-    is DoubleArray -> this.toVect0r()
-    is FloatArray -> this.toVect0r()
-    is BitSet -> this.toVect0r()
-    is String -> this.toVect0r()
-    is CharSequence -> this.toVect0r()
-    is ByteArray -> this.toVect0r()
-    is CharArray -> this.toVect0r()
-    is ByteBuffer -> this.toVect0r()
-    else ->*/ Vect0r(size) { ix: Int -> this[ix] }
-/*}*/
-
-
-fun IntArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
-fun LongArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
-fun DoubleArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
-fun FloatArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
-fun BitSet.toVect0r() = Vect0r(this.length()) { ix: Int -> get(ix) }
-fun String.toVect0r() = Vect0r(this.length) { ix: Int -> get(ix) }
-fun CharSequence.toVect0r() = Vect0r(this.length) { ix: Int -> get(ix) }
-fun ByteArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
-fun CharArray.toVect0r() = Vect0r(size) { ix: Int -> get(ix) }
-fun ByteBuffer.toVect0r(): Vect0r<Byte> {
-    val slice = slice();return Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) }
-}
-
-fun <T> List<T>.toVect0r() = Vect0r(size) { ix: Int -> this[ix] }
-suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
-
-
+suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
+fun ByteBuffer.toVect0r(): Vect0r<Byte> = slice().let {slice-> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
-
-
 fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
-
-
 fun <T> combine(vararg s: Flow<T>): Flow<T> = flow {
     for (f: Flow<T> in s)
         f.collect(this::emit)
@@ -431,10 +402,20 @@ inline fun <T> Vect0r<T>.slice(
 inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P): P = combine(this, p) as P
 
 
+/**cloning and reifying Vect0r to ByteArray*/
+fun Vect0r<Byte>.toByteArray() = ByteArray(size) { i -> get(i) }
 
-/**cloning and reifying Vect0r to ByteArray*/   fun Vect0r<Byte>.toByteArray() = ByteArray(size) { i -> get(i) }
-/**cloning and reifying Vect0r to CharArray*/   fun Vect0r<Char>.toCharArray() = CharArray(size) { i -> get(i) }
-/**cloning and reifying Vect0r to IntArray*/   fun Vect0r<Int>.toIntArray() = IntArray(size) { i -> get(i) }
-/**cloning and reifying Vect0r to LongArray*/   fun Vect0r<Long>.toLongArray() = LongArray(size) { i -> get(i) }
-/**cloning and reifying Vect0r to FloatArray*/   fun Vect0r<Float>.toFloatArray() = FloatArray(size) { i -> get(i) }
-/**cloning and reifying Vect0r to DoubleArray*/   fun Vect0r<Double>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
+/**cloning and reifying Vect0r to CharArray*/
+fun Vect0r<Char>.toCharArray() = CharArray(size) { i -> get(i) }
+
+/**cloning and reifying Vect0r to IntArray*/
+fun Vect0r<Int>.toIntArray() = IntArray(size) { i -> get(i) }
+
+/**cloning and reifying Vect0r to LongArray*/
+fun Vect0r<Long>.toLongArray() = LongArray(size) { i -> get(i) }
+
+/**cloning and reifying Vect0r to FloatArray*/
+fun Vect0r<Float>.toFloatArray() = FloatArray(size) { i -> get(i) }
+
+/**cloning and reifying Vect0r to DoubleArray*/
+fun Vect0r<Double>.toDoubleArray() = DoubleArray(size) { i -> get(i) }

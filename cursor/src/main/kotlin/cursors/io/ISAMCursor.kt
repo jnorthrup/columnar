@@ -47,7 +47,7 @@ class ISAMCursor(
             res
         }
         val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
-        scalars= (typeVec).zip(rnames).map { Scalar(it.first, it.second) }.toList().toVect0r()
+        scalars= (typeVec).zip(rnames,Scalar.Companion::invoke  ) /*as Vect0r<Scalar>*/
 
         fc.let { fileChannel ->
 

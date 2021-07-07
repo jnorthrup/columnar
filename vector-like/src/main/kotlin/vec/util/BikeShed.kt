@@ -40,8 +40,7 @@ var logReuseCountdown = 0
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _v {
-
-    operator fun <T> get(vararg t: T): Vect0r<T> = (t as Array<T>).toVect0r()
+    operator fun <T> get(vararg t: T) = t.toVect0r() as Vect0r<T>
 }
 
 /**
@@ -56,25 +55,12 @@ object _l {
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-
     operator fun get(vararg t: Int) = t
-
-
     operator fun get(vararg t: Double) = t
-
-
     operator fun get(vararg t: Short) = t
-
-
     operator fun get(vararg t: Byte) = t
-
-
     operator fun get(vararg t: Boolean) = t
-
-
     operator fun get(vararg t: Long) = t
-
-
     operator fun <T> get(vararg t: T) = t as Array<T>
 }
 
@@ -138,12 +124,13 @@ fun <T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
 @JvmOverloads
 inline fun <reified T> moireValues(
     inVec: Vect0r<T>,
-    limit: Int ,
-    initialOneOrMore: Int= inVec.first,
+    limit: Int,
+    initialOneOrMore: Int = inVec.first,
     noinline x: (Int) -> T = inVec.second,
 ) = min(initialOneOrMore, limit).let { min ->
     combine(_v[min t2 x,
-            (limit - min) t2 { i: Int ->x(i.rem(min))
+            (limit - min) t2 { i: Int ->
+                x(i.rem(min))
             } //dummy loop rows
     ])
 }

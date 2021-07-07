@@ -6,6 +6,7 @@ import cursors.io.RowVec
 import cursors.io.Vect02_.left
 import cursors.io.Vect02_.right
 import vec.macros.*
+import kotlin.coroutines.CoroutineContext
 
 /**
  * reducer func -- operator for sum/avg/mean etc. would be nice, but we have to play nice in a type-safe language so  ∑'s just a hint  of a reducer semantic

@@ -18,13 +18,10 @@ fun Cursor.resample(indexcol: Int): Cursor = let {
     val scalars = this.scalars
     val sequence = daySeq(min, max) - indexValues
     val indexVec = sequence.toVect0r()
-    val cursor: Cursor = Cursor(indexVec.first) { iy: Int ->
-        Pai2(scalars.first) { ix: Int ->
-            val any = when (ix == indexcol) {
-                true -> indexVec[iy]
-                else -> null
-            }
-            any t2 { scalars[ix] }
+    val cursor: Cursor =
+        indexVec.size t2  { iy: Int ->
+         scalars.size t2  { ix: Int ->
+             ix.takeIf { it==indexcol }?.let{ indexVec[iy]} t2 { scalars[ix] }
         }
     }
     combine(this, cursor)

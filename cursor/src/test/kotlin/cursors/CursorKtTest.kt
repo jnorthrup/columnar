@@ -49,7 +49,7 @@ class CursorKtTest {
         fixedWidth,
         RowMajor.indexableOf(nio, fixedWidth),
         nio,
-        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?>)
+        Columnar(drivers.zip(names)  )
     )
 
 

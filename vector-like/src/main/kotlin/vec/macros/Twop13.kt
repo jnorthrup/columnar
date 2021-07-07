@@ -121,7 +121,8 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
 /**
  * int-type specific twin with primitive array backing store.
  */
-inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
+@JvmInline
+value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
     override val first get() = ia[0]
     override val second get() = ia[1]
 }
@@ -129,7 +130,8 @@ inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
 /**
  * long-type specific twin with primitive array backing store.
  */
-inline class Twln(val ia: LongArray) : Tw1n<Long> {
+@JvmInline
+value class Twln(val ia: LongArray) : Tw1n<Long> {
     override val first get() = ia[0]
     override val second get() = ia[1]
 }
@@ -140,7 +142,7 @@ fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 @JvmName("twinlong")
 fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
-infix fun <F, S> F.t2(s: S) = Pai2(this, s)
+infix fun <F, S> F.t2(s: S) = Pai2.invoke(this, s)
 infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
         f,
@@ -174,7 +176,7 @@ interface Qu4d<F, S, T, Z> {
         )
 
     companion object {
-        
+
         operator fun <F, S, T, Z> invoke(
             first: F,
             second: S,
@@ -188,19 +190,19 @@ interface Qu4d<F, S, T, Z> {
                 override val fourth get() = fourth
             }
 
-        
+
         operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) =
             p.let { (f, s, t, z) ->
                 Qu4d(f, s, t, z)
             }
 
-        
+
         operator fun <F, S, T, Z> invoke(p: Array<*>) = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST")
             (Qu4d(f as F, s as S, t as T, z as Z))
         }
 
-        
+
         operator fun <F, S, T, Z> invoke(p: List<*>) = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST")
             (Qu4d(f as F, s as S, t as T, z as Z))

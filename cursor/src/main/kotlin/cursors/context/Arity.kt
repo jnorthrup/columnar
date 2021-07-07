@@ -22,7 +22,7 @@ open interface Scalar : Arity, Pai2<TypeMemento, String?> {
             val (a, b) = p
             return Scalar(a, b)
         }
-
+operator fun invoke(type: TypeMemento, name: String? = null)= Scalar(type, name)
         fun Scalar(type: TypeMemento, name: String? = null) = object : Scalar {
             override val first: TypeMemento
                 get() = type
