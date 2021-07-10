@@ -10,7 +10,7 @@ Tuples also occur in relational algebra; when programming the semantic web with 
  */
 
 
-@file:Suppress("OVERRIDE_BY_")
+@file:Suppress("OVERRIDE_BY_", "OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE")
 
 package vec.macros
 
@@ -26,27 +26,27 @@ interface Pai2<F, S> {
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
-    val pair get() = let { first to second }
+    val pair: Pair<F, S> get() = let { first to second }
 
-    @Suppress("OVERRIDE_BY_")
     companion object {
-        
-        operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
+        inline operator fun <reified F, reified S> invoke(first: F, second: S): Pai2<F, S> =
             object : Pai2<F, S> {
-                override val first get() = first
-                override val second get() = second
+                override inline val first get() = first
+                override inline val second get() = second
             }
 
 
         /**
          * Pair copy ctor conversion
          */
-        
-        operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P)  = object:  Pai2<F, S > {
-            override val first: F by p::first
-            override val second: S by p::second
-        }
-        operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P)  = object:  Pai2<F, S > {
+
+        inline operator fun <reified F, reified S, reified P : Pair<F, S>, reified R : Pai2<F, S>> invoke(p: P) =
+            object : Pai2<F, S> {
+                override val first: F by p::first
+                override val second: S by p::second
+            }
+
+        inline operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P) = object : Pai2<F, S> {
             override val first: F by p::key
             override val second: S by p::value
         }
@@ -70,24 +70,24 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
     val triple get() = Triple(first, second, third)
 
     companion object {
-        
-        operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
+
+        inline operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
             object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
-                override val first get() = first
-                override val second get() = second
-                override val third get() = third
+                override inline val first get() = first
+                override inline val second get() = second
+                override inline val third get() = third
             }
 
-        
-        operator fun <F, S, T> invoke(p: Triple<F, S, T>) =
+
+        inline operator fun <F, S, T> invoke(p: Triple<F, S, T>) =
             p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 
 }
 
-operator fun <F, S, T> Tripl3<F, S, T>.component3(): T = third
-operator fun <F, S, T> Tripl3<F, S, T>.component2(): S = second
-operator fun <F, S, T> Tripl3<F, S, T>.component1(): F = first
+inline operator fun <F, S, T> Tripl3<F, S, T>.component3(): T = third
+inline operator fun <F, S, T> Tripl3<F, S, T>.component2(): S = second
+inline operator fun <F, S, T> Tripl3<F, S, T>.component1(): F = first
 
 
 /**
@@ -113,8 +113,8 @@ typealias Tw1n<X> = XY<X, X>
  */
 inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
     object : Pai2<T, T> {
-        override val first get() = ar[0]
-        override val second get() = ar[1]
+        override inline val first get() = ar[0]
+        override inline val second get() = ar[1]
     }
 }
 
@@ -123,8 +123,8 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
  */
 @JvmInline
 value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
-    override val first get() = ia[0]
-    override val second get() = ia[1]
+    override inline val first get() = ia[0]
+    override inline val second get() = ia[1]
 }
 
 /**
@@ -132,8 +132,8 @@ value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
  */
 @JvmInline
 value class Twln(val ia: LongArray) : Tw1n<Long> {
-    override val first get() = ia[0]
-    override val second get() = ia[1]
+    override inline val first get() = ia[0]
+    override inline val second get() = ia[1]
 }
 
 @JvmName("twinint")
@@ -142,7 +142,7 @@ fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 @JvmName("twinlong")
 fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
-infix fun <F, S> F.t2(s: S) = Pai2.invoke(this, s)
+inline infix fun <reified F, reified S> F.t2(s: S) = Pai2.invoke(this, s)
 infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
         f,
@@ -184,10 +184,10 @@ interface Qu4d<F, S, T, Z> {
             fourth: Z,
         ): Qu4d<F, S, T, Z> =
             object : Qu4d<F, S, T, Z> {
-                override val first get() = first
-                override val second get() = second
-                override val third get() = third
-                override val fourth get() = fourth
+                override inline val first get() = first
+                override inline val second get() = second
+                override inline val third get() = third
+                override inline val fourth get() = fourth
             }
 
 
@@ -210,7 +210,7 @@ interface Qu4d<F, S, T, Z> {
     }
 }
 
-operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component4() = fourth
-operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component3() = third
-operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component2() = second
-operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component1() = first
+inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component4() = fourth
+inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component3() = third
+inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component2() = second
+inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component1() = first

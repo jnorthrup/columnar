@@ -4,7 +4,7 @@ package trie
  * Created by kenny on 6/6/16.
  */
 class Trie(var root: Map<String, Node> = linkedMapOf()) {
-    var freeze: Boolean = false
+    private var freeze: Boolean = false
     fun add(v: Int, vararg values: String) {
         var children = root
         for ((i, value) in values.withIndex()) {
@@ -14,7 +14,6 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
                 val node = Node(value, isLeaf, v)
                 (children as MutableMap)[value] = node as Node
                 children = node.children
-
             } else {
                 // exist, so traverse current path + set isLeaf if needed
                 val node = children[value]!!

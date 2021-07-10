@@ -1,12 +1,15 @@
 package trie
 
 import java.util.*
+import kotlin.Comparator
+
 
 class ArrayMap<K, V>(
-    val entre: Array<Map.Entry<K, V>>,
-    val cmp: Comparator<K> = Comparator<K> { o1, o2 -> o1.toString().compareTo(o2.toString()) },
+    val entre: Array<out Map.Entry<K, V>>,
+    val cmp: Comparator<K> = Comparator<K> { o1, o2 ->
+        ((o1 as? Comparable<K>)?.compareTo(o2 as K)) ?: o1.toString().compareTo(o2.toString())
+    },
 ) : Map<K, V> {
-
     override val entries: Set<Map.Entry<K, V>>
         get() = map { (k, v) ->
             object : Map.Entry<K, V> {
@@ -26,7 +29,7 @@ class ArrayMap<K, V>(
 
     private fun binIndexOf(key1: K) = Arrays.binarySearch(entre, comparatorKeyShim(key1), comparator)
 
-    fun comparatorKeyShim(key1: K): Map.Entry<K, V> = KVEntry(key1)
+    fun comparatorKeyShim(key1: K): Map.Entry<K, V> = ShimEntry(key1)
 
     override fun isEmpty() = run(entre::isEmpty)
 
@@ -35,7 +38,7 @@ class ArrayMap<K, V>(
             Comparator<Map.Entry<K, *>> { (o1: K), (o2: K) -> comparator1.compare(o1, o2) }
 
         /**
-         * if there aren't guarantees about ordered constructor entries, we can doa quick sort first on the comparator
+         * if there aren't guarantees about ordered constructor entries, we can do a quick sort first on the comparator
          */
         fun <K, V> sorting(
             map: Map<K, V>,
@@ -45,7 +48,7 @@ class ArrayMap<K, V>(
     }
 }
 
-class KVEntry<K, V>(private val key1: K) : Map.Entry<K, V> {
+class ShimEntry<K, V>(private val key1: K) : Map.Entry<K, V> {
     override val key: K get() = key1
     override val value: V get() = TODO("Not yet implemented")
 }

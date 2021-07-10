@@ -221,7 +221,7 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> =
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-infix fun <T, R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
+inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
     zip(other.toList()) { a: T, b: R -> a t2 b }
 
 
@@ -425,10 +425,19 @@ fun ByteBuffer.toVect0r(): Vect0r<Byte> =
 fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
-inline val <reified X> Vect0r<Vect0r<X>>.T:Vect0r<Vect0r<X>>
+inline val <reified X> Vect0r<Vect0r<X>>.T: Vect0r<Vect0r<X>>
     get() = combine(this).toList().let { c ->
-        (size t2 (  f1rst.size)).let {(fs, count) ->
-              count t2 { x: Int ->
-          (c).slice((x * fs )until ((x + 1) *fs)).toVect0r()}}}
+        (size t2 (f1rst.size)).let { (fs, count) ->
+            count t2 { x: Int ->
+                (c).slice((x * fs) until ((x + 1) * fs)).toVect0r()
+            }
+        }
+    }
 
-
+/**
+ * Vect0r->Set */
+inline fun <reified S> Vect0r<S>.toSet(opt:MutableSet<S>?=null) = (opt?:LinkedHashSet<S>(size)).also { hs ->
+    repeat(size) {
+        hs.add(get(it))
+    }
+}

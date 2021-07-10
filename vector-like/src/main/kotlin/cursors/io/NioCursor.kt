@@ -1,19 +1,16 @@
 package cursors.io
 
 import vec.macros.*
+import java.util.*
+import kotlin.collections.HashMap
 
 object Vect02_ {
-
-
     val <F, S> Vect02<F, S>.left get() = this.α(Pai2<F, S>::first)
     val <F, S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
     val <F, S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair
 
-    fun <F, S> Vect02<F, S>.toMap() = linkedMapOf<F, S>().also { map ->
-        this.left.toList().zip(this.right.toList()) { a: F, b: S ->
-            map[a] = b
+    inline fun <reified F, reified S> Vect02<F, S>.toMap(theMap: MutableMap<F, S>? = null) = toList().map(Pai2<F, S>::pair).let { paris -> (if (theMap != null) theMap.let { paris.toMap(theMap as MutableMap<in F, in S>) } else paris.toMap(HashMap(paris.size)))
         }
-    }as Map<F,S>
 }
 
 object V3ct0r_ {
