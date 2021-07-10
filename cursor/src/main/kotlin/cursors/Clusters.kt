@@ -8,7 +8,6 @@ import cursors.io.Vect02_.right
 import trie.ArrayMap
 import vec.macros.*
 import vec.util.BloomFilter
-import vec.util.logDebug
 import java.util.*
 import kotlin.math.max
 import kotlin.math.sqrt

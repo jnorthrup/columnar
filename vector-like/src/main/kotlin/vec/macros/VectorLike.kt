@@ -228,25 +228,12 @@ infix fun <T, R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
 @JvmOverloads
 @JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T,reified O,reified R> Vect0r< T>.zip(o: Vect0r<O>, crossinline f: (T, O) -> R = { a, b -> (a t2 b)  as R }):Vect0r<R> =
-    size t2 { x: Int -> f(this[x], o[x])  }
+inline fun <reified T, reified O, reified R> Vect0r<T>.zip(
+    o: Vect0r<O>,
+    crossinline f: (T, O) -> R = { a, b -> (a t2 b) as R },
+): Vect0r<R> =
+    size t2 { x: Int -> f(this[x], o[x]) }
 
-fun <T> Array<T>.toVect0r() = (size t2 ::get )as Vect0r<T>
-fun IntArray.toVect0r() = (size t2 ::get )as Vect0r<Int>
-fun LongArray.toVect0r() = (size t2 ::get )as Vect0r<Long>
-fun DoubleArray.toVect0r() = (size t2 ::get )as Vect0r<Double>
-fun FloatArray.toVect0r() = (size t2 ::get )as Vect0r<Float>
-fun ByteArray.toVect0r() = (size t2 ::get )as Vect0r<Byte>
-fun CharArray.toVect0r() = (size t2 ::get )as Vect0r<Char>
-fun String.toVect0r() = (length t2 ::get )as Vect0r<String>
-fun CharSequence.toVect0r() = (length t2 ::get )as Vect0r<Char>
-fun <T> List<T>.toVect0r()  = (size t2 ::get) as Vect0r<T>
-fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) }) as Vect0r<Boolean>
-
-suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
-fun ByteBuffer.toVect0r(): Vect0r<Byte> = slice().let {slice-> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
-fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
-fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("combine_Flow")
 fun <T> combine(vararg s: Flow<T>): Flow<T> = flow {
@@ -380,23 +367,23 @@ val <T> Vect0r<T>.reverse: Vect0r<T>
  * direct increment x offset for a cheaper slice than binary search
  */
 @JvmOverloads
-inline fun <T> Vect0r<Vect0r<T>>.slicex(
+inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.slicex(
     sta: Int = 0, end: Int = this.size,
-) = this.first t2 { y: Int ->
+): TTT = (this.first t2 { y: Int ->
     this.second(y).let { (_, b) ->
         (1 + end - sta) t2 { x: Int -> b(x + sta) }
     }
-}
+}) as TTT
 
 /**
  * direct increment offset for a cheaper slice than binary search
  */
 @JvmOverloads
-inline fun <T> Vect0r<T>.slice(
+inline fun <reified T, reified TT : Vect0r<T>> TT.slice(
     sta: Int = 0, end: Int = this.size,
-) = end - sta t2 { y: Int ->
+): TT = (end - sta t2 { y: Int ->
     this[y + sta]
-}
+}) as TT
 
 /** plus operator*/
 inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P): P = combine(this, p) as P
@@ -419,3 +406,29 @@ fun Vect0r<Float>.toFloatArray() = FloatArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to DoubleArray*/
 fun Vect0r<Double>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
+
+fun <T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
+fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
+fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
+fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
+fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
+fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
+fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
+fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
+fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) })
+suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
+fun ByteBuffer.toVect0r(): Vect0r<Byte> =
+    slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
+
+fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+
+inline val <reified X> Vect0r<Vect0r<X>>.T:Vect0r<Vect0r<X>>
+    get() = combine(this).toList().let { c ->
+        (size t2 (  f1rst.size)).let {(fs, count) ->
+              count t2 { x: Int ->
+          (c).slice((x * fs )until ((x + 1) *fs)).toVect0r()}}}
+
+
