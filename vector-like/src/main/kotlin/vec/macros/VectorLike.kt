@@ -173,10 +173,10 @@ operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> =
 
 @JvmName("vlike_Vect0r_toArray")
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
-fun <T> Vect0r<T>.toList(): List<T> = let { v ->
+inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
-        override val size: Int = v.first
-        override operator fun get(index: Int) = (v[index])
+      override inline val size get() = v.first
+      override inline operator fun get(index: Int) = (v[index])
     }
 }
 
@@ -422,11 +422,10 @@ fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
 fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) })
 
 fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
-fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0
+fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0L
 
-@JvmName("VsumDouble")
-fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0
-fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0
+fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0.0
+fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0f
 
 suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
@@ -478,3 +477,56 @@ inline val <reified S> Vect0r<S>.`➤`
 value class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
     override inline fun iterator() = p.iterator()
 }
+/**
+ * optimize for where a smallish map has hotspots that are over-used and others that are excess overhead
+ * in the more expensive things that old code does with maps
+ */
+inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> = let { top ->
+    ((this as? SortedMap)?.keys ?: keys.sorted()).toIntArray().let { k ->
+        0 t2 if (top.size <= 16)
+            { x: Int ->
+                var r: V? = null
+                var i = 0
+                do {
+                    if (k[i]++ == x) r = top[x]
+                } while (i < size && r == null)
+                r.also {
+                    assert(it == top[x])
+                }
+            } else { x: Int ->
+            k.binarySearch(x).takeUnless { 0 < it }?.let { i ->
+                top[x].also {
+                    assert(it == top[x])
+                }
+            }
+        }
+    }
+}
+
+
+/**
+ * pay once for the conversion from a mutable map to an array map and all that implies
+ */
+inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = let { top ->
+    ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toTypedArray().let { entries ->
+        val k = keys.toIntArray()
+        0 t2 if (top.size <= 16)
+            { x: Int ->
+                var r: V? = null
+                var i = 0
+                do {
+                    if (k[i]++ == x) r = entries[i].value
+                } while (i < size && r == null)
+                r.also { assert(it == top[x]) }
+            } else { x: Int ->
+            k.binarySearch(x).takeUnless { 0 < it }?.let { i ->
+                (entries[i].value).also {
+                    assert(it == top[x])
+                }
+            }
+        }
+    }
+}
+
+
+

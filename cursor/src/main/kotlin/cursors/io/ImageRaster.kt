@@ -1,6 +1,7 @@
+package cursors.io
+
 import cursors.Cursor
 import cursors.context.Scalar.Companion.Scalar
-import cursors.io.IOMemento
 import vec.macros.t2
 import java.io.File
 import javax.imageio.ImageIO

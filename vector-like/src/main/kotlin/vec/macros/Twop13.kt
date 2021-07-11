@@ -20,8 +20,6 @@ import vec.util._a
 interface Pai2<F, S> {
     val first: F
     val second: S
-    operator fun component1(): F = first
-    operator fun component2(): S = second
 
     /**
      * for println and serializable usecases, offload that stuff using this method.
@@ -53,9 +51,9 @@ interface Pai2<F, S> {
     }
 }
 
-/*
- operator fun < F,  S> Pai2<F, S>.component2(): S = second
- operator fun < F,  S> Pai2<F, S>.component1(): F = first*/
+inline operator fun <reified F, reified S> Pai2<F, S>.component2(): S = second
+inline operator fun <reified F, reified S> Pai2<F, S>.component1(): F = first
+
 
 /**inheritable version of triple
  */
@@ -143,7 +141,7 @@ fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
 inline infix fun <reified F, reified S> F.t2(s: S) = Pai2.invoke(this, s)
-infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
+inline infix fun <reified F, reified S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
         f,
         s,

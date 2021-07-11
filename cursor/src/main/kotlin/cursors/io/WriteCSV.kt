@@ -3,6 +3,8 @@ package cursors.io
 import cursors.Cursor
 import cursors.io.Vect02_.left
 import cursors.io.Vect02_.right
+import vec.macros.component1
+import vec.macros.component2
 import vec.macros.size
 import vec.macros.toList
 import vec.util.fib

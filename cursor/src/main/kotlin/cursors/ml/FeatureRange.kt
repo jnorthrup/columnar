@@ -1,6 +1,8 @@
 package cursors.ml
 
 import vec.macros.Tw1n
+import vec.macros.component1
+import vec.macros.component2
 
 /**
  * returns min,max of sequence given
@@ -21,12 +23,11 @@ inline fun <reified T : Comparable<T>> featureRange(seq: Sequence<T>, maxMinTwin
 /**
  * this is a min-max in that order
  */
-fun <T : Double> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-fun <T : Float> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-fun <T : Int> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-fun <T : Long> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-
-fun <T : Double> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
-fun <T : Float> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
-fun <T : Int> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
-fun <T : Long> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
+inline fun <reified T : Double> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
+inline fun <reified T : Float> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
+inline fun <reified T : Int> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
+inline fun <reified T : Long> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
+inline fun <reified T : Double> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
+inline fun <reified T : Float> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
+inline fun <reified T : Int> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
+inline fun <reified T : Long> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
