@@ -3,6 +3,7 @@ package vec.macros
 import kotlinx.coroutines.flow.*
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.experimental.ExperimentalTypeInference
 import kotlin.experimental.and
 
 /**
@@ -420,10 +421,12 @@ fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
 fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
 fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) })
 
-fun Vect0r<Int>.sum() = `➤`.reduce(Int::plus)
-fun Vect0r<Long>.sum() = `➤`.reduce(Long::plus)
-fun Vect0r<Double>.sum() = `➤`.reduce(Double::plus)
-fun Vect0r<Float>.sum() = `➤`.reduce(Float::plus)
+fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
+fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0
+
+@JvmName("VsumDouble")
+fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0
+fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0
 
 suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
