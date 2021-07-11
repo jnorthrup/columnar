@@ -3,6 +3,7 @@ package vec.macros
 import kotlinx.coroutines.flow.*
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.experimental.and
 
 /**
  * semigroup
@@ -414,10 +415,16 @@ fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
 fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
 fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
 fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
-fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
 fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
+fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
 fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
 fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) })
+
+fun Vect0r<Int>.sum() = `➤`.reduce(Int::plus)
+fun Vect0r<Long>.sum() = `➤`.reduce(Long::plus)
+fun Vect0r<Double>.sum() = `➤`.reduce(Double::plus)
+fun Vect0r<Float>.sum() = `➤`.reduce(Float::plus)
+
 suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
     slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
@@ -436,8 +443,35 @@ inline val <reified X> Vect0r<Vect0r<X>>.T: Vect0r<Vect0r<X>>
 
 /**
  * Vect0r->Set */
-inline fun <reified S> Vect0r<S>.toSet(opt:MutableSet<S>?=null) = (opt?:LinkedHashSet<S>(size)).also { hs ->
+inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: LinkedHashSet<S>(size)).also { hs ->
     repeat(size) {
         hs.add(get(it))
     }
+}
+
+
+fun <S> Vect0r<S>.iterator(): Iterator<S> {
+    val size = this.size
+
+    return object : Iterator<S> /*,Enumeration<S>*/ {
+        var x = 0
+        override fun hasNext(): Boolean {
+            return x < size
+        }
+
+        override fun next(): S = get(x)
+//        override fun hasMoreElements() = hasNext()
+//        override fun nextElement(): S =next()
+
+    }
+}
+
+inline val <reified S> Vect0r<S>.`➤`
+    get() =
+        `Vect0r➤`<S>(this)
+
+
+@JvmInline
+value class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
+    override inline fun iterator() = p.iterator()
 }
