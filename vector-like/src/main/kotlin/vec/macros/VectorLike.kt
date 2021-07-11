@@ -1,10 +1,9 @@
 package vec.macros
 
 import kotlinx.coroutines.flow.*
+import vec.util.logDebug
 import java.nio.ByteBuffer
 import java.util.*
-import kotlin.experimental.ExperimentalTypeInference
-import kotlin.experimental.and
 
 /**
  * semigroup
@@ -175,8 +174,8 @@ operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> =
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
 inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
-      override inline val size get() = v.first
-      override inline operator fun get(index: Int) = (v[index])
+        override inline val size get() = v.first
+        override inline operator fun get(index: Int) = (v[index])
     }
 }
 
@@ -434,12 +433,18 @@ fun ByteBuffer.toVect0r(): Vect0r<Byte> =
 fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
-inline val <reified X> Vect0r<Vect0r<X>>.T: Vect0r<Vect0r<X>>
-    get() = combine(this).toList().let { c ->
-        (size t2 (f1rst.size)).let { (fs, count) ->
-            count t2 { x: Int ->
-                (c).slice((x * fs) until ((x + 1) * fs)).toVect0r()
-            }
+inline val <reified X> Vect0r<Vect0r<X>>.T
+    get() = run {
+        val shape = this[0].size t2 this.size
+        val combine = combine(this)
+        ((0 until combine.size) / shape.second).let { rr ->
+                  rr[0].map { y ->
+                     rr.map {
+                        val i = it.toList()[y]
+                         i
+                    }.toIntArray()
+
+            } α combine::get
         }
     }
 
@@ -477,6 +482,7 @@ inline val <reified S> Vect0r<S>.`➤`
 value class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
     override inline fun iterator() = p.iterator()
 }
+
 /**
  * optimize for where a smallish map has hotspots that are over-used and others that are excess overhead
  * in the more expensive things that old code does with maps

@@ -41,10 +41,10 @@ class VectorLikeKtTest {
         (tist α Vect0r<Int>::toList).forEach { list: List<Int> ->
             System.err.println(list.toString())
         }
-        assertEquals(goal[1][0], tist[0][1])
-        assertEquals(goal[2][1], tist[1][2])
-        assertEquals(goal[3][2], tist[2][3])
-        assertEquals(goal[0][2], tist[2][0])
+        assertEquals(goal[1][0], tist[1][0])
+        assertEquals(goal[2][1], tist[2][1])
+        assertEquals(goal[3][2], tist[3][2])
+        assertEquals(goal[0][2], tist[0][2])
 
     }
 }
