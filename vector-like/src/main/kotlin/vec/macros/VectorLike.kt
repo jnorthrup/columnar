@@ -1,7 +1,8 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package vec.macros
 
 import kotlinx.coroutines.flow.*
-import vec.util.logDebug
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -407,57 +408,51 @@ fun Vect0r<Float>.toFloatArray() = FloatArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to DoubleArray*/
 fun Vect0r<Double>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
-
 fun <T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
-fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
-fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
-fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
-fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
-fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
-fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
-fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
-fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) })
+inline fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
+inline fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
+inline fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
+inline fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
+inline fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
+inline fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
+inline fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
+inline fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
+inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+inline fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) })
+inline fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
+inline fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0L
+inline fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0.0
+inline fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0f
 
-fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
-fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0L
-
-fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0.0
-fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0f
-
-suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
+suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
     slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 
-fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
-fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 inline val <reified X> Vect0r<Vect0r<X>>.T
     get() = run {
         val shape = this[0].size t2 this.size
         val combine = combine(this)
         ((0 until combine.size) / shape.second).let { rr ->
-                  rr[0].map { y ->
-                     rr.map {
-                        val i = it.toList()[y]
-                         i
-                    }.toIntArray()
-
-            } α combine::get
+            rr α { it.toVect0r()[rr[0]].toIntArray() }
+        } α {
+            combine[it]
         }
     }
 
 /**
  * Vect0r->Set */
-inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: LinkedHashSet<S>(size)).also { hs ->
-    repeat(size) {
-        hs.add(get(it))
+inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) =
+    (opt ?: LinkedHashSet<S>(size)).also { hs ->
+        repeat(size) {
+            hs.add(get(it))
+        }
     }
-}
 
 
-fun <S> Vect0r<S>.iterator(): Iterator<S> {
+inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
     val size = this.size
 
     return object : Iterator<S> /*,Enumeration<S>*/ {
@@ -478,9 +473,21 @@ inline val <reified S> Vect0r<S>.`➤`
         `Vect0r➤`<S>(this)
 
 
-@JvmInline
-value class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
-    override inline fun iterator() = p.iterator()
+inline class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
+    override fun iterator(): Iterator<S> {
+        val size = p.size
+        return object : Iterator<S> /*,Enumeration<S>*/ {
+            var x = 0
+            override fun hasNext(): Boolean {
+                return x < size
+            }
+
+            override fun next(): S = p.get(x)
+            //        override fun hasMoreElements() = hasNext()
+            //        override fun nextElement(): S =next()
+
+        }
+    }
 }
 
 /**
