@@ -62,8 +62,8 @@ we can print them. there is no toString so we get an identity from an inline cla
 we can reify them and then print that.
 
 ``` 
- System.err.println("double length vector is reified: " + doubleLength.toList())
- >double length vector is reified: [0, 1, 2, 0, 1, 2]
+ System.err.println("double length vector is : " + doubleLength.toList())
+ >double length vector is : [0, 1, 2, 0, 1, 2]
 
 ```
 

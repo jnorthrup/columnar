@@ -69,7 +69,7 @@ object _a {
  */
 object _s {
 
- inline    operator fun <reified T> get(vararg t: T) = setOf(*t)
+    inline operator fun <T> get(vararg t: T) = setOf(*t)
 }
 
 /**
@@ -77,10 +77,10 @@ object _s {
  */
 object _m {
 
-  inline   operator fun <reified K, reified V, reified P : Pair<K, V>> get(p: List<P>) = (p).toMap()
+    inline operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
 
 
-  inline   operator fun <reified K, reified V, reified P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
+    inline operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
 
 fun main() {
@@ -110,7 +110,7 @@ infix fun Any?.println(x: Any?) {
 }
 
 @JvmOverloads
-  tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
+tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
     when (n) {
         0 -> a
         1 -> b
@@ -122,11 +122,11 @@ fun <T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
 
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
-inline fun <reified T> moireValues(
+fun <T> moireValues(
     inVec: Vect0r<T>,
     limit: Int,
     initialOneOrMore: Int = inVec.first,
-    noinline x: (Int) -> T = inVec.second,
+    x: (Int) -> T = inVec.second,
 ) = min(initialOneOrMore, limit).let { min ->
     combine(_v[min t2 x,
             (limit - min) t2 { i: Int ->

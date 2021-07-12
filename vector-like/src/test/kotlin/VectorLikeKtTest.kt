@@ -69,7 +69,7 @@ class VectorLikeKtTest {
         System.err.println()
 
         // we can reify them and then print that.
-        System.err.println("double length vector is reified: " + doubleLength.toList())
+        System.err.println("double length vector is : " + doubleLength.toList())
         System.err.println()
 
         //we can destructure them to reach under the hood

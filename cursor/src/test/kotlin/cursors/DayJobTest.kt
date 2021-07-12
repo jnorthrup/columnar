@@ -129,7 +129,7 @@ class DayJobTest {
         var lastmessage: String? = null
     }
 
-    inline fun measureNanoTimeStr(block: () -> Unit): String = Duration.ofNanos(measureNanoTime(block)).toString()
+    fun  measureNanoTimeStr(block: () -> Unit): String = Duration.ofNanos(measureNanoTime(block)).toString()
 
     @Test
     fun `reorder+rewrite+pivot+pgroup+reduce`() {

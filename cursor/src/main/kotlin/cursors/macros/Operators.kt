@@ -40,7 +40,7 @@ infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor = run {
 //    }
 
 
-inline val <reified R, C : Vect0r<R>> C.`…`: List<R> get() = this.toList()
+val  < R, C : Vect0r<R>> C.`…`: List<R> get() = this.toList()
 
 /** left identity */
 

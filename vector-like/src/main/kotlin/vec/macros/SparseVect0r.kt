@@ -9,14 +9,14 @@ import java.util.*
  * pay once for the conversion from a mutable map to an array map and all that implies
  */
 @OptIn(ExperimentalStdlibApi::class)
-inline fun <reified V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = let { top ->
+fun  < V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = let { top ->
     val entries =
         ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toList()
     val sparse: Vect0r<V?> = bindSparse(entries α { (k, v) -> k t2 v })
     SparseVect0r(sparse, entries)
 }
 
-inline fun <reified V> bindSparse(
+fun  < V> bindSparse(
     driver: Vect02<Int, V>
 ): Vect0r<V?> = driver.let { entres ->
     val k = driver.left.toIntArray()

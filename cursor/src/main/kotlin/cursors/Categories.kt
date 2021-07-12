@@ -16,7 +16,7 @@ import kotlin.coroutines.CoroutineContext
  *
  * this creates a one-hot encoding set of categories for each value in each column.
  *
- * every distinct (column,value) permutation is reified as (as of this comment, expensive) in-place pivot
+ * every distinct (column,value) permutation is  as (as of this comment, expensive) in-place pivot
  *
  * TODO: staple the catx values to the cursor foreheads
  *

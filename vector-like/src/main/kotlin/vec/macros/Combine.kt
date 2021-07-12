@@ -3,10 +3,10 @@ package vec.macros
 import kotlin.math.absoluteValue
 
 @JvmName("combine_Vect0r ")
-inline fun <reified T> combine(vargs: Vect0r<Vect0r<T>>) = combine(*vargs.toArray())
+fun  < T> combine(vargs: Vect0r<Vect0r<T>>) = combine(*vargs.toArray())
 
 @JvmName("combine_VecVa")
-inline fun <reified T> combine(vararg vecArgs: Vect0r<T>) = vecArgs.filterNot { it.size == 0 }.let { vex ->
+fun  < T> combine(vararg vecArgs: Vect0r<T>) = vecArgs.filterNot { it.size == 0 }.let { vex ->
     when (vex.size) {
         0 -> vecArgs[0]
         1 -> vex.first()
@@ -21,7 +21,7 @@ inline fun <reified T> combine(vararg vecArgs: Vect0r<T>) = vecArgs.filterNot { 
     }
 }
 
-inline fun <reified T> muxIndexes(vargs: Collection<Vect0r<T>>) =
+fun  < T> muxIndexes(vargs: Collection<Vect0r<T>>) =
     vargs.foldIndexed (0 t2 IntArray(vargs.size)) { vix, (acc: Int, srcVec: IntArray), (vecSize) ->
         (acc + vecSize).let { nsize ->
             srcVec[vix] = nsize

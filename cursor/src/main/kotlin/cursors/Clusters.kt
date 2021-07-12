@@ -60,12 +60,12 @@ fun Cursor.group(
     }
 }
 
-inline fun Cursor.group(
+fun  Cursor.group(
     /**these columns will be preserved as the cluster key.
      * the remaining indexes will be aggregate
      */
     axis: IntArray,
-    crossinline reducer: ((Any?, Any?) -> Any?),
+    reducer: ((Any?, Any?) -> Any?),
 ): Cursor = run {
     val clusters = groupClusters(axis)
     val masterScalars = scalars

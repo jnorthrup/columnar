@@ -10,7 +10,7 @@ import javax.management.openmbean.InvalidKeyException
 /**
  * colIdx lands here
  */
-inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = right.toList().let { list ->
+inline operator fun < X,  T> Vect02<X, T?>.get(vararg s: T) = right.toList().let { list ->
     s.map {
         val indexOf = list.indexOf(it)
         if (-1 == indexOf)
@@ -22,7 +22,7 @@ inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = righ
 /**
  * colIdx lands here
  */
-inline operator fun <reified X> Vect02<X, String?>.get(vararg s: NegateColumn) =
+inline operator fun < X> Vect02<X, String?>.get(vararg s: NegateColumn) =
     ((0 until size).toList() - get(*s.map { it.negated }.toTypedArray()).toList()).toIntArray()
 
 
