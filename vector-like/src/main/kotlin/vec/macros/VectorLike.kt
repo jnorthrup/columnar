@@ -3,6 +3,7 @@
 package vec.macros
 
 import kotlinx.coroutines.flow.*
+import vec.util._v
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -29,16 +30,12 @@ inline operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> 
     { a: A -> b(this(a)) }
 
 
-inline infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
-    b: G,
-): R1 = ({ a: A -> b(this(a)) }) as R1
+inline infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(b: G): R1 = ({ a: A -> b(this(a)) }) as R1
 
 /**
  * G follows F
  */
-inline infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
-    f: F,
-): R = { a: A -> a `→` f `→` this } as R
+inline infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(f: F): R = { a: A -> a `→` f `→` this } as R
 
 /**
  * (λx.M[x]) → (λy.M[y])	α-conversion
@@ -372,8 +369,10 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
  */
 @JvmOverloads
 inline fun <reified T, reified TT : Vect0r<T>> TT.slice(
-    sta: Int = 0, end: Int = this.size,
-): TT = (end - sta t2 { y: Int ->
+    sta: Int = 0, until: Int = this.size,
+
+
+    ): TT = (until - sta t2 { y: Int ->
     this[y + sta]
 }) as TT
 
@@ -442,43 +441,34 @@ inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) =
     }
 
 
-inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
-    val size = this.size
+//inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
+//    val size = this.size
+//
+//    return object : Iterator<S> /*,Enumeration<S>*/ {
+//        var x = 0
+//        override fun hasNext(): Boolean {
+//            return x < size
+//        }
+//
+//        override fun next(): S = get(x)
+////        override fun hasMoreElements() = hasNext()
+////        override fun nextElement(): S =next()
+//
+//    }
+//}
 
-    return object : Iterator<S> /*,Enumeration<S>*/ {
-        var x = 0
-        override fun hasNext(): Boolean {
-            return x < size
-        }
-
-        override fun next(): S = get(x)
-//        override fun hasMoreElements() = hasNext()
-//        override fun nextElement(): S =next()
-
-    }
-}
-
+inline val <reified T>Vect0r<T>.`🗒`
+    get() = VList(this)
 inline val <reified S> Vect0r<S>.`➤`
     get() =
         `Vect0r➤`<S>(this)
 
 
-inline class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
-    override fun iterator(): Iterator<S> {
-        val size = p.size
-        return object : Iterator<S> /*,Enumeration<S>*/ {
-            var x = 0
-            override fun hasNext(): Boolean {
-                return x < size
-            }
+inline val <reified T>Vect0r<T>.iter
+    get() = this.`➤`
 
-            override fun next(): S = p.get(x)
-            //        override fun hasMoreElements() = hasNext()
-            //        override fun nextElement(): S =next()
+inline val <reified T>Vect0r<T>.vlist
+    get() = this.`🗒`
 
-        }
-    }
-}
-
-
+inline infix operator fun <reified T> Vect0r<T>.plus(t: T) = this + _v[t]
 
