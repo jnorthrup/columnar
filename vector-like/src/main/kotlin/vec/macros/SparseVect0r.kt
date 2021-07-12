@@ -20,14 +20,14 @@ inline fun <reified V> bindSparse(
     driver: Vect02<Int, V>
 ): Vect0r<V?> = driver.let { entres ->
     val k = driver.left.toIntArray()
-    0 t2 if (driver.size <= 16) //64 byte cacheline
-        { x ->
+    k.size t2 if (driver.size <= 16) //64 byte cacheline
+        { x :Int->
             var r: V? = null
             if (driver.size > 0) {
                 var i = 0
                 do {
                     if (k[i] == x)
-                        r = entres.right[x]
+                        r = entres.right[i]
                     ++i
                 } while (i < entres.size && r == null)
             }
