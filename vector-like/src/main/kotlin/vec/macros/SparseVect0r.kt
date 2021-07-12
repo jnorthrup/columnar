@@ -10,7 +10,8 @@ import java.util.*
  */
 @OptIn(ExperimentalStdlibApi::class)
 inline fun <reified V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = let { top ->
-    val toTypedArray: Array<Map.Entry<Int, V>> = ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toTypedArray()
+    val toTypedArray: Array<Map.Entry<Int, V>> =
+        ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toTypedArray()
     val sparse: Vect0r<V?> = bindSparse(toTypedArray α { (k, v) -> k t2 v })
     SparseVect0r(sparse, toTypedArray α { (k, v) -> k t2 v })
 }
@@ -43,5 +44,11 @@ inline fun <reified V> bindSparse(
  */
 class SparseVect0r<V>(
     private val sparse: Vect0r<V?>,
-    private val typedArray: Vect02<Int, V>
-) : Vect0r<V?> by sparse, Iterable<Pai2<Int, V>> by (typedArray).`➤`
+    private val entries: Vect02<Int, V>
+) : Vect0r<V?> by sparse, Iterable<Pai2<Int,V>> by (entries).`➤`/* {
+    val left: Vect0r<Int> get() = (entries as Vect02<Int, Any?>).left
+    val right: Vect0r<V> get() = (entries as Vect02<Int, Any?>).right as Vect0r<V>
+    val keys by this::left
+    val values by this::right
+}
+*/
