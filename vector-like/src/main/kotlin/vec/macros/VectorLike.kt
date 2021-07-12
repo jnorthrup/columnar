@@ -2,6 +2,8 @@
 
 package vec.macros
 
+import cursors.io.Vect02_.left
+import cursors.io.Vect02_.right
 import kotlinx.coroutines.flow.*
 import java.nio.ByteBuffer
 import java.util.*
@@ -486,57 +488,6 @@ inline class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
             //        override fun hasMoreElements() = hasNext()
             //        override fun nextElement(): S =next()
 
-        }
-    }
-}
-
-/**
- * optimize for where a smallish map has hotspots that are over-used and others that are excess overhead
- * in the more expensive things that old code does with maps
- */
-inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> = let { top ->
-    ((this as? SortedMap)?.keys ?: keys.sorted()).toIntArray().let { k ->
-        0 t2 if (top.size <= 16)
-            { x: Int ->
-                var r: V? = null
-                var i = 0
-                do {
-                    if (k[i]++ == x) r = top[x]
-                } while (i < size && r == null)
-                r.also {
-                    assert(it == top[x])
-                }
-            } else { x: Int ->
-            k.binarySearch(x).takeUnless { 0 < it }?.let { i ->
-                top[x].also {
-                    assert(it == top[x])
-                }
-            }
-        }
-    }
-}
-
-
-/**
- * pay once for the conversion from a mutable map to an array map and all that implies
- */
-inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = let { top ->
-    ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toTypedArray().let { entries ->
-        val k = keys.toIntArray()
-        0 t2 if (top.size <= 16)
-            { x: Int ->
-                var r: V? = null
-                var i = 0
-                do {
-                    if (k[i]++ == x) r = entries[i].value
-                } while (i < size && r == null)
-                r.also { assert(it == top[x]) }
-            } else { x: Int ->
-            k.binarySearch(x).takeUnless { 0 < it }?.let { i ->
-                (entries[i].value).also {
-                    assert(it == top[x])
-                }
-            }
         }
     }
 }

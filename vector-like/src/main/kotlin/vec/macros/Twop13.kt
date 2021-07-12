@@ -140,7 +140,7 @@ fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 @JvmName("twinlong")
 fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
-inline infix fun <reified F, reified S> F.t2(s: S) = Pai2.invoke(this, s)
+inline infix fun <reified F, reified S> F.t2(s: S) = Pai2<F,S>( this, s)
 inline infix fun <reified F, reified S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
         f,
