@@ -10,10 +10,10 @@ import java.util.*
  */
 @OptIn(ExperimentalStdlibApi::class)
 inline fun <reified V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = let { top ->
-    val toTypedArray: Array<Map.Entry<Int, V>> =
-        ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toTypedArray()
-    val sparse: Vect0r<V?> = bindSparse(toTypedArray α { (k, v) -> k t2 v })
-    SparseVect0r(sparse, toTypedArray α { (k, v) -> k t2 v })
+    val entries =
+        ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toList()
+    val sparse: Vect0r<V?> = bindSparse(entries α { (k, v) -> k t2 v })
+    SparseVect0r(sparse, entries)
 }
 
 inline fun <reified V> bindSparse(
@@ -42,13 +42,13 @@ inline fun <reified V> bindSparse(
 /**
  * massive chimera
  */
+@OptIn(ExperimentalStdlibApi::class)
 class SparseVect0r<V>(
     private val sparse: Vect0r<V?>,
-    private val entries: Vect02<Int, V>
-) : Vect0r<V?> by sparse, Iterable<Pai2<Int,V>> by (entries).`➤`/* {
-    val left: Vect0r<Int> get() = (entries as Vect02<Int, Any?>).left
-    val right: Vect0r<V> get() = (entries as Vect02<Int, Any?>).right as Vect0r<V>
+    private val entries: List<Map.Entry<Int, V>>,
+) : Vect0r<V?> by sparse, Iterable<Map.Entry<Int, V>> by (entries) {
+    val left: Vect0r<Int> get() = entries α Map.Entry<Int, V>::key
+    val right: Vect0r<V> get() = entries α Map.Entry<Int, V>::value
     val keys by this::left
     val values by this::right
 }
-*/
