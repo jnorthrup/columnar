@@ -12,7 +12,7 @@ import java.util.*
  */
 typealias Vect0r<T> = Pai2<Int, (Int) -> T>
 
-val  <T>Vect0r<T>.size: Int get() = first
+inline val  <T>Vect0r<T>.size: Int get() = first
 @Suppress("NonAsciiCharacters")
 typealias Matrix<T> = Pai2<
         /**shape*/
@@ -162,8 +162,8 @@ inline operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> =
 inline fun  < reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
 fun  < T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
-        override val  size get() = v.first
-        override inline operator fun get(index: Int) = (v[index])
+     inline  override val  size get() = v.first
+     inline  override   operator fun get(index: Int) = (v[index])
     }
 }
 

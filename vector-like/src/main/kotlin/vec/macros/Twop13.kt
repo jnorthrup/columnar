@@ -14,7 +14,9 @@ Tuples also occur in relational algebra; when programming the semantic web with 
 
 package vec.macros
 
+import org.bouncycastle.asn1.x500.style.RFC4519Style.c
 import vec.util._a
+
 
 /**inheritable version of pair  */
 interface Pai2<F, S> {
@@ -27,10 +29,10 @@ interface Pai2<F, S> {
     val pair: Pair<F, S> get() = let { first to second }
 
     companion object {
-        inline operator fun < F,  S> invoke(first: F, second: S): Pai2<F, S> =
+        inline operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> =
             object : Pai2<F, S> {
-                override val  first get() = first
-                override val  second get() = second
+                override val first get() = first
+                override val second get() = second
             }
 
 
@@ -38,7 +40,7 @@ interface Pai2<F, S> {
          * Pair copy ctor conversion
          */
 
-        inline operator fun < F,  S,  P : Pair<F, S>,  R : Pai2<F, S>> invoke(p: P) =
+        inline operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P) =
             object : Pai2<F, S> {
                 override val first: F by p::first
                 override val second: S by p::second
@@ -51,8 +53,8 @@ interface Pai2<F, S> {
     }
 }
 
-inline operator fun < F,  S> Pai2<F, S>.component2(): S = second
-inline operator fun < F,  S> Pai2<F, S>.component1(): F = first
+inline operator fun <F, S> Pai2<F, S>.component2(): S = second
+inline operator fun <F, S> Pai2<F, S>.component1(): F = first
 
 
 /**inheritable version of triple
@@ -71,9 +73,9 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
 
         inline operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
             object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
-                override val  first get() = first
-                override val  second get() = second
-                override val  third get() = third
+                override val first get() = first
+                override val second get() = second
+                override val third get() = third
             }
 
 
@@ -109,10 +111,10 @@ typealias Tw1n<X> = XY<X, X>
 /**
  * a factory method
  */
-inline fun  < reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
+inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
     object : Pai2<T, T> {
-        override val  first get() = ar[0]
-        override val  second get() = ar[1]
+        override val first get() = ar[0]
+        override val second get() = ar[1]
     }
 }
 
@@ -121,8 +123,8 @@ inline fun  < reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, sec
  */
 @JvmInline
 value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
-    override val  first get() = ia[0]
-    override val  second get() = ia[1]
+    override val first get() = ia[0]
+    override val second get() = ia[1]
 }
 
 /**
@@ -130,8 +132,8 @@ value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
  */
 @JvmInline
 value class Twln(val ia: LongArray) : Tw1n<Long> {
-    override val  first get() = ia[0]
-    override val  second get() = ia[1]
+    override val first get() = ia[0]
+    override val second get() = ia[1]
 }
 
 @JvmName("twinint")
@@ -140,8 +142,17 @@ fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 @JvmName("twinlong")
 fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
-inline infix fun < F,  S> F.t2(s: S) = Pai2<F,S>( this, s)
-inline infix fun < F,  S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
+inline infix fun <F, S> F.t2(s: S) = Pai2<F, S>(this, s)
+
+inline infix fun Int.t2(s: Int) = Twint2(toLong() shl 32 or s.toLong() and 0xFFFF_FFFFL)
+
+inline class Twint2(val l: Long) : Pai2<Int, Int> {
+    override val first  get() = (l.shr(32)) .toInt()
+    override val second  get() = l.toInt()
+}
+
+
+inline infix fun <F, S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
         f,
         s,
@@ -182,10 +193,10 @@ interface Qu4d<F, S, T, Z> {
             fourth: Z,
         ): Qu4d<F, S, T, Z> =
             object : Qu4d<F, S, T, Z> {
-                override val  first get() = first
-                override val  second get() = second
-                override val  third get() = third
-                override val  fourth get() = fourth
+                override val first get() = first
+                override val second get() = second
+                override val third get() = third
+                override val fourth get() = fourth
             }
 
 
@@ -208,7 +219,7 @@ interface Qu4d<F, S, T, Z> {
     }
 }
 
-inline operator fun < F,  S,  T,  Z> Qu4d<F, S, T, Z>.component4() = fourth
-inline operator fun < F,  S,  T,  Z> Qu4d<F, S, T, Z>.component3() = third
-inline operator fun < F,  S,  T,  Z> Qu4d<F, S, T, Z>.component2() = second
-inline operator fun < F,  S,  T,  Z> Qu4d<F, S, T, Z>.component1() = first
+inline operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component4() = fourth
+inline operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component3() = third
+inline operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component2() = second
+inline operator fun <F, S, T, Z> Qu4d<F, S, T, Z>.component1() = first

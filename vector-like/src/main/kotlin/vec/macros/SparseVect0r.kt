@@ -20,8 +20,9 @@ fun  < V> bindSparse(
     driver: Vect02<Int, V>
 ): Vect0r<V?> = driver.let { entres ->
     val k = driver.left.toIntArray()
-    k.size t2 if (driver.size <= 16) //64 byte cacheline
-        { x :Int->
+    val function = when {
+        driver.size <= 16 //hypothetical 64 byte cacheline optimization
+        -> { x: Int ->
             var r: V? = null
             if (driver.size > 0) {
                 var i = 0
@@ -32,11 +33,14 @@ fun  < V> bindSparse(
                 } while (i < entres.size && r == null)
             }
             r
-        } else { x: Int ->
-        k.binarySearch(x).takeUnless {
-            0 > it
-        }?.let { i -> entres.right[i] }
+        }
+        else -> { x: Int ->
+            k.binarySearch(x).takeUnless {
+                0 > it
+            }?.let { i -> entres.right[i] }
+        }
     }
+    k.size t2 function
 }
 
 /**
