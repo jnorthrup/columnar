@@ -40,7 +40,21 @@ var logReuseCountdown = 0
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _v {
-    operator fun <T> get(vararg t: T) = t.toVect0r() as Vect0r<T>
+    inline operator fun <reified T> get(vararg t: T) :Vect0r<T> {
+        val pai2 = when (t.size) {
+            1 -> (1) t2 (t[0]).let { z -> { x: Int -> z } }
+            2 -> {
+                val let = (t[0] t2 t[1]).let { (a, b) ->
+                    { x: Int ->
+                        if (x == 0) a else b
+                    }
+                }
+                2 t2 let
+            }
+            else -> t.toVect0r() as Vect0r<T>
+        }
+        return pai2
+    }
 }
 
 /**
@@ -118,7 +132,7 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
     }
 
 @Deprecated("uncertainty about this one")
-fun <T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
+inline fun <reified T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
 
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
@@ -126,11 +140,11 @@ inline fun <reified T> moireValues(
     inVec: Vect0r<T>,
     limit: Int,
     initialOneOrMore: Int = inVec.first,
-    noinline x: (Int) -> T = inVec.second,
+      noinline x: (Int) -> T = inVec.second,
 ) = min(initialOneOrMore, limit).let { min ->
-    combine(_v[min t2 x,
+    combine( min t2 x,
             (limit - min) t2 { i: Int ->
                 x(i.rem(min))
             } //dummy loop rows
-    ])
+    )
 }

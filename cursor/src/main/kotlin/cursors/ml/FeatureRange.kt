@@ -1,3 +1,5 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package cursors.ml
 
 import vec.macros.Tw1n
@@ -23,11 +25,11 @@ inline fun <reified T : Comparable<T>> featureRange(seq: Sequence<T>, maxMinTwin
 /**
  * this is a min-max in that order
  */
-inline fun <reified T : Double> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-inline fun <reified T : Float> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-inline fun <reified T : Int> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-inline fun <reified T : Long> Tw1n<T>.normalize(d: T): T = let { (min, max) -> ((d - min) / (max - min)) as T }
-inline fun <reified T : Double> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
-inline fun <reified T : Float> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
-inline fun <reified T : Int> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
-inline fun <reified T : Long> Tw1n<T>.deNormalize(d: T): T = let { (min, max) -> (d * (max - min) + min) as T }
+inline fun   Tw1n< Double>.normalize(d:  Double):  Double = let { (min, max) -> ((d - min) / (max - min)) as  Double }
+inline fun   Tw1n< Float>.normalize(d:  Float):  Float = let { (min, max) -> ((d - min) / (max - min)) as  Float }
+inline fun   Tw1n< Int>.normalize(d:  Int):  Int = let { (min, max) -> ((d - min) / (max - min)) as  Int }
+inline fun   Tw1n< Long>.normalize(d:  Long):  Long = let { (min, max) -> ((d - min) / (max - min)) as  Long }
+inline fun   Tw1n< Double>.deNormalize(d:  Double):  Double = let { (min, max) -> (d * (max - min) + min) as  Double }
+inline fun   Tw1n< Float>.deNormalize(d:  Float):  Float = let { (min, max) -> (d * (max - min) + min) as  Float }
+inline fun   Tw1n< Int>.deNormalize(d:  Int):  Int = let { (min, max) -> (d * (max - min) + min) as  Int }
+inline fun   Tw1n< Long>.deNormalize(d:  Long):  Long = let { (min, max) -> (d * (max - min) + min) as  Long }

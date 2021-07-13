@@ -1,7 +1,8 @@
+@file:Suppress("OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE")
+
 package vec.macros
 
 import kotlinx.coroutines.flow.*
-import vec.util.logDebug
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -158,16 +159,16 @@ operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> th
 */
 
 @JvmName("vlike_Vect0r_getByInt")
-operator fun <T> Vect0r<T>.get(index: Int): T = second(index)
+operator fun <T> Vect0r<T>.get(index: Int) = second(index)
 
 @JvmName("vlike_Vect0r_getVarargInt")
-operator fun <T> Vect0r<T>.get(vararg index: Int): Vect0r<T> = get(index)
+operator fun <T> Vect0r<T>.get(vararg index: Int)  = get(index)
 
 @JvmName("vlike_Vect0r_getIntIterator")
-operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>): Vect0r<T> = this[indexes.toList().toIntArray()]
+operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>)  = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Vect0r_getIntArray")
-operator fun <T> Vect0r<T>.get(index: IntArray): Vect0r<T> =
+operator fun <T> Vect0r<T>.get(index: IntArray)  =
     Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
 @JvmName("vlike_Vect0r_toArray")
@@ -202,10 +203,10 @@ fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
 */
 
 fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> =
-    List(first) { it: Int -> fn(it, it `→` second) }
+     List(first) { fn(it, second(it)) }
 
 fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
-    for (ix: Int in (0 until first)) ix `→` (fn `⚬` second)
+    for (ix: Int in (0 until first)) fn(second(ix))
 }
 
 
@@ -387,7 +388,10 @@ inline fun <reified T, reified TT : Vect0r<T>> TT.slice(
 }) as TT
 
 /** plus operator*/
-inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P): P = combine(this, p) as P
+inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P) = combine(this, p) as P
+
+/** plus operator*/
+inline infix operator fun <reified T, P : Vect0r<T>> P.plus(t: T) = combine(this,(1 t2 t.`⟲` )as P ) as P
 
 
 /**cloning and reifying Vect0r to ByteArray*/
@@ -494,7 +498,7 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> 
                 var r: V? = null
                 var i = 0
                 do {
-                    if (k[i]++ == x) r = top[x]
+                    if (k[i++] == x) r = top[x]
                 } while (i < size && r == null)
                 r.also {
                     assert(it == top[x])
@@ -521,7 +525,7 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = l
                 var r: V? = null
                 var i = 0
                 do {
-                    if (k[i]++ == x) r = entries[i].value
+                    if (k[i++ ]== x) r = entries[i].value
                 } while (i < size && r == null)
                 r.also { assert(it == top[x]) }
             } else { x: Int ->
