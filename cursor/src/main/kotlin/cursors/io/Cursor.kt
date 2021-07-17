@@ -5,11 +5,11 @@ import cursors.TypeMemento
 import cursors.at
 import cursors.context.Arity.Companion.arityKey
 import cursors.context.Scalar
-import cursors.io.Vect02_.right
 import vec.macros.*
+import vec.macros.Vect02_.right
 
 val Cursor.scalars: Vect0r<Scalar>
-    get() =(this at  0 ).right.map {
+    get() = (this at 0).right.map {
         it.invoke() `→` {
             it[arityKey] as Scalar
         }
@@ -46,4 +46,3 @@ fun networkSizes(
     val sz = varcharSizes?.get(ix)
     memento.networkSize ?: (sz ?: defaultVarcharSize)
 }
-

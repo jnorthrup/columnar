@@ -2,8 +2,8 @@ package cursors.io
 
 import cursors.TypeMemento
 import cursors.context.CellDriver
-import cursors.io.Vect02_.left
 import vec.macros.*
+import vec.macros.Vect02_.left
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 
@@ -24,8 +24,3 @@ fun stringOf(it: RowVec) = it.left.toList().map { any ->
     val any1 = isVec?.toList() ?: any
     any1
 }.toString()
-
-
-
-
-

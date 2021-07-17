@@ -5,9 +5,9 @@ import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
 import cursors.context.Scalar
-import cursors.io.Vect02_.left
-import cursors.io.Vect02_.right
 import vec.macros.*
+import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import vec.util.logDebug
 import vec.util.span
 import java.nio.ByteBuffer
@@ -186,4 +186,3 @@ fun Cursor.writeISAMMeta(
         }
     }
 }
-

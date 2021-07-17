@@ -3,10 +3,10 @@ package cursors
 import cursors.context.Scalar
 import cursors.hash.md4
 import cursors.io.*
-import cursors.io.Vect02_.left
-import cursors.io.Vect02_.right
 import trie.ArrayMap
 import vec.macros.*
+import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import vec.util.BloomFilter
 import java.util.*
 import kotlin.math.max
@@ -170,7 +170,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
         var res = 0
         var ix = 0
         while (res == 0 && ix < map.size) {
-            res = map[ix].invoke(l1[ix], l2[ix]);
+            res = map[ix].invoke(l1[ix], l2[ix])
             ix++
         }
         res
@@ -211,4 +211,3 @@ fun Cursor.trieOnColumns(vararg colNames: String) = let {
     }/* only for short paths...*/
         .also { it.freeze() }
 }
-

@@ -1,9 +1,9 @@
 package cursors
 
-import cursors.io.Vect02_.right
-import cursors.io.colIdx
+ import cursors.io.colIdx
 import vec.macros.Vect02
-import vec.macros.size
+ import vec.macros.Vect02_.right
+ import vec.macros.size
 import vec.macros.toList
 import javax.management.openmbean.InvalidKeyException
 
@@ -30,4 +30,3 @@ inline operator fun <reified X> Vect02<X, String?>.get(vararg s: NegateColumn) =
  * cursor["f1","f2","f3"] to auto map the indexes
  */
 operator fun Cursor.get(vararg s: String): Cursor = this[colIdx.get(*s)]
-

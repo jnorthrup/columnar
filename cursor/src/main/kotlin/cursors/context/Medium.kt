@@ -2,8 +2,8 @@ package cursors.context
 
 import cursors.TypeMemento
 import cursors.io.*
-import cursors.io.Vect02_.left
 import vec.macros.*
+import vec.macros.Vect02_.left
 import vec.util.*
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel

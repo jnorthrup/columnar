@@ -4,15 +4,15 @@ import cursors.Cursor
 import cursors.at
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
-import cursors.io.V3ct0r_.left
-import cursors.io.V3ct0r_.mid
-import cursors.io.V3ct0r_.right
-import cursors.io.Vect02_.left
-import cursors.io.Vect02_.right
 import cursors.mirror
 import exchg.PlotThing
 import org.junit.Test
 import vec.macros.*
+import vec.macros.V3ct0r_.left
+import vec.macros.V3ct0r_.mid
+import vec.macros.V3ct0r_.right
+import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import vec.util._a
 import vec.util._l
 import vec.util._v
@@ -285,4 +285,3 @@ class SeedTesting {
         }
     }
 }
-

@@ -1,7 +1,7 @@
 package vec.macros
 
-import cursors.io.Vect02_.left
-import cursors.io.Vect02_.right
+import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import java.util.*
 
 

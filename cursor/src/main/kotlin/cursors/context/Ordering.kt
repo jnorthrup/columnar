@@ -1,8 +1,8 @@
 package cursors.context
 
 import cursors.io.TableRoot
-import cursors.io.Vect02_.right
 import vec.macros.*
+import vec.macros.Vect02_.right
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 

@@ -6,7 +6,7 @@ import kotlin.math.absoluteValue
 inline fun <reified T> combine(vargs: Vect0r<Vect0r<T>>) = combine(*vargs.toArray())
 
 @JvmName("combine_VecVa")
-inline fun <reified T> combine(vararg vecArgs: Vect0r<T>) = vecArgs.filterNot { it.size == 0 }.let { vex ->
+inline fun <  reified T> combine(vararg vecArgs: Vect0r<T>) = vecArgs.filterNot { it.size == 0 }.let { vex ->
     when (vex.size) {
         0 -> vecArgs[0]
         1 -> vex.first()

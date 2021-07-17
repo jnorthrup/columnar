@@ -4,15 +4,14 @@ package cursors
 import cursors.context.*
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
-import cursors.io.IOMemento.*
-import cursors.io.Vect02_.left
-import cursors.macros.`∑`
+ import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.macros.α
 import org.junit.Test
 import org.w3c.dom.Document
 import org.w3c.dom.NodeList
 import vec.macros.*
+import vec.macros.Vect02_.left
 import vec.util.*
 import java.io.File
 import java.io.FileInputStream
@@ -60,14 +59,14 @@ class DayJobTest {
         ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
 
         this.drivers = vect0rOf(
-            IoString as TypeMemento,
-            IoString,
-            IoLocalDate,
-            IoString,
-            IoString,
-            IoFloat,
-            IoFloat,
-            IoString
+            IOMemento.IoString as TypeMemento,
+            IOMemento.IoString,
+            IOMemento.IoLocalDate,
+            IOMemento.IoString,
+            IOMemento.IoString,
+            IOMemento.IoFloat,
+            IOMemento.IoFloat,
+            IOMemento.IoString
         )
         this.names = vect0rOf(
             "SalesNo",    //        0
@@ -217,7 +216,7 @@ class DayJobTest {
         theCoords: Vect0r<Pai2<Int, Int>>,
     ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
         index t2 typeMemento
-    }.filter { (_, b) -> b == IoString }.map { (a, _) ->
+    }.filter { (_, b) -> b == IOMemento.IoString }.map { (a, _) ->
         a to theCoords[a].span
     }.toMap()
 
@@ -314,7 +313,7 @@ class DayJobTest {
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
         val bloomIndex: List<Pai2<BloomFilter, IntArray>> = bloomAccess(groupClusters)
-        val scalarColHdr = Scalar(IoString, "City")
+        val scalarColHdr = Scalar(IOMemento.IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
         var seeks = 0
         var misses = 0
@@ -349,7 +348,7 @@ class DayJobTest {
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
         val bloomIndex: List<Pai2<BloomFilter, IntArray>> = bloomAccess(groupClusters)
-        val scalarColHdr = Scalar(IoString, "City")
+        val scalarColHdr = Scalar(IOMemento.IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
         var seeks = 0
         var misses = 0
@@ -371,4 +370,3 @@ class DayJobTest {
         }
     }
 }
-

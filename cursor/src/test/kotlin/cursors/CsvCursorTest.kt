@@ -4,9 +4,9 @@ import cursors.context.TokenizedRow
 import cursors.context.TokenizedRow.Companion.CsvArraysCursor
 import cursors.io.IOMemento.*
 import cursors.io.RowVec
-import cursors.io.Vect02_.left
 import junit.framework.Assert.assertEquals
 import org.junit.Test
+import vec.macros.Vect02_.left
 import vec.macros.get
 import vec.util._v
 import java.nio.file.Files

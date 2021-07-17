@@ -10,8 +10,6 @@ import cursors.context.RowMajor.Companion.fixedWidthOf
 import cursors.io.*
 import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString
-import cursors.io.Vect02_.left
-import cursors.io.Vect02_.right
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.ml.DummySpec
@@ -19,6 +17,8 @@ import org.junit.Assert
 import org.junit.Test
 import shouldBe
 import vec.macros.*
+import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import vec.util._a
 import vec.util._v
 

@@ -4,9 +4,8 @@ import cursors.TypeMemento
 import cursors.at
 import cursors.context.TokenizedRow
 import cursors.io.*
-import cursors.io.IOMemento.*
-import cursors.io.Vect02_.left
 import vec.macros.*
+import vec.macros.Vect02_.left
 import vec.util._l
 import vec.util.logDebug
 import vec.util.path
@@ -51,17 +50,17 @@ class CacheMgr {
 
                         when {
                             instantMapper(value.toString()) != java.time.Instant.EPOCH ->
-                                IoInstant
+                                IOMemento.IoInstant
                             dateMapper(value.toString()) != java.time.LocalDate.EPOCH ->
-                                IoLocalDate
+                                IOMemento.IoLocalDate
                             value.lowercase() in _l["true", "false"] ->
-                                IoBoolean
+                                IOMemento.IoBoolean
                             "^[-+]?[0-9]{1,19}$".toRegex().matches(value) ->
-                                IoLong
+                                IOMemento.IoLong
                             "^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$".toRegex().matches(value) ->
-                                IoDouble
+                                IOMemento.IoDouble
                             else ->
-                                IoString
+                                IOMemento.IoString
                         }
                     }.toVect0r()
                 }

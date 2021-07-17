@@ -1,16 +1,20 @@
 package cursors
 
-import cursors.context.Scalar.Companion.Scalar
-import cursors.io.*
-import cursors.io.Vect02_.left
-import cursors.io.Vect02_.right
+import cursors.context.Scalar
+import cursors.io.IOMemento
+import cursors.io.RowVec
+import cursors.io.colIdx
+import cursors.io.scalars
 import cursors.macros.join
 import cursors.ml.DummySpec
 import vec.macros.*
+import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import vec.util._a
 import vec.util._v
 import java.util.*
 import kotlin.coroutines.CoroutineContext
+
 
 /***
  *

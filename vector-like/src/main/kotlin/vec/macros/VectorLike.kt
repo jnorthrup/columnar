@@ -10,6 +10,8 @@ import java.util.*
  * semigroup
  */
 typealias Vect0r<T> = Pai2<Int, (Int) -> T>
+typealias   Vect02<F, S> = Vect0r<XY<F, S>>
+typealias  V3ct0r<F, S, T> = Vect0r<XYZ<F, S, T>>
 
 val <T>Vect0r<T>.size: Int get() = first
 @Suppress("NonAsciiCharacters")
@@ -44,7 +46,7 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(fn = m)
+infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B): Vect0r<C> = map(fn = m)
 
 
 infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B): List<C> =
@@ -162,13 +164,13 @@ operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> th
 operator fun <T> Vect0r<T>.get(index: Int) = second(index)
 
 @JvmName("vlike_Vect0r_getVarargInt")
-operator fun <T> Vect0r<T>.get(vararg index: Int)  = get(index)
+operator fun <T> Vect0r<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_Vect0r_getIntIterator")
-operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>)  = this[indexes.toList().toIntArray()]
+operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Vect0r_getIntArray")
-operator fun <T> Vect0r<T>.get(index: IntArray)  =
+operator fun <T> Vect0r<T>.get(index: IntArray) =
     Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
 @JvmName("vlike_Vect0r_toArray")
@@ -203,7 +205,7 @@ fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
 */
 
 fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> =
-     List(first) { fn(it, second(it)) }
+    List(first) { fn(it, second(it)) }
 
 fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
     for (ix: Int in (0 until first)) fn(second(ix))
@@ -347,6 +349,17 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
     }
 
 /**
+ * returns
+ * Vect0r<T> / x= Vecto<Vector<T>> in x parts
+ */
+inline infix operator fun <reified T> Vector<T>.div(denominator: Int) =
+    (0 until this.size).div(denominator).α{ rnge ->
+        (this as Vect0r<T>).slice(rnge.first, rnge.endInclusive)
+    }
+
+
+
+/**
  * this is an unfortunate discriminator between Pai2.first..second and Vect0r.first..last
  */
 val <T> Vect0r<T>.f1rst: T
@@ -381,38 +394,40 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
  * direct increment offset for a cheaper slice than binary search
  */
 @JvmOverloads
-inline fun <reified T, reified TT : Vect0r<T>> TT.slice(
-    sta: Int = 0, end: Int = this.size,
-): TT = (end - sta t2 { y: Int ->
+  fun <  T > Vect0r<T>.slice(
+    sta: Int = 0,
+    end: Int = this.size,
+): Vect0r<T> = (end - sta t2 { y: Int ->
     this[y + sta]
-}) as TT
+}) as Vect0r<T>
 
 /** plus operator*/
 inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P) = combine(this, p) as P
 
 /** plus operator*/
-inline infix operator fun <reified T, P : Vect0r<T>> P.plus(t: T) = combine(this,(1 t2 t.`⟲` )as P ) as P
+inline infix operator fun <reified T, P : Vect0r<T>> P.plus(t: T) = combine(this, (1 t2 t.`⟲`) as P) as P
 
 
 /**cloning and reifying Vect0r to ByteArray*/
-fun Vect0r<Byte>.toByteArray() = ByteArray(size) { i -> get(i) }
+fun <T : Byte> Vect0r<T>.toByteArray() = ByteArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to CharArray*/
-fun Vect0r<Char>.toCharArray() = CharArray(size) { i -> get(i) }
+fun <T : Char> Vect0r<T>.toCharArray() = CharArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to IntArray*/
-fun Vect0r<Int>.toIntArray() = IntArray(size) { i -> get(i) }
+fun <T : Int> Vect0r<T>.toIntArray() = IntArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to LongArray*/
-fun Vect0r<Long>.toLongArray() = LongArray(size) { i -> get(i) }
+fun <T : Long> Vect0r<T>.toLongArray() = LongArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to FloatArray*/
-fun Vect0r<Float>.toFloatArray() = FloatArray(size) { i -> get(i) }
+fun <T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to DoubleArray*/
-fun Vect0r<Double>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
+fun <T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
 
 fun <T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
 fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
 fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
 fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
@@ -421,8 +436,8 @@ fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
 fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
 fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
 fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
-fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-fun BitSet.toVect0r() = (length() t2 { x: Int -> get(x) })
+fun <T:Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })as Vect0r< Boolean>
+
 
 fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
 fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0L
@@ -434,19 +449,19 @@ suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
     slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 
-fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
-fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
+fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
 inline val <reified X> Vect0r<Vect0r<X>>.T
     get() = run {
         val shape = this[0].size t2 this.size
         val combine = combine(this)
         ((0 until combine.size) / shape.second).let { rr ->
-                  rr[0].map { y ->
-                     rr.map {
-                        val i = it.toList()[y]
-                         i
-                    }.toIntArray()
+            rr[0].map { y ->
+                rr.map {
+                    val i = it.toList()[y]
+                    i
+                }.toIntArray()
 
             } α combine::get
         }
@@ -525,7 +540,7 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = l
                 var r: V? = null
                 var i = 0
                 do {
-                    if (k[i++ ]== x) r = entries[i].value
+                    if (k[i++] == x) r = entries[i].value
                 } while (i < size && r == null)
                 r.also { assert(it == top[x]) }
             } else { x: Int ->
@@ -538,5 +553,28 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = l
     }
 }
 
+object Vect02_ {
+    inline val <reified F, reified S> Vect02<F, S>.left get() = this.α(Pai2<F, S>::first)
+    inline val <reified F, reified S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
+    inline val <reified F, reified S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair
 
+    inline fun <reified F, reified S> Vect02<F, S>.toMap(theMap: MutableMap<F, S>? = null) =
+        toList().map(Pai2<F, S>::pair).let { paris ->
+            (if (theMap != null) theMap.let { paris.toMap(theMap as MutableMap<in F, in S>) } else paris.toMap(
+                HashMap(
+                    paris.size
+                )
+            ))
+        }
+}
 
+object V3ct0r_ {
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.left get() = this α Tripl3<F, *, *>::first
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.mid get() = this α Tripl3<F, S, T>::second
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.right get() = this α Tripl3<F, S, T>::third
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.reify get() = this α Tripl3<F, S, T>::triple
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.x get() = this α (XYZ<F, S, T>::first)
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.y get() = this α (XYZ<F, S, T>::second)
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.z get() = this α (XYZ<F, S, T>::third)
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify get() = this α (XYZ<F, S, T>::triple)
+}

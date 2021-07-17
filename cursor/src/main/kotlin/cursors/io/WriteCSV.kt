@@ -1,8 +1,8 @@
 package cursors.io
 
 import cursors.Cursor
-import cursors.io.Vect02_.left
-import cursors.io.Vect02_.right
+import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import vec.macros.component1
 import vec.macros.component2
 import vec.macros.size
@@ -65,4 +65,3 @@ fun Cursor.writeCSV(fn: String) {
         }
     }
 }
-
