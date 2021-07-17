@@ -7,10 +7,8 @@ sealed class Addressable : CoroutineContext.Element {
 
     override val key get() = addressableKey
 
-    companion object {
-        val addressableKey = object :
-            CoroutineContext.Key<Addressable> {}
-    }
+    object addressableKey : CoroutineContext.Key<Addressable>
+
 }
 
 abstract class Forward<T> : Iterable<T>, Addressable()
