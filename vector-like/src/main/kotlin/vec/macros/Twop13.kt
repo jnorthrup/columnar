@@ -168,6 +168,7 @@ inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>) = this.ordi
 
 @JvmName("αS")
 inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R) = (-this).α(f)
+
 inline infix fun <reified F, reified S> F.t2(s: S) = Pai2.invoke(this, s)
 inline infix fun <reified F, reified S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
