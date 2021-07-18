@@ -353,10 +353,9 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
  * Vect0r<T> / x= Vecto<Vector<T>> in x parts
  */
 inline infix operator fun <reified T> Vector<T>.div(denominator: Int) =
-    (0 until this.size).div(denominator).α{ rnge ->
+    (0 until this.size).div(denominator).α { rnge ->
         (this as Vect0r<T>).slice(rnge.first, rnge.endInclusive)
     }
-
 
 
 /**
@@ -394,12 +393,12 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
  * direct increment offset for a cheaper slice than binary search
  */
 @JvmOverloads
-  fun <  T > Vect0r<T>.slice(
+fun <T> Vect0r<T>.slice(
     sta: Int = 0,
     end: Int = this.size,
 ): Vect0r<T> = (end - sta t2 { y: Int ->
     this[y + sta]
-}) as Vect0r<T>
+})
 
 /** plus operator*/
 inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P) = combine(this, p) as P
@@ -436,7 +435,7 @@ fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
 fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
 fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
 fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
-fun <T:Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })as Vect0r< Boolean>
+fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })
 
 
 fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
@@ -501,6 +500,7 @@ inline val <reified S> Vect0r<S>.`➤`
 value class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
     override inline fun iterator() = p.iterator()
 }
+
 
 /**
  * optimize for where a smallish map has hotspots that are over-used and others that are excess overhead

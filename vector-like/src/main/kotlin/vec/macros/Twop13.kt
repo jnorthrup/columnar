@@ -10,7 +10,7 @@ Tuples also occur in relational algebra; when programming the semantic web with 
  */
 
 
-@file:Suppress("OVERRIDE_BY_", "OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE")
+@file:Suppress("OVERRIDE_BY_", "OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE", "FunctionName")
 
 package vec.macros
 
@@ -140,6 +140,34 @@ fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 @JvmName("twinlong")
 fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
+@JvmName("unaryPlusAny")
+operator fun <S> Tw1n<S>.unaryMinus() = _a[first, second]
+
+@JvmName("unaryPlusI")
+inline operator fun Tw1n<Int>.unaryPlus() = (-this).let { (a, b) -> a..b }
+@JvmName("aSInt")
+inline infix fun <reified R> Tw1n<Int>.α(noinline f: (Int) -> R) = (-this).α(f)
+@JvmName("aSDouble")
+inline infix fun <reified R> Tw1n<Double>.α(noinline f: (Double) -> R) = (-this).α(f)
+@JvmName("aSLong")
+inline infix fun <reified R> Tw1n<Long>.α(noinline f: (Long) -> R) = (-this).α(f)
+@JvmName("aSFloat")
+inline infix fun <reified R> Tw1n<Float>.α(noinline f: (Float) -> R) = (-this).α(f)
+@JvmName("aSByte")
+inline infix fun <reified R> Tw1n<Byte>.α(noinline f: (Byte) -> R) = (-this).α(f)
+@JvmName("aSChar")
+inline infix fun <reified R> Tw1n<Char>.α(noinline f: (Char) -> R) = (-this).α(f)
+@JvmName("aSShort")
+inline infix fun <reified R> Tw1n<Short>.α(noinline f: (Short) -> R) = (-this).α(f)
+
+
+//pairs of enums tricks
+@JvmName("unaryPlusS")
+inline operator fun <T, S : Enum<S>> Tw1n<S>.unaryPlus() = (-this).let { (a, b) -> a..b }
+inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>) = this.ordinal..ub.ordinal
+
+@JvmName("αS")
+inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R) = (-this).α(f)
 inline infix fun <reified F, reified S> F.t2(s: S) = Pai2.invoke(this, s)
 inline infix fun <reified F, reified S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) ->
     Tripl3(
@@ -154,7 +182,6 @@ infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T) =
 
 infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D) =
     let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
-
 
 /**inheritable version of quad that also provides its first three as a triple. */
 interface Qu4d<F, S, T, Z> {
