@@ -13,16 +13,14 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 
-fun bloomAccess(groupClusters: List<IntArray>): List<Pai2<BloomFilter, IntArray>> {
-    return groupClusters.map {
-        val n = it.size
-        val bloomFilter = BloomFilter(n/*, n * 11*/).apply {
-            for (i in it) {
-                add(i)
-            }
+fun bloomAccess(groupClusters: Iterable<IntArray>)  = groupClusters α {
+    val n = it.size
+    val bloomFilter = BloomFilter(n/*, n * 11*/).apply {
+        for (i in it) {
+            add(i)
         }
-        bloomFilter t2 it
     }
+    bloomFilter t2 it
 }
 
 
@@ -96,7 +94,7 @@ inline fun Cursor.group(
 fun Cursor.groupClusters(
     axis: IntArray,
     clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf(),
-): List<IntArray> = run {
+) = run {
     System.err.println("--- groupClusters")
     keyClusters(axis, clusters)
     clusters.values α MutableList<Int>::toIntArray

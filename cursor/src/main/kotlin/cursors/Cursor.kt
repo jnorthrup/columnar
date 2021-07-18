@@ -182,7 +182,7 @@ fun Cursor.ordered(
     (keyClusters(
         axis,
         comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
-            (IntArray::toVect0r  `⚬` MutableList<Int>::toIntArray)).toVect0r()
+            (IntArray::toVect0r  `⚬` MutableList<Int>::toIntArray))
 ).let {
     Cursor(it.size) { iy: Int ->
         val ix2 = it[iy]

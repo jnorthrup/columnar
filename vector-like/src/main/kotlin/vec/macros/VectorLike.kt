@@ -49,39 +49,39 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
 infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B): Vect0r<C> = map(fn = m)
 
 
-infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B): List<C> =
-    this.map { it: A -> it `→` m }
+infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B)  =
+    this.map { it: A -> it `→` m }.toVect0r()
 
 
-infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B): Sequence<C> =
-    this.map { it: A -> it `→` m }
+//infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B): Sequence<C> =
+//    this.map { it: A -> it `→` m }
+//
+//
+//infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B): Flow<C> =
+//    this.map { it: A -> it `→` m }
 
 
-infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B): Flow<C> =
-    this.map { it: A -> it `→` m }
-
-
-infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Vect0r<C> =
+infix fun <A, C, B : (A) -> C> List<A>.α(m: B)  =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B): Vect0r<C> =
+infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Int) -> C> IntArray.α(m: B): Vect0r<C> =
+infix fun <C, B : (Int) -> C> IntArray.α(m: B)  =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Vect0r<C> =
+infix fun <C, B : (Float) -> C> FloatArray.α(m: B)  =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Vect0r<C> =
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B)   =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Long) -> C> LongArray.α(m: B): Vect0r<C> =
+infix fun <C, B : (Long) -> C> LongArray.α(m: B)  =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 /*
@@ -98,14 +98,11 @@ inline val <reified T> T.`⟲`
 
 infix fun <T, R> T.`⟲`(f: (T) -> R) = run { f(this) }
 
+/*
 @JvmName("vlike_Sequence_1")
-
-
 operator fun <T> Sequence<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_Sequence_Iterable2")
-
-
 operator fun <T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Sequence_IntArray3")
@@ -119,35 +116,27 @@ suspend fun <T> Flow<T>.get(vararg index: Int) = get(index)
 suspend fun <T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
 
 @JvmName("vlike_Flow_IntArray3")
-suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()
+suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()*/
 
 @JvmName("vlike_List_1")
-operator fun <T> List<T>.get(vararg index: Int) = get(index)
+inline operator fun <T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
-
-
-operator fun <T> List<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+inline operator fun <T> List<T>.get(indexes: Iterable<Int>):Vect0r<T> = this.get(indexes.toList().toIntArray())
 
 @JvmName("vlike_List_IntArray3")
-
-
-operator fun <T> List<T>.get(index: IntArray) = List(index.size) { i: Int -> this[index[i]] }
+inline operator fun <T> List<T>.get(index: IntArray):Vect0r<T> = index α ::get
 
 @JvmName("vlike_Array_1")
-
-
-inline operator fun <reified T> Array<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> Array<T>.get(vararg index: Int):Vect0r<T> =    index α ::get
 
 @JvmName("vlike_Array_Iterable2")
 
 
-inline operator fun <reified T> Array<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+inline operator fun <reified T> Array<T>.get(index: Iterable<Int>) =  index α ::get
 
 @JvmName("vlike_Array_IntArray3")
-
-
-inline operator fun <reified T> Array<T>.get(index: IntArray) = Array(index.size) { i: Int -> this[index[i]] }
+inline operator fun <reified T> Array<T>.get(index: IntArray) =    index α ::get
 /*
 
 @JvmName("vlike_IntArray_1i")
@@ -486,9 +475,7 @@ fun <S> Vect0r<S>.iterator(): Iterator<S> {
     }
 }
 
-inline val <reified S> Vect0r<S>.`➤`
-    get() =
-        `Vect0r➤`<S>(this)
+inline val <reified S> Vect0r<S>.`➤` get() = `Vect0r➤`(this)
 
 
 @JvmInline

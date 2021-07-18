@@ -309,10 +309,10 @@ class DayJobTest {
         val cities: Vect0r<String> = cities()
 
         // SalesArea column is 1.  cluster key is on _a[1]
-        val groupClusters: List<IntArray> = curs1.groupClusters(_a[1])
+        val groupClusters  = curs1.groupClusters(_a[1])
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
-        val bloomIndex: List<Pai2<BloomFilter, IntArray>> = bloomAccess(groupClusters)
+        val bloomIndex  = bloomAccess(groupClusters.`➤`)
         val scalarColHdr = Scalar(IOMemento.IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
         var seeks = 0
@@ -321,7 +321,7 @@ class DayJobTest {
             RowVec(1) { _: Int ->
                 seeks++
                 val cindex =
-                    bloomIndex.indexOfFirst { (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum) > -1).also { if (!it) misses++ } }
+                    bloomIndex.`➤`.indexOfFirst { (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum) > -1).also { if (!it) misses++ } }
                 cities[cindex] t2 function
             }
         }
@@ -344,10 +344,10 @@ class DayJobTest {
         val cities: Vect0r<String> = cities()
 
         // SalesArea column is 1.  cluster key is on _a[1]
-        val groupClusters: List<IntArray> = curs1.groupClusters(_a[1])
+        val groupClusters  = curs1.groupClusters(_a[1])
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
-        val bloomIndex: List<Pai2<BloomFilter, IntArray>> = bloomAccess(groupClusters)
+        val bloomIndex = bloomAccess(groupClusters.`➤`)
         val scalarColHdr = Scalar(IOMemento.IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
         var seeks = 0
@@ -356,7 +356,7 @@ class DayJobTest {
             RowVec(1) { _: Int ->
                 seeks++
                 val cindex =
-                    bloomIndex.indexOfFirst { (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum) > -1).also { if (!it) misses++ } }
+                    bloomIndex.`➤`.indexOfFirst { (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum) > -1).also { if (!it) misses++ } }
                 cities[cindex] t2 function
             }
         }
