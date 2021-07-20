@@ -194,7 +194,7 @@ fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
 */
 
 fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> =
-    List(first) { fn(it, second(it)) }
+    List(first) {it:Int-> fn(it, second(it)) }
 
 fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
     for (ix: Int in (0 until first)) fn(second(ix))
