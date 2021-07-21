@@ -15,18 +15,19 @@ has more expensive toList/iterator by copy/concat
  */
 class CirQlar<T>(
     val maxSize: Int,
-    val al: MutableList<T> = arrayListOf<T>().also { it.ensureCapacity(maxSize) },
+    val backingStore: MutableList<T> = arrayListOf<T>().also { it.ensureCapacity(maxSize) },
 ) : AbstractQueue<T>() {
     var tail = 0
-    override val size = al.size
+    override val size = backingStore.size
+    val full get() = maxSize == size
 
     @Deprecated("gonna blow up on mutable ops")
     override fun iterator(): MutableIterator<T> =
         this.toList<T>().iterator() as MutableIterator<T> // gonna blow on mutable ops
 
-    fun toList() = when (al.size) {
-        maxSize -> al.drop(tail) + al.dropLast(maxSize - tail)
-        else -> al
+    fun toList() = when (backingStore.size) {
+        maxSize -> backingStore.drop(tail) + backingStore.dropLast(maxSize - tail)
+        else -> backingStore
     }
 
 
@@ -34,19 +35,19 @@ class CirQlar<T>(
      * this is a mutable Vect0r that is going to violate reverse,combine,join repeatability.
      */
     fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
-            override val first by al::size
+        override val first by backingStore::size
 
-            override val second= {x:Int->
-                al[(tail+x).rem(maxSize)]
-            }
+        override val second = { x: Int ->
+            backingStore[(tail + x).rem(maxSize)]
         }
+    }
 
     //todo: lockless dequeue here ?
     override fun offer(e: T): Boolean =
         synchronized(this) {
-            when (al.size) {
-                maxSize -> al[tail] = e.also { tail = (++tail).rem(maxSize) }
-                else -> al.add(e)
+            when (backingStore.size) {
+                maxSize -> backingStore[tail] = e.also { tail = (++tail).rem(maxSize) }
+                else -> backingStore.add(e)
             }
         }.let { true }
 
