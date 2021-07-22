@@ -49,7 +49,7 @@ class CursorKtTest {
         fixedWidth,
         RowMajor.indexableOf(nio, fixedWidth),
         nio,
-        Columnar(drivers.zip(names)  )
+        Columnar(drivers.zip(names)  as Vect02<TypeMemento, String?> /* = vec.macros.Pai2<kotlin.Int, (kotlin.Int) -> vec.macros.Pai2<cursors.TypeMemento, kotlin.String?>> */ )
     )
 
 

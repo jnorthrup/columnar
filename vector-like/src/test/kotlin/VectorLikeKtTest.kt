@@ -134,7 +134,7 @@ class VectorLikeKtTest {
         val pai2: Pai2<Int, (Int) -> Pai2<Int, Int>> = reordered1.zip(reordered1)
         val vect02: Vect02<Int, Int> = reordered1.zip(reordered1)
         val vectTwin: Vect0r<Tw1n<Int>> = reordered1.zip(reordered1)
-        val vectTwint: Vect0r<Tw1nt> = reordered1.zip(reordered1)
+//        val vectTwint: Vect0r<Tw1nt> = reordered1.zip(reordered1)
 
     }
 
