@@ -20,7 +20,7 @@ class CirQlar<T>(
     var tail = 0
     override val size = backingStore.size
     val full get() = maxSize == size
-
+    fun get(x:Int)    = backingStore::get
     @Deprecated("gonna blow up on mutable ops")
     override fun iterator(): MutableIterator<T> =
         this.toList<T>().iterator() as MutableIterator<T> // gonna blow on mutable ops

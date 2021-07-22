@@ -46,7 +46,7 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B): Vect0r<C> = map(fn = m)
+infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B)  = map(m)
 
 
 infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B)  =
@@ -186,7 +186,7 @@ fun <T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
 }
 
 fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
-    Vect0r(first) { it: Int -> it `→` (fn `⚬` second) }
+    Vect0r(this.size) { it: Int -> fn(second(it)) }
 
 /* unhealthy
  fun < T,  R> Vect0r<T>.mapIndexed(cross fn: (Int, T) -> R): Vect0r<R> =
@@ -221,11 +221,15 @@ inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2
 @JvmOverloads
 @JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified O, reified R> Vect0r<T>.zip(
+  fun <  T,   O,   R> Vect0r<T>.zip(
     o: Vect0r<O>,
-    crossinline f: (T, O) -> R = { a, b -> (a t2 b) as R },
-): Vect0r<R> =
-    size t2 { x: Int -> f(this[x], o[x]) }
+   f: (T, O) -> R
+): Vect0r<R> =    size t2 { x: Int -> f(this[x], o[x]) }
+
+@JvmOverloads
+@JvmName("vvzip2")
+@Suppress("UNCHECKED_CAST")
+inline fun <  reified T,   reified O,   R: Pai2<T,O>> Vect0r<T>.zip(o: Vect0r<O>):Vect02<T,O>  =    size t2 {x:Int->(  this[x] t2 o[x]) }
 
 
 @JvmName("combine_Flow")
