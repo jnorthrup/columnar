@@ -18,7 +18,7 @@ class CirQlar<T>(
     val backingStore: MutableList<T> = arrayListOf<T>().also { it.ensureCapacity(maxSize) },
 ) : AbstractQueue<T>() {
     var tail = 0
-    override val size = backingStore.size
+    override val size by backingStore::size
     val full get() = maxSize == size
     fun get(x:Int)    = backingStore::get
     @Deprecated("gonna blow up on mutable ops")
