@@ -18,6 +18,7 @@ import vec.util._a
 
 /**inheritable version of pair  */
 interface Pai2<F, S> {
+
     val first: F
     val second: S
 

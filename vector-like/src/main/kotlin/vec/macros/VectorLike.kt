@@ -46,10 +46,10 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B)  = map(m)
+infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(m)
 
 
-infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B)  =
+infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
     this.map { it: A -> it `→` m }.toVect0r()
 
 
@@ -61,7 +61,7 @@ infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B)  =
 //    this.map { it: A -> it `→` m }
 
 
-infix fun <A, C, B : (A) -> C> List<A>.α(m: B)  =
+infix fun <A, C, B : (A) -> C> List<A>.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
@@ -69,19 +69,19 @@ infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Int) -> C> IntArray.α(m: B)  =
+infix fun <C, B : (Int) -> C> IntArray.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Float) -> C> FloatArray.α(m: B)  =
+infix fun <C, B : (Float) -> C> FloatArray.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Double) -> C> DoubleArray.α(m: B)   =
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Long) -> C> LongArray.α(m: B)  =
+infix fun <C, B : (Long) -> C> LongArray.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 /*
@@ -122,21 +122,21 @@ suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()*/
 inline operator fun <T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
-inline operator fun <T> List<T>.get(indexes: Iterable<Int>):Vect0r<T> = this.get(indexes.toList().toIntArray())
+inline operator fun <T> List<T>.get(indexes: Iterable<Int>): Vect0r<T> = this.get(indexes.toList().toIntArray())
 
 @JvmName("vlike_List_IntArray3")
-inline operator fun <T> List<T>.get(index: IntArray):Vect0r<T> = index α ::get
+inline operator fun <T> List<T>.get(index: IntArray): Vect0r<T> = index α ::get
 
 @JvmName("vlike_Array_1")
-inline operator fun <reified T> Array<T>.get(vararg index: Int):Vect0r<T> =    index α ::get
+inline operator fun <reified T> Array<T>.get(vararg index: Int): Vect0r<T> = index α ::get
 
 @JvmName("vlike_Array_Iterable2")
 
 
-inline operator fun <reified T> Array<T>.get(index: Iterable<Int>) =  index α ::get
+inline operator fun <reified T> Array<T>.get(index: Iterable<Int>) = index α ::get
 
 @JvmName("vlike_Array_IntArray3")
-inline operator fun <reified T> Array<T>.get(index: IntArray) =    index α ::get
+inline operator fun <reified T> Array<T>.get(index: IntArray) = index α ::get
 /*
 
 @JvmName("vlike_IntArray_1i")
@@ -194,7 +194,7 @@ fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
 */
 
 fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> =
-    List(first) {it:Int-> fn(it, second(it)) }
+    List(first) { it: Int -> fn(it, second(it)) }
 
 fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
     for (ix: Int in (0 until first)) fn(second(ix))
@@ -221,15 +221,16 @@ inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2
 @JvmOverloads
 @JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
-  fun <  T,   O,   R> Vect0r<T>.zip(
+fun <T, O, R> Vect0r<T>.zip(
     o: Vect0r<O>,
-   f: (T, O) -> R
-): Vect0r<R> =    size t2 { x: Int -> f(this[x], o[x]) }
+    f: (T, O) -> R,
+): Vect0r<R> = size t2 { x: Int -> f(this[x], o[x]) }
 
 @JvmOverloads
 @JvmName("vvzip2")
 @Suppress("UNCHECKED_CAST")
-inline fun <  reified T,   reified O,   R: Pai2<T,O>> Vect0r<T>.zip(o: Vect0r<O>):Vect02<T,O>  =    size t2 {x:Int->(  this[x] t2 o[x]) }
+inline fun <reified T, reified O, R : Pai2<T, O>> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =
+    size t2 { x: Int -> (this[x] t2 o[x]) }
 
 
 @JvmName("combine_Flow")
@@ -469,11 +470,12 @@ inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: Lin
 
 
 fun <S> Vect0r<S>.iterator(): Iterator<S> {
-    return object : Iterator<S>   {
+    return object : Iterator<S> {
         var x = 0
         override fun hasNext(): Boolean {
             return x < size
         }
+
         override fun next(): S = get(x++)
 
     }
@@ -564,3 +566,5 @@ object V3ct0r_ {
     inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.z get() = this α (XYZ<F, S, T>::third)
     inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify get() = this α (XYZ<F, S, T>::triple)
 }
+
+operator fun <T> Vect0r<T>.div(d: Int): Vect0r<Vect0r<T>> = (0 until size) / d α { this[it] }
