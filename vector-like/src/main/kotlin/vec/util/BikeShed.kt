@@ -23,6 +23,7 @@ fun Int.toArray(): IntArray = _a[this]
 fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
 fun btoa(ba: ByteArray) = String(ba, UTF_8)
 fun trim(it: String) = it.trim()
+
 fun logDebug(debugTxt: () -> String) {
     try {
         assert(false, debugTxt)
