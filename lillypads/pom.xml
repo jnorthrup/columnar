@@ -11,7 +11,7 @@
     <artifactId>lillypads</artifactId>
 
     <properties>
-        <kotlin.version>1.5.21</kotlin.version>
+        <kotlin.version>1.5.30-M1</kotlin.version>
     </properties>
 
 
@@ -20,11 +20,35 @@
             <groupId>columnar</groupId>
             <artifactId>cursor</artifactId>
             <version>${project.version}</version>
-        </dependency><dependency>
-  <groupId>org.apache.arrow</groupId>
-  <artifactId>arrow-vector</artifactId>
-  <version>4.0.1</version>
-</dependency>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>arrow-vector</artifactId>
+            <version>4.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
+        </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>

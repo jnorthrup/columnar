@@ -21,7 +21,7 @@ class CirQlar<T>(
     override val size by backingStore::size
     val full get() = maxSize == size
     fun get(x:Int)    = backingStore::get
-    @Deprecated("gonna blow up on mutable ops")
+    @Deprecated("gonna blow up on mutable ops", ReplaceWith("this.toVect0r<T>().iterator()"))
     override fun iterator(): MutableIterator<T> =
         this.toList<T>().iterator() as MutableIterator<T> // gonna blow on mutable ops
 
