@@ -65,11 +65,11 @@ class VectorLikeKtTest {
 
 
         // we  can print them.  there is no toString so we get an identity from an inline class
-        System.err.println("double length vector is cold: " + doubleLength)
+        System.err.println("double length vector is cold: ${doubleLength }")
         System.err.println()
 
         // we can reify them and then print that.
-        System.err.println("double length vector is reified: " + doubleLength.toList())
+        System.err.println("double length vector is reified: ${doubleLength.toList()}")
         System.err.println()
 
         //we can destructure them to reach under the hood
