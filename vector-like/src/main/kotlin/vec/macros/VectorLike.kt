@@ -9,7 +9,7 @@ import java.util.*
 /**
  * semigroup
  */
-typealias Vect0r<T> = Pai2<Int, (Int) -> T>
+typealias Vect0r< reified T> = Pai2<Int, (  ( Int) -> T)>
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
 typealias  V3ct0r<F, S, T> = Vect0r<XYZ<F, S, T>>
 
@@ -77,8 +77,7 @@ infix fun <C, B : (Float) -> C> FloatArray.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 
-infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) =
-    Vect0r(this.size) { i: Int -> this[i] `→` m }
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = this.size t2 { i: Int -> m(this[i]) }
 
 
 infix fun <C, B : (Long) -> C> LongArray.α(m: B) =
