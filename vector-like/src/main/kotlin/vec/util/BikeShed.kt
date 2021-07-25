@@ -41,7 +41,7 @@ var logReuseCountdown = 0
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _v {
-    inline operator fun <reified T> get(vararg t: T) :Vect0r<T> {
+    inline operator fun <reified T> get(vararg t: T): Vect0r<T> {
         val pai2 = when (t.size) {
             1 -> (1) t2 (t[0]).let { z -> { x: Int -> z } }
             2 -> {
@@ -141,11 +141,17 @@ inline fun <reified T> moireValues(
     inVec: Vect0r<T>,
     limit: Int,
     initialOneOrMore: Int = inVec.first,
-      noinline x: (Int) -> T = inVec.second,
+    noinline x: (Int) -> T = inVec.second,
 ) = min(initialOneOrMore, limit).let { min ->
-    combine( min t2 x,
-            (limit - min) t2 { i: Int ->
-                x(i.rem(min))
-            } //dummy loop rows
+    combine(min t2 x,
+        (limit - min) t2 { i: Int ->
+            x(i.rem(min))
+        } //dummy loop rows
     )
 }
+
+
+/**really really wants to produce a Double
+ *
+ */
+fun todub(f: Any?) = ((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: .0e-350

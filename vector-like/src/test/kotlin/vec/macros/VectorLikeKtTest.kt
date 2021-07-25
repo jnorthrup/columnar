@@ -56,6 +56,4 @@ class VectorLikeKtTest {
 logDebug {
     val pai21 = pai2[2]
     pai2.map {it.toList().toString()  }.toList().toString()}
-
-
     }}
