@@ -392,10 +392,10 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
  */
 @JvmOverloads
 fun <T> Vect0r<T>.slice(
-    sta: Int = 0,
+    start: Int = 0,
     end: Int = this.size,
-): Vect0r<T> = (end - sta t2 { y: Int ->
-    this[y + sta]
+): Vect0r<T> = (end - start t2 { y: Int ->
+    this[y + start]
 })
 
 /** plus operator*/
