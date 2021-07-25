@@ -331,6 +331,11 @@ inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K): Array<V> =
 
 /**splits a range into multiple parts for upstream reindexing utility
  * 0..11 / 3 produces [0..3, 4..7, 8..11].toVect0r()
+ *
+ * in order to dereference these vectors, invert the applied order
+ *  val r=(0 until 743 * 347 * 437) / 437 / 347 / 743
+ *
+ *  the order to access these is the r[..743][..347][..437]
  */
 infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
     (this t2 (last - first + (1 - first)) / denominator).let { (_: IntRange, subSize: Int): Pai2<IntRange, Int> ->

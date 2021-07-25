@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import vec.util._l
 import vec.util._v
+import vec.util.logDebug
 
 class VectorLikeKtTest {
 
@@ -47,4 +48,14 @@ class VectorLikeKtTest {
         assertEquals(goal[0][2], tist[0][2])
 
     }
-}
+
+    @Test
+    fun div() {
+
+        val pai2 = (0 until 743 * 347 * 437) / 437 / 347/743
+logDebug {
+    val pai21 = pai2[2]
+    pai2.map {it.toList().toString()  }.toList().toString()}
+
+
+    }}
