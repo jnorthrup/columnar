@@ -62,19 +62,19 @@ infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
 
 
 infix fun <A, C, B : (A) -> C> List<A>.α(m: B) =
-    Vect0r(this.size) { i: Int -> this[i] `→` m }
+     this.size t2 { i: Int -> m(this[i]) }
 
 
 infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B) =
-    Vect0r(this.size) { i: Int -> this[i] `→` m }
+     this.size t2 { i: Int -> m(this[i]) }
 
 
 infix fun <C, B : (Int) -> C> IntArray.α(m: B) =
-    Vect0r(this.size) { i: Int -> this[i] `→` m }
+     (this.size) t2{ i: Int -> m(this[i]) }
 
 
 infix fun <C, B : (Float) -> C> FloatArray.α(m: B) =
-    Vect0r(this.size) { i: Int -> this[i] `→` m }
+     (this.size)t2 { i: Int -> m(this[i]) }
 
 
 infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = this.size t2 { i: Int -> m(this[i]) }
