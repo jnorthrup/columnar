@@ -154,4 +154,4 @@ inline fun <reified T> moireValues(
 /**really really wants to produce a Double
  *
  */
-fun todub(f: Any?) = ((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: .0e-350
+fun todub(f: Any?) =( ((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: 1e-311).takeIf {it.isFinite() }?:1e-311
