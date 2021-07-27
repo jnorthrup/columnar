@@ -141,7 +141,7 @@ fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 @JvmName("twinlong")
 fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
 
-@JvmName("unaryPlusAny")
+@JvmName("unaryMinusTw1n")
 operator fun <S> Tw1n<S>.unaryMinus() = _a[first, second]
 
 @JvmName("unaryPlusI")
@@ -162,10 +162,16 @@ inline infix fun <reified R> Tw1n<Char>.α(noinline f: (Char) -> R) = (-this).α
 inline infix fun <reified R> Tw1n<Short>.α(noinline f: (Short) -> R) = (-this).α(f)
 
 
-//pairs of enums tricks
+/**
+ * create range of enums ordinals, inclusive +(enum1 t2 enum2)
+ */
 @JvmName("unaryPlusS")
-inline operator fun <T, S : Enum<S>> Tw1n<S>.unaryPlus() = (-this).let { (a, b) -> a..b }
-inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>) = this.ordinal..ub.ordinal
+inline   operator fun <T, S : Enum<S>> Tw1n<S>.unaryPlus() = (-this).let { (a, b) -> a..b }
+/**
+ * create range of enums ordinals, inclusive  (enum1..enum2)
+ */
+inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>)  = this.ordinal..ub.ordinal
+
 
 @JvmName("αS")
 inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R) = (-this).α(f)
