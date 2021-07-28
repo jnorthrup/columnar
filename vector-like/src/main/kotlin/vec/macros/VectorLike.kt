@@ -27,13 +27,12 @@ operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 infix fun <O, R, F : (O) -> R> O.`→`(f: F) = f(this)
 
 
-operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R =
-    { a: A -> a `→` this `→` b }
+operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> b(this(a)) }
 
 
 infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
     b: G,
-): R1 = (this * b) as R1
+): R1 = { a: A -> b(this(a)) } as R1
 
 /**
  * G follows F
@@ -50,7 +49,7 @@ infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(m)
 
 
 infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
-    this.map { it: A -> it `→` m }.toVect0r()
+    this.map { m(it) }.toVect0r()
 
 
 //infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B): Sequence<C> =
@@ -205,7 +204,7 @@ fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
 }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> =
-    Vect0r(a.size) { it: Int -> a[it] }
+    Vect0r(a.size) { a[it] }
 
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
@@ -485,7 +484,15 @@ fun <S> Vect0r<S>.iterator(): Iterator<S> {
     }
 }
 
+/**
+ * wrapper for for loops and iterable filters
+ */
 inline val <reified S> Vect0r<S>.`➤` get() = `Vect0r➤`(this)
+
+/**
+ * index by enum
+ */
+operator fun < S,E:Enum<E>> Vect0r<  S>.get(e:E) =get(e.ordinal)
 
 
 @JvmInline

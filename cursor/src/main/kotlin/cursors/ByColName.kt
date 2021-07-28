@@ -14,7 +14,7 @@ inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = righ
     s.map {
         val indexOf = list.indexOf(it)
         if (-1 == indexOf)
-            throw InvalidKeyException("$it not found in meta among ${list.toString()}" )
+            throw InvalidKeyException("$it not found in meta among $list" )
         indexOf
     }.toIntArray()
 }
