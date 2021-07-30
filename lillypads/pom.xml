@@ -14,7 +14,6 @@
         <kotlin.version>1.5.30-M1</kotlin.version>
     </properties>
 
-
     <dependencies>
         <dependency>
             <groupId>columnar</groupId>
