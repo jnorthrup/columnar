@@ -1,7 +1,7 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST")
+@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType")
 
 package vec.util
 
@@ -10,6 +10,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import java.nio.file.Paths
+import java.util.*
 import kotlin.math.min
 import kotlin.text.Charsets.UTF_8
 
@@ -63,7 +64,7 @@ object _v {
  */
 object _l {
 
-    operator fun <T> get(vararg t: T) = listOf(*t)
+    operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
 }
 
 /**
@@ -83,18 +84,15 @@ object _a {
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-
-    operator fun <T> get(vararg t: T) = setOf(*t)
+    operator fun <T> get(vararg t: T) = if(t.size==1)Collections.singleton(t[0])else setOf(*t)
 }
 
 /**
  * missing stdlib map convenience operator
  */
 object _m {
-
     operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
-
-
+    operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
     operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
 
@@ -132,8 +130,8 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
         else -> fib(n - 1, b, a + b)
     }
 
-@Deprecated("uncertainty about this one")
-inline fun <reified T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
+@Deprecated("causes cursors to miss left,right,combine cues")
+//inline fun <reified T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
 
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
@@ -150,9 +148,14 @@ inline fun <reified T> moireValues(
     )
 }
 
-@JvmName("todub")@JvmOverloads
-fun todub(f: Any? ) = vec.util.todub(f, -1e300)
+@JvmName("todub")
+@JvmOverloads
+fun todub(f: Any?) = vec.util.todub(f, -1e300)
+
 /**really really wants to produce a Double
  *
- */@JvmName("todubd") @JvmOverloads
-fun todub(f: Any?, d: Double ) =( ((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: d).takeIf {it.isFinite() }?: d
+ */
+@JvmName("todubd")
+@JvmOverloads
+fun todub(f: Any?, d: Double) =
+    (((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: d).takeIf { it.isFinite() } ?: d
