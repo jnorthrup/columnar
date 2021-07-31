@@ -149,7 +149,7 @@ inline fun <reified T> moireValues(
 }
 
 @JvmName("todub")
-fun todubspec(f: Any?) = vec.util.todub(f, -1e300)
+fun todubneg(f: Any?) = vec.util.todub(f, -1e300)
 
 @JvmName("todub0")
 fun todub(f: Any?) = vec.util.todub(f, .0)
