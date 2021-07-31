@@ -1,7 +1,7 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType")
+@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType", "NOTHING_TO_INLINE")
 
 package vec.util
 
@@ -84,7 +84,7 @@ object _a {
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-    operator fun <T> get(vararg t: T) = if(t.size==1)Collections.singleton(t[0])else setOf(*t)
+    operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singleton(t[0]) else setOf(*t)
 }
 
 /**
@@ -149,14 +149,13 @@ inline fun <reified T> moireValues(
 }
 
 @JvmName("todub")
-fun todubneg(f: Any?) = vec.util.todub(f, -1e300)
+inline fun todubneg(f: Any?) = vec.util.todub(f, -1e300)
 
 @JvmName("todub0")
-fun todub(f: Any?) = vec.util.todub(f, .0)
+inline fun todub(f: Any?) = vec.util.todub(f, .0)
 
 /**really really wants to produce a Double
  *
  */
 @JvmName("todubd")
-fun todub(f: Any?, d: Double) =
-    (((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: d).takeIf { it.isFinite() } ?: d
+inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: d).takeIf { it.isFinite() } ?: d
