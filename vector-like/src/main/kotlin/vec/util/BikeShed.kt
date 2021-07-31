@@ -149,13 +149,14 @@ inline fun <reified T> moireValues(
 }
 
 @JvmName("todub")
-@JvmOverloads
-fun todub(f: Any?) = vec.util.todub(f, -1e300)
+fun todubspec(f: Any?) = vec.util.todub(f, -1e300)
+
+@JvmName("todub0")
+fun todub(f: Any?) = vec.util.todub(f, .0)
 
 /**really really wants to produce a Double
  *
  */
 @JvmName("todubd")
-@JvmOverloads
 fun todub(f: Any?, d: Double) =
     (((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: d).takeIf { it.isFinite() } ?: d
