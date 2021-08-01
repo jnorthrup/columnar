@@ -240,7 +240,8 @@ fun <T> combine(vararg s: Flow<T>): Flow<T> = flow {
 @JvmName("combine_Sequence")
 fun <T> combine(vararg s: Sequence<T>): Sequence<T> = sequence {
     for (sequence: Sequence<T> in s)
-        for (t in sequence) yield(t)
+        for (t in sequence)
+            yield(t)
 }
 
 @JvmName("combine_List")
@@ -325,7 +326,7 @@ inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>): Array
  * pulls out an array of Map values for an vararg array of keys
  */
 inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K): Array<V> =
-    Array(ks.size) { ix: Int -> ks[ix].let(this::get)!! }
+    Array(ks.size) { ix: Int -> get(ks[ix])!! }
 
 
 /**splits a range into multiple parts for upstream reindexing utility

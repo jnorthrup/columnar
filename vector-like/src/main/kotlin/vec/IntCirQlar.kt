@@ -15,19 +15,18 @@ only mutability is offer(T)
 has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
-class CirQlar<T>(
+class IntCirQlar(
     val maxSize: Int,
-    val al: MutableList<T> = arrayListOf<T>().also { it.ensureCapacity(maxSize) },
-) : AbstractQueue<T>() {
+    val al: IntArray =IntArray(maxSize),
+) : AbstractQueue<Int>() {
     var tail = 0
-    override val size = al.size
-    val full get() = maxSize == size
+     val full get() = maxSize <= tail
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
-    override fun iterator(): MutableIterator<T> {
+    override fun iterator(): MutableIterator<Int> {
         val v = this.toVect0r()
-        return object : Iterator<T> {
+        return object : Iterator<Int> {
             var x = 0
             override inline fun hasNext(): Boolean {
                 return x < v.size
@@ -35,28 +34,26 @@ class CirQlar<T>(
 
             override inline fun next() = v.second(x++)
 
-        } as MutableIterator<T>
+        } as MutableIterator<Int>
     }
 
     fun toList() = toVect0r().mapIndexedToList { _, t -> t }
-    fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
+    fun toVect0r(): Vect0r<Int> = object : Pai2<Int, (Int) -> Int> {
         override val first by al::size
-        override val second = { x: Int ->
-            al[(tail + x).rem(maxSize)]
+        override val second: (Int) -> Int = { x: Int ->
+            al[(tail + x).rem(maxSize)] as Int
         }
     }
 
     //todo: lockless dequeue here ?
-    override fun offer(e: T): Boolean =
+    override fun offer(e:Int): Boolean =
         synchronized(this) {
-            when (al.size) {
-                maxSize -> al[tail] = e.also { tail = (++tail).rem(maxSize) }
-                else -> al.add(e)
-            }
+            al[tail% maxSize ] = e.also { tail = ++tail }
+            if(tail==2*maxSize)tail=maxSize
         }.let { true }
 
-    override fun poll(): T = TODO("Not yet implemented")
-    override fun peek(): T = TODO("Not yet implemented")
-    override fun add(k: T) =offer(k)
+    override fun poll() = TODO("Not yet implemented")
+    override fun peek() = TODO("Not yet implemented")
+    override fun add(k: Int) =offer(k)
+    override val size: Int get()= kotlin.math.min(tail, maxSize)
 }
-
