@@ -2,6 +2,7 @@ package vec
 
 import vec.macros.Pai2
 import vec.macros.Vect0r
+import vec.macros.`➤`
 import java.util.*
 
 /**
@@ -15,39 +16,29 @@ has more expensive toList/iterator by copy/concat
  */
 class CirQlar<T>(
     val maxSize: Int,
-    val backingStore: MutableList<T> = arrayListOf<T>().also { it.ensureCapacity(maxSize) },
+    val al: MutableList<T> = arrayListOf<T>().also { it.ensureCapacity(maxSize) },
 ) : AbstractQueue<T>() {
     var tail = 0
-    override val size by backingStore::size
+    override val size = al.size
     val full get() = maxSize == size
-    fun get(x:Int)    = backingStore::get
-    @Deprecated("gonna blow up on mutable ops", ReplaceWith("this.toVect0r<T>().iterator()"))
-    override fun iterator(): MutableIterator<T> =
-        this.toList<T>().iterator() as MutableIterator<T> // gonna blow on mutable ops
 
-    fun toList() = when (backingStore.size) {
-        maxSize -> backingStore.drop(tail) + backingStore.dropLast(maxSize - tail)
-        else -> backingStore
-    }
-
-
-    /**
-     * this is a mutable Vect0r that is going to violate reverse,combine,join repeatability.
-     */
+    @Suppress("DeprecatedCallableAddReplaceWith")
+    @Deprecated("gonna blow up on mutable ops")
+    override fun iterator(): MutableIterator<T> = toVect0r().`➤`.iterator() as MutableIterator<T>
+    fun toList() = toVect0r().`➤`.toList()
     fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
-        override val first by backingStore::size
-
+        override val first by al::size
         override val second = { x: Int ->
-            backingStore[(tail + x).rem(maxSize)]
+            al[(tail + x).rem(maxSize)]
         }
     }
 
     //todo: lockless dequeue here ?
     override fun offer(e: T): Boolean =
         synchronized(this) {
-            when (backingStore.size) {
-                maxSize -> backingStore[tail] = e.also { tail = (++tail).rem(maxSize) }
-                else -> backingStore.add(e)
+            when (al.size) {
+                maxSize -> al[tail] = e.also { tail = (++tail).rem(maxSize) }
+                else -> al.add(e)
             }
         }.let { true }
 

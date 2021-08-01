@@ -9,7 +9,7 @@ import java.util.*
 /**
  * semigroup
  */
-typealias Vect0r< reified T> = Pai2<Int, (  ( Int) -> T)>
+typealias Vect0r<reified T> = Pai2<Int, ((Int) -> T)>
 typealias   Vect02<F, S> = Vect0r<XY<F, S>>
 typealias  V3ct0r<F, S, T> = Vect0r<XYZ<F, S, T>>
 
@@ -61,19 +61,19 @@ infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
 
 
 infix fun <A, C, B : (A) -> C> List<A>.α(m: B) =
-     this.size t2 { i: Int -> m(this[i]) }
+    this.size t2 { i: Int -> m(this[i]) }
 
 
 infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B) =
-     this.size t2 { i: Int -> m(this[i]) }
+    this.size t2 { i: Int -> m(this[i]) }
 
 
 infix fun <C, B : (Int) -> C> IntArray.α(m: B) =
-     (this.size) t2{ i: Int -> m(this[i]) }
+    (this.size) t2 { i: Int -> m(this[i]) }
 
 
 infix fun <C, B : (Float) -> C> FloatArray.α(m: B) =
-     (this.size)t2 { i: Int -> m(this[i]) }
+    (this.size) t2 { i: Int -> m(this[i]) }
 
 
 infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = this.size t2 { i: Int -> m(this[i]) }
@@ -487,12 +487,12 @@ fun <S> Vect0r<S>.iterator(): Iterator<S> {
 /**
  * wrapper for for loops and iterable filters
  */
-inline val <reified S> Vect0r<S>.`➤` get() = `Vect0r➤`(this)
+val <S> Vect0r<S>.`➤` get() = `Vect0r➤`(this)
 
 /**
  * index by enum
  */
-operator fun < S,E:Enum<E>> Vect0r<  S>.get(e:E) =get(e.ordinal)
+operator fun <S, E : Enum<E>> Vect0r<S>.get(e: E) = get(e.ordinal)
 
 
 @JvmInline
