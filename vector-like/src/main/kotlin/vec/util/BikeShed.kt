@@ -44,16 +44,15 @@ var logReuseCountdown = 0
 object _v {
     inline operator fun <reified T> get(vararg t: T): Vect0r<T> {
         val pai2 = when (t.size) {
-            1 -> (1) t2 (t[0]).let { z -> { x: Int -> z } }
+            1 -> 1 t2 t.first().let { z -> { _  -> z } }
             2 -> {
-                val let = (t[0] t2 t[1]).let { (a, b) ->
+                2 t2 (t[0] t2 t[1]).let { (a, b) ->
                     { x: Int ->
                         if (x == 0) a else b
                     }
                 }
-                2 t2 let
             }
-            else -> t.toVect0r() as Vect0r<T>
+            else -> t.size t2 {x:Int->t[x]}
         }
         return pai2
     }

@@ -2,7 +2,8 @@ package vec
 
 import vec.macros.Pai2
 import vec.macros.Vect0r
-import vec.macros.`➤`
+import vec.macros.mapIndexedToList
+import vec.macros.size
 import java.util.*
 
 /**
@@ -24,8 +25,20 @@ class CirQlar<T>(
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
-    override fun iterator(): MutableIterator<T> = toVect0r().`➤`.iterator() as MutableIterator<T>
-     fun toList()= toVect0r().`➤`.toList()
+    override fun iterator(): MutableIterator<T> {
+        val v = this.toVect0r()
+        return object : Iterator<T> {
+            var x = 0
+            override inline fun hasNext(): Boolean {
+                return x < v.size
+            }
+
+            override inline fun next() = v.second(x++)
+
+        } as MutableIterator<T>
+    }
+
+    fun toList() = toVect0r().mapIndexedToList { _, t -> t }
     fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
         override val first by al::size
         override val second = { x: Int ->

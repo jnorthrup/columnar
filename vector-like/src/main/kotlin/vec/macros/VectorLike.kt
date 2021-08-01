@@ -48,7 +48,7 @@ infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
 infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(m)
 
 
-infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
+inline infix fun <A, reified C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
     this.map { m(it) }.toVect0r()
 
 
@@ -117,7 +117,7 @@ suspend fun <T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().
 suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()*/
 
 @JvmName("vlike_List_1")
-inline operator fun <T> List<T>.get(vararg index: Int) = get(index)
+inline operator fun < reified T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
 inline operator fun <T> List<T>.get(indexes: Iterable<Int>): Vect0r<T> = this.get(indexes.toList().toIntArray())
@@ -148,7 +148,7 @@ operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> th
 */
 
 @JvmName("vlike_Vect0r_getByInt")
-operator fun <T> Vect0r<T>.get(index: Int) = second(index)
+inline operator fun <reified T> Vect0r<T>.get(index: Int) = second(index)
 
 @JvmName("vlike_Vect0r_getVarargInt")
 operator fun <T> Vect0r<T>.get(vararg index: Int) = get(index)
@@ -165,7 +165,7 @@ inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) 
 inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
         override inline val size get() = v.first
-        override inline operator fun get(index: Int) = (v[index])
+        override inline operator fun get(index: Int) = v.second(index)
     }
 }
 
@@ -219,9 +219,9 @@ inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2
 @JvmOverloads
 @JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
-fun <T, O, R> Vect0r<T>.zip(
+inline fun <reified T, reified O, R> Vect0r<T>.zip(
     o: Vect0r<O>,
-    f: (T, O) -> R,
+    crossinline f: (T, O) -> R,
 ): Vect0r<R> = size t2 { x: Int -> f(this[x], o[x]) }
 
 @JvmOverloads
@@ -358,13 +358,13 @@ inline infix operator fun <reified T> Vector<T>.div(denominator: Int) =
 /**
  * this is an unfortunate discriminator between Pai2.first..second and Vect0r.first..last
  */
-val <T> Vect0r<T>.f1rst: T
+inline val <reified T> Vect0r<T>.f1rst: T
     get() = get(0)
 
 /**
  * the last element of the Vect0r
  */
-val <T> Vect0r<T>.last: T
+inline val <reified T> Vect0r<T>.last: T
     get() = get(size - 1)
 
 /**
@@ -390,7 +390,7 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
  * direct increment offset for a cheaper slice than binary search
  */
 @JvmOverloads
-fun <T> Vect0r<T>.slice(
+inline fun <reified T> Vect0r<T>.slice(
     start: Int = 0,
     end: Int = this.size,
 ): Vect0r<T> = (end - start t2 { y: Int ->
@@ -405,25 +405,25 @@ inline infix operator fun <reified T, P : Vect0r<T>> P.plus(t: T) = combine(this
 
 
 /**cloning and reifying Vect0r to ByteArray*/
-fun <T : Byte> Vect0r<T>.toByteArray() = ByteArray(size) { i -> get(i) }
+inline fun <  reified T : Byte> Vect0r<T>.toByteArray() = ByteArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to CharArray*/
-fun <T : Char> Vect0r<T>.toCharArray() = CharArray(size) { i -> get(i) }
+inline fun <reified T : Char> Vect0r<T>.toCharArray() = CharArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to IntArray*/
-fun <T : Int> Vect0r<T>.toIntArray() = IntArray(size) { i -> get(i) }
+inline fun <reified T : Int> Vect0r<T>.toIntArray() = IntArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to LongArray*/
-fun <T : Long> Vect0r<T>.toLongArray() = LongArray(size) { i -> get(i) }
+inline fun <reified T : Long> Vect0r<T>.toLongArray() = LongArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to FloatArray*/
-fun <T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -> get(i) }
+inline fun <reified T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to DoubleArray*/
-fun <T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
+inline fun <reified T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
 
-fun <T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+inline fun < reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+inline fun < reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
 fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
 fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
 fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
@@ -441,7 +441,7 @@ fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0
 fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0.0
 fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0f
 
-suspend fun <T> Flow<T>.toVect0r() = this.toList().toVect0r()
+suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
     slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 
@@ -472,14 +472,14 @@ inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: Lin
 }
 
 
-fun <S> Vect0r<S>.iterator(): Iterator<S> {
+inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
     return object : Iterator<S> {
         var x = 0
-        override fun hasNext(): Boolean {
+    override inline fun hasNext(): Boolean {
             return x < size
         }
 
-        override fun next(): S = get(x++)
+        override inline fun next(): S = get(x++)
 
     }
 }
@@ -487,18 +487,14 @@ fun <S> Vect0r<S>.iterator(): Iterator<S> {
 /**
  * wrapper for for loops and iterable filters
  */
-val <S> Vect0r<S>.`➤` get() = `Vect0r➤`(this)
+inline val <reified S> Vect0r<S>.`➤` get() = this.toList()
 
 /**
  * index by enum
  */
-operator fun <S, E : Enum<E>> Vect0r<S>.get(e: E) = get(e.ordinal)
+inline operator fun <reified S,reified  E : Enum<E>> Vect0r<S>.get(e: E) = get(e.ordinal)
 
 
-@JvmInline
-value class `Vect0r➤`<S>(val p: Vect0r<S>) : Iterable<S>, RandomAccess {
-    override inline fun iterator() = p.iterator()
-}
 
 
 /**
