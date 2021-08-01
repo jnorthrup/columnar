@@ -25,7 +25,7 @@ class CirQlar<T>(
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
     override fun iterator(): MutableIterator<T> = toVect0r().`➤`.iterator() as MutableIterator<T>
-    fun toList() = toVect0r().`➤`.toList()
+     fun toList()= toVect0r().`➤`.toList()
     fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
         override val first by al::size
         override val second = { x: Int ->
