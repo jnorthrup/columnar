@@ -8,6 +8,7 @@ package vec.util
 import vec.macros.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.ref.SoftReference
 import java.nio.ByteBuffer
 import java.nio.file.Paths
 import java.util.*
@@ -44,7 +45,7 @@ var logReuseCountdown = 0
 object _v {
     inline operator fun <reified T> get(vararg t: T): Vect0r<T> {
         val pai2 = when (t.size) {
-            1 -> 1 t2 t.first().let { z -> { _  -> z } }
+            1 -> 1 t2 t.first().let { z -> { _ -> z } }
             2 -> {
                 2 t2 (t[0] t2 t[1]).let { (a, b) ->
                     { x: Int ->
@@ -52,7 +53,7 @@ object _v {
                     }
                 }
             }
-            else -> t.size t2 {x:Int->t[x]}
+            else -> t.size t2 { x: Int -> t[x] }
         }
         return pai2
     }
@@ -153,8 +154,12 @@ inline fun todubneg(f: Any?) = vec.util.todub(f, -1e300)
 @JvmName("todub0")
 inline fun todub(f: Any?) = vec.util.todub(f, .0)
 
+
+val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>( 0)
+
 /**really really wants to produce a Double
- *
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble() ?: "$f".toDoubleOrNull() ?: d).takeIf { it.isFinite() } ?: d
+inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble()
+    ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }
+        .get()?.second)?.takeIf { it.isFinite() } ?: d
