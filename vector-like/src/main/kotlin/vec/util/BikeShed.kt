@@ -24,26 +24,6 @@ fun Int.toArray(): IntArray = _a[this]
 fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
 fun btoa(ba: ByteArray) = String(ba, UTF_8)
 fun trim(it: String) = it.trim()
-fun logDebug(debugTxt: () -> String) {
-    try {
-        assert(false, debugTxt)
-    } catch (a: AssertionError) {
-        System.err.println(debugTxt())
-    }
-}
-
-//@ExperimentalContracts
-inline fun <T> T.debug(block: (T) -> Unit): T {
-/*    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }*/
-    try {
-        assert(false)
-    } catch (a: AssertionError) {
-         block(this)
-    }
-    return this
-}
 
 //infix fun Any?.debug(message: String) = kotlin.io.println(message)
 
@@ -171,9 +151,20 @@ inline fun todub(f: Any?) = vec.util.todub(f, .0)
 
 val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 
-/**really really wants to produce a Double
+/** really really wants to produce a Double
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble()
-    ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }
+inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble()   ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }
         .get()?.second)?.takeIf { it.isFinite() } ?: d
+
+
+fun logDebug(debugTxt: () -> String) {
+    if (`debug status matching -ea jvm switch`) System.err.println(debugTxt())
+}
+@[JvmSynthetic JvmField]
+val `debug status matching -ea jvm switch` = !Runtime::class.java.desiredAssertionStatus()
+
+inline fun <T> T.debug(block: (T) -> Unit): T =apply {
+    if (`debug status matching -ea jvm switch`) block(this)
+
+}
