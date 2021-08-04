@@ -20,12 +20,10 @@ infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() 
 operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
 val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
-infix fun Any?.debug(message: String) = kotlin.io.println(message)
 fun Int.toArray(): IntArray = _a[this]
 fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
 fun btoa(ba: ByteArray) = String(ba, UTF_8)
 fun trim(it: String) = it.trim()
-
 fun logDebug(debugTxt: () -> String) {
     try {
         assert(false, debugTxt)
@@ -33,6 +31,22 @@ fun logDebug(debugTxt: () -> String) {
         System.err.println(debugTxt())
     }
 }
+
+//@ExperimentalContracts
+inline fun <T> T.debug(block: (T) -> Unit): T {
+/*    contract {
+        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+    }*/
+    try {
+        assert(false)
+    } catch (a: AssertionError) {
+         block(this)
+    }
+    return this
+}
+
+//infix fun Any?.debug(message: String) = kotlin.io.println(message)
+
 
 val IntProgression.indices
     get() = map { it }
@@ -155,7 +169,7 @@ inline fun todubneg(f: Any?) = vec.util.todub(f, -1e300)
 inline fun todub(f: Any?) = vec.util.todub(f, .0)
 
 
-val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>( 0)
+val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 
 /**really really wants to produce a Double
  */

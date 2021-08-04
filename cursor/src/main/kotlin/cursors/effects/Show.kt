@@ -7,7 +7,6 @@ import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
 import vec.macros.size
 import vec.macros.toList
-import vec.util.debug
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -27,7 +26,8 @@ fun Cursor.showValues(range: IntProgression) {
             println((this at it).left.toList())
         }
     } catch (e: NoSuchElementException) {
-        e debug "cannot fully access range $range"
+        e
+        System.err.println("cannot fully access range $range")
     }
 }
 

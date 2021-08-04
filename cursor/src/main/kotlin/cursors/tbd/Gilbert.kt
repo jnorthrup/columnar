@@ -1,6 +1,5 @@
 package cursors.tbd
 
-import vec.macros.`→`
 import java.lang.Integer.signum
 import kotlin.math.abs
 
@@ -94,7 +93,3 @@ fun gilbertCurve2D(xPrime: Int, yPrime: Int, ax: Int, ay: Int, bx: Int, by: Int,
     }
 }
 
-
-fun audit(x: Int, y: Int) = x to y `→` ::println
-
-fun main(vararg args: String) = gilbertCurve(16, 33, ::audit)
