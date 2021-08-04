@@ -22,7 +22,6 @@ class CirQlar<T>(
     var tail = 0
     override val size = al.size
     val full get() = maxSize == size
-
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
     override fun iterator(): MutableIterator<T> {
@@ -57,6 +56,10 @@ class CirQlar<T>(
 
     override fun poll(): T = TODO("Not yet implemented")
     override fun peek(): T = TODO("Not yet implemented")
-    override fun add(k: T) =offer(k)
+    override fun add(k: T) = offer(k)
+    operator fun <T> CirQlar<T>.plus(k: T) = offer(k)
+    operator fun <T> CirQlar<T>.plusAssign(k: T) {
+        offer(k)
+    }
 }
 
