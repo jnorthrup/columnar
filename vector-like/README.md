@@ -75,7 +75,7 @@ we can combine them to create new indexed vect0r's
 
  ``` 
  val doubleLength = combine(intVec, intVec)
- doubleLength.size shouldBe 6
+ doubleLength.size shouldbe.testing.always.shouldBe 6
 
 ``` 
 
@@ -101,7 +101,7 @@ larger abstractions, namely cursors, and tables in Columnar are also pairwise co
 
 ``` 
  val (a: Int, b: (Int) -> Int) = doubleLength
- (a === doubleLength.size) shouldBe (doubleLength.size === doubleLength.first)
+ (a === doubleLength.size) shouldbe.testing.always.shouldBe (doubleLength.size === doubleLength.first)
 ```
 
 #### zip

@@ -3,7 +3,6 @@ package cursors
 import cursors.context.TokenizedRow
 import cursors.effects.head
 import org.junit.Test
-import shouldBe
 import vec.macros.size
 import vec.util._l
 

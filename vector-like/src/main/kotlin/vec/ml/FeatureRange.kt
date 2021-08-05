@@ -2,22 +2,24 @@
 
 package vec.ml
 
-import vec.macros.Tw1n
-import vec.macros.component1
-import vec.macros.component2
+import vec.macros.*
 
 /**
  * returns min,max of Iterable given
  */
-@JvmName("FRComparable")
-inline fun <reified T : Comparable<T>> featureRange(seq: Iterable<T>, maxMinTwin: Tw1n<T>) =
+@JvmName("FRComparable")@JvmOverloads
+inline fun <reified T : Comparable<T>> featureRange(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Pai2<T, T> = featureRange_(seq,maxMinTwin)
+/**
+ * returns min,max of Iterable given
+ */
+@JvmName("FRComparable_")@JvmOverloads
+inline fun <reified T : Comparable<T>> featureRange_(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Pai2<T, T> =
     seq.fold(maxMinTwin) { incumbent, candidate: T ->
         val (incumbentMin, incumbentMax) = incumbent
         val cmin = minOf(incumbentMin, candidate)
         val cmax = maxOf(candidate, incumbentMax)
         when {
-            incumbentMax !== candidate && candidate === cmax ||
-                    incumbentMin !== candidate && candidate === cmin -> Tw1n(cmin, cmax)
+            incumbentMax !== candidate && candidate === cmax || incumbentMin !== candidate && candidate === cmin -> Tw1n(cmin, cmax)
             else -> incumbent
         }
     }
@@ -37,11 +39,7 @@ inline fun Tw1n<Long>.deNormalize(d: Long): Long = let { (min, max) -> (d * (max
 @JvmName("FrInt")
 fun featureRange(
     seq: Iterable<Int>,
-    maxMinTwin: Tw1n<Int> = Tw1n(
-        Int.MAX_VALUE,
-        Int.MIN_VALUE
-    ),
-): Tw1n<Int> = featureRange(seq, maxMinTwin)
+    maxMinTwin: Tw1n<Int> =          Int.MAX_VALUE t2 Int.MIN_VALUE )  = featureRange_(seq, maxMinTwin)
 
 
 @JvmName("FrLong")
@@ -51,7 +49,7 @@ fun featureRange(
         Long.MAX_VALUE,
         Long.MIN_VALUE
     ),
-): Tw1n<Long> = featureRange(seq, maxMinTwin)
+): Tw1n<Long> = featureRange_(seq, maxMinTwin)
 
 @JvmName("FrDouble")
 fun featureRange(
@@ -60,7 +58,7 @@ fun featureRange(
         Double.MAX_VALUE,
         Double.MIN_VALUE
     ),
-): Tw1n<Double> = featureRange(seq, maxMinTwin)
+): Tw1n<Double> = featureRange_(seq, maxMinTwin)
 
 @JvmName("FrFloat")
 fun featureRange(
@@ -69,5 +67,5 @@ fun featureRange(
         Float.MAX_VALUE,
         Float.MIN_VALUE
     ),
-): Tw1n<Float> = featureRange(seq, maxMinTwin)
+): Tw1n<Float> = featureRange_(seq, maxMinTwin)
 

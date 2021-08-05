@@ -4,7 +4,7 @@ import java.time.chrono.IsoChronology
 
 object TestDate {
     
-    fun main(args: Array<String>) {
+    fun main() {
         val x: IsoChronology
     }
 }

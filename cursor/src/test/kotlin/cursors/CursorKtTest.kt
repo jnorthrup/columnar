@@ -14,7 +14,6 @@ import cursors.macros.`∑`
 import cursors.macros.join
 import org.junit.Assert
 import org.junit.Test
-import shouldBe
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
@@ -22,6 +21,10 @@ import vec.ml.DummySpec
 import vec.util._a
 import vec.util._v
 
+
+infix fun Any?.shouldBe(that: Any?) {
+    org.junit.Assert.assertEquals(that, this)
+}
 
 class CursorKtTest {
     val coords = _a[

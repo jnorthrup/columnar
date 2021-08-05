@@ -6,6 +6,10 @@ import vec.macros.*
 import vec.util._a
 import vec.util._l
 
+
+infix fun Any?.shouldBe(that: Any?) {
+    org.junit.Assert.assertEquals(that, this)
+}
 class VectorLikeKtTest {
     @Test
     fun testCombineVec() {
@@ -36,13 +40,12 @@ class VectorLikeKtTest {
         assertEquals(toList1, toList)
     }
 
-    infix fun Any?.shouldBe(that: Any?) = assertEquals(this, that)
 
     @Test
     fun `WhatCanVect0rDo`() {
 
         // we can create an array from bikeshed util
-        val ar  = _a["0", "1", "2"]
+        val ar = _a["0", "1", "2"]
 
         //we can make a lazy vector from the array of strings
         val strVec = ar.toVect0r()
@@ -65,7 +68,7 @@ class VectorLikeKtTest {
 
 
         // we  can print them.  there is no toString so we get an identity from an inline class
-        System.err.println("double length vector is cold: ${doubleLength }")
+        System.err.println("double length vector is cold: $doubleLength")
         System.err.println()
 
         // we can reify them and then print that.
@@ -77,14 +80,14 @@ class VectorLikeKtTest {
         (a === doubleLength.size) shouldBe (doubleLength.size === doubleLength.first)
 
         //we can reorder them as a new Vect0r,  lazily.  the bikeshed  util extends this to Any convertables above
-        val reordered1 = doubleLength[2, 1, 3, 4, 4, 4, 4, 4] as Vect0r<Int>
+        val reordered1 = doubleLength[2, 1, 3, 4, 4, 4, 4, 4]
         System.err.println(reordered1.toList())
         System.err.println()
 
         //#### zip
         // same as the stdlib zip except the Vect0r result uses an interface instead of a data class
         // the pairwise construction uses the simplest possible `pair` interface named `Pai2`
-        val zip: Vect02<Int, Int> = reordered1.zip (reordered1)
+        val zip: Vect02<Int, Int> = reordered1.zip(reordered1)
 
         // these are pure functional interfaces without toString, but have a pair conversion
         val z1 = zip α Pai2<Int, Int>::pair

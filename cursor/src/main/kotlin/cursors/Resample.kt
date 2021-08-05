@@ -1,7 +1,7 @@
 package cursors
 
 import cursors.calendar.daySeq
-import cursors.calendar.feature_range
+import cursors.calendar.featureRange
 import cursors.io.scalars
 import vec.macros.*
 import vec.macros.Vect02_.left
@@ -14,7 +14,7 @@ import java.time.LocalDate
  */
 fun Cursor.resample(indexcol: Int): Cursor = let {
     val indexValues = (combine(this[indexcol]).left α { it as LocalDate }).`➤`
-    val (min, max) = feature_range(indexValues, LocalDate.MAX t2 LocalDate.MIN)
+    val (min, max) = featureRange(indexValues, LocalDate.MAX t2 LocalDate.MIN)
     val scalars = this.scalars
     val sequence: Sequence<LocalDate> = daySeq(min, max) - indexValues
     val indexVec = sequence.toVect0r()

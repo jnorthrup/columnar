@@ -10,21 +10,17 @@
     </parent>
     <artifactId>cursor</artifactId>
 
-    <properties>
-        <kotlin.version>1.5.21</kotlin.version>
-    </properties>
-
 
     <dependencies>
         <dependency>
             <groupId>columnar</groupId>
             <artifactId>vector-like</artifactId>
-            <version>${version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>columnar</groupId>
             <artifactId>trie</artifactId>
-            <version>${version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -64,7 +60,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <jvmTarget>1.8</jvmTarget>
+                    <jvmTarget>11</jvmTarget>
                 </configuration>
             </plugin>
         </plugins>
