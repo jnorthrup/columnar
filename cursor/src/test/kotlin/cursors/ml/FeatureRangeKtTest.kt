@@ -3,6 +3,8 @@ package cursors.ml
 import junit.framework.Assert.assertEquals
 import org.junit.Test
 import vec.macros.Tw1n
+import vec.ml.deNormalize
+import vec.ml.normalize
 
 class FeatureRangeKtTest {
 

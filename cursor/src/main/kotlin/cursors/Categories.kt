@@ -6,7 +6,7 @@ import cursors.io.RowVec
 import cursors.io.colIdx
 import cursors.io.scalars
 import cursors.macros.join
-import cursors.ml.DummySpec
+import vec.ml.DummySpec
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right

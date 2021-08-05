@@ -7,10 +7,10 @@ import cursors.context.Scalar
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
 import cursors.macros.join
-import cursors.ml.featureRange
-import cursors.ml.normalize
 import vec.macros.*
 import vec.macros.Vect02_.left
+import vec.ml.featureRange
+import vec.ml.normalize
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -77,16 +77,10 @@ typealias Cursor = Vect0r<RowVec>
 infix fun <T : Int> Cursor.at(t: T) = second.invoke(t)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
-fun Cursor.reify() =
-    this α RowVec::toList
+fun Cursor.reify() = combine(this)
 
 @Deprecated("unit testing holdover from prior codebase no longer adds clarity")
-fun Cursor.narrow() =
-    (reify()) α { list: List<Pai2<*, *>> ->
-        list.map(
-            Pai2<*, *>::first
-        )
-    }
+fun Cursor.narrow() = combine(this).left
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -216,7 +210,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
         }
     }
 
-    val normalizedRange = featureRange<Float>(seq, maxMinTwin as Tw1n<Float>)
+    val normalizedRange = featureRange<Float>(seq.asIterable(), maxMinTwin as Tw1n<Float>)
 
     val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
 
@@ -248,7 +242,7 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
         }
     }
 
-    val normalizedRange = featureRange<Double>(seq, maxMinTwin as Tw1n<Double>)
+    val normalizedRange = featureRange<Double>(seq.asIterable(), maxMinTwin as Tw1n<Double>)
 
     val ctx = { Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange) }
 

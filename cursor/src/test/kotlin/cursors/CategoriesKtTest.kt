@@ -3,7 +3,7 @@ package cursors
 import cursors.context.TokenizedRow
 import cursors.effects.show
 import cursors.io.IOMemento
-import cursors.ml.DummySpec
+import vec.ml.DummySpec
 import org.junit.Test
 import vec.util._l
 

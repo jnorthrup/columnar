@@ -3,7 +3,7 @@ package cursors.calendar
 import java.time.LocalDate
 
 fun daySeq(min: LocalDate, max: LocalDate): Sequence<LocalDate> {
-    var marker = min
+    var marker: LocalDate = min
     return sequence {
         while (max > marker) {
             yield(marker)

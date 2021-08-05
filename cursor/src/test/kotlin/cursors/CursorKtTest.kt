@@ -12,13 +12,13 @@ import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString
 import cursors.macros.`∑`
 import cursors.macros.join
-import cursors.ml.DummySpec
 import org.junit.Assert
 import org.junit.Test
 import shouldBe
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
+import vec.ml.DummySpec
 import vec.util._a
 import vec.util._v
 
@@ -63,12 +63,8 @@ class CursorKtTest {
     @Test
     fun resample() {
         val cursor: Cursor = cursorOf(root)
-        val narrow = cursor.narrow()
         cursor.toList()[3][2].first shouldBe 820f
-        System.err.println(narrow.toList())
-        val toList = cursor.resample(0).narrow().toList()
-        toList[3][2] shouldBe 820f
-        toList.forEach { System.err.println(it) }
+        System.err.println(combine(cursor).left.toList())
     }
 
     @Test
@@ -77,12 +73,12 @@ class CursorKtTest {
         var categories = cursor[0].categories()
         var scalars = categories.scalars as Vect02<TypeMemento, String?>
         System.err.println(scalars.right.toList())
-        var toList = categories.narrow().toList()
+        var toList = combine(categories).left.toList()
         toList.forEach { System.err.println(it) }
         categories = cursor[0].categories(DummySpec.Last)
         scalars = categories.scalars as Vect02<TypeMemento, String?>
         System.err.println(scalars.right.toList())
-        toList = categories.narrow().toList()
+        toList = combine(categories).left.toList()
         toList.forEach { System.err.println(it) }
     }
 
@@ -93,8 +89,8 @@ class CursorKtTest {
             System.err.println("unordered\n\n")
 
             val resample = cursor.resample(0)
-            val toList = resample
-                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/.narrow()
+            val toList = combine(resample
+                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/).left
                 .toList()
             resample.toList()[3][2].first shouldBe 820f
             toList.forEach { System.err.println(it) }
@@ -104,11 +100,13 @@ class CursorKtTest {
             val ordered = cursor.resample(0)
                 .ordered(intArrayOf(0)/*, Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) }*/)
 
-            val toList = ordered.narrow()
-                .toList()
+            val toList = combine(ordered).left.toList()
 
             toList.forEach { System.err.println(it) }
-            ordered.toList()[9][1].first shouldBe "0102211/0101010212/13-14/01"
+            val pai2 = ordered.toList()[9]
+            val pai21 = pai2[1]
+            val first = pai21.first
+            first shouldBe "0102211/0101010212/13-14/01"
             ordered.toList()[10][1].first shouldBe "0500020/0101010106/13-14/05"
         }
     }
@@ -157,7 +155,7 @@ class CursorKtTest {
     @Test
     fun pivot() {
         val cursor: Cursor = cursorOf(root)
-        println(cursor.narrow().toList())
+        println(combine(cursor).left.toList())
         val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3))
         val toArray = piv.scalars.toArray()
         val map = toArray.map { it.second }
@@ -173,7 +171,7 @@ class CursorKtTest {
     fun group() {
 
         val cursor: Cursor = cursorOf(root)
-        println(cursor.narrow().toList())
+        println(combine(cursor).left.toList())
         val piv = cursor.group((0))
         cursor.forEach { it ->
             println(it.map { pai2 ->
@@ -199,7 +197,7 @@ class CursorKtTest {
     fun `pivot+group`() {
         System.err.println("pivot+group ")
         val cursor: Cursor = cursorOf(root)
-        println("from:\n" + cursor.narrow().toList())
+        println("from:\n" + combine(cursor).left.toList())
         val piv = cursor.pivot(intArrayOf(0), intArrayOf(1), intArrayOf(2, 3)).group((0))
         println()
         piv.forEach { it ->
@@ -217,7 +215,7 @@ class CursorKtTest {
     fun `pivot+group+reduce`() {
         System.err.println("pivot+group+reduce")
         val cursor: Cursor = cursorOf(root)
-        println(cursor.narrow().toList())
+        println(combine(cursor).left.toList())
         val piv = cursor.pivot(
             intArrayOf(0),
             intArrayOf(1),
