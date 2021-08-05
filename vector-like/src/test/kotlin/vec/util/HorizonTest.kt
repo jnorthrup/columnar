@@ -2,7 +2,6 @@ package vec.util
 
 import org.junit.Test
 import vec.macros.*
-import java.time.Duration
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -11,12 +10,9 @@ class HorizonTest {
     fun horizonTest() {
         val v = Vect0r(5000) { x: Int -> x }
         val v2size = 100
-        val v2: Vect0r<Int> = v2size t2 { x: Int ->
-            horizon(x, v2size, v.size)
-        }
+        val v2: Vect0r<Int> = v2size t2 { x: Int -> horizon(x, v2size, v.size) }
         System.err.println(v2.toList())
         horizonRatioHunt(v2size, v.size)
-
     }
 
     fun horizonRatioHunt(viewSize: Int, modelSize: Int) = run {
