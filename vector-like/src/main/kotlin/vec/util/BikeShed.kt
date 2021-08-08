@@ -168,3 +168,8 @@ inline fun <T> T.debug(block: (T) -> Unit): T =apply {
     if (`debug status matching -ea jvm switch`) block(this)
 
 }
+
+/**
+ * ternary --- (B) % t ?: f
+ */
+infix operator fun Boolean.rem(s: Any): Any? = if (this) s else null
