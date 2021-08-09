@@ -9,11 +9,8 @@ import vec.macros.*
 import vec.macros.Vect02_.right
 
 val Cursor.scalars: Vect0r<Scalar>
-    get() = (this at 0).right.map {
-        it.invoke() `→` {
-            it[arityKey] as Scalar
-        }
-    }
+    get() = (this at 0).right α  { it()[arityKey] as Scalar }
+
 val Cursor.width get() = this.scalars.size
 val Cursor.colIdx: Vect02<IOMemento, String?> get() = scalars α { sc: Scalar -> sc as Pai2<IOMemento, String?> }
 

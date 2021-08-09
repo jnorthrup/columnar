@@ -1,3 +1,5 @@
+@file:Suppress("OVERRIDE_BY_INLINE")
+
 package cursors.io
 
 import cursors.Cursor
@@ -26,18 +28,18 @@ class ISAMCursor(
     metapath: Path = Paths.get(binpath.toString() + ".meta"),
 ) : Cursor {
 
-    override val first get() = size
+    override inline val first get() = size
     override val second: (Int) -> RowVec
-    val width get() =drivers.size
-    val drivers get() = NioMMap.binary(scalars.map(Scalar::first) as Vect0r<IOMemento>)
-    val recordlen :Int get()= rcoords.last.second
-    val rcoords: Vect02<Int,Int>
+    val width get() = drivers.size
+    val drivers by lazy { NioMMap.binary(scalars.map(Scalar::first) as Vect0r<IOMemento>) }
+    val recordlen: Int by lazy { rcoords.last.second }
+    val rcoords: Vect02<Int, Int>
     val scalars: Vect0r<Scalar>
     val size get() = (fc.size() / recordlen).toInt()
 
     init {
         val lines = Files.readAllLines(metapath).apply { removeIf { it.startsWith("# ") || it.isNullOrBlank() } }
-        rcoords =( lines[0].split("\\s+".toRegex()) α (String::toInt )).zipWithNext()
+        rcoords = (lines[0].split("\\s+".toRegex()) α (String::toInt)).zipWithNext()
         val typeVec = run {
             val s = lines[2]
             val split = s.split("\\s+".toRegex())
@@ -46,7 +48,7 @@ class ISAMCursor(
             res
         }
         val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
-        scalars= (typeVec).zip(rnames,Scalar.Companion::invoke  ) /*as Vect0r<Scalar>*/
+        scalars = (typeVec).zip(rnames, Scalar.Companion::invoke) /*as Vect0r<Scalar>*/
 
         fc.let { fileChannel ->
 
@@ -89,16 +91,14 @@ fun Cursor.writeISAM(
             /**length*/
             Int>? = null,
 ) {
-    val mementos = scalars α Scalar::first
-    val vec = scalars `→` { scalars: Vect0r<Scalar> ->
-        Columnar.of(scalars) t2 mementos
-    }
+    val mementos = scalars.map(Scalar::first).toArray()
+    val vec = Columnar.of(scalars) t2 mementos
     /** create context columns */
     val (_: Arity, ioMemos) = vec
     val sizes = varcharSizes ?: let { curs ->
 
         linkedMapOf<Int, Int>().apply {
-            (curs at 0).right.toList().mapIndexed { index, it ->
+            (curs at 0).right.`➤`.withIndex().onEach {( index, it) ->
 
                 //our blackboard CoroutineCOntext  metadata function.
                 val cc = it.invoke()
@@ -111,7 +111,7 @@ fun Cursor.writeISAM(
             }
         }
     }
-    val wcoords: Vect02<Int, Int> = networkCoords(ioMemos.toArray(), defaultVarcharSize, sizes)
+    val wcoords: Vect02<Int, Int> = networkCoords(ioMemos, defaultVarcharSize, sizes)
     val reclen = wcoords.right.last
     writeISAMMeta(pathname, wcoords)
     val rowBuf = ByteBuffer.allocateDirect(reclen + 1)
@@ -155,7 +155,7 @@ fun Cursor.writeISAMMeta(
     wcoords: Vect02<Int, Int>,
 ) {
     Files.newOutputStream(
-        Paths.get(pathname + ".meta")
+        Paths.get("$pathname.meta")
     ).bufferedWriter().use {
 
             fileWriter ->
