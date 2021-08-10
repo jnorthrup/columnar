@@ -22,15 +22,15 @@ fun networkCoords(
     val sizes = networkSizes(ioMemos, defaultVarcharSize, varcharSizes)
     //todo: make IntArray Tw1nt Matrix
     var wrecordlen = 0
-    val wcoords: Array<Tw1nt> = Array(sizes.size) { ix ->
-        Tw1n(wrecordlen, (wrecordlen + sizes[ix]).apply { wrecordlen = this })
+    val wcoords  = Array(sizes.size) { ix ->
+         (wrecordlen t2 (wrecordlen + sizes[ix]).also { wrecordlen = it })
     }
 
-    wcoords.map { tw1nt: Tw1nt -> tw1nt.ia.toList() }.toList().flatten().toIntArray().let { ia ->
+    wcoords.map { tw1nt -> (-tw1nt).toList() }.flatten().toIntArray().let { ia ->
         Vect02(wcoords.size) { ix: Int ->
             val i = ix * 2
             val i1 = i + 1
-            Tw1n(ia[i], ia[i1])
+             (ia[i]t2 ia[i1])
         }
     }
 }
