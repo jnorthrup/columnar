@@ -1,10 +1,8 @@
 package vec
 
-import vec.macros.Pai2
-import vec.macros.Vect0r
-import vec.macros.mapIndexedToList
-import vec.macros.size
+import vec.macros.*
 import java.util.*
+import kotlin.math.min
 
 /**
 
@@ -17,42 +15,34 @@ has more expensive toList/iterator by copy/concat
  */
 class CirQlar<T>(
     val maxSize: Int,
-    val al: MutableList<T> = arrayListOf<T>().also { it.ensureCapacity(maxSize) },
+    val al: Array<Any?> = arrayOfNulls(maxSize),
 ) : AbstractQueue<T>() {
     var tail = 0
     override val size = al.size
-    val full get() = maxSize == size
+    val full get() = tail>= maxSize
+
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
-    override fun iterator(): MutableIterator<T> {
-        val v = this.toVect0r()
-        return object : Iterator<T> {
-            var x = 0
-            override inline fun hasNext(): Boolean {
-                return x < v.size
-            }
+    override fun iterator() =( this.toVect0r() α {it as Any?}).`➤`.iterator() as MutableIterator<T>
 
-            override inline fun next() = v.second(x++)
-
-        } as MutableIterator<T>
-    }
 
     fun toList() = toVect0r().mapIndexedToList { _, t -> t }
+    @Suppress("OVERRIDE_BY_INLINE")
     fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
-        override val first by al::size
-        override val second = { x: Int ->
-            al[(tail + x).rem(maxSize)]
+         override inline val first  get()= min(tail,maxSize)
+        override   val second  = { x: Int ->
+            @Suppress("UNCHECKED_CAST")
+            al[(tail + x).rem(maxSize)]  as T
         }
     }
 
     //todo: lockless dequeue here ?
-    override fun offer(e: T): Boolean =
-        synchronized(this) {
-            when (al.size) {
-                maxSize -> al[tail] = e.also { tail = (++tail).rem(maxSize) }
-                else -> al.add(e)
-            }
-        }.let { true }
+    override fun offer(e: T) = synchronized(this) {
+            al[tail % maxSize] = e
+            tail++
+            if (tail == 2 * maxSize) tail = maxSize
+            true
+        }
 
     override fun poll(): T = TODO("Not yet implemented")
     override fun peek(): T = TODO("Not yet implemented")

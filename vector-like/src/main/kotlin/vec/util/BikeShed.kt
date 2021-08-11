@@ -174,4 +174,4 @@ inline fun <T> T.debug(block: (T) -> Unit): T = apply {
 /**
  * ternary --- (B) % t ?: f
  */
-inline infix operator fun <T> Boolean.rem(s: T): T? = if (this) s else null
+inline infix operator fun <T> Boolean.rem(s: T): T? = s.takeIf { this }
