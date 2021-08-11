@@ -11,6 +11,7 @@ import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.ml.featureRange
 import vec.ml.normalize
+import vec.util.rem
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -32,10 +33,10 @@ import kotlin.coroutines.CoroutineContext
  *  anything about any Cursor Value by controlling the CoroutineContext herein
  *
  * ## cursor column slices
- * cursor[0] returns a new cursor from column 0
+ * `cursor[0]` returns a new cursor from column 0
  *
  * DSEL gotcha:
- * cursor[1][0] returns a new cursor from column 1, followed by a new cursor from new column 0 (the old column 1).
+ * `cursor[1][0]` returns a new cursor from column 1, followed by a new cursor from new column 0 (the old column 1).
  *
  * ## multi column slices
  * `cursor[0,1]` returns a new cursor with columns 0,1 in specified order
@@ -48,27 +49,28 @@ import kotlin.coroutines.CoroutineContext
  *
  * these operate on all of a cursor's type-safe columns, reading as Any?
  *
- * `cursor.`∑` {reducer}`
- * `cursor.α { pure function }`
+ * * `cursor.`∑` {reducer}`
+ * * `cursor.α { pure function }`
  *
  * ###  groupby processing
- * `cursor.group(0,{myreducer})`
+ * * `cursor.group(0,{myreducer})`
  *
  * ## value access
- * cursor at (0) returns rowVec 0  (interchangably mentioned as y=0)
+ * * cursor at (0) returns rowVec 0  (interchangably mentioned as y=0)
  *
  * # to access the whole cursor x,y plane use
- * `for(i in 0 until cursor.size) cursor at (i)`
+ * * `for(i in 0 until cursor.size) cursor at (i)`
  *
  * # column meta
- * `cursor.scalars` requests the type information (not the byte widths) for each column
- *maxMinTwin
- * Cursors are created from within the blackboard state of a CoroutineContext which is accessable from each value
- * by default unless specialized using `RowVec[x] at ()`   within every cursor value is a function`RowVec[i] at `
- * providing the underlying construction factors and potentially cell-specific data.  Generally these are not accessed
- * in DataFrame usecases but this forms the basis for emergent spreadsheet functions on top of cursor state.
+ * * `cursor.scalars` requests the type information (not the byte widths) for each column
  *
- * CoroutineContext access may yet require some caution in kotlin 1.3 around performance overhead
+ *
+ * maxMinTwin:
+ *   Cursors are created from within the blackboard state of a CoroutineContext which is accessable from each value
+ *   by default unless specialized using `RowVec`[`x] at ()`   within every cursor value is a function`RowVec`[`i] at `
+ *   providing the underlying construction factors and potentially cell-specific data.  Generally these are not accessed
+ *   in DataFrame usecases but this forms the basis for emergent spreadsheet functions on top of cursor state.
+ *
  *
  */
 typealias Cursor = Vect0r<RowVec>
@@ -141,21 +143,21 @@ fun Cursor.pivot(
     System.err.println("--- pivot")
     cursr.first t2 { iy: Int ->
         val theRow: RowVec = cursr at (iy)
-        theRow.let { (_: Int, original: (Int) -> Pai2<Any?, () -> CoroutineContext>): RowVec ->
-            RowVec(xsize) { ix: Int ->
-                when {
-                    ix < lhs.size -> {
-                        original(lhs[ix])
+        xsize t2 { ix: Int ->
+            when {
+                ix < lhs.size -> {
+                    theRow.second(lhs[ix])
+                }
+                else /*fanout*/ -> {
+                    val theKey = theRow[axis].left .toList() //expressly for toString and equality tests
+                    val keyGate = whichKey(ix)
+                    val cellVal = (keyGate == keys[theKey]) % fanOut[whichFanoutIndex(ix)].let {
+                        theRow.second(it).first
                     }
-                    else /*fanout*/ -> {
-                        val theKey: List<Any?> = theRow[axis].left.toList()
-                        val keyGate = whichKey(ix)
-                        val cellVal = if (keys[theKey] == keyGate)
-                            original(fanOut[whichFanoutIndex(ix)]).first
-                        else null
 
-                        cellVal t2 { synthScalars[ix - lhs.size] }
-                    }
+
+
+                    cellVal t2 { synthScalars[ix - lhs.size] }
                 }
             }
         }

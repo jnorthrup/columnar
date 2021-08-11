@@ -154,17 +154,19 @@ val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 /** really really wants to produce a Double
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble()   ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }
+inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble()
+    ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }
         .get()?.second)?.takeIf { it.isFinite() } ?: d
 
 
 fun logDebug(debugTxt: () -> String) {
     if (`debug status matching -ea jvm switch`) System.err.println(debugTxt())
 }
+
 @[JvmSynthetic JvmField]
 val `debug status matching -ea jvm switch` = !Runtime::class.java.desiredAssertionStatus()
 
-inline fun <T> T.debug(block: (T) -> Unit): T =apply {
+inline fun <T> T.debug(block: (T) -> Unit): T = apply {
     if (`debug status matching -ea jvm switch`) block(this)
 
 }
@@ -172,4 +174,4 @@ inline fun <T> T.debug(block: (T) -> Unit): T =apply {
 /**
  * ternary --- (B) % t ?: f
  */
-infix operator fun Boolean.rem(s: Any): Any? = if (this) s else null
+inline infix operator fun <T> Boolean.rem(s: T): T? = if (this) s else null
