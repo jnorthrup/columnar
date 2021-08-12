@@ -1,11 +1,10 @@
 package vec
 
-import vec.macros.Pai2
-import vec.macros.Vect0r
 import vec.macros.`➤`
 import vec.macros.mapIndexedToList
+import vec.macros.t2
+import vec.util.rem
 import java.util.*
-import kotlin.math.min
 
 /**
 
@@ -28,13 +27,11 @@ class DoubleCirQlar(
     override fun iterator() = this.toVect0r().`➤`.iterator() as MutableIterator<Double>
 
     fun toList() = toVect0r().mapIndexedToList { _, t -> t }
-    fun toVect0r(): Vect0r<Double> = object : Pai2<Int, (Int) -> Double> {
-        @Suppress("OVERRIDE_BY_INLINE")
-        override inline val first get()= min(tail,maxSize)
-        override val second= { x: Int ->
-            al[(tail + x) % maxSize]
-        }
-    }
+    @Suppress("OVERRIDE_BY_INLINE")
+    fun toVect0r() = (this@DoubleCirQlar.size t2 { x: Int ->
+        @Suppress("UNCHECKED_CAST")
+        al[((tail >= maxSize) % ((tail + x) % maxSize)) ?: x]
+    })
 
     //todo: lockless dequeue here ?
     override fun offer(e: Double): Boolean =

@@ -1,6 +1,8 @@
 package vec
 
-import vec.macros.*
+import vec.macros.size
+import vec.macros.t2
+import vec.util.rem
 import java.util.*
 import kotlin.math.min
 
@@ -13,36 +15,32 @@ only mutability is offer(T)
 has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
-class CirQlar<T>(
+class CirQlar<T  >(
     val maxSize: Int,
-    val al: Array<Any?> = arrayOfNulls(maxSize),
+
 ) : AbstractQueue<T>() {
+    private val al  = arrayOfNulls <Any?> (maxSize)
     var tail = 0
-    override val size = al.size
-    val full get() = tail>= maxSize
+    override val size get() = min(tail, maxSize)
+    val full get() = tail >= maxSize
 
-    @Suppress("DeprecatedCallableAddReplaceWith")
-    @Deprecated("gonna blow up on mutable ops")
-    override fun iterator() =( this.toVect0r() α {it as Any?}).`➤`.iterator() as MutableIterator<T>
-
-
-    fun toList() = toVect0r().mapIndexedToList { _, t -> t }
-    @Suppress("OVERRIDE_BY_INLINE")
-    fun toVect0r(): Vect0r<T> = object : Pai2<Int, (Int) -> T> {
-         override inline val first  get()= min(tail,maxSize)
-        override   val second  = { x: Int ->
-            @Suppress("UNCHECKED_CAST")
-            al[(tail + x).rem(maxSize)]  as T
-        }
-    }
 
     //todo: lockless dequeue here ?
     override fun offer(e: T) = synchronized(this) {
-            al[tail % maxSize] = e
-            tail++
-            if (tail == 2 * maxSize) tail = maxSize
-            true
+        val i = tail % maxSize
+        al[i] = e
+        tail++
+        if (tail == 2 * maxSize) tail = maxSize
+        true
+    }
+
+    fun toList(): List<T> {
+        val iterator = iterator()
+        return List(size) {
+            val next = iterator.next()
+            next
         }
+    }
 
     override fun poll(): T = TODO("Not yet implemented")
     override fun peek(): T = TODO("Not yet implemented")
@@ -51,5 +49,22 @@ class CirQlar<T>(
     operator fun <T> CirQlar<T>.plusAssign(k: T) {
         offer(k)
     }
+
+    @Suppress("OVERRIDE_BY_INLINE")
+    fun toVect0r() = (this@CirQlar.size t2 { x: Int ->
+        @Suppress("UNCHECKED_CAST")
+        al[((tail >= maxSize) % ((tail + x) % maxSize)) ?: x] as T
+    })
+
+    override fun iterator(): MutableIterator<T> = object : MutableIterator<T> {
+        val v = toVect0r()
+        var i = 0
+        override fun hasNext(): Boolean = i < v.size
+
+        override fun next(): T = v.second(i++)
+
+        override fun remove(): Unit = TODO("Not yet implemented")
+    }
+
 }
 
