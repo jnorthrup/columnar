@@ -57,7 +57,6 @@ object _v {
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _l {
-
     operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
 }
 
@@ -89,6 +88,22 @@ object _m {
     operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
     operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
+fun logDebug(debugTxt: () -> String) {
+    if (`debug status matching -ea jvm switch`) System.err.println(debugTxt())
+}
+
+@[JvmSynthetic JvmField]
+val `debug status matching -ea jvm switch` = !Runtime::class.java.desiredAssertionStatus()
+
+inline fun <T> T.debug(block: (T) -> Unit): T = apply {
+    if (`debug status matching -ea jvm switch`) block(this)
+
+}
+
+/**
+ * ternary --- (B) % t ?: f
+ */
+inline infix operator fun <T> Boolean.rem(s: T): T? = s.takeIf { this }
 
 fun main() {
     logDebug { "this ought not be visible" }
@@ -159,19 +174,3 @@ inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDo
         .get()?.second)?.takeIf { it.isFinite() } ?: d
 
 
-fun logDebug(debugTxt: () -> String) {
-    if (`debug status matching -ea jvm switch`) System.err.println(debugTxt())
-}
-
-@[JvmSynthetic JvmField]
-val `debug status matching -ea jvm switch` = !Runtime::class.java.desiredAssertionStatus()
-
-inline fun <T> T.debug(block: (T) -> Unit): T = apply {
-    if (`debug status matching -ea jvm switch`) block(this)
-
-}
-
-/**
- * ternary --- (B) % t ?: f
- */
-inline infix operator fun <T> Boolean.rem(s: T): T? = s.takeIf { this }

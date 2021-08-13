@@ -240,7 +240,7 @@ class SeedTesting {
                     }
                     else -> baseRowVec.left
                 } as Vect0r<Any?>).zip(o)
-            } as Cursor
+            }
             //write multiclass csv
             if (!Files.exists(classedName.path)) fiveClasses.writeISAM(classedName)
         }
@@ -249,8 +249,8 @@ class SeedTesting {
         fg.addWindowListener(closer)
 
 
-        FileChannel.open(classedName.path)!!.use {
-            val displayCurs = ISAMCursor(classedName.path, it)
+        FileChannel.open(classedName.path)!!.use { fileChannel ->
+            val displayCurs = ISAMCursor(classedName.path, fileChannel)
             fg.nextAction =
                 object : AbstractAction() {
                     override fun actionPerformed(p0: ActionEvent?) {
@@ -264,8 +264,7 @@ class SeedTesting {
 
                         fg.payload = when {
                             assetRow < 5 -> _v[rv]
-                            else -> combine(_v[rv],
-                                _v[displayCurs at assetRow.rem(5)])
+                            else -> combine(_v[rv], _v[displayCurs at (assetRow % 5)])
                         }
                         fg.repaint()
                         ++assetRow
