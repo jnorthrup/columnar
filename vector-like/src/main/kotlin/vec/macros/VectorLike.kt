@@ -219,7 +219,7 @@ inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2
 @JvmOverloads
 @JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified O, R> Vect0r<T>.zip(
+inline fun <reified T, reified O,reified R> Vect0r<T>.zip(
     o: Vect0r<O>,
     crossinline f: (T, O) -> R,
 ): Vect0r<R> = size t2 { x: Int -> f(this[x], o[x]) }
