@@ -490,9 +490,9 @@ inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
  */
 inline val <reified T> Vect0r<T>.`➤` get() = object:Iterable<T>{
     override fun iterator(): Iterator<T> = object : Iterator<T> {
-        var t: Int = 0
+        var t  = 0
         override fun hasNext(): Boolean = t < first
-        override fun next(): T = (second(t)).also { t++ }
+        override fun next(): T = second(t++)
     }
 }
 
