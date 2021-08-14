@@ -93,7 +93,7 @@ fun logDebug(debugTxt: () -> String) {
 }
 
 @[JvmSynthetic JvmField]
-val `debug status matching -ea jvm switch` = !Runtime::class.java.desiredAssertionStatus()
+val `debug status matching -ea jvm switch` =  Pai2::class.java.desiredAssertionStatus()
 
 inline fun <T> T.debug(block: (T) -> Unit): T = apply {
     if (`debug status matching -ea jvm switch`) block(this)
