@@ -117,7 +117,7 @@ suspend fun <T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().
 suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()*/
 
 @JvmName("vlike_List_1")
-inline operator fun < reified T> List<T>.get(vararg index: Int) = get(index)
+inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
 inline operator fun <T> List<T>.get(indexes: Iterable<Int>): Vect0r<T> = this.get(indexes.toList().toIntArray())
@@ -219,7 +219,7 @@ inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2
 @JvmOverloads
 @JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified O,reified R> Vect0r<T>.zip(
+inline fun <reified T, reified O, reified R> Vect0r<T>.zip(
     o: Vect0r<O>,
     crossinline f: (T, O) -> R,
 ): Vect0r<R> = size t2 { x: Int -> f(this[x], o[x]) }
@@ -406,7 +406,7 @@ inline infix operator fun <reified T, P : Vect0r<T>> P.plus(t: T) = combine(this
 
 
 /**cloning and reifying Vect0r to ByteArray*/
-inline fun <  reified T : Byte> Vect0r<T>.toByteArray() = ByteArray(size) { i -> get(i) }
+inline fun <reified T : Byte> Vect0r<T>.toByteArray() = ByteArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to CharArray*/
 inline fun <reified T : Char> Vect0r<T>.toCharArray() = CharArray(size) { i -> get(i) }
@@ -423,8 +423,8 @@ inline fun <reified T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -
 /**cloning and reifying Vect0r to DoubleArray*/
 inline fun <reified T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
 
-inline fun < reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-inline fun < reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+inline fun <reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
 fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
 fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
 fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
@@ -476,7 +476,7 @@ inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: Lin
 inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
     return object : Iterator<S> {
         var x = 0
-    override inline fun hasNext(): Boolean {
+        override inline fun hasNext(): Boolean {
             return x < size
         }
 
@@ -488,19 +488,20 @@ inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
 /**
  * wrapper for for loops and iterable filters
  */
-inline val <reified T> Vect0r<T>.`➤` get() = object:Iterable<T>{
-    override fun iterator(): Iterator<T> = object : Iterator<T> {
-        var t  = 0
-        override fun hasNext(): Boolean = t < first
-        override fun next(): T = second(t++)
+inline val <reified T> Vect0r<T>.`➤`
+    get() = object : Iterable<T> {
+        override fun iterator(): Iterator<T> = object : Iterator<T> {
+            var t = 0
+            override fun hasNext(): Boolean = t < first
+            override fun next(): T = second(t++)
+        }
     }
-}
 
 
 /**
  * index by enum
  */
-inline operator fun <reified S,reified  E : Enum<E>> Vect0r<S>.get(e: E) = get(e.ordinal)
+inline operator fun <reified S, reified E : Enum<E>> Vect0r<S>.get(e: E) = get(e.ordinal)
 
 /**
  * optimize for where a smallish map has hotspots that are over-used and others that are excess overhead
@@ -554,7 +555,7 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = l
 }
 
 object Vect02_ {
-    inline val <reified F, reified S> Vect02<F, S>.left get() = this.α(Pai2<F, S>::first)
+    inline val <reified F, reified S> Vect02<F, S>.left get() = this α Pai2<F, S>::first
     inline val <reified F, reified S> Vect02<F, S>.right get() = this α Pai2<F, S>::second
     inline val <reified F, reified S> Vect02<F, S>.reify get() = this α Pai2<F, S>::pair
 

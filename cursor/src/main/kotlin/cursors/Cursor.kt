@@ -9,6 +9,7 @@ import cursors.io.*
 import cursors.macros.join
 import vec.macros.*
 import vec.macros.Vect02_.left
+import vec.macros.Vect02_.right
 import vec.ml.featureRange
 import vec.ml.normalize
 import vec.util.rem
@@ -149,7 +150,7 @@ fun Cursor.pivot(
                     theRow.second(lhs[ix])
                 }
                 else /*fanout*/ -> {
-                    val theKey = theRow[axis].left .toList() //expressly for toString and equality tests
+                    val theKey = theRow[axis].left.toList() //expressly for toString and equality tests
                     val keyGate = whichKey(ix)
                     val cellVal = (keyGate == keys[theKey]) % fanOut[whichFanoutIndex(ix)].let {
                         theRow.second(it).first
@@ -268,3 +269,25 @@ fun Cursor.mirror(): Cursor = Cursor(first) { y: Int ->
         xsz t2 { x: Int -> fn(xsz - x) }
     }
 }
+
+/**
+ * "left/right" is blocked by precedence magic in Vect02_ so we have to treat cursors with a perturbed set of keywords like f1rst and whatnot.
+ *
+ *  - Pai2 uses unaryMinus to make an array.
+ *  Cursor should not be reifying anything but unaryMinus as vect0r is plenty good and cheap
+ */
+operator fun Cursor.unaryMinus(): Vect0r<Vect0r<Any?>> = size t2 { x: Int -> second(x).left }
+
+/** positionally preserves the objects of type t as v<v<T?>>
+ */
+inline infix operator fun <reified T> Cursor.div(t: Class<T>): Vect0r<Vect0r<T?>> =
+    -this α { outer -> outer α { inner -> inner as? T } }
+
+/**  flattens cursor to Vect0r of T? preserving order/position */
+inline infix operator fun <reified T> Cursor.rem(t: Class<T>) = combine(this / t)
+
+/**
+ * "left/right" is blocked by precedence magic in Vect02_ so we have to treat cursors with a perturbed set of keywords like f1rst and whatnot.
+ *
+ */
+inline val Cursor.meta get() = size t2 { x: Int -> second(x).right }

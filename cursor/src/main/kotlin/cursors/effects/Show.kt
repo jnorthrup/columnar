@@ -5,6 +5,7 @@ import cursors.at
 import cursors.io.colIdx
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
+import vec.macros.combine
 import vec.macros.size
 import vec.macros.toList
 import kotlin.math.max
@@ -23,7 +24,9 @@ fun Cursor.show(range: IntProgression = 0 until size) {
 fun Cursor.showValues(range: IntProgression) {
     try {
         (range).forEach {
-            println((this at it).left.toList())
+            val pai2 = this at it
+            val combine = combine(pai2.left)
+            println( combine.toList() )
         }
     } catch (e: NoSuchElementException) {
         e
