@@ -1,4 +1,5 @@
-@file:Suppress("OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE")
+@file:Suppress("OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE", "FunctionName", "FINAL_UPPER_BOUND", "FINAL_UPPER_BOUND",
+    "UNCHECKED_CAST", "NonAsciiCharacters", "KDocUnresolvedReference")
 
 package vec.macros
 
@@ -50,15 +51,6 @@ infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(m)
 
 inline infix fun <A, reified C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
     this.map { m(it) }.toVect0r()
-
-
-//infix fun <A, C, B : (A) -> C, T : Sequence<A>> T.α(m: B): Sequence<C> =
-//    this.map { it: A -> it `→` m }
-//
-//
-//infix fun <A, C, B : (A) -> C, T : Flow<A>> T.α(m: B): Flow<C> =
-//    this.map { it: A -> it `→` m }
-
 
 infix fun <A, C, B : (A) -> C> List<A>.α(m: B) =
     this.size t2 { i: Int -> m(this[i]) }
@@ -212,11 +204,9 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> =
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
-    zip(other.toList()) { a: T, b: R -> a t2 b }
+inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> = zip(other.toList()) { a: T, b: R -> a t2 b }
 
 
-@JvmOverloads
 @JvmName("vvzip2f")
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T, reified O, reified R> Vect0r<T>.zip(
@@ -224,7 +214,6 @@ inline fun <reified T, reified O, reified R> Vect0r<T>.zip(
     crossinline f: (T, O) -> R,
 ): Vect0r<R> = size t2 { x: Int -> f(this[x], o[x]) }
 
-@JvmOverloads
 @JvmName("vvzip2")
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T, reified O, R : Pai2<T, O>> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =

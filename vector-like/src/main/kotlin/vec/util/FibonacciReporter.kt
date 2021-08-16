@@ -19,9 +19,9 @@ class FibonacciReporter(val size: Int? = null) {
             val perUnit = sofar.dividedBy(max(iy, 1).toLong())
             val remaining = size?.let { perUnit.multipliedBy(size.toLong()).minus(sofar) }
             val ofSeconds = Duration.ofSeconds(1)
-            val dividedBy = ofSeconds.dividedBy(max(1,perUnit.toSeconds()))
-            "logged " + iy + " rows in " + sofar + " " + dividedBy +  "/s " +size?.let {
-                    "remaining: " + remaining + " est " + LocalDateTime.now().plus(remaining)
-            }?:""
+            val dividedBy = ofSeconds.dividedBy(max(1, perUnit.toSeconds()))
+            "logged $iy rows in $sofar $dividedBy/s " + (size?.let {
+                "remaining: " + remaining + " est " + LocalDateTime.now().plus(remaining)
+            } ?: "")
         } else null
-    }
+}
