@@ -183,20 +183,13 @@ fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
         Vect0r(first) { it: Int -> fn(it, it `→` second) }
 */
 
-fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> =
-    List(first) { it: Int -> fn(it, second(it)) }
+fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R) = List(first) { fn(it, second(it)) }
 
-fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) {
-    for (ix: Int in (0 until first)) fn(second(ix))
-}
+fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) = repeat(size) { fn(second(it)) }
 
+fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit) = repeat(size) { f(it, second(it)) }
 
-fun <T> Vect0r<T>.forEachIndexed(fn: (Int, T) -> Unit) {
-    repeat(size) { i -> fn(i, second(i)) }
-}
-
-fun <T> vect0rOf(vararg a: T): Vect0r<T> =
-    Vect0r(a.size) { a[it] }
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
 
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
@@ -204,7 +197,8 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> =
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> = zip(other.toList()) { a: T, b: R -> a t2 b }
+inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
+    zip(other.toList()) { a: T, b: R -> a t2 b }
 
 
 @JvmName("vvzip2f")
