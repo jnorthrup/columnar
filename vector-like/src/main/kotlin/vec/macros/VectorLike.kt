@@ -363,10 +363,10 @@ val <T> Vect0r<T>.reverse: Vect0r<T>
  */
 @JvmOverloads
 inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.slicex(
-    sta: Int = 0, end: Int = this.size,
+    sta: Int = 0, endExclusive: Int = this.size,
 ): TTT = (this.first t2 { y: Int ->
     this.second(y).let { (_, b) ->
-        (1 + end - sta) t2 { x: Int -> b(x + sta) }
+        (1 + endExclusive - sta) t2 { x: Int -> b(x + sta) }
     }
 }) as TTT
 
