@@ -459,9 +459,7 @@ inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: Lin
 inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
     return object : Iterator<S> {
         var x = 0
-        override inline fun hasNext(): Boolean {
-            return x < size
-        }
+        override inline fun hasNext(): Boolean = x < size
 
         override inline fun next(): S = get(x++)
 

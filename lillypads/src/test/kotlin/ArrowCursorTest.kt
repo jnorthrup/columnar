@@ -40,9 +40,7 @@ class Address(val street: String, val streetNumber: Int, val city: String, val p
 }
 class Person(val firstName: String, val lastName: String, val age: Int, address: Address) {
     private val address: Address
-    fun getAddress(): Address {
-        return address
-    }
+    fun getAddress(): Address = address
 
 
 
@@ -52,13 +50,9 @@ class Person(val firstName: String, val lastName: String, val age: Int, address:
 }
 
 object ArrowSchemas {
-    fun addressSchema(): Schema {
-        return Schema(addressFields())
-    }
+    fun addressSchema(): Schema = Schema(addressFields())
 
-    fun personSchema(): Schema {
-        return Schema(personFields())
-    }
+    fun personSchema(): Schema = Schema(personFields())
 
     private fun addressFields(): List<Field> {
         return Arrays.asList(

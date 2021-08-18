@@ -25,9 +25,7 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
         }
     }
 
-    fun contains(vararg values: String): Boolean {
-        return search(*values) != null
-    }
+    fun contains(vararg values: String): Boolean = search(*values) != null
 
     operator fun get(vararg key: String) = search(*key)?.payload
 
