@@ -29,7 +29,7 @@ fun Cursor.showValues(range: IntProgression) {
             println( combine.toList() )
         }
     } catch (e: NoSuchElementException) {
-        e
+//        e
         System.err.println("cannot fully access range $range")
     }
 }

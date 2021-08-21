@@ -169,8 +169,8 @@ val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 /** really really wants to produce a Double
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, d: Double) = (((f as? Double) ?: (f as? Number))?.toDouble()
-    ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }
-        .get()?.second)?.takeIf { it.isFinite() } ?: d
+inline fun todub(f: Any?, d: Double) = ((f as? Double ?: f as? Number)?.toDouble()
+    ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }.get()?.second)
+    ?.takeIf { it.isFinite() } ?: d
 
 
