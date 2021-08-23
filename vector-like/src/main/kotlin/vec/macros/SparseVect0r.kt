@@ -8,8 +8,7 @@ import java.util.*
 /**
  * pay once for the conversion from a mutable map to an array map and all that implies
  */
-@OptIn(ExperimentalStdlibApi::class)
-inline fun <reified V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = let { top ->
+inline fun <reified V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = run {
     val entries =
         ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toList()
     val sparse: Vect0r<V?> = bindSparse(entries α { (k, v) -> k t2 v })
@@ -42,8 +41,7 @@ inline fun <reified V> bindSparse(
 /**
  * massive chimera
  */
-@OptIn(ExperimentalStdlibApi::class)
-class SparseVect0r<V>(
+ class SparseVect0r<V>(
     private val sparse: Vect0r<V?>,
     private val entries: List<Map.Entry<Int, V>>,
 ) : Vect0r<V?> by sparse, Iterable<Map.Entry<Int, V>> by (entries) {

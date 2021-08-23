@@ -25,7 +25,7 @@ typealias Matrix<T> = Pai2<
 operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 
 
-infix fun <O, R, F : (O) -> R> O.`→`(f: F) = f(this)
+inline infix fun <reified O,reified  R,   F : (O) -> R > O.`→`(f: F): R = f(this)
 
 
 operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> b(this(a)) }
@@ -38,7 +38,7 @@ infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
 /**
  * G follows F
  */
-infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
+inline infix fun <reified A, reified B, reified C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
     f: F,
 ): R = { a: A -> a `→` f `→` this } as R
 
@@ -71,7 +71,7 @@ infix fun <C, B : (Float) -> C> FloatArray.α(m: B) =
 infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = this.size t2 { i: Int -> m(this[i]) }
 
 
-infix fun <C, B : (Long) -> C> LongArray.α(m: B) =
+inline infix fun <reified C, B : (Long) -> C> LongArray.α(m: B) =
     Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 /*
@@ -245,8 +245,8 @@ fun <T> combine(vararg a: List<T>): List<T> =
 inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf(Array<T>::size).let { size: Int ->
     var x = 0
     var y = 0
-    Array(size) { i: Int ->
-        if (y >= a[x].size) {
+    Array(size) { _: Int ->
+        if (y >= a[x].size ) {
             ++x; y = 0
         }
         a[x][y++]
@@ -377,7 +377,7 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
 inline fun <reified T> Vect0r<T>.slice(
     start: Int = 0,
     endExclusive: Int = this.size,
-): Vect0r<T> = (endExclusive - start) t2 { x:Int->this[x + start] }
+): Vect0r<T> = (endExclusive - start) t2 { x: Int -> this[x + start] }
 
 
 /** plus operator*/
