@@ -7,14 +7,7 @@
 ## description
  
 Columnar is a work in progress toolkit which:
- * started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write
-  maven import: 
-```!xml
-  <groupId>columnar</groupId>
-  <artifactId>cursor</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
-```
-
+ * started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write 
  * maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/kotlin/vec/macros/Twop13.kt#L20)
  * maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
 ```!kt
