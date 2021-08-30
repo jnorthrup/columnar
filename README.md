@@ -2,118 +2,37 @@
 
 ## build requirements
 
-* columnar uses the zstd compression tool during unit tests.
+* columnar uses the zstd compression tool during unit tests.  maven also. 
 
 ## description
+ 
+Columnar is a work in progress toolkit which:
+ * started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write
+  maven import: 
+```!xml
+  <groupId>columnar</groupId>
+  <artifactId>cursor</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
+```
 
-This is an idiomatic kotlin dataframe toolkit to support data engineering tasks of any size collection of datasets.
+ * maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/kotlin/vec/macros/Twop13.kt#L20)
+ * maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
+```!kt
+typealias Vect0r<reified T> = Pai2<Int, ((Int) -> T)>
+typealias Vect02<F, S> = Vect0r<Pai2<F, S>>
+typealias V3ct0r<F, S, T> = Vect0r<Tripl3<F, S, T>>
+```
 
-The primary focus of this toolkit is to support Pandas-like operations on a Dataframe iterator for large data
-extractions using function assignment and deferred reification instead of in-memory data manipulation.
-
-so far, these are the fundamaental composable Unary Operators:  (val newcursor = oldcursor.operator)
-
-* Resampling time-series datasets on LocalDate/LocatlTime columns
-
-  `cursor.resample(indexes)`
-
-* Pivot any columns into any collection of other columns
-
-  `cursor.pivot(preservedcolumns,newcolumnheaders,expansiontargets)`
-
-* Value Replacement, Aliasing, and Reducers
-    * Synthetic "3" Cursor
-         ```kotlin
-             
-              //three rows of threes
-              Cursor(3){rownum:Int-> 
-                 RowVec(3){colIndex:Int->
-                    3 t2 {Scalar(IoInt,"Three")}
-               }
-              }
-            
-         ```
-    * Column-wise value replacement
-
-         ```kotlin
-                 
-                    val cities: Vect0r<String> = cities()
-         
-                    val cityCursor:Cursor= Cursor(curs.size) { rowNum: Int ->
-                     RowVec(1) { ix: Int ->
-                         val cindex = bloomIndex.indexOfFirst {  (b, ia) -> b.contains(rowNum) && (ia.binarySearch(rowNum )> -1)}
-                         cities[cindex] t2 {Scalar(IoString, "City")}
-                     }
-                 } 
-         ```
-    * Group with reducers  
-      `cursor.group(columns,{reducer})`
-
-
-* slice,reorder, and join columns
-    * `cursor[0]` -slice first column only
-    * `cursor[0,1,2]` -slice first three columns
-    * `cursor[(0 until 3).painfulKotlinCastFunctions]` -slice first three columns
-    * `cursor[3,2,1,3,2, 1,1,1,1,2]` -remap 3 source columns into 10 columns
-    * `join(cursor[0],cursor[2],othercursor[0],...)` -join any permutation of source cursor/columns as one cursor.
-      boundschecking is not done upfront here. know your row sizes.
-
-* random access across combined rows from different sources   
-  `combine(cursor1,cursor..n,)` - creates a new aggregate cursor with rows in the order combined
-
-
-* Simplified one-hot encoding
-
-  `cursor[0,1].categories([DummySpec.last])`
-* ISO, Lunar, and Islamic Jvm Calendar Time-Series support
-
-  ...almost
-    * todo: Javanese + Balinese Calendars
-
-* Column remapping
-
-### runtime objects
-
-The familiar dataset abstractions are as follows:
-
-**Cursor**: a cursor is a typealias Vector(Vect0r) of Rows accessable first by row(y) and then by Vector of column
-pairs (value,type) on x axis. This Row is a typealias called RowVec. Future implementations will include more complex
-arrangements of x,y,z and more, as described in the CoroutineContext at creationtime.
-
-Since Cursor is a typealias of several Pai2 typaliases, the kotlin type spec in intellij shows up
-as ![image](https://user-images.githubusercontent.com/73514/86093079-9d1f5500-bad8-11ea-9a68-5d58863c37a0.png) until you
-specify it explicitly. kotlin destructuring syntax tends to tame these loose representations quickly as needed as well
-as explicit typing.
-
-**Table** is generally speaking a virtual array of driver-specific x,y,z read and write access on homogenous and
-heterogenous backing stores.
-
-**Kotlin CoroutineContext** - documented elsewhere, is the defining collection of factors describing the Table and
-Cursor configurations above using ContextElements to differentiate driver-level execution strategies at creation from
-common top level interfaces. one source input may potentially be accessed y,x, and x,y from two driver configurations.
-
-## architecture
-
-The initial focus of the implementation rests on the fixed-width file format obtainable via the companion project
-[flatsql, part of jdbc2json](https://github.com/jnorthrup/jdbc2json#flatsqlsh).  
-the library is designed to levereage the ISAM properties of FWF and to extend toward reading and creation of other data
-formats such as Binary rowsets and Scalar Column index volumes
-
-internals: [vectorlike](vector-like/README.md)
-
-### implementation distinctions from other implementations
-
-The implementation relies on a set of typealiases and extension functions approximating various pure-functional
-constructs and retaining off-heap and deferred/lazy processing semantics.
-
-to briefly explain this a little more, the typalias features in kotlin enable a Pair (Pai2) as an interface, which
-provides Vectors (Vect0r) as pairs of size and functions, and some rich many-to-one indexing operations in function
-composition.
-
-Operations on this particular Pair(Pai2) may be the mechanism of mapping list or sequence semantics on primitive arrays
-or dynamically destructing a Vect0r<Pai2> to Vect02<First,Second> by casting alone and perform aggregate left, right
-functions without conversion.
-
+ * uses a Vect0r<Vect0r<Any?,{}>> as the complete codebase for dataframe called Cursor, which is typealias of Pai2 and some specialized delegates, performing on-disk data cursor functions where applicable as well as immutable-first abstractions of row and column abstractions in general.  
+```!kt
+typealias CellMeta = () -> CoroutineContext
+typealias RowVec = Vect02<Any?, CellMeta>
+typealias Cursor = Vect0r<RowVec>
+```
+ * follows some (most) usecases commonly solved in prep for deep learning usecases per pandas based on higher order function delegation and minimizes in-RAM requirements 
+ * provides almost 200 lines of utilities to enable [terse kotlin collection ops](/vector-like/src/main/kotlin/vec/util/BikeShed.kt)
+ 
+  
 ## features and todo
 
 - [X] Blackboard defined Table, Cursor, Row metadata driving access behaviors (using `CoroutineContext.Element`s)
