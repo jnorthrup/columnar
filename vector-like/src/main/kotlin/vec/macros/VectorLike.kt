@@ -1,5 +1,5 @@
-@file:Suppress("OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE", "FunctionName", "FINAL_UPPER_BOUND", "FINAL_UPPER_BOUND",
-    "UNCHECKED_CAST", "NonAsciiCharacters", "KDocUnresolvedReference")
+@file:Suppress("OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE", "FunctionName", "FINAL_UPPER_BOUND", 
+    "UNCHECKED_CAST", "NonAsciiCharacters", "KDocUnresolvedReference", "ObjectPropertyName", "ClassName")
 
 package vec.macros
 
