@@ -1,7 +1,8 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType", "NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType", "NOTHING_TO_INLINE",
+    "UnclearPrecedenceOfBinaryExpression")
 
 package vec.util
 
@@ -37,20 +38,7 @@ var logReuseCountdown = 0
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _v {
-    inline operator fun <reified T> get(vararg t: T): Vect0r<T> {
-        val pai2 = when (t.size) {
-            1 -> 1 t2 t.first().let { z -> { _ -> z } }
-            2 -> {
-                2 t2 (t[0] t2 t[1]).let { (a, b) ->
-                    { x: Int ->
-                        if (x == 0) a else b
-                    }
-                }
-            }
-            else -> t.size t2 { x: Int -> t[x] }
-        }
-        return pai2
-    }
+    inline operator fun <reified T> get(vararg t: T):Vect0r<T>  = t.size t2 t::get
 }
 
 /**
@@ -88,12 +76,13 @@ object _m {
     operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
     operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
+
 fun logDebug(debugTxt: () -> String) {
     if (`debug status matching -ea jvm switch`) System.err.println(debugTxt())
 }
 
 @[JvmSynthetic JvmField]
-val `debug status matching -ea jvm switch` =  Pai2::class.java.desiredAssertionStatus()
+val `debug status matching -ea jvm switch` = Pai2::class.java.desiredAssertionStatus()
 
 inline fun <T> T.debug(block: (T) -> Unit): T = apply {
     if (`debug status matching -ea jvm switch`) block(this)

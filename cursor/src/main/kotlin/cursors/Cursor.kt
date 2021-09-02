@@ -79,15 +79,8 @@ typealias Cursor = Vect0r<RowVec>
 // infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
 infix fun <T : Int> Cursor.at(t: T) = second.invoke(t)
 
-@Deprecated("unit testing holdover from prior codebase no longer adds clarity")
-fun Cursor.reify() = combine(this)
-
-@Deprecated("unit testing holdover from prior codebase no longer adds clarity")
-fun Cursor.narrow() = combine(this).left
-
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
-
 
 @JvmName("vlike_RSequence_Iterable21")
 operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
