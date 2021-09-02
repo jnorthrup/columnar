@@ -45,36 +45,36 @@ object _v {
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _l {
-    operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
+   inline operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
 }
 
 /**
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-    operator fun get(vararg t: Int) = t
-    operator fun get(vararg t: Double) = t
-    operator fun get(vararg t: Short) = t
-    operator fun get(vararg t: Byte) = t
-    operator fun get(vararg t: Boolean) = t
-    operator fun get(vararg t: Long) = t
-    operator fun <T> get(vararg t: T) = t as Array<T>
+   inline operator fun get(vararg t: Int) = t
+   inline operator fun get(vararg t: Double) = t
+   inline operator fun get(vararg t: Short) = t
+   inline operator fun get(vararg t: Byte) = t
+   inline operator fun get(vararg t: Boolean) = t
+   inline operator fun get(vararg t: Long) = t
+   inline operator fun <T> get(vararg t: T) = t as Array<T>
 }
 
 /**
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-    operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singleton(t[0]) else setOf(*t)
+  inline  operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singleton(t[0]) else setOf(*t)
 }
 
 /**
  * missing stdlib map convenience operator
  */
 object _m {
-    operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
-    operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
-    operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
+   inline operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
+   inline operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
+   inline operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
 
 fun logDebug(debugTxt: () -> String) {
