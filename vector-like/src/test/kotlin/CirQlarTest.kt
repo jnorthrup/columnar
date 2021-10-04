@@ -2,10 +2,10 @@ package cursors
 
 import junit.framework.TestCase
 import org.junit.Test
+import vec.CirQlar
 import vec.macros.f1rst
 import vec.macros.last
 import vec.macros.toList
-import vec.CirQlar
 
 class CirQlarTest : TestCase() {
 

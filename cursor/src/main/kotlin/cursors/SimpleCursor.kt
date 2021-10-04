@@ -13,9 +13,9 @@ import kotlin.coroutines.CoroutineContext
  *
  *
  */
-class SimpleCursor  (
+class SimpleCursor(
     val scalars: Vect0r<Scalar>,
-    val data: Vect0r<Vect0r<out Any? >>,
+    val data: Vect0r<Vect0r<out Any?>>,
     val o: Vect0r<() -> CoroutineContext> = scalars α { it -> { it } },
     val c: Pai2<Int, (Int) -> Vect02<Any?, () -> CoroutineContext>> = data α { it.zip(o) },
 ) : Cursor /*by c*/ {

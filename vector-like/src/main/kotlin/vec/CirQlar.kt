@@ -15,11 +15,11 @@ only mutability is offer(T)
 has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
-class CirQlar<T  >(
+class CirQlar<T>(
     val maxSize: Int,
 
-) : AbstractQueue<T>() {
-    private val al  = arrayOfNulls <Any?> (maxSize)
+    ) : AbstractQueue<T>() {
+    private val al = arrayOfNulls<Any?>(maxSize)
     var tail = 0
     override val size get() = min(tail, maxSize)
     val full get() = tail >= maxSize

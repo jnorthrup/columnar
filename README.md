@@ -2,30 +2,37 @@
 
 ## build requirements
 
-* columnar uses the zstd compression tool during unit tests.  maven also. 
+* columnar uses the zstd compression tool during unit tests. maven also.
 
 ## description
- 
+
 Columnar is a work in progress toolkit which:
- * started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write 
- * maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/kotlin/vec/macros/Twop13.kt#L20)
- * maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
+
+* started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write
+* maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/kotlin/vec/macros/Twop13.kt#L20)
+* maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
+
 ```!kt
 typealias Vect0r<reified T> = Pai2<Int, ((Int) -> T)>
 typealias Vect02<F, S> = Vect0r<Pai2<F, S>>
 typealias V3ct0r<F, S, T> = Vect0r<Tripl3<F, S, T>>
 ```
 
- * uses a Vect0r<Vect0r<Any?,{}>> as the complete codebase for dataframe called Cursor, which is typealias of Pai2 and some specialized delegates, performing on-disk data cursor functions where applicable as well as immutable-first abstractions of row and column abstractions in general.  
+* uses a Vect0r<Vect0r<Any?,{}>> as the complete codebase for dataframe called Cursor, which is typealias of Pai2 and
+  some specialized delegates, performing on-disk data cursor functions where applicable as well as immutable-first
+  abstractions of row and column abstractions in general.
+
 ```!kt
 typealias CellMeta = () -> CoroutineContext
 typealias RowVec = Vect02<Any?, CellMeta>
 typealias Cursor = Vect0r<RowVec>
 ```
- * follows some (most) usecases commonly solved in prep for deep learning usecases per pandas based on higher order function delegation and minimizes in-RAM requirements 
- * provides almost 200 lines of utilities to enable [terse kotlin collection ops](/vector-like/src/main/kotlin/vec/util/BikeShed.kt)
- 
-  
+
+* follows some (most) usecases commonly solved in prep for deep learning usecases per pandas based on higher order
+  function delegation and minimizes in-RAM requirements
+* provides almost 200 lines of utilities to
+  enable [terse kotlin collection ops](/vector-like/src/main/kotlin/vec/util/BikeShed.kt)
+
 ## features and todo
 
 - [X] Blackboard defined Table, Cursor, Row metadata driving access behaviors (using `CoroutineContext.Element`s)

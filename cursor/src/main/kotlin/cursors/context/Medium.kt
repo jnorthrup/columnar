@@ -243,7 +243,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 ::bb2ba `→` ::btoa `→` ::trim `→` String::toFloat,
                 { a, b: Float -> a.putFloat(b) }),
             IOMemento.IoDouble to Tokenized(
-                ::bb2ba `→` ::btoa `→` ::trim * { it.toDoubleOrNull()?:0.0 },
+                ::bb2ba `→` ::btoa `→` ::trim * { it.toDoubleOrNull() ?: 0.0 },
                 { a, b: Double -> a.putDouble(b) }),
             IOMemento.IoString to Tokenized(
                 ::bb2ba `→` ::btoa `→` ::trim, xInsertString
@@ -253,7 +253,7 @@ class Tokenized<B, R>(read: readfn<B, R>, write: writefn<B, R>) : CellDriver<B, 
                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
             IOMemento.IoInstant to Tokenized(
                 instantMapper `⚬` ::trim `⚬` ::btoa `⚬` ::bb2ba,
-                { a, b: Instant -> a.putLong(b.epochSecond ).putInt(b.nano) })
+                { a, b: Instant -> a.putLong(b.epochSecond).putInt(b.nano) })
         )
     }
 }
@@ -273,34 +273,34 @@ class Fixed<B, R>(val bound: Int, read: readfn<B, R>, write: writefn<B, R>) :
                 1,
                 ByteBuffer::get
             ) { a, b -> a.put((b.toInt() and 0xff.toInt()).toByte());Unit },
-            IOMemento.IoLong  as TypeMemento to Fixed(
+            IOMemento.IoLong as TypeMemento to Fixed(
                 8,
                 ByteBuffer::getLong
             ) { a, b -> a.putLong(b);Unit },
-            IOMemento.IoFloat  as TypeMemento to Fixed(
+            IOMemento.IoFloat as TypeMemento to Fixed(
                 4,
                 ByteBuffer::getFloat
-            ) { a, b:Any? -> a.putFloat((b as? Float)?:(b as? String )?.toFloatOrNull()?:Float.NaN);Unit },
-            IOMemento.IoDouble  as TypeMemento to Fixed(
+            ) { a, b: Any? -> a.putFloat((b as? Float) ?: (b as? String)?.toFloatOrNull() ?: Float.NaN);Unit },
+            IOMemento.IoDouble as TypeMemento to Fixed(
                 8,
                 ByteBuffer::getDouble
-            ) { a, b:Any? -> a.putDouble((b as? Double)?:(b  as? String)?.toDoubleOrNull()?:Double.NaN );Unit },
-            IOMemento.IoLocalDate  as TypeMemento to Fixed(
+            ) { a, b: Any? -> a.putDouble((b as? Double) ?: (b as? String)?.toDoubleOrNull() ?: Double.NaN);Unit },
+            IOMemento.IoLocalDate as TypeMemento to Fixed(
                 8,
                 { it.long `→` LocalDate::ofEpochDay },
                 { a, b: LocalDate -> a.putLong(b.toEpochDay()) }),
-            IOMemento.IoInstant  as TypeMemento to Fixed(
+            IOMemento.IoInstant as TypeMemento to Fixed(
                 12,
                 { byteBuffer ->
-                    val (esec,ens) =byteBuffer.long t2 byteBuffer.int ;
-                    Instant.ofEpochSecond (esec,ens.toLong())
+                    val (esec, ens) = byteBuffer.long t2 byteBuffer.int;
+                    Instant.ofEpochSecond(esec, ens.toLong())
                 },
                 { a, b: Instant ->
                     val epochSecond = b.epochSecond
                     val nano = b.nano
-                    a.putLong(epochSecond) .putInt(nano)
+                    a.putLong(epochSecond).putInt(nano)
                 }),
-            IOMemento.IoString  as TypeMemento to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
+            IOMemento.IoString as TypeMemento to /*Array-like has no constant bound. */ (Tokenized.mapped[IOMemento.IoString]
                 ?: error(""))
         )
     }

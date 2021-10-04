@@ -13,7 +13,7 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 
-fun bloomAccess(groupClusters: Iterable<IntArray>)  = groupClusters α {
+fun bloomAccess(groupClusters: Iterable<IntArray>) = groupClusters α {
     val n = it.size
     val bloomFilter = BloomFilter(n/*, n * 11*/).apply {
         for (i in it) {

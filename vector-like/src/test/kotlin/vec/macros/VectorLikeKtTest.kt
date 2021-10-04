@@ -11,8 +11,10 @@ class VectorLikeKtTest {
 
     @Test
     fun reverse() {
-        assertArrayEquals(_v[0, 1, 2, 3, 4, 5, 6].reverse.also { System.err.println(it.toList()) }.toList()
-            .toIntArray(), _l[0, 1, 2, 3, 4, 5, 6].reversed().toIntArray())
+        assertArrayEquals(
+            _v[0, 1, 2, 3, 4, 5, 6].reverse.also { System.err.println(it.toList()) }.toList()
+                .toIntArray(), _l[0, 1, 2, 3, 4, 5, 6].reversed().toIntArray()
+        )
 
 
     }
@@ -52,8 +54,10 @@ class VectorLikeKtTest {
     @Test
     fun div() {
 
-        val pai2 = (0 until 743 * 347 * 437) / 437 / 347/743
-logDebug {
-    val pai21 = pai2[2]
-    pai2.map {it.toList().toString()  }.toList().toString()}
-    }}
+        val pai2 = (0 until 743 * 347 * 437) / 437 / 347 / 743
+        logDebug {
+            val pai21 = pai2[2]
+            pai2.map { it.toList().toString() }.toList().toString()
+        }
+    }
+}

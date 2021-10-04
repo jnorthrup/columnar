@@ -1,9 +1,6 @@
-
 package cursors.arrow
 
-import cursors.Cursor
 import cursors.arrow.ArrowSchemas.personSchema
-import io.netty.util.internal.ThreadLocalRandom
 import org.apache.arrow.memory.RootAllocator
 import org.apache.arrow.vector.VectorSchemaRoot
 import org.apache.arrow.vector.dictionary.DictionaryProvider.MapDictionaryProvider
@@ -16,7 +13,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.nio.file.Path
 import java.util.*
 
 
@@ -38,10 +34,10 @@ class Address(val street: String, val streetNumber: Int, val city: String, val p
 
     }
 }
+
 class Person(val firstName: String, val lastName: String, val age: Int, address: Address) {
     private val address: Address
     fun getAddress(): Address = address
-
 
 
     init {
@@ -72,6 +68,7 @@ object ArrowSchemas {
         )
     }
 }
+
 class ChunkedWriter<T>(private val chunkSize: Int, private val vectorizer: Vectorizer<T>) {
     @Throws(IOException::class)
     fun write(file: File?, values: Array<T>) {
@@ -91,9 +88,11 @@ class ChunkedWriter<T>(private val chunkSize: Int, private val vectorizer: Vecto
                                 chunkIndex++
                             }
                             schemaRoot.rowCount = chunkIndex
-                            LOGGER.info("Filled chunk with {} items; {} items written",
+                            LOGGER.info(
+                                "Filled chunk with {} items; {} items written",
                                 chunkIndex,
-                                index + chunkIndex)
+                                index + chunkIndex
+                            )
                             fileWriter.writeBatch()
                             LOGGER.info("Chunk written")
                             index += chunkIndex

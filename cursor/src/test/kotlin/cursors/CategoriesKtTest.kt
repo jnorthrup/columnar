@@ -3,8 +3,8 @@ package cursors
 import cursors.context.TokenizedRow
 import cursors.effects.show
 import cursors.io.IOMemento
-import vec.ml.DummySpec
 import org.junit.Test
+import vec.ml.DummySpec
 import vec.util._l
 
 internal class CategoriesKtTest {

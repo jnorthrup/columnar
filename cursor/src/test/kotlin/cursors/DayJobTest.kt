@@ -4,7 +4,7 @@ package cursors
 import cursors.context.*
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
- import cursors.macros.`∑`
+import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.macros.α
 import org.junit.Test
@@ -309,10 +309,10 @@ class DayJobTest {
         val cities: Vect0r<String> = cities()
 
         // SalesArea column is 1.  cluster key is on _a[1]
-        val groupClusters  = curs1.groupClusters(_a[1])
+        val groupClusters = curs1.groupClusters(_a[1])
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
-        val bloomIndex  = bloomAccess(groupClusters.`➤`)
+        val bloomIndex = bloomAccess(groupClusters.`➤`)
         val scalarColHdr = Scalar(IOMemento.IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
         var seeks = 0
@@ -344,7 +344,7 @@ class DayJobTest {
         val cities: Vect0r<String> = cities()
 
         // SalesArea column is 1.  cluster key is on _a[1]
-        val groupClusters  = curs1.groupClusters(_a[1])
+        val groupClusters = curs1.groupClusters(_a[1])
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
         val bloomIndex = bloomAccess(groupClusters.`➤`)

@@ -21,14 +21,15 @@ class UnixTimeRemapper {
          * with the original cursor
          */
 
-        
+
         fun timestampFromIoLong(vararg timestampColumnNames: String): (Cursor) -> Cursor = { c0: Cursor ->
             val newKeys: IntArray = c0.colIdx.get(*timestampColumnNames)
-            val thinned: IntArray = c0.colIdx.get(*timestampColumnNames.map(String::unaryMinus).toTypedArray()) //-"column"
+            val thinned: IntArray =
+                c0.colIdx.get(*timestampColumnNames.map(String::unaryMinus).toTypedArray()) //-"column"
             val leftovers: Cursor = c0[thinned]
             val c2: Cursor = c0[newKeys] α { rv: RowVec ->
                 rv.size t2 rv.second α { (unixtime, desc) ->
-                    Instant.ofEpochMilli((unixtime as? Long) ?: unixtime.toString().toLongOrNull()?:0L) t2 {
+                    Instant.ofEpochMilli((unixtime as? Long) ?: unixtime.toString().toLongOrNull() ?: 0L) t2 {
                         val (_, f) = desc().get(Arity.arityKey) as Scalar
                         Scalar(IoInstant, f)
                     }

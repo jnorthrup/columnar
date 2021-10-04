@@ -59,17 +59,18 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
                     })
                     res
                 } else
-               s.split (regex, dt.size ).map { java.lang.String(it) as kotlin.String }.toTypedArray().let{res->
-                res.mapIndexed { i, s ->
-                        val ioMemento = dt[i]
-                        if (ioMemento == IOMemento.IoString) {
-                            longest[i] = max(longest[i], s.length)
-                            s
-                        } else {
-                            Tokenized.mapped[ioMemento]!!.read(ByteBuffer.wrap(s.toByteArray()).rewind())
-                        }
-                    }.toTypedArray()
-            }}
+                    s.split(regex, dt.size).map { java.lang.String(it) as kotlin.String }.toTypedArray().let { res ->
+                        res.mapIndexed { i, s ->
+                            val ioMemento = dt[i]
+                            if (ioMemento == IOMemento.IoString) {
+                                longest[i] = max(longest[i], s.length)
+                                s
+                            } else {
+                                Tokenized.mapped[ioMemento]!!.read(ByteBuffer.wrap(s.toByteArray()).rewind())
+                            }
+                        }.toTypedArray()
+                    }
+            }
             val xSize = colnames.size
 
             val sdt = dt.mapIndexed { ix, dt ->
@@ -99,6 +100,6 @@ private val dummy = vect0rOf<Pai2<Int, Int>>()
 class FixedWidth(
     val recordLen: Int,
     val coords: Vect02<Int, Int>,
-    val endl: () -> Byte? = { '\n'.toByte() } ,
+    val endl: () -> Byte? = { '\n'.toByte() },
     val pad: () -> Byte? = { ' '.toByte() }
 ) : RecordBoundary()

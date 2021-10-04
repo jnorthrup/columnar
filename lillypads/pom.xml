@@ -11,7 +11,7 @@
     <artifactId>lillypads</artifactId>
 
     <properties>
-        <kotlin.version>1.5.30</kotlin.version>
+        <kotlin.version>1.6.0M1</kotlin.version>
     </properties>
 
     <dependencies>

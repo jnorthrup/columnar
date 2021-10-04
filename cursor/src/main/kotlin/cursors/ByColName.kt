@@ -1,9 +1,9 @@
 package cursors
 
- import cursors.io.colIdx
+import cursors.io.colIdx
 import vec.macros.Vect02
- import vec.macros.Vect02_.right
- import vec.macros.size
+import vec.macros.Vect02_.right
+import vec.macros.size
 import vec.macros.toList
 import javax.management.openmbean.InvalidKeyException
 
@@ -14,7 +14,7 @@ inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = righ
     s.map {
         val indexOf = list.indexOf(it)
         if (-1 == indexOf)
-            throw InvalidKeyException("$it not found in meta among $list" )
+            throw InvalidKeyException("$it not found in meta among $list")
         indexOf
     }.toIntArray()
 }

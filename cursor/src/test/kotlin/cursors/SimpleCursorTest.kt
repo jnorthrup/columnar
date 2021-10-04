@@ -2,7 +2,6 @@ package cursors
 
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.IOMemento
-import cursors.io.scalars
 import org.junit.Test
 import vec.macros.Vect0r
 import vec.macros.t2
@@ -21,15 +20,17 @@ class SimpleCursorTest {
                 Scalar(IOMemento.IoInt t2 "b"),
                 Scalar(IOMemento.IoDouble t2 "c"),
         ]
-        SimpleCursor(vscalar, _v[
-                _v["dog", 1, 0.0],
-                _v["cat", 11, 0.01],
-                _v["act", 111, 0.011],
-                _v["lib", 1111, 0.0111],
-                _v["nil", 11111, 0.1111],
+        SimpleCursor(
+            vscalar, _v[
+                    _v["dog", 1, 0.0],
+                    _v["cat", 11, 0.01],
+                    _v["act", 111, 0.011],
+                    _v["lib", 1111, 0.0111],
+                    _v["nil", 11111, 0.1111],
 
-        ]) .scalars.also { logDebug { it.toList().toString() } }
-        val listOf: MutableList<Vect0r<*>> = MutableList(0){ _v[null]}
+            ]
+        ).scalars.also { logDebug { it.toList().toString() } }
+        val listOf: MutableList<Vect0r<*>> = MutableList(0) { _v[null] }
         listOf.clear()
         val to = listOf.toVect0r()
         val simpleCursor: SimpleCursor = SimpleCursor(vscalar, to as Vect0r<Vect0r<*>>)

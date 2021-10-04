@@ -37,7 +37,7 @@ class CacheMgr {
             logDebug { "output filename: $ofname" }
             val path = infile.path
             if (infmt == csv) {
-                val lines = Files.readAllLines( path)
+                val lines = Files.readAllLines(path)
                 val csvLines1: List<String> = lines.subList(0, 2)
                 val curs = TokenizedRow.CsvArraysCursor(csvLines1)
                 val replacementMementos: Vect0r<TypeMemento> = (curs at 0).let { rv: RowVec ->
@@ -66,7 +66,8 @@ class CacheMgr {
                 }
                 val c2 = TokenizedRow.CsvArraysCursor(
                     lines.asSequence().asIterable(),
-                    replacementMementos)
+                    replacementMementos
+                )
                     .also { c -> logDebug { "CSV file read with ${c.size} lines" } }
                 c2.writeISAM(ofname.also { logDebug { "writing $it " } })
 
@@ -80,7 +81,7 @@ class CacheMgr {
             0
         }
 
-        
+
         fun main(vararg args: String) {
 
             var cmd = args[0]

@@ -1,9 +1,12 @@
-@file:Suppress("OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE", "FunctionName", "FINAL_UPPER_BOUND", 
-    "UNCHECKED_CAST", "NonAsciiCharacters", "KDocUnresolvedReference", "ObjectPropertyName", "ClassName")
+@file:Suppress(
+    "OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE", "FunctionName", "FINAL_UPPER_BOUND",
+    "UNCHECKED_CAST", "NonAsciiCharacters", "KDocUnresolvedReference", "ObjectPropertyName", "ClassName"
+)
 
 package vec.macros
 
 import kotlinx.coroutines.flow.*
+import x
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -25,7 +28,7 @@ typealias Matrix<T> = Pai2<
 operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 
 
-inline infix fun <reified O,reified  R,   F : (O) -> R > O.`→`(f: F): R = f(this)
+inline infix fun <reified O, reified R, F : (O) -> R> O.`→`(f: F): R = f(this)
 
 
 operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> b(this(a)) }
@@ -246,7 +249,7 @@ inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf(Array<T>:
     var x = 0
     var y = 0
     Array(size) { _: Int ->
-        if (y >= a[x].size ) {
+        if (y >= a[x].size) {
             ++x; y = 0
         }
         a[x][y++]

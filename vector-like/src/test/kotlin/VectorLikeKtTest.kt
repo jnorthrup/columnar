@@ -10,6 +10,7 @@ import vec.util._l
 infix fun Any?.shouldBe(that: Any?) {
     org.junit.Assert.assertEquals(that, this)
 }
+
 class VectorLikeKtTest {
     @Test
     fun testCombineVec() {

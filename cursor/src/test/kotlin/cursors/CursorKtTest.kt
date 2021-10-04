@@ -52,7 +52,7 @@ class CursorKtTest {
         fixedWidth,
         RowMajor.indexableOf(nio, fixedWidth),
         nio,
-        Columnar(drivers.zip(names)  as Vect02<TypeMemento, String?> /* = vec.macros.Pai2<kotlin.Int, (kotlin.Int) -> vec.macros.Pai2<cursors.TypeMemento, kotlin.String?>> */ )
+        Columnar(drivers.zip(names) as Vect02<TypeMemento, String?> /* = vec.macros.Pai2<kotlin.Int, (kotlin.Int) -> vec.macros.Pai2<cursors.TypeMemento, kotlin.String?>> */)
     )
 
 
@@ -92,8 +92,10 @@ class CursorKtTest {
             System.err.println("unordered\n\n")
 
             val resample = cursor.resample(0)
-            val toList = combine(resample
-                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/).left
+            val toList = combine(
+                resample
+                /*.ordered(intArrayOf(0), Comparator { o1, o2 -> o1.toString().compareTo(o2.toString()) })*/
+            ).left
                 .toList()
             resample.toList()[3][2].first shouldBe 820f
             toList.forEach { System.err.println(it) }

@@ -27,6 +27,7 @@ class DoubleCirQlar(
     override fun iterator() = this.toVect0r().`➤`.iterator() as MutableIterator<Double>
 
     fun toList() = toVect0r().mapIndexedToList { _, t -> t }
+
     @Suppress("OVERRIDE_BY_INLINE")
     fun toVect0r() = (this@DoubleCirQlar.size t2 { x: Int ->
         @Suppress("UNCHECKED_CAST")

@@ -1,7 +1,6 @@
 package cursors
 
 import cursors.io.colIdx
-import vec.util.logDebug
 
 class NegateColumn(val negated: String)
 

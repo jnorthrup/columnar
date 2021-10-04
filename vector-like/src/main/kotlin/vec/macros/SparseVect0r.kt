@@ -20,7 +20,7 @@ inline fun <reified V> bindSparse(
 ): Vect0r<V?> = driver.let { entres ->
     val k = driver.left.toIntArray()
     k.size t2 if (driver.size <= 16) //64 byte cacheline
-        { x :Int->
+        { x: Int ->
             var r: V? = null
             if (driver.size > 0) {
                 var i = 0
@@ -41,7 +41,7 @@ inline fun <reified V> bindSparse(
 /**
  * massive chimera
  */
- class SparseVect0r<V>(
+class SparseVect0r<V>(
     private val sparse: Vect0r<V?>,
     private val entries: List<Map.Entry<Int, V>>,
 ) : Vect0r<V?> by sparse, Iterable<Map.Entry<Int, V>> by (entries) {

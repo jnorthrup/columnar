@@ -23,7 +23,8 @@ inline fun <reified T : Comparable<T>> featureRange_(seq: Iterable<T>, maxMinTwi
         when {
             incumbentMax !== candidate && candidate === cmax || incumbentMin !== candidate && candidate === cmin -> Tw1n(
                 cmin,
-                cmax)
+                cmax
+            )
             else -> incumbent
         }
     }

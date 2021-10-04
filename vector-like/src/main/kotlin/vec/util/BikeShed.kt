@@ -1,8 +1,10 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress("NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType", "NOTHING_TO_INLINE",
-    "UnclearPrecedenceOfBinaryExpression")
+@file:Suppress(
+    "NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType", "NOTHING_TO_INLINE",
+    "UnclearPrecedenceOfBinaryExpression"
+)
 
 package vec.util
 
@@ -38,43 +40,43 @@ var logReuseCountdown = 0
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _v {
-    inline operator fun <reified T> get(vararg t: T):Vect0r<T>  = t.size t2 t::get
+    inline operator fun <reified T> get(vararg t: T): Vect0r<T> = t.size t2 t::get
 }
 
 /**
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _l {
-   inline operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
+    inline operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
 }
 
 /**
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-   inline operator fun get(vararg t: Int) = t
-   inline operator fun get(vararg t: Double) = t
-   inline operator fun get(vararg t: Short) = t
-   inline operator fun get(vararg t: Byte) = t
-   inline operator fun get(vararg t: Boolean) = t
-   inline operator fun get(vararg t: Long) = t
-   inline operator fun <T> get(vararg t: T) = t as Array<T>
+    inline operator fun get(vararg t: Int) = t
+    inline operator fun get(vararg t: Double) = t
+    inline operator fun get(vararg t: Short) = t
+    inline operator fun get(vararg t: Byte) = t
+    inline operator fun get(vararg t: Boolean) = t
+    inline operator fun get(vararg t: Long) = t
+    inline operator fun <T> get(vararg t: T) = t as Array<T>
 }
 
 /**
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-  inline  operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singleton(t[0]) else setOf(*t)
+    inline operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singleton(t[0]) else setOf(*t)
 }
 
 /**
  * missing stdlib map convenience operator
  */
 object _m {
-   inline operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
-   inline operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
-   inline operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
+    inline operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
+    inline operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
+    inline operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
 }
 
 fun logDebug(debugTxt: () -> String) {

@@ -1,7 +1,6 @@
 package trie
 
 import java.util.*
-import kotlin.Comparator
 
 
 class ArrayMap<K, V>(

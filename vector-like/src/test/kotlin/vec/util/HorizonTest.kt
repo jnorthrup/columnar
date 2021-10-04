@@ -31,10 +31,10 @@ class HorizonTest {
         val res2 = res.let {
             res + _l[
                     it[0] * it[1],
-                    it[1] *it[2],
-                    acc.toDouble()*it[1],
-            (viewSize-acc).toDouble()*it[1],
-            (viewSize-acc).toDouble()*it[2],
+                    it[1] * it[2],
+                    acc.toDouble() * it[1],
+                    (viewSize - acc).toDouble() * it[1],
+                    (viewSize - acc).toDouble() * it[2],
             ]
         }
         logDebug { ("ratio ascends at($acc, $viewSize,${modelSize})=${res2}") }
@@ -75,11 +75,11 @@ class HorizonTest {
         }
         System.err.println(v2[0 until 20].toList())
         horizonRatioHunt(v2size, v.size)
-        horizonRatioHunt(100,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(200,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(300,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(500,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(3000,kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(100, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(200, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(300, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(500, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(3000, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
     }
 }
 /*

@@ -6,10 +6,10 @@ import cursors.io.RowVec
 import cursors.io.colIdx
 import cursors.io.scalars
 import cursors.macros.join
-import vec.ml.DummySpec
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
+import vec.ml.DummySpec
 import vec.util._a
 import vec.util._v
 import java.util.*
@@ -51,7 +51,8 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
                 val useIndex = v.indexOf(element)
 
                 RowVec(v.size) { vx: Int ->
-                    (useIndex == vx) as Any? t2 { Scalar(
+                    (useIndex == vx) as Any? t2 {
+                        Scalar(
                             IOMemento.IoBoolean,
                             "${narrowed.scalars[0].second}=${v[vx]}"
                         ) as CoroutineContext

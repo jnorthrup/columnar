@@ -9,7 +9,7 @@ import vec.macros.*
 import vec.macros.Vect02_.right
 
 val Cursor.scalars: Vect0r<Scalar>
-    get() = (this at 0).right α  { it()[arityKey] as Scalar }
+    get() = (this at 0).right α { it()[arityKey] as Scalar }
 
 val Cursor.width get() = this.scalars.size
 val Cursor.colIdx: Vect02<IOMemento, String?> get() = scalars α { sc: Scalar -> sc as Pai2<IOMemento, String?> }
@@ -22,15 +22,15 @@ fun networkCoords(
     val sizes = networkSizes(ioMemos, defaultVarcharSize, varcharSizes)
     //todo: make IntArray Tw1nt Matrix
     var wrecordlen = 0
-    val wcoords  = Array(sizes.size) { ix ->
-         (wrecordlen t2 (wrecordlen + sizes[ix]).also { wrecordlen = it })
+    val wcoords = Array(sizes.size) { ix ->
+        (wrecordlen t2 (wrecordlen + sizes[ix]).also { wrecordlen = it })
     }
 
     wcoords.map { tw1nt -> (-tw1nt).toList() }.flatten().toIntArray().let { ia ->
         Vect02(wcoords.size) { ix: Int ->
             val i = ix * 2
             val i1 = i + 1
-             (ia[i]t2 ia[i1])
+            (ia[i] t2 ia[i1])
         }
     }
 }

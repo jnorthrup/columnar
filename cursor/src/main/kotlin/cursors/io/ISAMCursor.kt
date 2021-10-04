@@ -98,7 +98,7 @@ fun Cursor.writeISAM(
     val sizes = varcharSizes ?: let { curs ->
 
         linkedMapOf<Int, Int>().apply {
-            (curs at 0).right.`➤`.withIndex().onEach {( index, it) ->
+            (curs at 0).right.`➤`.withIndex().onEach { (index, it) ->
 
                 //our blackboard CoroutineCOntext  metadata function.
                 val cc = it.invoke()
