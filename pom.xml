@@ -12,7 +12,6 @@
         <module>lillypads</module>
         <module>vector-like</module>
         <module>trie</module>
-
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -36,7 +35,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
-            <version>1.5.1-native-mt</version>
+            <version>1.5.1</version>
             <exclusions>
                 <exclusion>
                     <artifactId>kotlin-stdlib</artifactId>
@@ -48,11 +47,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <version>1.5.30-RC</version>
-        </dependency>
     </dependencies>
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
@@ -60,7 +54,6 @@
         <plugins>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <phase>install</phase>
@@ -76,7 +69,7 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>1.5.20-M1</version>
+                <version>1.6.0-M1</version>
                 <executions>
                     <execution>
                         <id>compile</id>
