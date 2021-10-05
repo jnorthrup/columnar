@@ -18,9 +18,11 @@ import vec.util._a
 
 /**inheritable version of pair  */
 interface Pai2<F, S> {
-
     val first: F
+
     val second: S
+    operator fun component1(): F = first
+    operator fun component2(): S = second
 
     /**
      * for println and serializable usecases, offload that stuff using this method.
@@ -52,8 +54,6 @@ interface Pai2<F, S> {
     }
 }
 
-inline operator fun <reified F, reified S> Pai2<F, S>.component2(): S = second
-inline operator fun <reified F, reified S> Pai2<F, S>.component1(): F = first
 
 
 /**inheritable version of triple
