@@ -1,10 +1,12 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress(
-    "NOTHING_TO_", "UNCHECKED_CAST", "ClassName", "HasPlatformType", "NOTHING_TO_INLINE",
-    "UnclearPrecedenceOfBinaryExpression"
-)
+@file:Suppress("NOTHING_TO_",
+    "UNCHECKED_CAST",
+    "ClassName",
+    "HasPlatformType",
+    "NOTHING_TO_INLINE",
+    "UnclearPrecedenceOfBinaryExpression")
 
 package vec.util
 
@@ -54,12 +56,18 @@ object _l {
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-    inline operator fun get(vararg t: Int) = t
-    inline operator fun get(vararg t: Double) = t
-    inline operator fun get(vararg t: Short) = t
-    inline operator fun get(vararg t: Byte) = t
     inline operator fun get(vararg t: Boolean) = t
+    inline operator fun get(vararg t: Byte) = t
+    inline operator fun get(vararg t: UByte) = t
+    inline operator fun get(vararg t: Char) = t
+    inline operator fun get(vararg t: Short) = t
+    inline operator fun get(vararg t: UShort) = t
+    inline operator fun get(vararg t: Int) = t
+    inline operator fun get(vararg t: UInt) = t
     inline operator fun get(vararg t: Long) = t
+    inline operator fun get(vararg t: ULong) = t
+    inline operator fun get(vararg t: Float) = t
+    inline operator fun get(vararg t: Double) = t
     inline operator fun <T> get(vararg t: T) = t as Array<T>
 }
 
@@ -123,12 +131,11 @@ infix fun Any?.println(x: Any?) {
 }
 
 @JvmOverloads
-tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int =
-    when (n) {
-        0 -> a
-        1 -> b
-        else -> fib(n - 1, b, a + b)
-    }
+tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int = when (n) {
+    0 -> a
+    1 -> b
+    else -> fib(n - 1, b, a + b)
+}
 
 @Deprecated("causes cursors to miss left,right,combine cues")
 //inline fun <reified T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
@@ -141,10 +148,9 @@ inline fun <reified T> moireValues(
     initialOneOrMore: Int = inVec.first,
     noinline x: (Int) -> T = inVec.second,
 ) = min(initialOneOrMore, limit).let { min ->
-    combine(min t2 x,
-        (limit - min) t2 { i: Int ->
-            x(i.rem(min))
-        } //dummy loop rows
+    combine(min t2 x, (limit - min) t2 { i: Int ->
+        x(i.rem(min))
+    } //dummy loop rows
     )
 }
 
@@ -160,8 +166,8 @@ val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 /** really really wants to produce a Double
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, d: Double) = ((f as? Double ?: f as? Number)?.toDouble()
-    ?: "$f".let { cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) } }.get()?.second)
-    ?.takeIf { it.isFinite() } ?: d
+inline fun todub(f: Any?, d: Double) = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
+    cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
+}.get()?.second)?.takeIf { it.isFinite() } ?: d
 
 
