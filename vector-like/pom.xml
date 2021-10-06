@@ -5,7 +5,7 @@
 
     <parent>
         <artifactId>meta-columnar</artifactId>
-        <groupId>columnar</groupId>
+        <groupId>com.vsiwest.columnar</groupId>
         <version>1.0.1-SNAPSHOT</version>
     </parent>
     <dependencies>

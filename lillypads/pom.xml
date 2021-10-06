@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>columnar</groupId>
+        <groupId>com.vsiwest.columnar</groupId>
         <artifactId>meta-columnar</artifactId>
         <version>1.0.1-SNAPSHOT</version>
     </parent>
@@ -16,7 +16,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>columnar</groupId>
+            <groupId>com.vsiwest.columnar</groupId>
             <artifactId>cursor</artifactId>
             <version>${project.version}</version>
         </dependency>
