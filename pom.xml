@@ -6,6 +6,10 @@
     <artifactId>meta-columnar</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <name>The Columnar Toolkit</name>
+
+    <description>columnar is a self-contained kotlin dataframe integration tookit</description>
+
     <modules>
         <module>cursor</module>
         <module>exchange</module>
@@ -13,21 +17,62 @@
         <module>vector-like</module>
         <module>trie</module>
     </modules>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+        <kotlin.version>1.6.0-M1</kotlin.version>
     </properties>
+
     <licenses>
         <license>
             <name>LGPLv2.1</name>
             <url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html</url>
         </license>
     </licenses>
+
     <scm>
-        <developerConnection>git:git@github.com:jnorthrup/columnar</developerConnection>
-        <url>git:git@github.com:jnorthrup/columnar</url>
+        <connection>scm:git:git@github.com:jnorthrup/columnar.git</connection>
+        <developerConnection>scm:git:git@github.com:jnorthrup/columnar.git</developerConnection>
+        <url>git@github.com:jnorthrup/columnar.git</url>
+        <tag>HEAD</tag>
     </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/jnorthrup/issues</url>
+    </issueManagement>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <downloadUrl>https://oss.sonatype.org/content/groups/public/com/vsiwest/columnar</downloadUrl>
+    </distributionManagement>
+
+    <developers>
+        <developer>
+            <name>James Northrup</name>
+        </developer>
+    </developers>
+
+    <url>https://jnorthrup.github.io/columnar</url>
+
+    <inceptionYear>2012</inceptionYear>
+
+    <organization>
+        <name>VSIWest LLC</name>
+        <url>https://www.vsiwest.com/</url>
+    </organization>
+
     <dependencies>
         <dependency>
             <groupId>shouldbe</groupId>
@@ -56,27 +101,24 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>1.6.0-M1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit</artifactId>
+            <version>1.6.0-M1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+
     <build>
-        <sourceDirectory>src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+<!--        <sourceDirectory>src/main/kotlin</sourceDirectory>-->
+<!--        <testSourceDirectory>src/test/kotlin</testSourceDirectory>-->
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -90,8 +132,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -134,8 +174,93 @@
                     </args>
                     <!--                    <jvmTarget>${maven.compiler.source}</jvmTarget>-->
                     <!--                    <useIrBackend>true</useIrBackend>-->
+                    <jvmTarget>11</jvmTarget>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>gpg.passphrase</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Generates a source code JAR during package -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.2.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Generates JavaDocs during package -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <doclint>none</doclint>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
