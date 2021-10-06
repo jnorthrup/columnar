@@ -19,11 +19,9 @@ import vec.util._a
 /**inheritable version of pair  */
 interface Pai2<F, S> {
     val first: F
-
     val second: S
     operator fun component1(): F = first
     operator fun component2(): S = second
-
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
@@ -53,6 +51,9 @@ interface Pai2<F, S> {
         }
     }
 }
+
+fun Pai2<*,*>.toString(): String = pair.toString()
+
 
 
 
