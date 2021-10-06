@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.vsiwest.columnar</groupId>
     <artifactId>meta-columnar</artifactId>
@@ -26,8 +27,11 @@
 
     <licenses>
         <license>
-            <name>LGPLv2.1</name>
-            <url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html</url>
+            <name>GNU General Public License, version 2</name>
+            <url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.md</url>
+            <comments>Everyone is permitted to copy and distribute verbatim copies of this license document, but
+                changing it is not allowed.
+            </comments>
         </license>
     </licenses>
 
@@ -174,10 +178,16 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
+                                    <keyname>A13271F9D1D2951E</keyname>
+                                    <passphraseServerId>keyserver.ubuntu.com</passphraseServerId>
+
+                                    <!--
+
                                     <gpgArguments>
-                                        <arg>--pinentry-mode</arg>
+                                        <arg>&#45;&#45;pinentry-mode</arg>
                                         <arg>loopback</arg>
                                     </gpgArguments>
+-->
                                 </configuration>
                             </execution>
                         </executions>
