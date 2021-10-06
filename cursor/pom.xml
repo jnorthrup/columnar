@@ -5,19 +5,19 @@
     <parent>
         <artifactId>meta-columnar</artifactId>
         <groupId>com.vsiwest.columnar</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
     <artifactId>cursor</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.vsiwest.columnar</groupId>
             <artifactId>vector-like</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.vsiwest.columnar</groupId>
             <artifactId>trie</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
