@@ -14,8 +14,8 @@
         <module>cursor</module>
         <module>exchange</module>
         <module>lillypads</module>
-        <module>vector-like</module>
         <module>trie</module>
+        <module>vector-like</module>
     </modules>
 
     <properties>
@@ -159,7 +159,8 @@
             <id>release-sign-artifacts</id>
             <!--
                    JAVA_HOME=~/opt/jdk-17/ mvn -P release-sign-artifacts package gpg:sign
-                   -->
+                 git  commit -S     -avvvm 'release'; git tag -S   prepare1_0_2
+   -->
             <activation>
                 <property>
                     <name>gpg.passphrase</name>
