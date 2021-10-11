@@ -85,11 +85,6 @@ a left identity and f is a right identity, then f=ef=e.
 inline val <reified T> T.`⟲`
     get() = { this }
 
-/**right identity*/
-
-
-infix fun <T, R> T.`⟲`(f: (T) -> R) = run { f(this) }
-
 /*
 @JvmName("vlike_Sequence_1")
 operator fun <T> Sequence<T>.get(vararg index: Int) = get(index)
