@@ -20,9 +20,8 @@ import java.util.*
 import kotlin.math.min
 import kotlin.text.Charsets.UTF_8
 
-
-infix fun ByteBuffer.at(start: Int): ByteBuffer = (if (limit() > start) clear() else this).position(start)
-operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = limit(end).position(start)
+infix fun ByteBuffer.at(start: Int): ByteBuffer = apply { (if (limit() > start) clear() else this).position(start) }
+operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = apply { limit(end).position(start) }
 val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
 fun Int.toArray(): IntArray = _a[this]
