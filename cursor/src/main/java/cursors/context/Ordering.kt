@@ -1,8 +1,11 @@
 package cursors.context
 
 import cursors.io.TableRoot
-import vec.macros.*
+import vec.macros.Vect02
 import vec.macros.Vect02_.right
+import vec.macros.`→`
+import vec.macros.get
+import vec.macros.t2
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 
@@ -53,18 +56,12 @@ class RowMajor : Ordering() {
             mappedByteBuffer: ByteBuffer = nio.mappedFile.mappedByteBuffer,
         ): Indexable =
             Indexable(size = (nio.mappedFile.randomAccessFile.length() / fixedWidth.recordLen)::toInt) { recordIndex ->
-                val lim = { b: ByteBuffer -> b.limit(fixedWidth.recordLen) }
-                val pos = { b: ByteBuffer -> b.position(recordIndex * fixedWidth.recordLen) }
-                val sl = { b: ByteBuffer -> b.slice() }
-                mappedByteBuffer `⟲` (lim `⚬` sl `⚬` pos)
+                mappedByteBuffer.limit(fixedWidth.recordLen).slice().position(recordIndex * fixedWidth.recordLen)
             }
 
-//todo: move to rowMajor
-
+        //todo: move to rowMajor
         fun TableRoot.name(xy: IntArray) = this.let { (_, rootContext) ->
             (rootContext[Arity.arityKey]!! as Columnar).let { cnar ->
-
-
                 cnar.right[(rootContext[orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
             }
         }
@@ -79,13 +76,8 @@ class RowMajor : Ordering() {
         nio: NioMMap,
         columnarArity: Columnar,
 
-        ): TableRoot = (
-            this +
-                    fixedWidth +
-                    indexable +
-                    nio +
-                    columnarArity
-            ).let { coroutineContext -> nio.values(coroutineContext) t2 coroutineContext }
+        ): TableRoot =
+        (this + fixedWidth + indexable + nio + columnarArity).let { coroutineContext -> nio.values(coroutineContext) t2 coroutineContext }
 
     /**
      * this builds a context and launches a cursor in the given NioMMap frame of reference
@@ -96,13 +88,8 @@ class RowMajor : Ordering() {
         nio: NioMMap,
         columnarArity: Columnar,
 
-        ): TableRoot = (
-            this +
-                    fixedWidth +
-                    indexable +
-                    nio +
-                    columnarArity
-            ).let { coroutineContext -> nio.values(coroutineContext) t2 coroutineContext }
+        ): TableRoot =
+        (this + fixedWidth + indexable + nio + columnarArity).let { coroutineContext -> nio.values(coroutineContext) t2 coroutineContext }
 
 }
 
