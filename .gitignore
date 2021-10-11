@@ -20,7 +20,7 @@ target*.ipr
 /lillypads/pom.xml.versionsBackup
 /trie/pom.xml.versionsBackup
 /vector-like/pom.xml.versionsBackup
-/pom.xml.versionsBackup
+*.versionsBackup
 /.mvn/wrapper/maven-wrapper.jar
 /superannuate/superannuated1909.fwf
 /cursor/${project.build.directory}/
