@@ -1,27 +1,27 @@
+@file:OptIn(ExperimentalTime::class)
+
 package cursors.io
 
 import vec.util.fib
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
 import kotlin.math.max
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimeSource
 
-class FibonacciReporter(val size: Int? = null) {
+class FibonacciReporter(val size: Int? = null,val noun:String="rows") {
     var trigger = 0
     var countdown = 1
-    val begin = Instant.now()
+    val begin = TimeSource.Monotonic.markNow() 
     fun report(iy: Int) =
         if (--countdown == 0) {
             //without -ea this benchmark only costs a unused variable decrement.
             countdown = fib(++trigger)
-            val l = Instant.now().minusMillis(begin.toEpochMilli()).toEpochMilli()
-            val sofar = Duration.ofMillis(l)
-            val perUnit = sofar.dividedBy(max(iy, 1).toLong())
-            val remaining = size?.let { perUnit.multipliedBy(size.toLong()).minus(sofar) }
-            val ofSeconds = Duration.ofSeconds(1)
-            val dividedBy = ofSeconds.dividedBy(max(1, perUnit.toSeconds()))
-            "logged $iy rows in $sofar $dividedBy/s " + (size?.let {
-                "remaining: " + remaining + " est " + LocalDateTime.now().plus(remaining)
+            val l =begin.elapsedNow()
+            val slice = l / max(1, iy)
+            
+            "logged $iy $noun in $l ${slice.inWholeSeconds}/s " + (size?.let {
+                val remaining:Duration=slice.times((size - iy))
+                "remaining: ${remaining} est ${kotlin.time.TimeSource.Monotonic.markNow().plus(remaining)}"
             } ?: "")
         } else null
 }
