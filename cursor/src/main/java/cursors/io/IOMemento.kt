@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package cursors.io
 
 import cursors.TypeMemento
@@ -8,6 +10,7 @@ import vec.macros.α
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.LocalDate
+import kotlin.time.ExperimentalTime
 
 const val SPACE: Byte = ' '.toByte()
 const val ZERO: Float = 0.toFloat()
