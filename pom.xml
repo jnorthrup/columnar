@@ -138,15 +138,10 @@
                 </executions>
                 <configuration>
                     <args>
-                        <!--                        <arg>-Xuse-ir</arg>-->
                         <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
-                        <!--                        <arg>-Xjvm-enable-preview</arg>-->
-                        <!--                        <arg>&#45;&#45;enable-preview</arg>-->
-                        <!--                        <arg>-language-version 1.5</arg>-->
+                        <arg>-Xskip-prerelease-check</arg>
                     </args>
-                    <!--                    <jvmTarget>${maven.compiler.source}</jvmTarget>-->
-                    <!--                    <useIrBackend>true</useIrBackend>-->
-<!--                    <jvmTarget>11</jvmTarget>-->
+                    <jvmTarget>16</jvmTarget>
                 </configuration>
             </plugin>
         </plugins>
@@ -154,10 +149,6 @@
     <profiles>
         <profile>
             <id>release-sign-artifacts</id>
-            <!--
-                   JAVA_HOME=~/opt/jdk-17/ mvn -P release-sign-artifacts package gpg:sign
-                 git  commit -S     -avvvm 'release'; git tag -S   prepare1_0_2
-   -->
             <activation>
                 <property>
                     <name>gpg.passphrase</name>
