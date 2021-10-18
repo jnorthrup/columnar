@@ -1,10 +1,7 @@
-
-
 package vec
 
 import vec.macros.size
 import vec.macros.t2
-import vec.util.rem
 import java.util.*
 import kotlin.math.min
 
@@ -47,15 +44,17 @@ class CirQlar<T>(
     override fun poll(): T = TODO("Not yet implemented")
     override fun peek(): T = TODO("Not yet implemented")
     override fun add(k: T) = offer(k)
-    operator fun <T> CirQlar<T>.plus(k: T) = offer(k)
-    operator fun <T> CirQlar<T>.plusAssign(k: T) {
+    operator fun CirQlar<T>.plus(k: T) = offer(k)
+    operator fun CirQlar<T>.plusAssign(k: T) {
         offer(k)
     }
 
     @Suppress("OVERRIDE_BY_INLINE")
     fun toVect0r() = (this@CirQlar.size t2 { x: Int ->
         @Suppress("UNCHECKED_CAST")
-        al[((tail >= maxSize) % ((tail + x) % maxSize)) ?: x] as T
+        al[if (tail >= maxSize) {
+            (tail + x) % maxSize
+        } else x] as T
     })
 
     override fun iterator(): MutableIterator<T> = object : MutableIterator<T> {
@@ -67,6 +66,5 @@ class CirQlar<T>(
 
         override fun remove(): Unit = TODO("Not yet implemented")
     }
-
 }
 

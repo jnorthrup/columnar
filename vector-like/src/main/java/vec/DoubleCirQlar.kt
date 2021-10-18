@@ -3,7 +3,6 @@ package vec
 import vec.macros.`➤`
 import vec.macros.mapIndexedToList
 import vec.macros.t2
-import vec.util.rem
 import java.util.*
 
 /**
@@ -31,7 +30,9 @@ class DoubleCirQlar(
     @Suppress("OVERRIDE_BY_INLINE")
     fun toVect0r() = (this@DoubleCirQlar.size t2 { x: Int ->
         @Suppress("UNCHECKED_CAST")
-        al[((tail >= maxSize) % ((tail + x) % maxSize)) ?: x]
+        al[if (tail >= maxSize) {
+            (tail + x) % maxSize
+        } else x]
     })
 
     //todo: lockless dequeue here ?

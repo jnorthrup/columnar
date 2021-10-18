@@ -12,7 +12,6 @@ import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
 import vec.ml.featureRange
 import vec.ml.normalize
-import vec.util.rem
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -139,15 +138,15 @@ fun Cursor.pivot(
         val theRow: RowVec = cursr at (iy)
         xsize t2 { ix: Int ->
             when {
-                ix < lhs.size -> {
-                    theRow.second(lhs[ix])
-                }
+                ix < lhs.size -> theRow.second(lhs[ix])
                 else /*fanout*/ -> {
                     val theKey = theRow[axis].left.toList() //expressly for toString and equality tests
                     val keyGate = whichKey(ix)
-                    val cellVal = (keyGate == keys[theKey]) % fanOut[whichFanoutIndex(ix)].let {
-                        theRow.second(it).first
-                    }
+                    val cellVal = if (keyGate == keys[theKey]) {
+                        fanOut[whichFanoutIndex(ix)].let {
+                            theRow.second(it).first
+                        }
+                    } else null
 
 
 
