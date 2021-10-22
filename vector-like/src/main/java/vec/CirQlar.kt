@@ -51,8 +51,7 @@ class CirQlar<T>(
 
     @Suppress("OVERRIDE_BY_INLINE")
     fun toVect0r() = (this@CirQlar.size t2 { x: Int ->
-        @Suppress("UNCHECKED_CAST")
-        al[if (tail >= maxSize) {
+        @Suppress("UNCHECKED_CAST") al[if (tail >= maxSize) {
             (tail + x) % maxSize
         } else x] as T
     })

@@ -1,1 +1,9 @@
-package doc;public class docs{public void waitingForKotlinJavadocs(){;};};
+package doc;
+
+public class docs {
+    public void waitingForKotlinJavadocs() {
+        ;
+    }
+
+    ;
+};

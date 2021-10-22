@@ -16,7 +16,7 @@ inline fun <reified V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = run {
 }
 
 inline fun <reified V> bindSparse(
-    driver: Vect02<Int, V>
+    driver: Vect02<Int, V>,
 ): Vect0r<V?> = driver.let { entres ->
     val k = driver.left.toIntArray()
     k.size t2 if (driver.size <= 16) //64 byte cacheline

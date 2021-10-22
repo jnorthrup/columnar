@@ -6,6 +6,7 @@
 package vec.macros
 
 import kotlinx.coroutines.flow.*
+import java.lang.Integer.min
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -207,8 +208,8 @@ inline fun <reified T, reified O, reified R> Vect0r<T>.zip(
 
 @JvmName("vvzip2")
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T, reified O, R : Pai2<T, O>> Vect0r<T>.zip(o: Vect0r<O>): Vect02<T, O> =
-    size t2 { x: Int -> (this[x] t2 o[x]) }
+inline infix fun <reified T, reified O, R : Vect02<T, O>> Vect0r<T>.zip(o: Vect0r<O>): R =
+    (min(size, o.size) t2 { x: Int -> (this[x] t2 o[x]) }) as R
 
 
 @JvmName("combine_Flow")

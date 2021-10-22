@@ -12,7 +12,7 @@ fun horizon(
     viewPoints: Int,
     datapoints: Int,
     dpDouble: Double = datapoints.toDouble(),
-    vpDouble: Double = viewPoints.toDouble()
+    vpDouble: Double = viewPoints.toDouble(),
 ): Int {
     return max(
         index,

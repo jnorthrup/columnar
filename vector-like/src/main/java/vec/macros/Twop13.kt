@@ -22,6 +22,7 @@ interface Pai2<F, S> {
     val second: S
     operator fun component1(): F = first
     operator fun component2(): S = second
+
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
@@ -52,9 +53,7 @@ interface Pai2<F, S> {
     }
 }
 
-fun Pai2<*,*>.toString(): String = pair.toString()
-
-
+fun Pai2<*, *>.toString(): String = pair.toString()
 
 
 /**inheritable version of triple
@@ -185,13 +184,14 @@ inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>) = this.ordi
 @JvmName("αS")
 inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R) = (-this).α(f)
 inline infix fun <reified F, reified S> F.t2(s: S) = Pai2.invoke(this, s)
-inline infix fun <reified F, reified S, T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
+inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
 
 infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T) = let { (a, b) -> Tripl3(a, b, t) }
 
 //overlaps Vect0r reverse and isn't compatible
 inline fun <reified F, reified S> Pair<F, S>.reversed(): Pai2<S, F> = second t2 first
-infix fun <A, B, C, D> Tripl3<A, B, C>.t4(d: D) = let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
+inline infix fun <reified A, reified B, reified C, reified D> Tripl3<A, B, C>.t4(d: D) =
+    let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
 
 /**inheritable version of quad that also provides its first three as a triple. */
 interface Qu4d<F, S, T, Z> {

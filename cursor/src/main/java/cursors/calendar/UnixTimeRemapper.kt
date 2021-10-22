@@ -11,7 +11,9 @@ import cursors.io.RowVec
 import cursors.io.colIdx
 import cursors.macros.join
 import cursors.unaryMinus
-import vec.macros.*
+import vec.macros.size
+import vec.macros.t2
+import vec.macros.α
 import java.time.Instant
 
 class UnixTimeRemapper {

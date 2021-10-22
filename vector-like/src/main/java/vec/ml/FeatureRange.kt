@@ -2,7 +2,9 @@
 
 package vec.ml
 
-import vec.macros.*
+import vec.macros.Pai2
+import vec.macros.Tw1n
+import vec.macros.t2
 
 /**
  * returns min,max of Iterable given

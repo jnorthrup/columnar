@@ -101,5 +101,5 @@ class FixedWidth(
     val recordLen: Int,
     val coords: Vect02<Int, Int>,
     val endl: () -> Byte? = { '\n'.toByte() },
-    val pad: () -> Byte? = { ' '.toByte() }
+    val pad: () -> Byte? = { ' '.toByte() },
 ) : RecordBoundary()
