@@ -1,8 +1,8 @@
 @file:OptIn(ExperimentalTime::class)
 
-package cursors.io
+package vec.util
 
-import vec.util.fib
+import kotlinx.datetime.Clock
 import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -21,7 +21,7 @@ class FibonacciReporter(val size: Int? = null, val noun: String = "rows") {
 
             "logged $iy $noun in $l ${slice.inWholeSeconds}/s " + (size?.let {
                 val remaining: Duration = slice.times((size - iy))
-                "remaining: ${remaining} est ${kotlin.time.TimeSource.Monotonic.markNow().plus(remaining)}"
+                "remaining: $remaining est ${Clock.System.now().plus(remaining)}"
             } ?: "")
         } else null
 }
