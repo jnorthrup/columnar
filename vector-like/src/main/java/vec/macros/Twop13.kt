@@ -29,11 +29,10 @@ interface Pai2<F, S> {
     val pair: Pair<F, S> get() = let { first to second }
 
     companion object {
-        inline operator fun <reified F, reified S> invoke(first: F, second: S): Pai2<F, S> =
-            object : Pai2<F, S> {
-                override inline val first get() = first
-                override inline val second get() = second
-            }
+        inline operator fun <reified F, reified S> invoke(first: F, second: S): Pai2<F, S> = object : Pai2<F, S> {
+            override inline val first get() = first
+            override inline val second get() = second
+        }
 
 
         /**
@@ -67,6 +66,9 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
      * for println and serializable usecases, offload that stuff using this method.
      */
     val triple get() = Triple(first, second, third)
+    operator fun component1() = first
+    operator fun component2() = second
+    operator fun component3() = third
 
     companion object {
 
@@ -78,15 +80,11 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
             }
 
 
-        inline operator fun <F, S, T> invoke(p: Triple<F, S, T>) =
-            p.let { (f, s, t) -> Tripl3(f, s, t) }
+        inline operator fun <F, S, T> invoke(p: Triple<F, S, T>) = p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 
-}
 
-inline operator fun <F, S, T> Tripl3<F, S, T>.component3(): T = third
-inline operator fun <F, S, T> Tripl3<F, S, T>.component2(): S = second
-inline operator fun <F, S, T> Tripl3<F, S, T>.component1(): F = first
+}
 
 
 /**
@@ -205,10 +203,12 @@ interface Qu4d<F, S, T, Z> {
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
-    val quad: Quad<F, S, T, Z>
-        get() = Quad(
-            first, second, third, fourth
-        )
+    val quad: Quad<F, S, T, Z> get() = Quad(first, second, third, fourth)
+
+    operator fun component1() = first
+    operator fun component2() = second
+    operator fun component3() = third
+    operator fun component4() = fourth
 
     companion object {
 
@@ -217,35 +217,27 @@ interface Qu4d<F, S, T, Z> {
             second: S,
             third: T,
             fourth: Z,
-        ): Qu4d<F, S, T, Z> =
-            object : Qu4d<F, S, T, Z> {
-                override inline val first get() = first
-                override inline val second get() = second
-                override inline val third get() = third
-                override inline val fourth get() = fourth
-            }
+        ): Qu4d<F, S, T, Z> = object : Qu4d<F, S, T, Z> {
+            override inline val first get() = first
+            override inline val second get() = second
+            override inline val third get() = third
+            override inline val fourth get() = fourth
+        }
 
 
-        operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) =
-            p.let { (f, s, t, z) ->
-                Qu4d(f, s, t, z)
-            }
+        operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) = p.let { (f, s, t, z) ->
+            Qu4d(f, s, t, z)
+        }
 
 
         operator fun <F, S, T, Z> invoke(p: Array<*>) = p.let { (f, s, t, z) ->
-            @Suppress("UNCHECKED_CAST")
-            (Qu4d(f as F, s as S, t as T, z as Z))
+            @Suppress("UNCHECKED_CAST") (Qu4d(f as F, s as S, t as T, z as Z))
         }
 
 
         operator fun <F, S, T, Z> invoke(p: List<*>) = p.let { (f, s, t, z) ->
-            @Suppress("UNCHECKED_CAST")
-            (Qu4d(f as F, s as S, t as T, z as Z))
+            @Suppress("UNCHECKED_CAST") (Qu4d(f as F, s as S, t as T, z as Z))
         }
     }
 }
 
-inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component4() = fourth
-inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component3() = third
-inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component2() = second
-inline operator fun <reified F, reified S, reified T, reified Z> Qu4d<F, S, T, Z>.component1() = first
