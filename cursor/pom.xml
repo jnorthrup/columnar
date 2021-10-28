@@ -20,6 +20,11 @@
             <artifactId>trie</artifactId>
             <version>1.0.2-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+            <version>3.0.0-alpha.11</version>
+        </dependency>
     </dependencies>
 
 </project>
