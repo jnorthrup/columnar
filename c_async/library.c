@@ -7,30 +7,30 @@
 #include <sys/epoll.h>
 #include <sys/mman.h>
 #include <aio.h>
-#include <sys/uio.h>
-#include <jmorecfg.h>
 #include <asm-generic/errno.h>
-
+#include <bits/types/struct_iovec.h>
+#include <sys/uio.h>
 
 void open_read();
 
 void open_mmap();
 
-int epoll_loop();
+int epoll_popen_loop_cat();
 
-int asio_read();
+int glibc_aio_read();
 
-int asio_suspend();
+int glibc_aio_suspend();
 
 int main(int, char **args) {
-    open_read();
+ struct iovec v;
+ open_read();
     open_mmap();
-    epoll_loop();
-    asio_read();
-    asio_suspend();
+    epoll_popen_loop_cat();
+    glibc_aio_read();
+    glibc_aio_suspend();
 }
 
-int epoll_loop() {
+int epoll_popen_loop_cat() {
 
     FILE *pIoFile = popen("cat /etc/sysctl.conf </dev/null", "r");   //works when stdin is piped, not dev/null tho
 
@@ -40,7 +40,7 @@ int epoll_loop() {
 
     int epoll_fd = epoll_create1(0);
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, event.data.fd, &event)) {
-        fprintf(stderr, "Failed to add file descriptor to epoll_loop\n");
+        fprintf(stderr, "Failed to add file descriptor to epoll_popen_loop_cat\n");
         close(epoll_fd);
         return 1;
     }
@@ -72,13 +72,13 @@ int epoll_loop() {
     }
 
     if (close(epoll_fd)) {
-        fprintf(stderr, "Failed to close epoll_loop file descriptor\n");
+        fprintf(stderr, "Failed to close epoll_popen_loop_cat file descriptor\n");
         return 1;
     }
     return 0;
 };
 
-int asio_read() {
+int glibc_aio_read() {
 
     int fd = open("/etc/sysctl.conf", O_RDONLY);
     if (fd < 0)
@@ -118,7 +118,7 @@ int asio_read() {
     free(my_aiocb);
 }
 
-int asio_suspend() {
+int glibc_aio_suspend() {
 
     int fd = open("/etc/sysctl.conf", O_RDONLY);
     if (fd < 0)
