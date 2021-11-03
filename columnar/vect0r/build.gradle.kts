@@ -21,6 +21,7 @@ kotlin {
 
     // generic linux code
     linuxX64()
+    mingwX64()
 
     // darwin macos code
     macosX64 {
@@ -32,13 +33,12 @@ kotlin {
         }
     }
 
-    mingwX64()
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-               api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-               api("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
             }
         }
         val commonTest by getting {
@@ -50,16 +50,16 @@ kotlin {
         val posixMain by creating {
             dependsOn(commonMain)
         }
-        val macosX64Main by getting {
-            dependsOn(posixMain)
-//            if (testApp?.toBoolean() == true) {
-//                kotlin.srcDirs("src/macosX64Runner/kotlin")
-//            }
-        }
         val linuxX64Main by getting {
             dependsOn(posixMain)
         }
-        val jvmMain by getting{dependencies{dependsOn(commonMain)}}
+        val mingwX64Main by getting {
+            dependsOn(posixMain)
+        }
+        val macosX64Main by getting {
+            dependsOn(posixMain)
+        }
+        val jvmMain by getting { dependencies { dependsOn(commonMain) } }
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test"))
