@@ -5,8 +5,9 @@ plugins {
 //    id("signing")
 }
 
-group = "com.vsiwest.columnar"
-version = "1.3.2"
+//group = "columnar"
+//version = "1.3.2"
+
 
 val isRunningInIde: Boolean = System.getProperty("idea.active")
     ?.toBoolean() == true
@@ -38,8 +39,8 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(project(":columnar:vect0r"))
-                api(project(":columnar:trie"))
+                api(project(":vect0r"))
+                api(project(":trie"))
 
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
@@ -68,21 +69,21 @@ kotlin {
     }
 }
 
-val dokkaOutputDir = "$buildDir/dokka"
-
-tasks.dokkaHtml {
-    outputDirectory.set(file(dokkaOutputDir))
-}
-
-val deleteDokkaOutputDir by tasks.registering(Delete::class) {
-    delete(dokkaOutputDir)
-}
-
-val javadocJar by tasks.registering(Jar::class) {
-    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
-    archiveClassifier.set("javadoc")
-    from(dokkaOutputDir)
-}
+//val dokkaOutputDir = "$buildDir/dokka"
+//
+//tasks.dokkaHtml {
+//    outputDirectory.set(file(dokkaOutputDir))
+//}
+//
+//val deleteDokkaOutputDir by tasks.registering(Delete::class) {
+//    delete(dokkaOutputDir)
+//}
+//
+//val javadocJar by tasks.registering(Jar::class) {
+//    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+//    archiveClassifier.set("javadoc")
+//    from(dokkaOutputDir)
+//}
 /*
 
 publishing {

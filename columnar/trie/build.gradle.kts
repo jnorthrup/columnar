@@ -1,12 +1,12 @@
 plugins {
     kotlin("multiplatform") version "1.6.0-RC"
-    id("org.jetbrains.dokka") version "1.4.32"
-    id("maven-publish")
-    id("signing")
+//    id("org.jetbrains.dokka") version "1.4.32"
+//    id("maven-publish")
+//    id("signing")
 }
 
-group = "com.vsiwest.columnar"
-version = "1.3.2"
+//group = "columnar"
+//version = "1.3.2"
 
 val isRunningInIde: Boolean = System.getProperty("idea.active")?.toBoolean() == true
 
@@ -17,6 +17,7 @@ repositories {
 }
 
 kotlin {
+
     jvm()
 
     // generic linux code
@@ -37,12 +38,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-               api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-               api("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
-            }
-        }
-        val commonTest by getting {
-            dependencies {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
             }
@@ -59,31 +54,31 @@ kotlin {
         val linuxX64Main by getting {
             dependsOn(posixMain)
         }
-        val jvmMain by getting{dependencies{dependsOn(commonMain)}}
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(kotlin("test-junit"))
             }
         }
+      
     }
 }
 
-val dokkaOutputDir = "$buildDir/dokka"
+//val dokkaOutputDir = "$buildDir/dokka"
 
-tasks.dokkaHtml {
-    outputDirectory.set(file(dokkaOutputDir))
-}
+//tasks.dokkaHtml {
+//    outputDirectory.set(file(dokkaOutputDir))
+//}
 
-val deleteDokkaOutputDir by tasks.registering(Delete::class) {
-    delete(dokkaOutputDir)
-}
-
-val javadocJar by tasks.registering(Jar::class) {
-    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
-    archiveClassifier.set("javadoc")
-    from(dokkaOutputDir)
-}
+//val deleteDokkaOutputDir by tasks.registering(Delete::class) {
+//    delete(dokkaOutputDir)
+//}
+//
+//val javadocJar by tasks.registering(Jar::class) {
+//    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+//    archiveClassifier.set("javadoc")
+//    from(dokkaOutputDir)
+//}
 /*
 
 publishing {
