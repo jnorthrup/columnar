@@ -8,7 +8,7 @@ import ports.ByteBuffer
 import vec.macros.*
 import kotlin.time.ExperimentalTime
 
-const val SPACE: Byte = ' '.toByte()
+const val SPACE: Byte = ' '.code.toByte()
 const val ZERO: Float = 0.toFloat()
 val DT_EPOCH=LocalDate(1970, 1, 1)
 val INSTANT_EPOCH=DT_EPOCH.atStartOfDayIn(TimeZone.UTC)

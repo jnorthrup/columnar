@@ -1,15 +1,15 @@
-package vec.macros
+package ports
 
-import ports.ByteBuffer
-import ports.assert
-import ports.ByteOrder.Companion.LITTLE_ENDIAN
+import ports.numberOfLeadingZeros
+import ports.numberOfTrailingZeros
 import kotlin.jvm.Transient
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.min
 
 //
 // Source code recreated from a .class file by IntelliJ IDEA
 // (powered by FernFlower decompiler)
-// 
+//
 open class BitSet {
     private lateinit var words: LongArray
 
@@ -71,7 +71,7 @@ open class BitSet {
             }
             val bytes = ByteArray(len)
             val wrap: ByteBuffer = ByteBuffer.wrap(bytes)
-            val bb: ByteBuffer = wrap.order(LITTLE_ENDIAN)
+            val bb: ByteBuffer = wrap.order(ByteOrder.LITTLE_ENDIAN)
             for (i in 0 until n - 1) {
                 bb.putLong(words[i])
             }
@@ -85,14 +85,14 @@ open class BitSet {
     }
 
     fun toLongArray(): LongArray {
-        return copyOf(words, wordsInUse)
+        return words.copyOf(wordsInUse)
     }
 
 
     private fun ensureCapacity(wordsRequired: Int) {
         if (words.size < wordsRequired) {
             val request: Int = max(2 * words.size, wordsRequired)
-            words = copyOf(words, request)
+            words = words.copyOf(request)
             sizeIsSticky = false
         }
     }
@@ -602,7 +602,7 @@ open class BitSet {
             while (n > 0 && longs[n - 1] == 0L) {
                 --n
             }
-            return BitSet(longs.copyOf( n))
+            return BitSet(longs.copyOf(n))
         }
 
 
@@ -617,8 +617,6 @@ open class BitSet {
         }
     }
 }
-
-fun copyOf(words: LongArray, wordsInUse: Int): LongArray = words.copyOf(wordsInUse)
 
 fun numberOfTrailingZeros(i: Long): Int {
     var i1 = i

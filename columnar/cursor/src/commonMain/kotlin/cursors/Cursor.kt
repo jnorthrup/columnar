@@ -191,7 +191,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
         }
     }
 
-    val normalizedRange = featureRange<Float>(seq.asIterable(), maxMinTwin as Tw1n<Float>)
+    val normalizedRange = featureRange (seq.asIterable(), maxMinTwin as Tw1n<Float>)
 
     val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
 

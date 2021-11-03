@@ -7,7 +7,7 @@ package com.github.lovasoa.bloomfilter
 package vec.util
 
 
-import vec.macros.BitSet
+import ports.BitSet
  import kotlin.math.round
 import kotlin.random.Random
 

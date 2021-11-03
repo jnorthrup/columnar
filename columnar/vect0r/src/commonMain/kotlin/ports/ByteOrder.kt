@@ -1,6 +1,5 @@
 package ports
 
-import ports.nativeOrder1
 
 /**
  * A typesafe enumeration for byte orders.
@@ -53,6 +52,10 @@ class ByteOrder(private val name: String) {
          * @return  The native byte order of the hardware upon which this Java
          * virtual machine is running
          */
-        fun nativeOrder()= nativeOrder1()
+        fun nativeOrder():ByteOrder= if( isLittleEndian) LITTLE_ENDIAN else BIG_ENDIAN
+
     }
+
 }
+
+expect val isLittleEndian:Boolean

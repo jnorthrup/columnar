@@ -5,6 +5,7 @@
 
 package vec.macros
 
+import ports.BitSet
 import ports.ByteBuffer
 import ports.SortedMap
 import ports.assert

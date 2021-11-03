@@ -5,6 +5,7 @@ import cursors.effects.head
 import org.junit.Test
 import vec.macros.size
 import vec.util._l
+import kotlin.test.assertEquals
 
 internal class NegateColumnTest {
     @Test
@@ -31,3 +32,5 @@ internal class NegateColumnTest {
 
 
 }
+
+  infix fun Any.shouldBe(i: Any?) = assertEquals(this, i)

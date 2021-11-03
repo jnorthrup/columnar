@@ -18,13 +18,16 @@ void open_mmap();
 
 int epoll_loop();
 
-int epoll_loop1();
+int asio_read();
+
+int asio_suspend();
 
 int main(int, char **args) {
     open_read();
     open_mmap();
     epoll_loop();
-    epoll_loop1();
+    asio_read();
+    asio_suspend();
 }
 
 int epoll_loop() {
@@ -75,22 +78,22 @@ int epoll_loop() {
     return 0;
 };
 
-int epoll_loop1() {
+int asio_read() {
 
     int fd = open("/etc/sysctl.conf", O_RDONLY);
-    if (fd < 0) 
+    if (fd < 0)
         perror("open");
 
     /* Zero out the aiocb structure (recommended)*/
     struct aiocb *my_aiocb = malloc(sizeof(struct aiocb));
     const int BUFSIZE = 40;
-    /*Allocate a data buffer for the aiocb request ∗*/
+    /*Allocate a data buffer for the aiocb request **/
     void *buf = malloc(BUFSIZE + 1);
     my_aiocb->aio_buf = buf;
-    if (!my_aiocb->aio_buf) 
+    if (!my_aiocb->aio_buf)
         perror("malloc");
 
-    /*∗ Initialize the necessary fields in the aiocb ∗*/
+    /** Initialize the necessary fields in the aiocb **/
     my_aiocb->aio_fildes = fd;
     my_aiocb->aio_nbytes = BUFSIZE;
     my_aiocb->aio_offset = 0;
@@ -105,9 +108,58 @@ int epoll_loop1() {
 
     printf("spun %d times\n", lag);
 
-    i > 0 ?
-    printf("buf:\n%s\n", (char *) buf) :
-    printf("res code %d\n", ret);
+    if (i > 0) {
+        printf("buf:\n%s\n", (char *) buf);
+    } else {
+        printf("res code %d\n", ret);
+    }
+
+    free(buf);
+    free(my_aiocb);
+}
+
+int asio_suspend() {
+
+    int fd = open("/etc/sysctl.conf", O_RDONLY);
+    if (fd < 0)
+        perror("open");
+
+    /* Zero out the aiocb structure (recommended)*/
+    struct aiocb *my_aiocb = malloc(sizeof(struct aiocb));
+    const int BUFSIZE = 40;
+
+    /*Allocate a data buffer for the aiocb request **/
+    void *buf = malloc(BUFSIZE + 1);
+
+    my_aiocb->aio_buf = buf;
+
+    if (!my_aiocb->aio_buf)
+        perror("malloc");
+
+    /** Initialize the necessary fields in the aiocb **/
+    my_aiocb->aio_fildes = fd;
+    my_aiocb->aio_nbytes = BUFSIZE;
+    my_aiocb->aio_offset = 0;
+
+    int ret = aio_read(my_aiocb);
+    if (ret < 0)
+        perror("aio_read");
+
+    int MAX_LIST = 1;
+
+    struct aioct *cblist[MAX_LIST] ;
+
+    /* Clear the list. */
+    bzero((char *) cblist, sizeof(cblist));
+
+    /* Load one or more references into the list */
+    cblist[0] = my_aiocb;
+    ret = aio_suspend(cblist, MAX_LIST, NULL);
+    if (ret != 0) {
+        printf("res code %d\n", ret);
+    } else {
+        printf("unsuspend:\n%s\n", (char *) buf);
+    }
 
     free(buf);
     free(my_aiocb);
@@ -145,5 +197,4 @@ void open_read() {
     } while (count > 0);
     free(buf);
     close(fd);
-
 }

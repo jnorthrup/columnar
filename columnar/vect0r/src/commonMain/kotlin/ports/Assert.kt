@@ -1,4 +1,4 @@
 package ports
 
-expect fun assert(c:Boolean)
-expect fun assert(c:Boolean, lazy:()->String)
+expect fun assert(c:Boolean):Unit
+expect fun assert(c:Boolean, lazy:()->String):Unit

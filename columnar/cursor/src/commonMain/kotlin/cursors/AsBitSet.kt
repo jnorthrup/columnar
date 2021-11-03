@@ -3,7 +3,11 @@ package cursors
 import cursors.context.Scalar
 import cursors.io.colIdx
 import cursors.io.scalars
-import vec.macros.*
+import ports.BitSet
+import vec.macros.Pai2
+import vec.macros.`⟲`
+import vec.macros.size
+import vec.macros.t2
 import kotlin.coroutines.CoroutineContext
 
 
@@ -11,12 +15,8 @@ fun Cursor.asBitSet(): Cursor = run {
     val xsize = colIdx.size
     val r = BitSet(size * xsize)
     repeat(size) { iy ->
-        (this at iy).let { (_, function) ->
-            repeat(xsize) { ix ->
-                if (true == (function(ix).first as? Boolean))
-                    r[iy * xsize + ix] = true
-            }
-        }
+        val (_: Int, fOfX: (Int) -> Pai2<Any?, () -> CoroutineContext>) = this at iy
+        repeat(xsize) { ix -> if (true == fOfX(ix).first) r[iy * xsize + ix] = true }
     }
     val (_: Int, b: (Int) -> Scalar) = scalars
     val prep: Array<() -> CoroutineContext> = Array(xsize) { (b(it)).`⟲` }
