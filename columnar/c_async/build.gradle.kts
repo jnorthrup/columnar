@@ -1,5 +1,5 @@
  plugins {
-    kotlin("multiplatform") version "1.6.0-RC"
+    kotlin ("multiplatform") version "1.6.0-RC"
 //    id("org.jetbrains.dokka") version "1.4.32"
 //    id("maven-publish")
 //    id("signing")
@@ -8,24 +8,27 @@
 group = "columnar"
 version = "1.0.2-SNAPSHOT"
 
-val isRunningInIde: Boolean = System.getProperty("idea.active")
-    ?.toBoolean() == true
-
-val testApp: String? by extra
-
 repositories {
     mavenCentral()
 }
 
-kotlin {
-    jvm()
+kotlin {  jvm()
+    linuxX64 { //sudo apt install liburing*
+        binaries {
+            staticLib()
+            compilations["main"].cinterops {
+                create("native") {
+                    defFile = project.file("${buildFile.parent}/src/linuxX64Main/c_async.def")
+                    packageName = "columnar.c_async"
+//                    includeDirs.headerFilterOnly("${buildFile.parent}/src/linuxX64Main/cinterop")
+                }
+            }
+        }
+    }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(project(":vect0r"))
-                api(project(":trie"))
-
             }
         }
         val commonTest by getting {
@@ -36,11 +39,11 @@ kotlin {
         val posixMain by creating {
             dependsOn(commonMain)
         }
+        val linuxX64Main by getting{dependsOn(posixMain)}
 
         val jvmMain by getting{
             dependencies{
                 dependsOn(commonMain)
-                api("org.bouncycastle:bcprov-jdk15on:1.69")
             }
         }
         val jvmTest by getting {

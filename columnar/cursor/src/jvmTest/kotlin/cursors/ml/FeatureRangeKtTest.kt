@@ -1,18 +1,17 @@
 package cursors.ml
 
-import junit.framework.Assert.assertEquals
-import org.junit.Test
 import vec.macros.Tw1n
 import vec.ml.deNormalize
 import vec.ml.normalize
+import kotlin.test.assertEquals
 
 class FeatureRangeKtTest {
 
-    @Test
+    @kotlin.test.Test
     fun normalize() {
 
-        (Tw1n(10.0, 100.0).normalize(40.0))
-        assertEquals(0.0, (Tw1n(10.0, 100.0).normalize(10.0)))
+        Tw1n(10.0, 100.0).normalize(40.0)
+        assertEquals(0.0, Tw1n(10.0, 100.0).normalize(10.0))
         run {
             val normalize = Tw1n(10.0, 100.0).normalize(100.0)
             assertEquals(1.0, normalize)

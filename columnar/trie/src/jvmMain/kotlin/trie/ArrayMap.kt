@@ -19,10 +19,10 @@ class ArrayMap<K, V>(
     override val values get() = entre.map(Map.Entry<K, V>::value)
     val comparator = entryComparator<K, V>(cmp)
 
-    override fun containsKey(key1: K) = 0 <= binIndexOf(key1)
+    override fun containsKey(key: K) = 0 <= binIndexOf(key)
 
     override fun containsValue(value: V) = entre.any { (_, v) -> Objects.equals(value, v) }
-    override fun get(key1: K) = binIndexOf(key1).takeIf { it >= 0 }?.let { ix -> entre[ix].value }
+    override fun get(key: K) = binIndexOf(key).takeIf { it >= 0 }?.let { ix -> entre[ix].value }
 
     private fun binIndexOf(key1: K) = Arrays.binarySearch(entre, comparatorKeyShim(key1), comparator)
 

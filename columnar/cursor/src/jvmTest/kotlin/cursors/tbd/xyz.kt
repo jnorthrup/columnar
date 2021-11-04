@@ -1,6 +1,6 @@
 package cursors.tbd
 
-import org.junit.Test
+import kotlin.test.Test
 import vec.macros.combine
 import vec.util._v
 

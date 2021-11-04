@@ -1,6 +1,6 @@
 package cursors
 
-import org.junit.Test
+import kotlin.test.Test
 import org.w3c.dom.Document
 import org.w3c.dom.NodeList
 import vec.macros.Vect0r

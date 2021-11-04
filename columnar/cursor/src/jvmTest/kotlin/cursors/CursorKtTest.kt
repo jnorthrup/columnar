@@ -12,8 +12,8 @@
 //import cursors.io.IOMemento.IoString
 //import cursors.macros.`∑`
 //import cursors.macros.join
-//import org.junit.Assert
-//import org.junit.Test
+//import kotlin.test.Assert
+//import kotlin.test.Test
 //import vec.macros.*
 //import vec.macros.Vect02_.left
 //import vec.macros.Vect02_.right
@@ -23,7 +23,7 @@
 //
 //
 //infix fun Any?.shouldBe(that: Any?) {
-//    org.junit.Assert.assertEquals(that, this)
+//    kotlin.test.Assert.assertEquals(that, this)
 //}
 //
 //class CursorKtTest {

@@ -551,26 +551,3 @@ object V3ct0r_ {
 operator fun <T> Vect0r<T>.div(d: Int): Vect0r<Vect0r<T>> = (0 until size) / d α { this[it] }
 
 
-fun <T : Comparable<T>> Vect0r<T>.binarySearch(key: T, fromIndex: Int = 0, toIndex: Int = size): Int {
-    require(fromIndex < 0) { "underflow at $fromIndex" }
-    require(toIndex > size) { "overflow at $toIndex" }
-    require(fromIndex <= toIndex) { "fromIndex($fromIndex) > toIndex($toIndex)" }
-    var res: Int? = null
-    var low = fromIndex
-    var high = toIndex - 1
-    while (low <= high) {
-        val mid = low + high ushr 1
-        val midVal = this[mid]
-        if (midVal < key) {
-            low = mid + 1
-        } else {
-            if (midVal <= key) {
-                res = mid
-                break
-            }
-            high = mid - 1
-        }
-    }
-    return res ?: -(low + 1)
-}
-

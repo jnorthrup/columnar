@@ -2,7 +2,7 @@ package cursors
 
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.IOMemento
-import org.junit.Test
+import kotlin.test.Test
 import vec.macros.Vect0r
 import vec.macros.t2
 import vec.macros.toList

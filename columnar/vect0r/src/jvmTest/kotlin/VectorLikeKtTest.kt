@@ -1,14 +1,13 @@
 package cursors
 
-import org.junit.*
-import org.junit.Assert.*
+import kotlin.test.*
 import vec.macros.*
 import vec.util._a
 import vec.util._l
 
 
 infix fun Any?.shouldBe(that: Any?) {
-    org.junit.Assert.assertEquals(that, this)
+ assertEquals(that, this)
 }
 
 class VectorLikeKtTest {

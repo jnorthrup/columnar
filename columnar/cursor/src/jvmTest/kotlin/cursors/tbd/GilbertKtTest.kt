@@ -1,12 +1,11 @@
 package cursors.tbd
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
-import org.junit.Test
+import kotlin.math.abs
+import kotlin.test.*
 
 typealias IntIntPair = Pair<Int, Int>
 
-/** TODO more exhasutive tests  */
+/** TODO more exhaustive tests  */
 internal class GilbertCurveTest {
     @Test
     fun testSizes() {
@@ -17,7 +16,9 @@ internal class GilbertCurveTest {
         private fun testGilbert(w: Int, h: Int) {
 
             val pointsOrdered = mutableListOf<IntIntPair>()
-            gilbertCurve(w, h) { x, y -> pointsOrdered += (x to y) }
+            gilbertCurve(w, h, fun(x: Int, y: Int) {
+                pointsOrdered += (x to y)
+            })
 
             assertEquals(w * h, pointsOrdered.distinct().size/*, "expected # of unique points"*/)
 
@@ -25,7 +26,7 @@ internal class GilbertCurveTest {
             for (i in 0 until pointsOrdered.size - 1) {
                 val a: IntIntPair = pointsOrdered[i]
                 val b: IntIntPair = pointsOrdered[i + 1]
-                assertTrue(Math.abs(a.first - b.first) + Math.abs(a.second - b.second) <= 2)
+                assertTrue(abs(a.first - b.first) + abs(a.second - b.second) <= 2)
             }
         }
     }

@@ -1,11 +1,11 @@
 package vec.ml
 
-import org.junit.Test
+import kotlin.test.*
 import vec.util._l
 
 
 infix fun Any?.shouldBe(that: Any?) {
-    org.junit.Assert.assertEquals(that, this)
+ assertEquals(that, this)
 }
 
 class FeatureRangeKtTest {

@@ -1,8 +1,8 @@
 package cursors
 
-import cursors.context.TokenizedRow
+import cursors.context.CsvArraysCursor
 import cursors.effects.head
-import org.junit.Test
+import kotlin.test.Test
 import vec.macros.size
 import vec.util._l
 import kotlin.test.assertEquals
@@ -11,7 +11,7 @@ internal class NegateColumnTest {
     @Test
     fun testNegate() {
         val csvLines1 =
-            TokenizedRow.CsvArraysCursor(
+            CsvArraysCursor(
                 _l[
                         "One,Two,Three",
                         "1,2,3",

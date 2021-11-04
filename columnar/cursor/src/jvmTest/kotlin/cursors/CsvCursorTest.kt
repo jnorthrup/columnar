@@ -1,12 +1,13 @@
 package cursors
 
-import cursors.context.TokenizedRow
-import cursors.context.TokenizedRow.Companion.CsvArraysCursor
+import cursors.context.CsvArraysCursor
 import cursors.io.IOMemento.*
 import cursors.io.RowVec
 import junit.framework.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import vec.macros.Pai2
 import vec.macros.Vect02_.left
+import vec.macros.Vect0r
 import vec.macros.get
 import vec.util._v
 import java.nio.file.Files
@@ -16,7 +17,7 @@ import kotlin.streams.asSequence
 
 
 class CsvCursorTest {
-    val dt = _v[IoLocalDate as TypeMemento, IoInt, IoString, IoString, IoString, IoString, IoString, IoString,
+    val dt: Vect0r<TypeMemento> = _v[IoLocalDate, IoInt, IoString, IoString, IoString, IoString, IoString, IoString,
             IoString, IoString, IoString, IoInt, IoInt, IoInt]
 
 
@@ -38,7 +39,7 @@ class CsvCursorTest {
     @Test
     fun ArrayCsvCursor() {
 
-        val curs = TokenizedRow.CsvArraysCursor(Files.lines(path).asSequence().asIterable(), dt)
+        val curs = CsvArraysCursor(Files.lines(path).asSequence().asIterable(), dt)
 
         val testRow: RowVec = curs at 1
 

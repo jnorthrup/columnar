@@ -1,21 +1,23 @@
 package cursors
 
-import junit.framework.TestCase
-import org.junit.Test
+
+import kotlinx.coroutines.runBlocking
+import kotlin.test.*
 import vec.CirQlar
 import vec.macros.f1rst
 import vec.macros.last
 import vec.macros.toList
 
-class CirQlarTest : TestCase() {
-
+class CirQlarTest {
     @Test
-    suspend fun testCirQtoList() {
+    fun testCirQtoList() = runBlocking {
 
         val cirQ = CirQlar<Int>(3)
         (-1 until 7).forEach {
             System.err.println(cirQ.toList())
+        
             cirQ.offer(it)
+
         }
         val list = cirQ.toList()
         System.err.println(list)
@@ -25,7 +27,7 @@ class CirQlarTest : TestCase() {
     }
 
     @Test
-    suspend fun testtoVect0r() {
+    fun testtoVect0r() = runBlocking {
         val cirQ = CirQlar<Int>(3)
         (-1 until 7).forEach {
             System.err.println(cirQ.toVect0r().toList())

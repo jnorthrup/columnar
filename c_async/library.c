@@ -9,7 +9,6 @@
 #include <aio.h>
 #include <asm-generic/errno.h>
 #include <bits/types/struct_iovec.h>
-#include <sys/uio.h>
 
 void open_read();
 

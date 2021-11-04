@@ -174,7 +174,6 @@ fun Cursor.writeISAMMeta(
             fileWriter ->
 
         val s = this.scalars as Vect02<TypeMemento, String?>
-
         val coords = wcoords.toList().map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right.map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left.toArray().mapIndexed<TypeMemento, Any> { ix, it ->

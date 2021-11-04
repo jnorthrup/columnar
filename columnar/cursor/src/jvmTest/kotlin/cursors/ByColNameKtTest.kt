@@ -1,16 +1,16 @@
 package cursors
 
-import cursors.context.TokenizedRow
+import cursors.context.CsvArraysCursor
 import cursors.effects.head
 import cursors.io.colIdx
-import org.junit.Test
+import kotlin.test.Test
 import vec.util._l
 
 internal class ByColNameKtTest {
 
     @Test
     fun testTheNegation() {
-        val curs = TokenizedRow.CsvArraysCursor(
+        val curs = CsvArraysCursor(
             _l[
                     "c1,c2,c3,c4,c5,c6",
                     "1,2,3,4,5,6"

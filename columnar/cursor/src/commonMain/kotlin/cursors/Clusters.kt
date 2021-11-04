@@ -5,21 +5,10 @@ import cursors.io.*
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
-import vec.util.BloomFilter
 import vec.util.logDebug
 import kotlin.math.max
 import kotlin.math.sqrt
 
-
-fun bloomAccess(groupClusters: Iterable<IntArray>) = groupClusters α {
-    val n = it.size
-    val bloomFilter = BloomFilter(n/*, n * 11*/).apply {
-        for (i in it) {
-            add(i)
-        }
-    }
-    bloomFilter t2 it
-}
 
 
 /**

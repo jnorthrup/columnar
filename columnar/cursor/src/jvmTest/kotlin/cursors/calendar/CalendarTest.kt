@@ -12,7 +12,7 @@
 //import cursors.get
 //import cursors.io.*
 //import cursors.macros.join
-//import org.junit.Test
+//import kotlin.test.Test
 //import vec.macros.*
 //import vec.macros.Vect02_.left
 //import vec.macros.Vect02_.right

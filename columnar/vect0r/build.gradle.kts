@@ -21,21 +21,6 @@ kotlin {
 //    js { nodejs() }
 
     jvm()
-
-    // generic linux code
-    linuxX64()
-
-    // darwin macos code
-    macosX64 {
-//        if (testApp?.toBoolean() == true) {
-//            binaries {
-//                executable()
-//            }
-//        }
-    }
-
-//    mingwX64()
-
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -48,27 +33,12 @@ kotlin {
         val posixMain by creating {
             dependsOn(commonMain)
         }
-        val macosX64Main by getting {
-            dependsOn(posixMain)
-//            if (testApp?.toBoolean() == true) {
-//                kotlin.srcDirs("src/macosX64Runner/kotlin")
-//            }
-        }
-        val linuxX64Main by getting {
-            dependsOn(posixMain)
-        }
-        val jvmTest by getting {
+        val jvmTest by getting { dependsOn(commonMain)
             dependencies {
                 implementation(kotlin("test"))
                 implementation(kotlin("test-junit"))
             }
         }
-//        val jsTest by getting {
-//            dependencies {
-//                implementation(kotlin("test"))
-//                implementation(kotlin("test-js"))
-//            }
-//        }
     }
 }
 //

@@ -1,15 +1,15 @@
 package cursors
 
-import cursors.context.TokenizedRow
+import cursors.context.CsvArraysCursor
 import cursors.effects.show
 import cursors.io.IOMemento
-import org.junit.Test
+import kotlin.test.Test
 import vec.ml.DummySpec
 import vec.util._l
 
 internal class CategoriesKtTest {
 
-    val curs = TokenizedRow.CsvArraysCursor(
+    val curs = CsvArraysCursor(
 
         _l["something,notsomething,cbf",
                 "john,0,below me",

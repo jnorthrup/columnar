@@ -77,7 +77,7 @@ import kotlin.jvm.JvmName
 typealias Cursor = Vect0r<RowVec>
 
 // infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
-infix fun <T : Int> Cursor.at(t: T) = second.invoke(t)
+infix fun Cursor.at(t: Int) = second.invoke(t)
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -166,27 +166,27 @@ fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
     o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
 @JvmName("NormalizeF1")
-fun <T : Float> Cursor.normalizeFloatColumn(colName: String) = run {
+fun Cursor.normalizeFloatColumn(colName: String) = run {
     val ptype = IOMemento.IoFloat
     val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
     inner_normalize(colName, maxMinTwin, ptype)
 }
 
 @JvmName("NormalizeD1")
-fun <T : Double> Cursor.normalizeDoubleColumn(colName: String) = run {
+fun Cursor.normalizeDoubleColumn(colName: String) = run {
     val ptype = IOMemento.IoDouble
     val maxMinTwin: Tw1n<Double> = Double.POSITIVE_INFINITY t2 Double.NEGATIVE_INFINITY
-    inner_normalize<Double>(colName, maxMinTwin, ptype)
+    inner_normalize (colName, maxMinTwin, ptype)
 }
 
 @JvmName("NormalizeF2")
-fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento) = run {
+fun Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<Float>, ptype: IOMemento) = run {
     val colIdx = colIdx[colName][0]
     val colCurs = this[colIdx]
     val seq = this.let { curs ->
         sequence {
             for (iy in 0 until curs.size) {
-                yield((colCurs at iy).left[0] as T)
+                yield((colCurs at iy).left[0] as Float)
             }
         }
     }
@@ -200,7 +200,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
             val row = (c at iy)
             RowVec(row.size) { ix: Int ->
                 val (v) = row[ix]
-                normalizedRange.normalize(v as T) t2 ctx
+                normalizedRange.normalize(v as Float) t2 ctx
             }
         }
     })
@@ -209,8 +209,7 @@ fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pty
 
 
 @JvmName("NormalizeD2")
-
-fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
+fun Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<Double>, ptype: IOMemento): Cursor {
     val colIdx = colIdx[colName][0]
     val colCurs = this[colIdx]
     val seq = this.let { curs ->
@@ -218,7 +217,7 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
             for (iy in 0 until curs.size) {
                 val any = (colCurs at iy).left[0]
                 any.also { }
-                yield(any as T)
+                yield(any as Double)
             }
         }
     }
@@ -232,7 +231,7 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
             val row = (c at iy)
             RowVec(row.size) { ix: Int ->
                 val (v) = row[ix]
-                normalizedRange.normalize(v as T) t2 ctx
+                normalizedRange.normalize(v as Double) t2 ctx
             }
         }
     })

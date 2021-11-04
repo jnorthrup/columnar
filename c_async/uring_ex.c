@@ -1,23 +1,17 @@
-/**
- * https://unixism.net/loti/low_level.html
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
+#include <asm/unistd.h>
 #include <sys/ioctl.h>
-#include <sys/syscall.h>
 #include <sys/mman.h>
-#include <sys/uio.h>
-#include <linux/fs.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <sys/stat.h>
+#include <liburing.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
 
 /* If your compilation fails because the header file below is missing,
-* your kernel is probably too old to support io_uring.
-* */
-#include <linux/io_uring.h>
+ * your kernel is probably too old to support io_uring.
+ * */
 
 #define QUEUE_DEPTH 1
 #define BLOCK_SZ    1024
@@ -52,14 +46,14 @@ struct submitter {
 
 struct file_info {
     off_t file_sz;
-    struct iovec iovecs[];      /* Referred by readv/writev */
+    struct iovec *iovecs  ;      /* Referred by readv/writev */
 };
 
 /*
-* This code is written in the days when io_uring-related system calls are not
-* part of standard C libraries. So, we roll our own system call wrapper
-* functions.
-* */
+ * This code is written in the days when io_uring-related system calls are not
+ * part of standard C libraries. So, we roll our own system call wrapper
+ * functions.
+ * */
 
 int io_uring_setup(unsigned entries, struct io_uring_params *p)
 {
@@ -74,9 +68,9 @@ int io_uring_enter(int ring_fd, unsigned int to_submit,
 }
 
 /*
-* Returns the size of the file whose open file descriptor is passed in.
-* Properly handles regular file and block devices as well. Pretty.
-* */
+ * Returns the size of the file whose open file descriptor is passed in.
+ * Properly handles regular file and block devices as well. Pretty.
+ * */
 
 off_t get_file_size(int fd) {
     struct stat st;
@@ -99,13 +93,13 @@ off_t get_file_size(int fd) {
 }
 
 /*
-* io_uring requires a lot of setup which looks pretty hairy, but isn't all
-* that difficult to understand. Because of all this boilerplate code,
-* io_uring's author has created liburing, which is relatively easy to use.
-* However, you should take your time and understand this code. It is always
-* good to know how it all works underneath. Apart from bragging rights,
-* it does offer you a certain strange geeky peace.
-* */
+ * io_uring requires a lot of setup which looks pretty hairy, but isn't all
+ * that difficult to understand. Because of all this boilerplate code,
+ * io_uring's author has created liburing, which is relatively easy to use.
+ * However, you should take your time and understand this code. It is always
+ * good to know how it all works underneath. Apart from bragging rights,
+ * it does offer you a certain strange geeky peace.
+ * */
 
 int app_setup_uring(struct submitter *s) {
     struct app_io_sq_ring *sring = &s->sq_ring;
@@ -114,10 +108,10 @@ int app_setup_uring(struct submitter *s) {
     void *sq_ptr, *cq_ptr;
 
     /*
-    * We need to pass in the io_uring_params structure to the io_uring_setup()
-    * call zeroed out. We could set any flags if we need to, but for this
-    * example, we don't.
-    * */
+     * We need to pass in the io_uring_params structure to the io_uring_setup()
+     * call zeroed out. We could set any flags if we need to, but for this
+     * example, we don't.
+     * */
     memset(&p, 0, sizeof(p));
     s->ring_fd = io_uring_setup(QUEUE_DEPTH, &p);
     if (s->ring_fd < 0) {
@@ -126,22 +120,22 @@ int app_setup_uring(struct submitter *s) {
     }
 
     /*
-    * io_uring communication happens via 2 shared kernel-user space ring buffers,
-    * which can be jointly mapped with a single mmap() call in recent kernels.
-    * While the completion queue is directly manipulated, the submission queue
-    * has an indirection array in between. We map that in as well.
-    * */
+     * io_uring communication happens via 2 shared kernel-user space the_ring_on_the_stack buffers,
+     * which can be jointly mapped with a single mmap() call in recent kernels.
+     * While the completion queue is directly manipulated, the submission queue
+     * has an indirection array in between. We map that in as well.
+     * */
 
     int sring_sz = p.sq_off.array + p.sq_entries * sizeof(unsigned);
-    int cring_sz = p.cq_off.cqes + p.cq_entries * sizeof(struct io_uring_cqe);
+    int cring_sz = p.cq_off.cqes + p.cq_entries * sizeof (struct io_uring_cqe);
 
     /* In kernel version 5.4 and above, it is possible to map the submission and
-    * completion buffers with a single mmap() call. Rather than check for kernel
-    * versions, the recommended way is to just check the features field of the
-    * io_uring_params structure, which is a bit mask. If the
-    * IORING_FEAT_SINGLE_MMAP is set, then we can do away with the second mmap()
-    * call to map the completion ring.
-    * */
+     * completion buffers with a single mmap() call. Rather than check for kernel
+     * versions, the recommended way is to just check the features field of the
+     * io_uring_params structure, which is a bit mask. If the
+     * IORING_FEAT_SINGLE_MMAP is set, then we can do away with the second mmap()
+     * call to map the completion the_ring_on_the_stack.
+     * */
     if (p.features & IORING_FEAT_SINGLE_MMAP) {
         if (cring_sz > sring_sz) {
             sring_sz = cring_sz;
@@ -149,9 +143,9 @@ int app_setup_uring(struct submitter *s) {
         cring_sz = sring_sz;
     }
 
-    /* Map in the submission and completion queue ring buffers.
-    * Older kernels only map in the submission queue, though.
-    * */
+    /* Map in the submission and completion queue the_ring_on_the_stack buffers.
+     * Older kernels only map in the submission queue, though.
+     * */
     sq_ptr = mmap(0, sring_sz, PROT_READ | PROT_WRITE,
                   MAP_SHARED | MAP_POPULATE,
                   s->ring_fd, IORING_OFF_SQ_RING);
@@ -163,7 +157,7 @@ int app_setup_uring(struct submitter *s) {
     if (p.features & IORING_FEAT_SINGLE_MMAP) {
         cq_ptr = sq_ptr;
     } else {
-        /* Map in the completion queue ring buffer in older kernels separately */
+        /* Map in the completion queue the_ring_on_the_stack buffer in older kernels separately */
         cq_ptr = mmap(0, cring_sz, PROT_READ | PROT_WRITE,
                       MAP_SHARED | MAP_POPULATE,
                       s->ring_fd, IORING_OFF_CQ_RING);
@@ -173,7 +167,7 @@ int app_setup_uring(struct submitter *s) {
         }
     }
     /* Save useful fields in a global app_io_sq_ring struct for later
-    * easy reference */
+     * easy reference */
     sring->head = sq_ptr + p.sq_off.head;
     sring->tail = sq_ptr + p.sq_off.tail;
     sring->ring_mask = sq_ptr + p.sq_off.ring_mask;
@@ -191,7 +185,7 @@ int app_setup_uring(struct submitter *s) {
     }
 
     /* Save useful fields in a global app_io_cq_ring struct for later
-    * easy reference */
+     * easy reference */
     cring->head = cq_ptr + p.cq_off.head;
     cring->tail = cq_ptr + p.cq_off.tail;
     cring->ring_mask = cq_ptr + p.cq_off.ring_mask;
@@ -202,10 +196,10 @@ int app_setup_uring(struct submitter *s) {
 }
 
 /*
-* Output a string of characters of len length to stdout.
-* We use buffered output here to be efficient,
-* since we need to output character-by-character.
-* */
+ * Output a string of characters of len length to stdout.
+ * We use buffered output here to be efficient,
+ * since we need to output character-by-character.
+ * */
 void output_to_console(char *buf, int len) {
     while (len--) {
         fputc(*buf++, stdout);
@@ -213,10 +207,10 @@ void output_to_console(char *buf, int len) {
 }
 
 /*
-* Read from completion queue.
-* In this function, we read completion events from the completion queue, get
-* the data buffer that will have the file data and print it to the console.
-* */
+ * Read from completion queue.
+ * In this function, we read completion events from the completion queue, get
+ * the data buffer that will have the file data and print it to the console.
+ * */
 
 void read_from_cq(struct submitter *s) {
     struct file_info *fi;
@@ -229,9 +223,9 @@ void read_from_cq(struct submitter *s) {
     do {
         read_barrier();
         /*
-        * Remember, this is a ring buffer. If head == tail, it means that the
-        * buffer is empty.
-        * */
+         * Remember, this is a the_ring_on_the_stack buffer. If head == tail, it means that the
+         * buffer is empty.
+         * */
         if (head == *cring->tail)
             break;
 
@@ -254,12 +248,12 @@ void read_from_cq(struct submitter *s) {
     write_barrier();
 }
 /*
-* Submit to submission queue.
-* In this function, we submit requests to the submission queue. You can submit
-* many types of requests. Ours is going to be the readv() request, which we
-* specify via IORING_OP_READV.
-*
-* */
+ * Submit to submission queue.
+ * In this function, we submit requests to the submission queue. You can submit
+ * many types of requests. Ours is going to be the readv() request, which we
+ * specify via IORING_OP_READV.
+ *
+ * */
 int submit_to_sq(char *file_path, struct submitter *s) {
     struct file_info *fi;
 
@@ -287,11 +281,11 @@ int submit_to_sq(char *file_path, struct submitter *s) {
     fi->file_sz = file_sz;
 
     /*
-    * For each block of the file we need to read, we allocate an iovec struct
-    * which is indexed into the iovecs array. This array is passed in as part
-    * of the submission. If you don't understand this, then you need to look
-    * up how the readv() and writev() system calls work.
-    * */
+     * For each block of the file we need to read, we allocate an iovec struct
+     * which is indexed into the iovecs array. This array is passed in as part
+     * of the submission. If you don't understand this, then you need to look
+     * up how the readv() and writev() system calls work.
+     * */
     while (bytes_remaining) {
         off_t bytes_to_read = bytes_remaining;
         if (bytes_to_read > BLOCK_SZ)
@@ -310,7 +304,7 @@ int submit_to_sq(char *file_path, struct submitter *s) {
         bytes_remaining -= bytes_to_read;
     }
 
-    /* Add our submission queue entry to the tail of the SQE ring buffer */
+    /* Add our submission queue entry to the tail of the SQE the_ring_on_the_stack buffer */
     next_tail = tail = *sring->tail;
     next_tail++;
     read_barrier();
@@ -333,11 +327,11 @@ int submit_to_sq(char *file_path, struct submitter *s) {
     }
 
     /*
-    * Tell the kernel we have submitted events with the io_uring_enter() system
-    * call. We also pass in the IOURING_ENTER_GETEVENTS flag which causes the
-    * io_uring_enter() call to wait until min_complete events (the 3rd param)
-    * complete.
-    * */
+     * Tell the kernel we have submitted events with the io_uring_enter() system
+     * call. We also pass in the IOURING_ENTER_GETEVENTS flag which causes the
+     * io_uring_enter() call to wait until min_complete events (the 3rd param)
+     * complete.
+     * */
     int ret =  io_uring_enter(s->ring_fd, 1,1,
                               IORING_ENTER_GETEVENTS);
     if(ret < 0) {
@@ -369,13 +363,11 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 1; i < argc; i++) {
-        int sq = submit_to_sq(argv[i], s);
-        if (!sq) {
-            read_from_cq(s);
-        } else {
-            fprintf(stderr, "Error reading file %d\n", sq);
+        if(submit_to_sq(argv[i], s)) {
+            fprintf(stderr, "Error reading file\n");
             return 1;
         }
+        read_from_cq(s);
     }
 
     return 0;
