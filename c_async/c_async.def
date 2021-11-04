@@ -1,0 +1,4 @@
+headers.linux_x64 = ac.h
+package  = async_c
+linkerOpts.linux_x64= -luring
+compilerOpts.linux_x64 =   -I.  -I/usr/include   -I/usr/include/x86_64-linux-gnu
