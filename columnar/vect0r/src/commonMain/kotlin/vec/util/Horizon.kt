@@ -34,7 +34,7 @@ fun main(args: Array<String>) {
     (0..evens.lastIndex step 2).forEach { x ->
         val (a, b) = evens[x]
         @Suppress("UNCHECKED_CAST") val arrayOfKFunctions: Array<(Int, Int, Int) -> Int> =
-            _a[::horizon as (Int, Int, Int) -> Int, ::hzInvSqr as (Int, Int, Int) -> Int]
+            _a[::horizon as (Int, Int, Int) -> Int, ::hzInvSqr as (Int, Int, Int) -> Int] as Array<(Int, Int, Int) -> Int>
         arrayOfKFunctions.map { fn: (Int, Int, Int) -> Int ->
             println("--------$fn")
             println("showing $a of $b ${

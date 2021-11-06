@@ -394,17 +394,17 @@ fun <T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -> get(i) }
 /**cloning and reifying Vect0r to DoubleArray*/
 fun <T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
 
-fun <T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-fun <T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
-fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
-fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
-fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
-fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
-fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
-fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
-fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
-fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> this.get(it) })
+fun <T> Array<T>.toVect0r(): Vect0r<T> = size t2 ::get
+fun <T> List<T>.toVect0r(): Vect0r<T> = size t2 ::get
+fun IntArray.toVect0r(): Vect0r<Int> = size t2 ::get
+fun LongArray.toVect0r(): Vect0r<Long> = size t2 ::get
+fun DoubleArray.toVect0r(): Vect0r<Double> = size t2 ::get
+fun FloatArray.toVect0r(): Vect0r<Float> = (size t2 ::get) as Vect0r<Float>
+fun ByteArray.toVect0r(): Vect0r<Byte> = (size t2 ::get) as Vect0r<Byte>
+fun CharArray.toVect0r(): Vect0r<Char> = (size t2 ::get) as Vect0r<Char>
+fun CharSequence.toVect0r(): Vect0r<Char> = (length t2 ::get) as Vect0r<Char>
+fun String.toVect0r(): Vect0r<String> = (length t2 ::get) as Vect0r<String>
+fun BitSet.toVect0r(): Vect0r<Boolean> = length() t2 { this[it] }
 
 
 fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
@@ -476,7 +476,7 @@ operator fun <S, E : Enum<E>> Vect0r<S>.get(e: E) = get(e.ordinal)
  * in the more expensive things that old code does with maps
  */
 fun <K : Int, V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> = let { top ->
-    ((this as? SortedMap<K,V>)?.keys ?: keys.sorted()).toIntArray().let { k ->
+    ((this as? SortedMap<K, V>)?.keys ?: keys.sorted()).toIntArray().let { k ->
         0 t2 if (top.size <= 16)
             { x: Int ->
                 var r: V? = null
@@ -502,7 +502,7 @@ fun <K : Int, V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> = let { top ->
  * pay once for the conversion from a mutable map to an array map and all that implies
  */
 fun <K : Int, V> Map<K, V>.sparseVect0r(): Vect0r<V?> = let { top ->
-    ((this as? SortedMap<K,V>)?.entries ?: entries.sortedBy { it.key }).toTypedArray().let { entries ->
+    ((this as? SortedMap<K, V>)?.entries ?: entries.sortedBy { it.key }).toTypedArray().let { entries ->
         val k = keys.toIntArray()
         0 t2 if (top.size <= 16)
             { x: Int ->

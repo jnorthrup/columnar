@@ -27,7 +27,8 @@ internal class CategoriesKtTest {
 
     @Test
     fun testCategories() {
-        curs.categories().show()
+        val categories = curs.categories()
+        categories.show()
         curs.categories(DummySpec.Last).show()
         curs.categories(1).show()
     }

@@ -14,15 +14,16 @@ repositories {
 
 kotlin {  jvm()
     linuxX64 { //sudo apt install liburing*
-        binaries {
-            staticLib()
-            compilations["main"].cinterops {
-                create("native") {
-                    defFile = project.file("${buildFile.parent}/src/linuxX64Main/c_async.def")
-                    packageName = "columnar.c_async"
-//                    includeDirs.headerFilterOnly("${buildFile.parent}/src/linuxX64Main/cinterop")
-                }
+        compilations["main"].cinterops {
+
+                create("linuxX64") {
+                defFile = project.file("src/linuxX64Main/c_async.def")
+                packageName = "c_async"
             }
+        }
+        binaries {
+
+            staticLib()
         }
     }
 

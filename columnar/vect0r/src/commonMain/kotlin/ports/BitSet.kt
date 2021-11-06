@@ -1,7 +1,5 @@
 package ports
 
-import ports.numberOfLeadingZeros
-import ports.numberOfTrailingZeros
 import kotlin.jvm.Transient
 import kotlin.math.max
 import kotlin.math.min

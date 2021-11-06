@@ -1,3 +1,3 @@
 package ports
 
-actual val isLittleEndian: Boolean by lazy { Platform.isLittleEndian }
+actual fun isLittleEndian(): Boolean = Platform.isLittleEndian

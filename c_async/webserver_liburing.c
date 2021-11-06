@@ -313,7 +313,7 @@ void handle_get_method(char *path, int client_socket) {
     } else {
         /* Check if this is a normal/regular file and not a directory or something else */
         if (S_ISREG(path_stat.st_mode)) {
-            struct request *req = zh_malloc(sizeof(*req) + (sizeof(struct iovec) * 6));
+            struct request *req = zh_malloc(sizeof(*req) + sizeof(struct iovec) * 6);
             req->iovec_count = 6;
             req->client_socket = client_socket;
             send_headers(final_path, path_stat.st_size, req->iov);

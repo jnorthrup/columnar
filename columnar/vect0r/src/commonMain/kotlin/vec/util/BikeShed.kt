@@ -2,7 +2,7 @@
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
 @file:Suppress("NOTHING_TO_",
-    "UNCHECKED_CAST",
+//    "UNCHECKED_CAST",
     "ClassName",
     "HasPlatformType",
     "NOTHING_TO_INLINE",
@@ -66,7 +66,7 @@ object _a {
     @OptIn(ExperimentalUnsignedTypes::class) operator fun get(vararg t: UByte) = t
     @OptIn(ExperimentalUnsignedTypes::class) operator fun get(vararg t: ULong) = t
     @OptIn(ExperimentalUnsignedTypes::class) operator fun get(vararg t: UShort) = t
-    operator fun <T> get(vararg t: T) = t as Array<T>
+    inline operator fun <T> get(vararg t: T): Array<out T> = t
 }
 
 /**

@@ -21,6 +21,7 @@ kotlin {
 //    js { nodejs() }
 
     jvm()
+    linuxX64()
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -30,9 +31,8 @@ kotlin {
                 implementation(kotlin("test-annotations-common"))
             }
         }
-        val posixMain by creating {
-            dependsOn(commonMain)
-        }
+        val linuxX64Main by getting { dependsOn(commonMain)}
+        val jvmMain by getting { dependsOn(commonMain)}
         val jvmTest by getting { dependsOn(commonMain)
             dependencies {
                 implementation(kotlin("test"))

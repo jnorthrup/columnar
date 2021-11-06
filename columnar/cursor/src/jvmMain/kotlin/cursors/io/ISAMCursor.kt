@@ -6,7 +6,6 @@ import cursors.Cursor
 import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
-import cursors.context.Scalar
 import cursors.context.Scalar.Companion.Scalar
 import ports.ByteBuffer
 import vec.macros.*
@@ -19,15 +18,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.util.*
-import java.nio.ByteBuffer as NioHeapByteBuffer
+import java.util.AbstractMap
+import java.nio.ByteBuffer as JavaNioByteBuffer
 
 
 @Suppress("USELESS_CAST")
 class ISAMCursor(
     binpath: Path,
     val fc: FileChannel,
-    metapath: Path = Paths.get(binpath.toString() + ".meta"),
+    metapath: Path = Paths.get("$binpath.meta"),
 ) : Cursor {
 
     override inline val first get() = size
@@ -41,17 +40,19 @@ class ISAMCursor(
 
     init {
         val lines = Files.readAllLines(metapath).apply { removeIf { it.startsWith("# ") || it.isNullOrBlank() } }
-        rcoords = (lines[0].split("\\s+".toRegex()) α (String::toInt)).zipWithNext()
+        rcoords = (lines[0].split("\\s+".toRegex()) α String::toInt).zipWithNext()
         val typeVec = run {
             val s = lines[2]
             val split = s.split("\\s+".toRegex())
-            val res = split.α(IOMemento::valueOf)
+            val res = split α (IOMemento::valueOf)
 
             res
         }
         val rnames = lines[1].split("\\s+".toRegex()).toVect0r()
-        scalars = typeVec.zip(rnames) { type  ,
-            name   ->  Scalar(type, name) }
+        scalars = typeVec.zip(rnames) {
+                typ,
+                name,
+            ->  Scalar(typ, name) }
 
         fc.let { fileChannel ->
 
@@ -107,7 +108,7 @@ fun Cursor.writeISAM(
                 //our blackboard CoroutineCOntext  metadata function.
                 val cc = it.invoke()
                 (cc[Arity.arityKey] as? Scalar)?.let { (a) ->
-                    if (a == IOMemento.IoString) (cc[RecordBoundary.boundaryKey] as? FixedWidth)?.let { fw: FixedWidth ->
+                    if (a == IOMemento.IoString) (cc[RecordBoundary.boundaryKey] as? RecordBoundary.FixedWidth)?.let { fw: RecordBoundary.FixedWidth ->
                         this.entries.add(AbstractMap.SimpleEntry(index, fw.recordLen))
                     }
                 }
@@ -153,14 +154,14 @@ fun FileChannel.read(byteBuffer: ByteBuffer, l: Long): Int {
 }
 
 fun FileChannel.write(byteBuffer: ByteBuffer): Int {
-    val proxy = proxy(byteBuffer)
-    val write = write(proxy)
+    val proxy = proxy(byteBuffer) as JavaNioByteBuffer
+    val write = write (proxy)
     byteBuffer.pos += write
     return write
 }
 
 fun proxy(byteBuffer: ByteBuffer) =
-    NioHeapByteBuffer.wrap(byteBuffer.array)
+    JavaNioByteBuffer.wrap(byteBuffer.array)
         .limit(byteBuffer.limit())
         .position(byteBuffer.position())
 

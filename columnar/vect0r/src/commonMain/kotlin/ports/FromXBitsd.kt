@@ -1,3 +1,3 @@
 package ports
 
-expect fun fromXBits(t:Long)  :Double
+expect fun fromXBits(t: Long): Double
