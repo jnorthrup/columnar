@@ -9,7 +9,7 @@ repositories {
 kotlin {
     linuxX64 {
         binaries {
-            executable("my_executable", listOf(RELEASE)) {
+            executable("my_executable", listOf(DEBUG,RELEASE)) {
                         // Base name for the output file.
         baseName = "foo"
         // Accessing the output file.

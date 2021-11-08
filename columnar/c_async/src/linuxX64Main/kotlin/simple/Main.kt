@@ -10,7 +10,7 @@ import uring.*
 import uring.iovec
 
 fun main(args: Array<String>): Unit {
-    val server_socket: Int = setup_listening_socket(DEFAULT_SERVER_PORT)
+    val server_socket = setup_listening_socket(DEFAULT_SERVER_PORT)
 
     uring.signal(uring.SIGINT,
         staticCFunction(

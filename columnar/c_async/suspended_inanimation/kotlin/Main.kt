@@ -15,8 +15,7 @@ import platform.posix.signal
 
 fun main(args: Array<String>): Int {
     if (args.isEmpty()) {
-        memScoped {
-            // the_ring_on_the_stack = alloc(io_uring)
+             // the_ring_on_the_stack = alloc(io_uring)
             val server_socket = setup_listening_socket(DEFAULT_SERVER_PORT)
             val __handler = { signo: Int ->
                 printf("^C pressed. Shutting down. signal %d\n", signo)
@@ -30,5 +29,5 @@ fun main(args: Array<String>): Int {
             server_loop(server_socket)
             return 0
         }
-    }else return withparams(args)
+     else return 1
 }
