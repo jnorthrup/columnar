@@ -1,63 +1,47 @@
+import platform.linux.*
+import platform.posix.*
+import platform.posix.free
 
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-#include <malloc.h>
-#include <sys/epoll.h>
-#include <sys/mman.h>
-#include <aio.h>
-#include <asm-generic/errno.h>
-#include <bits/types/struct_iovec.h>
 
-void open_read();
+fun main(int, char **args):Int{
 
-void open_mmap();
-
-int epoll_popen_loop_cat();
-
-int glibc_aio_read();
-
-int glibc_aio_suspend();
-
-int main(int, char **args) {
- open_read();
+    open_read();
     open_mmap();
     epoll_popen_loop_cat();
     glibc_aio_read();
     glibc_aio_suspend();
 }
 
-int epoll_popen_loop_cat() {
+fun epoll_popen_loop_cat():Int{
 
     FILE *pIoFile = popen("cat /etc/sysctl.conf </dev/null", "r");   //works when stdin is piped, not dev/null tho
 
-    struct epoll_event event;
-    event.data.fd = pIoFile->_fileno;
+    event:epoll_event;
+    event.data.fd = pIoFile.pointed._fileno ;
     event.events = EPOLLIN | EPOLLPRI | EPOLLERR;
 
-    int epoll_fd = epoll_create1(0);
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, event.data.fd, &event)) {
+    epoll_fd:Int = epoll_create1(0);
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, event.data.fd, event.ptr)) {
         fprintf(stderr, "Failed to add file descriptor to epoll_popen_loop_cat\n");
         close(epoll_fd);
         return 1;
     }
 
-    const int READ_SIZE = 10;
-    int running = 1;
+    const READ_SIZE:Int = 10;
+    running:Int = 1;
     while (running) {
         printf("\nPolling for input...\n");
-        const int MAX_EVENTS = 5;
-        struct epoll_event events[MAX_EVENTS];
-        int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, 3000);
+        const MAX_EVENTS:Int = 5;
+        events:epoll_event[MAX_EVENTS];
+        event_count:Int = epoll_wait(epoll_fd, events, MAX_EVENTS, 3000);
 
         printf("%d ready events\n", event_count);
-        for (int i = 0; i < event_count; i++) {
-            int fd = events[i].data.fd;
+        for (i:Int = 0; i < event_count; i++) {
+            fd:Int = events[i].data.fd;
             printf("Reading file descriptor '%d' -- ", fd);
 
             char buf[READ_SIZE + 1];
-            ssize_t bytes_read = read(fd, buf, READ_SIZE);
+            bytes_read:ssize_t = read(fd, buf, READ_SIZE);
             printf("%zd bytes read.\n", bytes_read);
             if (bytes_read < 1) {
                 running = 0;
@@ -76,33 +60,33 @@ int epoll_popen_loop_cat() {
     return 0;
 };
 
-int glibc_aio_read() {
+fun glibc_aio_read():Int{
 
-    int fd = open("/etc/sysctl.conf", O_RDONLY);
+    fd:Int = open("/etc/sysctl.conf", O_RDONLY);
     if (fd < 0)
         perror("open");
 
     /* Zero out the aiocb structure (recommended)*/
-    struct aiocb *my_aiocb = malloc(sizeof(struct aiocb));
-    const int BUFSIZE = 40;
+    my_aiocb:CPointer<aiocb> = malloc(sizeof(b:aioc));
+    const BUFSIZE:Int = 40;
     /*Allocate a data buffer for the aiocb request **/
-    void *buf = malloc(BUFSIZE + 1);
-    my_aiocb->aio_buf = buf;
-    if (!my_aiocb->aio_buf)
-        perror("malloc");
+    buf:CPointer<ByteVar>  = malloc(BUFSIZE + 1);
+ my_aiocb.pointed.aio_buf  = buf;
+    if (! my_aiocb.pointed.aio_buf )
+    perror("malloc");
 
     /** Initialize the necessary fields in the aiocb **/
-    my_aiocb->aio_fildes = fd;
-    my_aiocb->aio_nbytes = BUFSIZE;
-    my_aiocb->aio_offset = 0;
+ my_aiocb.pointed.aio_fildes  = fd;
+ my_aiocb.pointed.aio_nbytes  = BUFSIZE;
+ my_aiocb.pointed.aio_offset  = 0;
 
-    int ret = aio_read(my_aiocb);
+    ret:Int = aio_read(my_aiocb);
     if (ret < 0)
         perror("aio_read");
 
-    int lag = 0;
+    lag:Int = 0;
     while (aio_error(my_aiocb) == EINPROGRESS)lag++;
-    __ssize_t i = aio_return(my_aiocb);
+    i:__ssize_t = aio_return(my_aiocb);
 
     printf("spun %d times\n", lag);
 
@@ -116,36 +100,36 @@ int glibc_aio_read() {
     free(my_aiocb);
 }
 
-int glibc_aio_suspend() {
+fun glibc_aio_suspend():Int{
 
-    int fd = open("/etc/sysctl.conf", O_RDONLY);
+    fd:Int = open("/etc/sysctl.conf", O_RDONLY);
     if (fd < 0)
         perror("open");
 
     /* Zero out the aiocb structure (recommended)*/
-    struct aiocb *my_aiocb = malloc(sizeof(struct aiocb));
-    const int BUFSIZE = 40;
+    my_aiocb:CPointer<aiocb> = malloc(sizeof(b:aioc));
+    const BUFSIZE:Int = 40;
 
     /*Allocate a data buffer for the aiocb request **/
-    void *buf = malloc(BUFSIZE + 1);
+    buf:CPointer<ByteVar>  = malloc(BUFSIZE + 1);
 
-    my_aiocb->aio_buf = buf;
+ my_aiocb.pointed.aio_buf  = buf;
 
-    if (!my_aiocb->aio_buf)
-        perror("malloc");
+    if (! my_aiocb.pointed.aio_buf )
+    perror("malloc");
 
     /** Initialize the necessary fields in the aiocb **/
-    my_aiocb->aio_fildes = fd;
-    my_aiocb->aio_nbytes = BUFSIZE;
-    my_aiocb->aio_offset = 0;
+ my_aiocb.pointed.aio_fildes  = fd;
+ my_aiocb.pointed.aio_nbytes  = BUFSIZE;
+ my_aiocb.pointed.aio_offset  = 0;
 
-    int ret = aio_read(my_aiocb);
+    ret:Int = aio_read(my_aiocb);
     if (ret < 0)
         perror("aio_read");
 
-    int MAX_LIST = 1;
+    MAX_LIST:Int = 1;
 
-    struct aioct *cblist[MAX_LIST] ;
+    cblist:CPointer<aioct>[MAX_LIST] ;
 
     /* Clear the list. */
     bzero((char *) cblist, sizeof(cblist));
@@ -163,17 +147,17 @@ int glibc_aio_suspend() {
     free(my_aiocb);
 }
 
-void open_mmap() {
-    int fd = open("/etc/sysctl.conf", O_RDONLY);
-    long pagesize = sysconf(_SC_PAGE_SIZE);
-    void *pVoid = mmap(NULL, pagesize,
-                       PROT_READ,
-                       MAP_PRIVATE,
-            /** descriptor */ fd,
-/**ofsset*/ 0);
+fun open_mmap():Unit{
+    fd:Int = open("/etc/sysctl.conf", O_RDONLY);
+    pagesize:Long = sysconf(_SC_PAGE_SIZE);
+    pVoid:CPointer<ByteVar>  = mmap(NULL, pagesize,
+        PROT_READ,
+        MAP_PRIVATE,
+        /** descriptor */ fd,
+        /**ofsset*/ 0);
 
-    int closed = close(fd);
-    void *pVoid1 = malloc(41);//gives us a zero ending
+    closed:Int = close(fd);
+    pVoid1:CPointer<ByteVar>  = malloc(41);//gives us a zero ending
     memcpy(pVoid1, pVoid, 40);
     printf("%s\n", (char *) pVoid1);
     free(pVoid1);
@@ -181,13 +165,13 @@ void open_mmap() {
 
 }
 
-void open_read() {
+fun open_read():Unit{
 
-    int fd = open("/etc/sysctl.conf", O_RDONLY);
-    char *buf = malloc(41);
+    val fd:Int = open("/etc/sysctl.conf", O_RDONLY);
+    buf:CPointer<ByteVar> = malloc(41);
 
-    int count;
-    int disp = 0;
+    count:Int;
+    disp:Int = 0;
     do {
         count = read(fd, buf, 40);
         if (disp == 0)printf("%s\n", buf);

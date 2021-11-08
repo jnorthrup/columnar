@@ -8,7 +8,11 @@ repositories {
 
 kotlin {
     linuxX64 {
+        val main by compilations.getting
+//        val notmain by compilations.getting
+        val posix by main.cinterops.creating
         binaries {
+
             executable("my_executable", listOf(DEBUG,RELEASE)) {
                         // Base name for the output file.
         baseName = "foo"
@@ -19,7 +23,6 @@ kotlin {
         entryPoint = "simple.main"
             }
         }
-        val main by compilations.getting
         val uring by main.cinterops.creating
 
     }

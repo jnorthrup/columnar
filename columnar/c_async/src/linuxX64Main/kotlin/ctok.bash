@@ -1,8 +1,8 @@
 #!/bin/bash
 set -x
 
-# shellcheck disable=SC2068
-#xforms=(
+#built and tested against clion default formatted c ymmv
+
 sed  --in-place --regexp-extended\
  -e 's,^\s*void\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Unit{,'\
  -e 's,^\s*void\s*[*](\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2: CPointer<ByteVar> {,'\
@@ -26,5 +26,4 @@ sed  --in-place --regexp-extended\
  -e 's,switch(.*)[{]$,when \1 {,'\
  -e 's,case (.*):,\1 -> ,'\
   $@
-#)
- 
+
