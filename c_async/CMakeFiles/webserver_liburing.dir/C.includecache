@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jim/work/columnar/c_async/webserver_liburing.c
+liburing.h
+-
+ctype.h
+-
+string.h
+-
+unistd.h
+-
+stdlib.h
+-
+signal.h
+-
+sys/stat.h
+-
+stdio.h
+-
+fcntl.h
+-
+netinet/in.h
+-
+

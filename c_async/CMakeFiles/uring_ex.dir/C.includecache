@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jim/work/columnar/c_async/uring_ex.c
+asm/unistd.h
+-
+sys/ioctl.h
+-
+sys/mman.h
+-
+sys/stat.h
+-
+liburing.h
+-
+string.h
+-
+unistd.h
+-
+stdlib.h
+-
+stdio.h
+-
+fcntl.h
+-
+

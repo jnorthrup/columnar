@@ -9,6 +9,27 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 
+struct request {
+    int event_type;
+    int iovec_count;
+    int client_fd;
+    struct iovec iov[];
+};
+
+struct request *Request(    int event_type,
+                            int iovec_count,
+                            int client_fd
+){
+    return malloc(sizeof(struct request)+sizeof(struct iovec)*iovec_count) ;
+
+}
+struct io_uring the_ring_on_the_stack;
+
+struct request *selectorKeyAttachment(const struct io_uring_cqe *completion_queue_entry_ptr);
+
+struct request *selectorKeyAttachment(
+        const struct io_uring_cqe *completion_queue_entry_ptr) { return (struct request *) completion_queue_entry_ptr->user_data; }
+
 #define SERVER_STRING           "Server: zerohttpd/0.1\r\n"
 #define DEFAULT_SERVER_PORT     8000
 #define QUEUE_DEPTH             256
@@ -18,47 +39,31 @@
 #define EVENT_TYPE_READ         1
 #define EVENT_TYPE_WRITE        2
 
-struct request {
-    int event_type;
-    int iovec_count;
-    int client_socket;
-    struct iovec iov[];
-};
+const char *unimplemented_content = "HTTP/1.0 400 Bad Request\r\n"
+                                    "Content-type: text/html\r\n"
+                                    "\r\n"
+                                    "<html>"
+                                    "<head>"
+                                    "<title>ZeroHTTPd: Unimplemented</title>"
+                                    "</head>"
+                                    "<body>"
+                                    "<h1>Bad Request (Unimplemented)</h1>"
+                                    "<p>Your client sent a request ZeroHTTPd did not understand and it is probably not your fault.</p>"
+                                    "</body>"
+                                    "</html>";
 
-struct io_uring the_ring_on_the_stack;
-
-struct request *selectorKeyAttachment(const struct io_uring_cqe *completion_queue_entry_ptr);
-
-const char *unimplemented_content =
-        "HTTP/1.0 400 Bad Request\r\n"
-        "Content-type: text/html\r\n"
-        "\r\n"
-        "<html>"
-        "<head>"
-        "<title>ZeroHTTPd: Unimplemented</title>"
-        "</head>"
-        "<body>"
-        "<h1>Bad Request (Unimplemented)</h1>"
-        "<p>Your client sent a request ZeroHTTPd did not understand and it is probably not your fault.</p>"
-        "</body>"
-        "</html>";
-
-struct request *selectorKeyAttachment(
-        const struct io_uring_cqe *completion_queue_entry_ptr) { return (struct request *) completion_queue_entry_ptr->user_data; }
-
-const char *http_404_content =
-        "HTTP/1.0 404 Not Found\r\n"
-        "Content-type: text/html\r\n"
-        "\r\n"
-        "<html>"
-        "<head>"
-        "<title>ZeroHTTPd: Not Found</title>"
-        "</head>"
-        "<body>"
-        "<h1>Not Found (404)</h1>"
-        "<p>Your client is asking for an object that was not found on this server.</p>"
-        "</body>"
-        "</html>";
+const char *http_404_content = "HTTP/1.0 404 Not Found\r\n"
+                               "Content-type: text/html\r\n"
+                               "\r\n"
+                               "<html>"
+                               "<head>"
+                               "<title>ZeroHTTPd: Not Found</title>"
+                               "</head>"
+                               "<body>"
+                               "<h1>Not Found (404)</h1>"
+                               "<p>Your client is asking for an object that was not found on this server.</p>"
+                               "</body>"
+                               "</html>";
 
 /*
  * Utility function to convert a string to lower case.
@@ -101,9 +106,7 @@ int setup_listening_socket(int port) {
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock != -1) {
         int enable = 1;
-        if (setsockopt(sock,
-                       SOL_SOCKET, SO_REUSEADDR,
-                       &enable, sizeof(int)) >= 0) {
+        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) >= 0) {
             memset(&srv_addr, 0, sizeof(srv_addr));
             srv_addr.sin_family = AF_INET;
             srv_addr.sin_port = htons(port);
@@ -408,8 +411,8 @@ void server_loop(int server_socket_fd) {
                 /* Mark this request as processed */
                 io_uring_cqe_seen(&the_ring_on_the_stack, completion_queue_entry_ptr);
             } else {
-                fprintf(stderr, "Async request failed: %s for event: %d\n",
-                        strerror(-resultCode), req_heap_ptr->event_type);
+                fprintf(stderr, "Async request failed: %s for event: %d\n", strerror(-resultCode),
+                        req_heap_ptr->event_type);
                 exit(1);
             }
         } else fatal_error("io_uring_wait_cqe");

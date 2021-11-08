@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jim/work/columnar/c_async/lib_uring_poll_kernel_thread_ex.c
+stdio.h
+-
+unistd.h
+-
+stdlib.h
+-
+fcntl.h
+-
+liburing.h
+-
+string.h
+-
+

@@ -1,0 +1,7 @@
+/home/jim/work/columnar/c_async/CMakeFiles/rebuild_cache.dir
+/home/jim/work/columnar/c_async/CMakeFiles/edit_cache.dir
+/home/jim/work/columnar/c_async/CMakeFiles/webserver_liburing.dir
+/home/jim/work/columnar/c_async/CMakeFiles/lib_uring_ex.dir
+/home/jim/work/columnar/c_async/CMakeFiles/lib_uring_poll_kernel_thread_ex.dir
+/home/jim/work/columnar/c_async/CMakeFiles/uring_ex.dir
+/home/jim/work/columnar/c_async/CMakeFiles/mainthing.dir

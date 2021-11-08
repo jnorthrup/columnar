@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jim/work/columnar/c_async/library.c
+stdio.h
+-
+unistd.h
+-
+fcntl.h
+-
+string.h
+-
+malloc.h
+-
+sys/epoll.h
+-
+sys/mman.h
+-
+aio.h
+-
+asm-generic/errno.h
+-
+bits/types/struct_iovec.h
+-
+
