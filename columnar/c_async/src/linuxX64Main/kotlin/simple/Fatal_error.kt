@@ -1,3 +1,5 @@
+package simple
+
 import platform.posix.exit
 import platform.posix.perror
 

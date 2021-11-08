@@ -2,7 +2,6 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <liburing.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>

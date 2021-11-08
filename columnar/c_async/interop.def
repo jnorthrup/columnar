@@ -1,15 +1,18 @@
+headers =   liburing.h
+#headerFilter = liburing/* sys/*
+compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu -Isrc/nativeInterop/cinterop
+linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -luring
 
-extern "C"{
+---
 
-typedef struct request {
-    int event_type;
-    int iovec_count;
-    int client_fd;
-    struct iovec iov[];
-};
-
+ typedef struct  {
+        unsigned int event_type;
+        unsigned short  client_fd;
+        unsigned char   iovec_count;
+        struct iovec iov[];
+}request;
 struct io_uring the_ring_on_the_stack;
-}
+
 #define SERVER_STRING           "Server: zerohttpd/0.1\r\n"
 #define DEFAULT_SERVER_PORT     8000
 #define QUEUE_DEPTH             256

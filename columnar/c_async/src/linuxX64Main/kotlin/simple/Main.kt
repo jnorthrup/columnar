@@ -1,12 +1,28 @@
-import interop.*
-import interop.iovec
-import interop.off_t
-import interop.sockaddr
-import interop.socklen_tVar
-import interop.ssize_t
-import interop.stat
+package simple
+
+import platform.posix.off_t
+import platform.posix.socklen_tVar
+import platform.posix.ssize_t
+import platform.posix.stat
 import platform.posix.*
 import kotlinx.cinterop.*
+import uring.*
+import uring.iovec
+
+fun main(args: Array<String>): Unit {
+    val server_socket: Int = setup_listening_socket(DEFAULT_SERVER_PORT)
+
+    uring.signal(uring.SIGINT,
+        staticCFunction(
+            fun(signo: Int) {
+                println("^C pressed. Shutting down. signal $signo\n")
+                io_uring_queue_exit(the_ring_on_the_stack.ptr)
+                platform.posix.exit(0)
+            }))
+    io_uring_queue_init(QUEUE_DEPTH, the_ring_on_the_stack.ptr, 0)
+    server_loop(server_socket)
+//    return 0
+}
 
 fun Request(event_type: UInt = 0u, client_fd: UShort = 0u, iovec_count: UByte = 1u): CPointer<request> {
 
@@ -20,19 +36,19 @@ fun Request(event_type: UInt = 0u, client_fd: UShort = 0u, iovec_count: UByte = 
 }
 
 /*
- * This function is responsible for setting up the main listening socket used by the
+ * This function is responsible for setting up the simple.simple.main listening socket used by the
  * web server.
  * */
 
 fun add_accept_request(
     server_socket1: Int,
     client_addr: CPointer<sockaddr_in>,
-    client_addr_len: kotlinx.cinterop.CValuesRef<interop.socklen_tVar>,
+    client_addr_len: kotlinx.cinterop.CValuesRef<socklen_tVar>,
 ): Int {
     val submission_queue_entry = io_uring_get_sqe(the_ring_on_the_stack.ptr)!!
     io_uring_prep_accept(submission_queue_entry,
         server_socket1,
-        client_addr.reinterpret<sockaddr>() as CValuesRef<sockaddr>,
+        client_addr.reinterpret<uring.sockaddr>() as CValuesRef<uring.sockaddr>,
         client_addr_len,
         0)
     val req: CPointer<request> = Request(EVENT_TYPE_ACCEPT.toUInt())
@@ -254,7 +270,7 @@ fun handle_get_method(path: CPointer<ByteVar>, client_fd: Int): Unit {
 
 /*
  * This function looks at method used and calls the appropriate handler function.
- * Since we only implement GET and POST methods, it calls handle_unimplemented_method()
+ * Since we only implement GET and POST methods, it calls simple.handle_unimplemented_method()
  * in case both these don't match. This sends an error to the client.
  * */
 
@@ -341,17 +357,6 @@ fun server_loop(server_socket_fd: Int): Unit {
     }
 }
 
-fun main(): Int {
-    val server_socket: Int = setup_listening_socket(DEFAULT_SERVER_PORT)
 
-    interop.signal(interop.SIGINT,
-        staticCFunction(
-            fun(signo: Int) {
-                println("^C pressed. Shutting down. signal $signo\n")
-                io_uring_queue_exit(the_ring_on_the_stack.ptr)
-                platform.posix.exit(0)
-            }) )
-    io_uring_queue_init(QUEUE_DEPTH, the_ring_on_the_stack.ptr, 0)
-    server_loop(server_socket)
-    return 0
-}
+
+

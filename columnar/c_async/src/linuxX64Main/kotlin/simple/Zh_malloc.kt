@@ -1,3 +1,5 @@
+package simple
+
 import kotlinx.cinterop.COpaquePointer
 import platform.posix.*
 

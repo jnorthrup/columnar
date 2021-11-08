@@ -1,7 +1,8 @@
+package simple
 
-import interop.io_uring_cqe
-import interop.request
 import kotlinx.cinterop.*
+import uring.io_uring_cqe
+import uring.request
 
 fun selectorKeyAttachment(
 completion_queue_entry_ptr:CPointer<io_uring_cqe>): CPointer<request>? =

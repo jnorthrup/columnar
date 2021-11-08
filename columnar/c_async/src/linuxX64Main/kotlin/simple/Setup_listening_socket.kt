@@ -1,5 +1,6 @@
+package simple
+
 import kotlinx.cinterop.*
-import kotlinx.cinterop.nativeHeap.alloc
 import platform.posix.*
 
 fun setup_listening_socket(port: Int): Int {

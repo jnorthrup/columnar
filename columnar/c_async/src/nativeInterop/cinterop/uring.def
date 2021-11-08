@@ -1,20 +1,16 @@
 headers =   liburing.h
+#headerFilter = liburing/* sys/*
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu -Isrc/nativeInterop/cinterop
 linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -luring
+
 ---
 
-typedef struct {
-  int a;
-  double b;
-} MyStruct;
-
-typedef struct  {
+ typedef struct  {
         unsigned int event_type;
         unsigned short  client_fd;
         unsigned char   iovec_count;
         struct iovec iov[];
 }request;
-
 struct io_uring the_ring_on_the_stack;
 
 #define SERVER_STRING           "Server: zerohttpd/0.1\r\n"

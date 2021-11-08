@@ -7,15 +7,20 @@ repositories {
 }
 
 kotlin {
-    linuxX64("native") { // on Linux
-        // macosX64("native") { // on x86_64 macOS
-        // macosArm64("native") { // on Apple Silicon macOS
-        // mingwX64("native") { // on Windows
-        val main by compilations.getting
-        val interop by main.cinterops.creating
-
+    linuxX64 {
         binaries {
-            executable()
+            executable("my_executable", listOf(RELEASE)) {
+                        // Base name for the output file.
+        baseName = "foo"
+        // Accessing the output file.
+        println("Executable path: ${outputFile.absolutePath}")
+
+        // Custom entry point function.
+        entryPoint = "simple.main"
+            }
         }
+        val main by compilations.getting
+        val uring by main.cinterops.creating
+
     }
 }
