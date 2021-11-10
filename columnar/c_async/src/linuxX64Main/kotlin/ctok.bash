@@ -25,5 +25,6 @@ sed  --in-place --regexp-extended\
  -e 's,(\s+|\W)(\w+_t)\s+(\w+)(\W),\1\3:\2\4,g'\
  -e 's,switch(.*)[{]$,when \1 {,'\
  -e 's,case (.*):,\1 -> ,'\
+ -e 's,(\w+)\s*[|]\s*(\w+), \1 or \2 ,g'\
   $@
 

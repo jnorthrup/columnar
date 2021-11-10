@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -21,7 +20,7 @@ int glibc_aio_read();
 int glibc_aio_suspend();
 
 int main(int, char **args) {
- open_read();
+    open_read();
     open_mmap();
     epoll_popen_loop_cat();
     glibc_aio_read();
@@ -145,7 +144,7 @@ int glibc_aio_suspend() {
 
     int MAX_LIST = 1;
 
-    struct aioct *cblist[MAX_LIST] ;
+    struct aioct *cblist[MAX_LIST];
 
     /* Clear the list. */
     bzero((char *) cblist, sizeof(cblist));
@@ -166,9 +165,7 @@ int glibc_aio_suspend() {
 void open_mmap() {
     int fd = open("/etc/sysctl.conf", O_RDONLY);
     long pagesize = sysconf(_SC_PAGE_SIZE);
-    void *pVoid = mmap(NULL, pagesize,
-                       PROT_READ,
-                       MAP_PRIVATE,
+    void *pVoid = mmap(NULL, pagesize, PROT_READ, MAP_PRIVATE,
             /** descriptor */ fd,
 /**ofsset*/ 0);
 

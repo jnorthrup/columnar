@@ -8,9 +8,7 @@ repositories {
 
 kotlin {
     linuxX64 {
-        val main by compilations.getting
-//        val notmain by compilations.getting
-        val posix by main.cinterops.creating
+
         binaries {
 
             executable("my_executable", listOf(DEBUG,RELEASE)) {
@@ -23,7 +21,10 @@ kotlin {
         entryPoint = "simple.main"
             }
         }
-        val uring by main.cinterops.creating
+        val main by compilations.getting
+//        val notmain by compilations.getting
+        val posix by main.cinterops.creating
+//        val uring by main.cinterops.creating
 
     }
 }
