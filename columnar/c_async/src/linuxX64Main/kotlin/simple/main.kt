@@ -181,10 +181,12 @@ fun open_mmap(): Unit {
     memScoped{
 
         val cFile = CFile("/etc/sysctl.conf", O_RDONLY)
-        val cPointer = cFile.mmap(41.toULong())
+        val cPointer = cFile.mmap(41.toULong(), offset = 0)
         cFile.close()
-        println(cPointer.toLong().toCPointer<ByteVar>()!!.pin().get().toKStringFromUtf8().take(40))
-        cPointer
+        val ccptr = cPointer.toLong().toCPointer<ByteVar>()
+        println(ccptr!!.pin().get().toKStringFromUtf8().take(40))
+
+        munmap( ccptr,41  )
 
 
 //        val fd: Int = open("/etc/sysctl.conf", O_RDONLY)
