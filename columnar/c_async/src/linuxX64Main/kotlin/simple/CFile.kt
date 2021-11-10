@@ -14,7 +14,6 @@ class CFile(
         open(path, O_FLAGS)
     },
 ) : HasDescriptor {
-
     override fun read64(buf: ByteArray): ULong {
         val addressOf = buf.pin().addressOf(0)
         val b: CArrayPointer<ByteVar> = addressOf.reinterpret<ByteVar>()
@@ -43,15 +42,10 @@ class CFile(
     }
 
     companion object {
-        /**
-         * [manpage](https://www.man7.org/linux/man-pages/man2/strerror.2.html)
-         */
-
+        /**strerror [manpage](https://www.man7.org/linux/man-pages/man2/strerror.2.html) */
         fun reportErr(res: Int) = "$res ${strerror(errno)?.toKString() ?: "<trust me>"}"
 
-        /**
-         * [manpage](https://www.man7.org/linux/man-pages/man2/open.2.html)
-         */
+        /**open [manpage](https://www.man7.org/linux/man-pages/man2/open.2.html) */
 
         fun open(path: String?, O_FLAGS: Int): Int {
             val fd = posix_open(path, O_FLAGS)
@@ -59,13 +53,13 @@ class CFile(
             return fd
         }
 
-        val page_size = sysconf(_SC_PAGE_SIZE)
+        val page_size by lazy { sysconf(_SC_PAGE_SIZE) }
 
         /**
          * [manpage](https://www.man7.org/linux/man-pages/man2/mmap.2.html)
          */
         fun mmap_base(
-            __addr: kotlinx.cinterop.CValuesRef<*>? = null as CValuesRef<*>,
+            __addr: kotlinx.cinterop.CValuesRef<*>? = 0L.toCPointer<ByteVar>(),
             __len: platform.posix.size_t = page_size.toULong(), /* = kotlin.ULong */
             /**
              *
@@ -85,34 +79,52 @@ class CFile(
              */
 
             __prot: kotlin.Int,
+            /**
+             * exactly one:
+             *        MAP_SHARED MAP_SHARED_VALIDATE MAP_PRIVATE
+             *
+             *  |=MAP_ANON MAP_FIXED MAP_FIXED_NOREPLACE MAP_GROWSDOWN MAP_HUGETLB
+             *   MAP_HUGE_2MB MAP_HUGE_1GB MAP_LOCKED MAP_NONBLOCK MAP_NORESERVE
+             *   MAP_POPULATE MAP_STACK MAP_SYNC MAP_UNINITIALIZED
+             */
             __flags: kotlin.Int,
             fd: Int,
-            __offset: platform.posix.__off_t, /* = kotlin.Long */
-        ): kotlinx.cinterop.COpaquePointer? /* = kotlinx.cinterop.CPointer<out kotlinx.cinterop.CPointed>? */ {
+            __offset: platform.posix.__off_t,
+        ): kotlinx.cinterop.COpaquePointer {
+            println("*** posix_mmap($__addr, $__len, $__prot, $__flags, $fd, $__offset)\n")
+
             val cPointer =
                 posix_mmap(__addr, __len, __prot, __flags, fd, __offset)
-
             require(cPointer.toLong() != -1L) { "mmap failed with result ${reportErr(cPointer.toLong().toInt())}" }
 
-            return cPointer
+            return cPointer!!
 
         }
-  /**
-         * [manpage](https://www.man7.org/linux/man-pages/man2/mmap.2.html)
-         */
+
+        /** [manpage](https://www.man7.org/linux/man-pages/man2/mmap.2.html) */
 
         fun mapBag(
             len: ULong,
             prot: Int = PROT_READ or PROT_WRITE,
             flags: Int = MAP_SHARED or MAP_ANONYMOUS,
             offset: off_t = 0L,
-        ): COpaquePointer? =
-            mmap_base(fd = -1, __len = len, __prot = prot, __flags = flags, __offset = offset)
+        ): COpaquePointer? = mmap_base(fd = -1, __len = len, __prot = prot, __flags = flags, __offset = offset)
     }
 
     fun mmap(len: ULong, prot: Int = PROT_READ, flags: Int = MAP_SHARED, offset: off_t = 0L): COpaquePointer? =
-        mmap_base(fd = fd, __len = len, __prot = prot, __flags = flags, __offset = offset)
+        mmap_base(
+            fd = fd,
+            __len = len,
+            __prot = prot,
+            __flags = flags,
+            __offset = offset
+        )
 
+    /** lseek [manpage](https://www.man7.org/linux/man-pages/man2/leek.2.html) */
+    fun at(offset: __off_t, whence: Int) {
+        lseek(fd, offset /* = kotlin.Long */, __whence = whence)
+
+    }
 
 }
 

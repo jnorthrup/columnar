@@ -178,26 +178,32 @@ fun glibc_aio_suspend(): Int {
 */
 
 fun open_mmap(): Unit {
-    val fd: Int = open("/etc/sysctl.conf", O_RDONLY)
-    val pagesize: Long = sysconf(_SC_PAGE_SIZE)
-    val pVoid = mmap(NULL, pagesize.toULong(), PROT_READ, MAP_PRIVATE,
-        /** descriptor */
-        fd, 0)
+    memScoped{
 
-    closed:Int = close(fd)
-    pVoid1:CPointer<ByteVar> = malloc(41)//gives us a zero ending
-    memcpy(pVoid1, pVoid, 40)
-    printf("%s\n", (char *) pVoid1)
-    free(pVoid1)
-    munmap(pVoid, 0)
+        val cFile = CFile("/etc/sysctl.conf", O_RDONLY)
+        val cPointer = cFile.mmap(41.toULong())
+        cFile.close()
+        println(cPointer.toLong().toCPointer<ByteVar>()!!.pin().get().toKStringFromUtf8().take(40))
+        cPointer
 
+
+//        val fd: Int = open("/etc/sysctl.conf", O_RDONLY)
+//        val pagesize: Long = sysconf(_SC_PAGE_SIZE)
+//        val pVoid = mmap(NULL, pagesize.toULong(), PROT_READ, MAP_PRIVATE, /** descriptor */ fd, 0)
+//
+//        val byteArray = ByteArray(41).pin()
+//        close(fd)
+//        val pVoid1 = byteArray.addressOf(0)
+//        memcpy(pVoid, pVoid1,40)
+//        println(byteArray.get().decodeToString(40))
+//        munmap(pVoid, 0)
+    }
 }
-
-
 fun main() {
     try {
         open_read()
         cFileRead()
+        open_mmap()
     } catch (e: kotlin.IllegalArgumentException) {
         e.printStackTrace()
     }
@@ -205,7 +211,7 @@ fun main() {
 
 fun cFileRead() {
     val buf = ByteArray(41)
-    val cFile = CFile("/etc/sysctl.conf"/*, O_RDONLY*/)
+    val cFile = CFile("/etc/sysctl.conf", O_RDONLY)
     val read = cFile.read(buf)
     println(buf.decodeToString(0, read.toInt()))
     cFile.close()
