@@ -4,7 +4,9 @@ set -x
 #built and tested against clion default formatted c ymmv
 
 sed  --in-place --regexp-extended\
+ -e 's,for\s*\((\w+\s+)(\w+)\s*=\s*(\w+)\;\s*\2.*<([^;]+)\;.*(\2?(\+\+)\2?).*\),for (\2/*as \1*/ in \3 until \4),'\
  -e 's,^\s*void\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Unit{,'\
+ -e 's,^\s*(\w+_t)\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \2\3:\1{,'\
  -e 's,^\s*void\s*[*](\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2: CPointer<ByteVar> {,'\
  -e 's,^\s*int\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Int{,'\
  -e 's,^\s*long\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Long{,'\

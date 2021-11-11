@@ -1,4 +1,4 @@
-headers =   liburing.h
+headers =   liburing.h bits/stat.h
 #headerFilter = liburing/* sys/*
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu -Isrc/nativeInterop/cinterop
 linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -luring

@@ -29,6 +29,7 @@ int main(int, char **args) {
 
 int epoll_popen_loop_cat() {
 
+        S_ISBLK sl;
     FILE *pIoFile = popen("cat /etc/sysctl.conf </dev/null", "r");   //works when stdin is piped, not dev/null tho
 
     struct epoll_event event;
