@@ -52,14 +52,14 @@ class CFile(
     ): COpaquePointer? = mmap_base(fd = -1, __len = len, __prot = prot, __flags = flags, __offset = offset)
 
     /** mmap [manpage](https://www.man7.org/linux/man-pages/man2/mmap.2.html) */
-    fun mmap(len: ULong, prot: Int = PROT_READ, flags: Int = MAP_SHARED, offset: off_t = 0L): COpaquePointer? =
+    fun mmap(len: ULong, prot: Int = PROT_READ, flags: Int = MAP_SHARED, offset: off_t = 0L) =
         mmap_base(
             fd = fd,
             __len = len,
             __prot = prot,
             __flags = flags,
             __offset = offset
-        )
+        ).reinterpret<CArrayPointerVar<ByteVar>>()
 
     /** lseek [manpage](https://www.man7.org/linux/man-pages/man2/leek.2.html) */
     fun at(offset: __off_t, whence: Int) {

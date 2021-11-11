@@ -8,10 +8,8 @@ repositories {
 
 kotlin {
     linuxX64 {
-
         binaries {
-
-            executable("my_executable", listOf(DEBUG,RELEASE)) {
+            executable("my_executable", listOf(DEBUG,RELEASE,)) {
                         // Base name for the output file.
         baseName = "foo"
         // Accessing the output file.
@@ -22,9 +20,6 @@ kotlin {
             }
         }
         val main by compilations.getting
-//        val notmain by compilations.getting
-        val posix by main.cinterops.creating
-//        val uring by main.cinterops.creating
 
     }
 }

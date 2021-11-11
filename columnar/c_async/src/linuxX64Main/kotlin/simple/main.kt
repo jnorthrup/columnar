@@ -33,7 +33,6 @@ fun open_mmap(): Unit {
         cFile.close()
         val ccptr = cPointer.toLong().toCPointer<ByteVar>()
         println(ccptr!!.pin().get().toKStringFromUtf8().take(40))
-
         munmap(ccptr, 41)
     }
 }
