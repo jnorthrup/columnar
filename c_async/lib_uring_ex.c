@@ -1,32 +1,26 @@
-
-#include <stdio.h>
-#include <stdlib.h>
 #include <liburing.h>
+#include <ctype.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <stdio.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
-
-
-#define QUEUE_DEPTH 1
-#define BLOCK_SZ    1024
-
-struct file_info {
-    off_t file_sz;
-    struct iovec iovecs[];      /* Referred by readv/writev */
-};
+#include <netinet/in.h>
 
 /*
-* Returns the size of the file whose open file descriptor is passed in.
-* Properly handles regular file and block devices as well. Pretty.
-* */
+ * Returns the size of the file whose open file descriptor is passed in.
+ * Properly handles regular file and block devices as well. Pretty.
+ * */
 
 off_t get_file_size(int fd) {
     struct stat st;
 
-    if (fstat(fd, &st) < 0) {
+    if(fstat(fd, &st) < 0) {
         perror("fstat");
         return -1;
     }
-
     if (S_ISBLK(st.st_mode)) {
         unsigned long long bytes;
         if (ioctl(fd, BLKGETSIZE64, &bytes) != 0) {
@@ -51,114 +45,78 @@ void output_to_console(char *buf, int len) {
     }
 }
 
-/*
- * Wait for a completion to be available, fetch the data from
- * the readv operation and print it to the console.
- * */
-
-int get_completion_and_print(struct io_uring *ring) {
-    struct io_uring_cqe *cqe;
-    int ret = io_uring_wait_cqe(ring, &cqe);
-    if (ret < 0) {
-        perror("io_uring_wait_cqe");
-        return 1;
-    }
-    if (cqe->res < 0) {
-        fprintf(stderr, "Async readv failed.\n");
-        return 1;
-    }
-    struct file_info *fi = io_uring_cqe_get_data(cqe);
-    int blocks = (int) fi->file_sz / BLOCK_SZ;
-    if (fi->file_sz % BLOCK_SZ) blocks++;
-    for (int i = 0; i < blocks; i++)
-        output_to_console(fi->iovecs[i].iov_base, fi->iovecs[i].iov_len);
-
-    io_uring_cqe_seen(ring, cqe);
-    return 0;
-}
-
-/*
- * Submit the readv request via liburing
- * */
-int submit_read_request(char *file_path, struct io_uring *ring) {
-    int file_fd = open(file_path, O_RDONLY);
+int read_and_print_file(char *file_name) {
+    struct iovec *iovecs;
+    int file_fd = open(file_name, O_RDONLY);
     if (file_fd < 0) {
         perror("open");
         return 1;
     }
+
     off_t file_sz = get_file_size(file_fd);
     off_t bytes_remaining = file_sz;
-    off_t offset = 0;
-    int current_block = 0;
     int blocks = (int) file_sz / BLOCK_SZ;
     if (file_sz % BLOCK_SZ) blocks++;
-    struct file_info *fi = malloc(sizeof(*fi) +
-                                  (sizeof(struct iovec) * blocks));
-    char *buff = malloc(file_sz);
-    if (!buff) {
-        fprintf(stderr, "Unable to allocate memory.\n");
-        return 1;
-    }
+    iovecs = malloc(sizeof(struct iovec) * blocks);
+
+    int current_block = 0;
 
     /*
-     * For each block of the file we need to read, we allocate an iovec struct
-     * which is indexed into the iovecs array. This array is passed in as part
-     * of the submission. If you don't understand this, then you need to look
-     * up how the readv() and writev() system calls work.
+     * For the file we're reading, allocate enough blocks to be able to hold
+     * the file data. Each block is described in an iovec structure, which is
+     * passed to readv as part of the array of iovecs.
      * */
     while (bytes_remaining) {
         off_t bytes_to_read = bytes_remaining;
         if (bytes_to_read > BLOCK_SZ)
             bytes_to_read = BLOCK_SZ;
 
-        offset += bytes_to_read;
-        fi->iovecs[current_block].iov_len = bytes_to_read;
+
         void *buf;
-        if (posix_memalign(&buf, BLOCK_SZ, BLOCK_SZ)) {
+        if( posix_memalign(&buf, BLOCK_SZ, BLOCK_SZ)) {
             perror("posix_memalign");
             return 1;
         }
-        fi->iovecs[current_block].iov_base = buf;
-
+        iovecs[current_block].iov_base = buf;
+        iovecs[current_block].iov_len = bytes_to_read;
         current_block++;
         bytes_remaining -= bytes_to_read;
     }
-    fi->file_sz = file_sz;
 
-    /* Get an SQE */
-    struct io_uring_sqe *sqe = io_uring_get_sqe(ring);
-    /* Setup a readv operation */
-    io_uring_prep_readv(sqe, file_fd, fi->iovecs, blocks, 0);
-    /* Set user data */
-    io_uring_sqe_set_data(sqe, fi);
-    /* Finally, submit the request */
-    io_uring_submit(ring);
+    /*
+     * The readv() call will block until all iovec buffers are filled with
+     * file data. Once it returns, we should be able to access the file data
+     * from the iovecs and print them on the console.
+     * */
+    int ret = readv(file_fd, iovecs, blocks);
+    if (ret < 0) {
+        perror("readv");
+        return 1;
+    }
+
+    for (int i = 0; i < blocks; i++)
+        output_to_console(iovecs[i].iov_base, iovecs[i].iov_len);
 
     return 0;
 }
 
 int main(int argc, char *argv[]) {
-    struct io_uring ring;
-
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s [file name] <[file name] ...>\n",
+        fprintf(stderr, "Usage: %s <filename1> [<filename2> ...]\n",
                 argv[0]);
         return 1;
     }
 
-    /* Initialize io_uring */
-    io_uring_queue_init(QUEUE_DEPTH, &ring, 0);
-
+    /*
+     * For each file that is passed in as the argument, call the
+     * read_and_print_file() function.
+     * */
     for (int i = 1; i < argc; i++) {
-        int ret = submit_read_request(argv[i], &ring);
-        if (ret) {
-            fprintf(stderr, "Error reading file: %s\n", argv[i]);
+        if(read_and_print_file(argv[i])) {
+            fprintf(stderr, "Error reading file\n");
             return 1;
         }
-        get_completion_and_print(&ring);
     }
 
-    /* Call the clean-up function. */
-    io_uring_queue_exit(&ring);
     return 0;
 }

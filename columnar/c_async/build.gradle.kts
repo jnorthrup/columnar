@@ -8,7 +8,16 @@ repositories {
 
 kotlin {
     linuxX64 {
+
         binaries {
+            val main by compilations.getting {
+
+                compilations["main"].cinterops {
+                    create("native") {
+                        defFile = project.file("src/nativeInterop/cinterop/uring.def")
+                     }
+                }
+            }
             executable("uring_read", listOf(DEBUG, RELEASE)) {
                 // Base name for the output file.
                 baseName = "ufoo"
@@ -28,7 +37,7 @@ kotlin {
                 entryPoint = "simple.main"
             }
         }
-        val main by compilations.getting
+
 
     }
 }
