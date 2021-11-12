@@ -1,4 +1,15 @@
-headers =   liburing.h bits/stat.h ac.h
+headers =   liburing.h
+#bits/stat.h ac.h
 #headerFilter = liburing/* sys/*
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu -Isrc/nativeInterop/cinterop
 linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -luring
+---
+#include <bits/stat.h>
+
+#define QUEUE_DEPTH 1
+#define BLOCK_SZ    BLOCK_SIZE
+
+typedef struct file_info{
+    off_t file_sz;
+    struct iovec  iovecs[];      /* Referred by readv/writev */
+} ;

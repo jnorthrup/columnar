@@ -2,6 +2,7 @@
 
 package uring
 
+
 import kotlinx.cinterop.*
 import platform.linux.BLKGETSIZE64
 import platform.posix.*
@@ -14,9 +15,8 @@ import platform.posix.__S_IFMT
 import platform.posix.__S_IFREG
 import platform.posix.off_t
 import platform.posix.stat
+import uring.file_info
 import kotlin.reflect.KProperty1
-
-
 import platform.posix.ioctl as posix_ioctl
 
 fun __S_ISTYPE(mode: Int, mask: Int) = (((mode) and __S_IFMT) == (mask))
@@ -78,26 +78,31 @@ fun output_to_console(buf: CPointer<ByteVar>, len: Int) {
  * the readv operation and print it to the console.
  * */
 
-fun get_completion_and_print(ring: CPointer<io_uring>): Int = memScoped {
-    print("get_completion_and_print")
-    val cqe: io_uring_cqe = nativeHeap.alloc<io_uring_cqe>()
-    print("get_completion_and_print1")
-    val ret: Int = io_uring_wait_cqe(ring!!, cqe!!.ptr!!.reinterpret<CPointerVar<io_uring_cqe>>()!!.get(0)!!.toLong().toCPointer<CPointerVar<io_uring_cqe>>()!!.reinterpret())
-    print("get_completion_and_print1.1 $ret")
-  if (ret >= 0) {
-        print("get_completion_and_print2")
+fun get_completion_and_print(ring: CPointer<io_uring>): Int {
+    println("get_completion_and_print0")
+    println("need ${io_uring_cqe.size} bytes")
+
+    val cqe: uring.io_uring_cqe = nativeHeap.alloc()
+    println("got ${(cqe)}")
+
+
+    println("get_completion_and_print1")
+    val ret: Int = io_uring_wait_cqe(ring, cqe.ptr.reinterpret())
+    println("get_completion_and_print1.1 $ret")
+    if (ret >= 0) {
+        println("get_completion_and_print2")
 
         if (cqe.res >= 0) {
             val fi: CPointer<file_info> = io_uring_cqe_get_data(cqe.ptr)!!.reinterpret()
             var blocks: Int = (fi.pointed.file_sz / BLOCK_SZ.toLong()).toInt()
             if (0L != fi.pointed.file_sz % BLOCK_SZ.toLong()) blocks++
-            print("get_completion_and_print3")
+            println("get_completion_and_print3")
             for (i in 0 until blocks)
                 output_to_console(
                     fi.pointed.iovecs[i].iov_base!!.reinterpret(),
                     fi.pointed.iovecs[i].iov_len.toInt())
             io_uring_cqe_seen(ring, cqe.ptr)
-            print("get_completion_and_print4")
+            println("get_completion_and_print4")
             return 0
         } else fprintf(stderr, "Async readv failed.\n")
     } else perror("io_uring_wait_cqe")
@@ -183,5 +188,4 @@ fun main(args1: Array<String>) {
 
     /* Call the clean-up function. */
     io_uring_queue_exit(ring.ptr)
-
 }

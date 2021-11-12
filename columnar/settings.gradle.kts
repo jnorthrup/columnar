@@ -1,9 +1,9 @@
 rootProject.name = "columnar"
 pluginManagement {
     repositories {
+        mavenCentral()
         gradlePluginPortal()
         google()
-        mavenCentral()
     }
 //        includeBuild("buildsrc")
 }
@@ -12,7 +12,9 @@ dependencyResolutionManagement {
 //    includeBuild("../somethingelse")
 }
 
-include(*(rootDir.listFiles()
-.filter(File::isDirectory)
-.filter { !it.isHidden }
-.map(File::getName)-"buildSrc"-"gradle").toTypedArray())
+//include(*(rootDir.listFiles()
+//.filter(File::isDirectory)
+//.filter { !it.isHidden }
+//.map(File::getName)-"buildSrc"-"gradle").toTypedArray())
+
+include("c_async")
