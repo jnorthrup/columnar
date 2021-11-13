@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/mainthing.dir/library.c.o -o mainthing 

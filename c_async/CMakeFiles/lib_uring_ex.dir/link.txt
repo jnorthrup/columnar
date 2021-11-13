@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/lib_uring_ex.dir/lib_uring_ex.c.o -o lib_uring_ex  -luring 
