@@ -16,7 +16,7 @@ import java.time.Instant
 import kotlin.random.Random
 
 class ISAMCursorKtTest {
-    @Test
+  @Ignore  @Test
     fun testIoInstant() {
 
         val testInstant = Instant.now()
@@ -35,7 +35,7 @@ class ISAMCursorKtTest {
         }
     }
 
-    @Test
+  @Ignore  @Test
     fun testIoInstant2() {
 
         val testInstant = Instant.now()
@@ -70,7 +70,7 @@ class ISAMCursorKtTest {
         }
     }
 
-    @Test
+ @Ignore   @Test
     fun testIoInstant3() {
 
         val testInstant = Instant.now()
@@ -112,7 +112,7 @@ class ISAMCursorKtTest {
         }
     }
 
-    @Test
+  @Ignore  @Test
     fun testIoInstant4() {
 
         val testInstant = Instant.now()

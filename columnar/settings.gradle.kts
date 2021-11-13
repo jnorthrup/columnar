@@ -12,9 +12,7 @@ dependencyResolutionManagement {
 //    includeBuild("../somethingelse")
 }
 
-//include(*(rootDir.listFiles()
-//.filter(File::isDirectory)
-//.filter { !it.isHidden }
-//.map(File::getName)-"buildSrc"-"gradle").toTypedArray())
-
-include("c_async")
+include(*(rootDir.listFiles()
+.filter(File::isDirectory)
+.filter { !it.isHidden }
+.map(File::getName)-"buildSrc"-"gradle").toTypedArray())

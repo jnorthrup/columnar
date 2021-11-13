@@ -6,6 +6,7 @@ import cursors.io.IOMemento
 import kotlin.test.Test
 import vec.ml.DummySpec
 import vec.util._l
+import kotlin.test.Ignore
 
 internal class CategoriesKtTest {
 
@@ -24,7 +25,7 @@ internal class CategoriesKtTest {
         overrides = linkedMapOf("notsomething" to IOMemento.IoInt)
     )
 
-
+@Ignore
     @Test
     fun testCategories() {
         val categories = curs.categories()
@@ -32,7 +33,7 @@ internal class CategoriesKtTest {
         curs.categories(DummySpec.Last).show()
         curs.categories(1).show()
     }
-
+@Ignore
     @Test
     fun testCategories1() {
         curs.categories().asBitSet().show()

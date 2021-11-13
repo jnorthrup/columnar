@@ -4,13 +4,15 @@ import kotlin.*
 import kotlinx.cinterop.*
 import platform.linux.memalign
 import platform.posix.NULL
+import uring.util.S_ISBLK
+import uring.util.S_ISREG
+import uring.util.allocWithFlex
 import platform.posix.bzero as posix_bzero
 import platform.linux.BLKGETSIZE64 as PlatformLinuxBLKGETSIZE64
 import platform.posix.ioctl as posix_ioctl
 import platform.posix.off_t as posix_off_t
 import platform.posix.perror as posix_perror
 import platform.posix.syscall as posix_syscall
-import uring.old.*
 
 /*
  * This code is written in the days when io_uring-related system calls are not

@@ -14,6 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
 import kotlin.streams.asSequence
+import kotlin.test.Ignore
 
 
 class CsvCursorTest {
@@ -23,6 +24,7 @@ class CsvCursorTest {
 
     val path = Paths.get("src/test/resources/calendar.csv")
 
+    @Ignore
     @Test
     fun HeapResidentCsvCursor() {
         val csvLines = Files.readAllLines(path)
@@ -35,7 +37,7 @@ class CsvCursorTest {
         print(value)
         assertEquals(value, LocalDate.parse("2011-01-30"))
     }
-
+@Ignore
     @Test
     fun ArrayCsvCursor() {
 

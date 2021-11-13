@@ -10,6 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPath
 import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathFactory
+import kotlin.test.Ignore
 
 
 /**
@@ -17,7 +18,7 @@ import javax.xml.xpath.XPathFactory
  */
 class XPathTest {
     @Test
-
+@Ignore
     fun remap() {
         // curl -s 'https://en.wikipedia.org/wiki/List_of_largest_cities' >List_of_largest_cities.html
         //  xmlstarlet sel -t -v   '//*[@id="mw-content-text"]/div/table[2]/tbody/tr[position() > 2 ]/td[1]/a/text()'  <(curl -s 'https://en.wikipedia.org/wiki/List_of_largest_cities')

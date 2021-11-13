@@ -1,9 +1,6 @@
 @file:Suppress("FunctionName")
 
-package uring.old
-
-
-
+package uring.util
 import kotlinx.cinterop.*
 import platform.posix.__S_IFBLK
 import platform.posix.__S_IFCHR
