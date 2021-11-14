@@ -2,7 +2,9 @@ package simple
 
 import kotlinx.cinterop.*
 import platform.posix.*
+import simple.HasPosixErr.Companion.posixRequires
 import simple.HasPosixErr.Companion.reportErr
+import simple.HasPosixErr.Companion.warning
 import platform.posix.mmap as posix_mmap
 import platform.posix.open as posix_open
 
@@ -14,25 +16,25 @@ class PosixFile(
     override val fd: Int = run {
         posix_open(path, O_FLAGS)
     },
-) : HasDescriptor {
+) : HasDescriptor, HasSize {
     override fun read64(buf: ByteArray): ULong {
         val addressOf = buf.pin().addressOf(0)
         val b: CArrayPointer<ByteVar> = addressOf.reinterpret<ByteVar>()
         val read = read(fd, b, buf.size.toULong())
-        require(read >= 0) { "read failed with result ${reportErr(read.toInt())}" }
+        posixRequires(read >= 0) { "read failed with result ${reportErr(read.toInt())}" }
         return read.toULong()
     }
 
     override fun close(): Int {
         val close = close(fd)
-        require(close >= 0) { "close failed with result ${reportErr(close)}" }
+        posixRequires(close >= 0) { "close failed with result ${reportErr(close)}" }
         return close
     }
 
     override fun write64(buf: ByteArray): ULong {
         val b: Long = buf.pin().objcPtr().toLong()
         val write = write(fd, b.toCPointer<ByteVar>()!!, buf.size.toULong())
-        require(write >= 0) { "write failed with result ${reportErr(write.toInt())}" }
+        posixRequires(write >= 0) { "write failed with result ${reportErr(write.toInt())}" }
         return write.toULong()
     }
 
@@ -40,7 +42,7 @@ class PosixFile(
     /**lseek [manpage](https://www.man7.org/linux/man-pages/man2/lseek.2.html) */
     override fun seek(offset: __off_t, whence: Int): ULong {
         val offr: __off_t = lseek(fd, offset, whence)
-        require(offr >= 0) { "seek failed with result ${ reportErr(res = offr.toInt() ) }" }
+        posixRequires(offr >= 0) { "seek failed with result ${reportErr(res = offr.toInt())}" }
         return offr.toULong()
     }
 
@@ -53,14 +55,11 @@ class PosixFile(
     ): COpaquePointer? = mmap_base(fd = -1, __len = len, __prot = prot, __flags = flags, __offset = offset)
 
     /** mmap [manpage](https://www.man7.org/linux/man-pages/man2/mmap.2.html) */
-    fun mmap(len: ULong, prot: Int = PROT_READ, flags: Int = MAP_SHARED, offset: off_t = 0L) =
-        mmap_base(
-            fd = fd,
-            __len = len,
-            __prot = prot,
-            __flags = flags,
-            __offset = offset
-        ).reinterpret<CArrayPointerVar<ByteVar>>()
+    fun mmap(len: ULong, prot: Int = PROT_READ, flags: Int = MAP_SHARED, offset: off_t = 0L) = mmap_base(fd = fd,
+        __len = len,
+        __prot = prot,
+        __flags = flags,
+        __offset = offset).reinterpret<CArrayPointerVar<ByteVar>>()
 
     /** lseek [manpage](https://www.man7.org/linux/man-pages/man2/leek.2.html) */
     fun at(offset: __off_t, whence: Int) {
@@ -73,7 +72,7 @@ class PosixFile(
 
         fun open(path: String?, O_FLAGS: Int): Int {
             val fd = posix_open(path, O_FLAGS)
-            require(fd > 0) { "File::open $path returned ${reportErr(fd)}" }
+            posixRequires(fd > 0) { "File::open $path returned ${reportErr(fd)}" }
             return fd
         }
 
@@ -115,24 +114,17 @@ class PosixFile(
             fd: Int,
             __offset: platform.posix.__off_t,
         ): kotlinx.cinterop.COpaquePointer {
-//            println("*** posix_mmap($__addr, $__len, $__prot, $__flags, $fd, $__offset)\n")
             warning(__offset % page_size == 0L) { "$__offset requires blocksize of $page_size" }
-            val cPointer =
-                posix_mmap(__addr, __len, __prot, __flags, fd, __offset)
-            require(cPointer.toLong() != -1L) { "mmap failed with result ${reportErr(cPointer.toLong().toInt())}" }
+            val cPointer = posix_mmap(__addr, __len, __prot, __flags, fd, __offset)
+            posixRequires(cPointer.toLong() != -1L) {
+                "mmap failed with result ${
+                    reportErr(cPointer.toLong().toInt())
+                }"
+            }
 
             return cPointer!!
 
         }
-
-        /**a non-throwing require*/
-        fun warning(cond: Boolean, lazyz: () -> Any?) = Unit.also { if (!cond) println("**warning: ${lazyz()}") }
     }
-    /*
- * Returns the size of the file whose open file descriptor is passed in.
- * Properly handles regular file and block devices as well. Pretty.
- * */
-
-
 }
 

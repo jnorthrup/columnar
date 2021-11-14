@@ -4,6 +4,7 @@
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 #linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu
 ---
+#include <linux/io_uring.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
@@ -15,7 +16,6 @@ compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 #include <sys/mman.h>
 #include <sys/uio.h>
 #include <linux/fs.h>
-#include <linux/io_uring.h>
 
 #define QUEUE_DEPTH 1
 #define BLOCK_SZ    1024

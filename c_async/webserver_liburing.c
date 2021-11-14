@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <linux/io_uring.h>
 
 struct request {
     int event_type;
