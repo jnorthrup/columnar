@@ -12,9 +12,12 @@ import simple.simple.CZero.nz
 import simple.simple.CZero.z
 import platform.posix.bzero as posix_bzero
 import platform.linux.BLKGETSIZE64 as PlatformLinuxBLKGETSIZE64
+import platform.posix.fstat as posix_fstat
 import platform.posix.ioctl as posix_ioctl
+import platform.posix.mmap as posix_mmap
 import platform.posix.off_t as posix_off_t
 import platform.posix.perror as posix_perror
+import platform.posix.stat as posix_stat
 import platform.posix.syscall as posix_syscall
 
 /*
@@ -35,8 +38,8 @@ fun io_uring_enter(ring_fd: Int, to_submit: UInt, min_complete: UInt, flags: UIn
  * */
 
 fun get_file_size(fd: Int): posix_off_t = memScoped {
-    val st: stat = alloc()
-    if (fstat(fd, st.ptr as CValuesRef<stat>) >= 0) {
+    val st: posix_stat = alloc()
+    if (posix_fstat(fd, st.ptr as CValuesRef<posix_stat>) >= 0) {
         if (S_ISBLK(st.st_mode)) {
             val bytes: CPointerVar<LongVar> = alloc()
             return if (posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes) == 0) bytes.pointed!!.value.toLong()
@@ -89,12 +92,12 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     var cring_sz: Int = (cqOff.cqes + p.cq_entries * sizeOf<io_uring_cqe>().toUInt()).toInt()
 
     /* In kernel version 5.4 and above, it is possible to map the submission and
- * completion buffers with a single mmap() call. Rather than check for kernel
- * versions, the recommended way is to just check the features field of the
- * io_uring_params structure, which is a bit mask. If the
- * IORING_FEAT_SINGLE_MMAP is set, then we can do away with the second mmap()
- * call to map the completion ring.
- * */
+     * completion buffers with a single mmap() call. Rather than check for kernel
+     * versions, the recommended way is to just check the features field of the
+     * io_uring_params structure, which is a bit mask. If the
+     * IORING_FEAT_SINGLE_MMAP is set, then we can do away with the second mmap()
+     * call to map the completion ring.
+     */
     if ((p.features and IORING_FEAT_SINGLE_MMAP).nz) {
         if (cring_sz > sring_sz) {
             sring_sz = cring_sz
@@ -106,16 +109,13 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     /* Map in the submission and completion queue ring buffers.
  * Older kernels only map in the submission queue, though.
  * */
-    val sq_ptr: CPointer<ByteVar> = mmap(NULL,
+    val sq_ptr = posix_mmap(NULL,
         sring_sz.toULong(),
         platform.posix.PROT_READ or platform.posix.PROT_WRITE,
         platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
         ringFd,
-        IORING_OFF_SQ_RING.toLong())!!.reinterpret()
-    if (sq_ptr == platform.posix.MAP_FAILED) {
-        posix_perror("mmap")
-        return 1
-    }
+        IORING_OFF_SQ_RING.toLong())!!.reinterpret<ByteVar>()
+    posixRequires(sq_ptr != platform.posix.MAP_FAILED) { "mmap" }
     val cq_ptr: CPointer<ByteVar>
     if ((p.features and IORING_FEAT_SINGLE_MMAP).nz) {
         cq_ptr = sq_ptr
@@ -127,10 +127,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
             MAP_SHARED or MAP_POPULATE,
             ringFd,
             IORING_OFF_CQ_RING.toLong())!!.reinterpret()
-        if (cq_ptr == MAP_FAILED) {
-            posix_perror("mmap")
-            return 1
-        }
+       posixRequires (cq_ptr != MAP_FAILED) { "mmap" }
     }
     /* Save useful fields in a global app_io_sq_ring r:fo later easy reference */
     val sqLong = sq_ptr.toLong()
@@ -141,12 +138,12 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
         val toLong3 = sqOff.ring_entries.toLong()
         val toLong4 = sqOff.flags.toLong()
         val toLong5 = sqOff.array.toLong()
-        sring.pointed.head = (sqLong + toLong).toCPointer<UIntVar>()!!.reinterpret()
-        sring.pointed.tail = (sqLong + toLong1).toCPointer<UIntVar>()!!.reinterpret()
-        sring.pointed.ring_mask = (sqLong + toLong2).toCPointer<UIntVar>()!!.reinterpret()
-        sring.pointed.ring_entries = (sqLong + toLong3).toCPointer<UIntVar>()!!.reinterpret()
-        sring.pointed.flags = (sqLong + toLong4).toCPointer<UIntVar>()!!.reinterpret()
-        sring.pointed.array = (sqLong + toLong5).toCPointer<UIntVar>()!!.reinterpret()
+        sring.pointed.head = (sqLong + toLong).toCPointer() 
+        sring.pointed.tail = (sqLong + toLong1).toCPointer()
+        sring.pointed.ring_mask = (sqLong + toLong2).toCPointer()
+        sring.pointed.ring_entries = (sqLong + toLong3).toCPointer()
+        sring.pointed.flags = (sqLong + toLong4).toCPointer()
+        sring.pointed.array = (sqLong + toLong5).toCPointer()
     }
 
     /* Map in the submission queue entries array */
@@ -154,8 +151,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
         (p.sq_entries * sizeOf<io_uring_sqe>().toUInt()).toULong(),
         platform.posix.PROT_READ or platform.posix.PROT_WRITE,
         platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
-        ringFd,
-        IORING_OFF_SQES.toLong())!!.reinterpret()
+        ringFd,IORING_OFF_SQES.toLong())!!.reinterpret()
     if (s.pointed.sqes == platform.posix.MAP_FAILED) {
         posix_perror("mmap")
         return 1
@@ -165,11 +161,11 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     cq_ptr.toLong().let { cq_ptr ->
         /* Save useful fields in a global app_io_cq_ring r:fo later
 * easy reference */
-        cring.pointed.head = (cq_ptr + cqOff.head.toLong()).toCPointer<UIntVar>()!!.reinterpret()
-        cring.pointed.tail = (cq_ptr + cqOff.tail.toLong()).toCPointer<UIntVar>()!!.reinterpret()
-        cring.pointed.ring_mask = (cq_ptr + cqOff.ring_mask.toLong()).toCPointer<UIntVar>()!!.reinterpret()
-        cring.pointed.ring_entries = (cq_ptr + cqOff.ring_entries.toLong()).toCPointer<UIntVar>()!!.reinterpret()
-        cring.pointed.cqes = (cq_ptr + cqOff.cqes.toLong()).toCPointer<UIntVar>()!!.reinterpret()
+        cring.pointed.head = (cq_ptr + cqOff.head.toLong()).toCPointer()
+        cring.pointed.tail = (cq_ptr + cqOff.tail.toLong()).toCPointer()
+        cring.pointed.ring_mask = (cq_ptr + cqOff.ring_mask.toLong()).toCPointer()
+        cring.pointed.ring_entries = (cq_ptr + cqOff.ring_entries.toLong()).toCPointer()
+        cring.pointed.cqes = (cq_ptr + cqOff.cqes.toLong()).toCPointer()
     }
 
     return 0
@@ -214,8 +210,8 @@ fun read_from_cq(s: CPointer<submitter>): Unit {
         fi = cqe.pointed.user_data.toLong().toCPointer<file_info>()!!
         if (cqe.pointed.res < 0) fprintf(stderr, "Error: %s\n", strerror(abs(cqe.pointed.res)))
 
-        var blocks: Int = (fi.pointed.file_sz.toLong() / BLOCK_SZ.toLong()).toInt()
-        if (0L != fi.pointed.file_sz.toLong() % BLOCK_SZ) blocks++
+        var blocks: Int = (fi.pointed.file_sz / BLOCK_SZ.toLong()).toInt()
+        if (0L != fi.pointed.file_sz % BLOCK_SZ) blocks++
 
         for (i/*as int */ in 0 until blocks) output_to_console(fi.pointed.iovecs[i].iov_base!!.reinterpret(),
             fi.pointed.iovecs[i].iov_len.toInt())
@@ -236,14 +232,12 @@ fun read_from_cq(s: CPointer<submitter>): Unit {
  *
  * */
 fun submit_to_sq(file_path: String, s: CPointer<submitter>): Int = nativeHeap.run {
-
-
-    val file_fd: Int = open(file_path, O_RDONLY.toInt())
+    val file_fd: Int = open(file_path, O_RDONLY)
     posixRequires(file_fd >= 0) { "fileopen $file_fd" }
     val sring: CPointer<app_io_sq_ring> = s.pointed.sq_ring.ptr
     var current_block = 0U
 
-    val file_sz: posix_off_t = get_file_size(file_fd.toInt()).toLong()
+    val file_sz: posix_off_t = get_file_size(file_fd)
     if (file_sz >= 0L) {
         var bytes_remaining: posix_off_t = file_sz
         var blocks: Int = (file_sz / BLOCK_SZ).toInt()
@@ -253,20 +247,19 @@ fun submit_to_sq(file_path: String, s: CPointer<submitter>): Int = nativeHeap.ru
         fi.file_sz = file_sz
 
         /*
-     * For each block of the file we need to read, we allocate an iovec struct
-     * which is indexed into the iovecs array. This array is passed in as part
-     * of the submission. If you don't understand this, then you need to look
-     * up how the readv() and writev() system calls work.
-     * */
+         * For each block of the file we need to read, we allocate an iovec struct
+         * which is indexed into the iovecs array. This array is passed in as part
+         * of the submission. If you don't understand this, then you need to look
+         * up how the readv() and writev() system calls work.
+         * */
         while (0L != bytes_remaining) {
-            var bytes_to_read: posix_off_t = bytes_remaining.toLong()
-            if (bytes_to_read > BLOCK_SZ.toLong()) bytes_to_read = BLOCK_SZ.toLong()
-
-            fi.iovecs[current_block.toInt()].iov_len = bytes_to_read.toULong()
-
-
-            fi.iovecs[current_block.toInt()].iov_base = memalign(BLOCK_SZ, BLOCK_SZ)
-
+            var bytes_to_read: posix_off_t = bytes_remaining
+            val tehBlockSize: Long = BLOCK_SZ.toLong()
+            if (bytes_to_read > tehBlockSize)
+                bytes_to_read = tehBlockSize
+            val curBlock = current_block.toInt()
+            fi.iovecs[curBlock].iov_len = bytes_to_read.toULong()
+            fi.iovecs[curBlock].iov_base = memalign(BLOCK_SZ, BLOCK_SZ)
             current_block++
             bytes_remaining -= bytes_to_read
         }
@@ -299,26 +292,24 @@ fun submit_to_sq(file_path: String, s: CPointer<submitter>): Int = nativeHeap.ru
         }
 
         /*
-     * Tell the kernel we have submitted events with the io_uring_enter() system
-     * call. We also pass in the IOURING_ENTER_GETEVENTS flag which causes the
-     * io_uring_enter() call to wait until min_complete events (the 3rd param)
-     * complete.
-     *
-     * ************** BLOCKS HERE
-     * ************** BLOCKS HERE
-     * ************** BLOCKS HERE
-     * ************** BLOCKS HERE
-     * ************** BLOCKS HERE
-     * ************** BLOCKS HERE
-     *
-     * */
+         * Tell the kernel we have submitted events with the io_uring_enter() system
+         * call. We also pass in the IOURING_ENTER_GETEVENTS flag which causes the
+         * io_uring_enter() call to wait until min_complete events (the 3rd param)
+         * complete.
+         *
+         * ************** BLOCKS HERE
+         * ************** BLOCKS HERE
+         * ************** BLOCKS HERE
+         * ************** BLOCKS HERE
+         * ************** BLOCKS HERE
+         * ************** BLOCKS HERE
+         *
+         */
         val ret: Int = io_uring_enter(s.pointed.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS)
-        posixRequires(ret.z, "io_uring_enter $ret")
+        posixRequires(ret.nz, "io_uring_enter $ret")
 
         return 0
     }
-    return 1
-    posix_perror("open")
     return 1
 }
 

@@ -1,8 +1,6 @@
 @file:Suppress("FunctionName")
 
 package uring.util
-
-
 import kotlinx.cinterop.*
 import simple.allocWithFlex
 import uring.file_info
