@@ -4,9 +4,9 @@ import kotlin.*
 import kotlinx.cinterop.*
 import platform.linux.memalign
 import platform.posix.NULL
-import uring.util.S_ISBLK
-import uring.util.S_ISREG
-import uring.util.allocWithFlex
+import simple.HasDescriptor.Companion.S_ISBLK
+import simple.HasDescriptor.Companion.S_ISREG
+import simple.allocWithFlex
 import platform.posix.bzero as posix_bzero
 import platform.linux.BLKGETSIZE64 as PlatformLinuxBLKGETSIZE64
 import platform.posix.ioctl as posix_ioctl
@@ -34,20 +34,17 @@ fun io_uring_enter(ring_fd: Int, to_submit: UInt, min_complete: UInt, flags: UIn
 
 fun get_file_size(fd: Int): posix_off_t = memScoped {
     val st: stat = alloc()
-
-    if (fstat(fd, st.ptr as CValuesRef<stat>) < 0) {
-        posix_perror("fstat")
-        return -1
+    if (fstat(fd, st.ptr as CValuesRef<stat>) >= 0) {
+        if (S_ISBLK(st.st_mode)) {
+            val bytes: CPointerVar<LongVar> = alloc()
+            return if (posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes) == 0) bytes.pointed!!.value.toLong()
+            else {
+                posix_perror("ioctl")
+                -1
+            }
+        } else if (S_ISREG(st.st_mode)) return st.st_size else return -1
     }
-    if (S_ISBLK(st.st_mode.toInt())) {
-        val bytes: CPointerVar<LongVar> = alloc()
-        if (posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes) != 0) {
-            posix_perror("ioctl")
-            return -1
-        }
-        return bytes.pointed!!.value.toLong() /* = kotlin.Long */
-    } else if (S_ISREG(st.st_mode.toInt())) return st.st_size
-
+    posix_perror("fstat")
     return -1
 }
 
@@ -311,7 +308,7 @@ fun submit_to_sq(file_path: String, s: CPointer<submitter>): Int = nativeHeap.ru
 fun main(argv1: Array<String>): Unit {
     val s: submitter = nativeHeap.alloc()
     val argv = argv1.takeIf { it.isNotEmpty() } ?: arrayOf("/etc/sysctl.conf")
-    
+
     println("setting up uring with args ${argv.toList()}")
     if (0 != app_setup_uring(s.ptr)) {
         fprintf(stderr, "Unable to setup uring!\n")
@@ -329,6 +326,5 @@ fun main(argv1: Array<String>): Unit {
         println("back from read_from_cq(${s.ptr})")
     }
     println("exitting")
-
     return
 }

@@ -1,9 +1,6 @@
-plugins {
-//    `kotlin-dsl`
+plugins { 
     kotlin("multiplatform") version "1.6.0-RC"
 }
-
-
 kotlin {
     linuxX64  {
         binaries {

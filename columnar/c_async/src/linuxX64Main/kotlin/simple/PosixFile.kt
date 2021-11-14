@@ -2,13 +2,14 @@ package simple
 
 import kotlinx.cinterop.*
 import platform.posix.*
+import simple.HasPosixErr.Companion.reportErr
 import platform.posix.mmap as posix_mmap
 import platform.posix.open as posix_open
 
 /**
 opens file for syncronous read/write
  */
-class CFile(
+class PosixFile(
     val path: String?, O_FLAGS: Int = O_RDWR or O_SYNC,
     override val fd: Int = run {
         posix_open(path, O_FLAGS)
@@ -68,9 +69,6 @@ class CFile(
     }
 
     companion object {
-        /**strerror [manpage](https://www.man7.org/linux/man-pages/man2/strerror.2.html) */
-        fun reportErr(res: Int) = "$res ${strerror(errno)?.toKString() ?: "<trust me>"}"
-
         /**open [manpage](https://www.man7.org/linux/man-pages/man2/open.2.html) */
 
         fun open(path: String?, O_FLAGS: Int): Int {
@@ -130,5 +128,11 @@ class CFile(
         /**a non-throwing require*/
         fun warning(cond: Boolean, lazyz: () -> Any?) = Unit.also { if (!cond) println("**warning: ${lazyz()}") }
     }
+    /*
+ * Returns the size of the file whose open file descriptor is passed in.
+ * Properly handles regular file and block devices as well. Pretty.
+ * */
+
+
 }
 

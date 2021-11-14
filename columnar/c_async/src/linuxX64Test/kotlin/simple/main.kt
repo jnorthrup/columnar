@@ -2,7 +2,6 @@ package simple
 
 
 import kotlinx.cinterop.*
-import platform.linux.*
 import platform.posix.*
 
 
@@ -28,9 +27,9 @@ fun open_read() {
 fun open_mmap(): Unit {
     memScoped {
 
-        val cFile = CFile("/etc/sysctl.conf", O_RDONLY)
-        val cPointer = cFile.mmap(41.toULong(), offset = 0)
-        cFile.close()
+        val posixFile = PosixFile("/etc/sysctl.conf", O_RDONLY)
+        val cPointer = posixFile.mmap(41.toULong(), offset = 0)
+        posixFile.close()
         val ccptr = cPointer.toLong().toCPointer<ByteVar>()
         println(ccptr!!.pin().get().toKStringFromUtf8().take(40))
         munmap(ccptr, 41)
@@ -49,8 +48,8 @@ fun main() {
 
 fun cFileRead() {
     val buf = ByteArray(41)
-    val cFile = CFile("/etc/sysctl.conf", O_RDONLY)
-    val read = cFile.read(buf)
+    val posixFile = PosixFile("/etc/sysctl.conf", O_RDONLY)
+    val read = posixFile.read(buf)
     println(buf.decodeToString(0, read.toInt()))
-    cFile.close()
+    posixFile.close()
 }
