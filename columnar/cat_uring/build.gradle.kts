@@ -11,13 +11,13 @@ kotlin {
                 // Accessing the output file.
                 println("Executable path: ${outputFile.absolutePath}")
                 // Custom entry point function.
-                entryPoint = "uring.cat_file"
+                entryPoint = "linux_uring.cat_file"
             }
         }
         val main by compilations.getting {
             compilations["main"].cinterops {
                 create("native") {
-                    defFile = project.file("src/nativeInterop/cinterop/uring.def")
+                    defFile = project.file("src/nativeInterop/cinterop/linux_uring.def")
                 }
             }
         }

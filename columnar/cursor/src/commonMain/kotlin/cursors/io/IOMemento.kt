@@ -10,6 +10,7 @@ import kotlinx.datetime.atStartOfDayIn
 import ports.ByteBuffer
 import vec.macros.*
 import vec.util._a
+import kotlin.jvm.JvmStatic
 import kotlin.time.ExperimentalTime
 
 const val SPACE: Byte = ' '.code.toByte()
@@ -68,11 +69,13 @@ enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
 
     companion object {
         val stringCmp = fun(o1: Any?, o2: Any?): Int = "$o1".compareTo("$o2")
+
+        @JvmStatic
         var cmpCache = (Array(values().size) { stringCmp }).also { arr ->
             _a[
                     IoInt to fun(o1: Any?, o2: Any?): Int = (o1 as Int).compareTo(o2 as Int),
                     IoLong to fun(o1: Any?, o2: Any?): Int = (o1 as Long).compareTo(o2 as Long),
-                    IoByte to fun(o1: Any?, o2: Any?): Int = (o1 as Int and 0xff).compareTo(o2 as Int and 0xff),
+                    IoByte to fun(o1: Any?, o2: Any?): Int = (o1 as Byte).toUByte().compareTo((o2 as Byte).toUByte()),
                     IoFloat to fun(o1: Any?, o2: Any?): Int = (o1 as Float).compareTo(o2 as Float),
                     IoDouble to fun(o1: Any?, o2: Any?): Int = (o1 as Double).compareTo(o2 as Double),
                     IoInstant to fun(o1: Any?, o2: Any?): Int = (o1 as Instant).compareTo(o2 as Instant),
@@ -80,6 +83,7 @@ enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
                     IoLocalDate to fun(o1: Any?, o2: Any?): Int = (o1 as LocalDate).compareTo(o2 as LocalDate),
             ].forEach { (a: IOMemento, b: (Any?, Any?) -> Int) -> arr[a.ordinal] = b }
         }
+
         fun cmp(t: TypeMemento) = (t as? IOMemento)?.let { cmpCache[t.ordinal] } ?: stringCmp
         fun listComparator(progression: Vect0r<out TypeMemento>) = Comparator<List<*>> { o1, o2 ->
             val comp = progression.map(::cmp)

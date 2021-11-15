@@ -1,4 +1,4 @@
-package uring
+package linux_uring
 
 /**
  * #The opcode

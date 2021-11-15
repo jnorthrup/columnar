@@ -1,7 +1,7 @@
-package uring
+package linux_uring
 
 import kotlinx.cinterop.*
-import platform.linux.memalign
+import platform.linux.*
 import platform.posix.*
 import simple.HasDescriptor.Companion.S_ISBLK
 import simple.HasDescriptor.Companion.S_ISREG
@@ -15,9 +15,10 @@ import platform.posix.fstat as posix_fstat
 import platform.posix.ioctl as posix_ioctl
 import platform.posix.mmap as posix_mmap
 import platform.posix.off_t as posix_off_t
-import platform.posix.perror as posix_perror
 import platform.posix.stat as posix_stat
 import platform.posix.syscall as posix_syscall
+import platform.posix.sigset_t
+import platform.posix.open as posix_open
 
 /** This code is written in the days when io_uring-related system calls are not
  *  part of standard C libraries. So, we roll our own system call wrapper
@@ -61,7 +62,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
      * call zeroed out. We could set any flags if we need to, but for this
      * example, we don't. */
     posix_bzero(p.ptr, sizeOf<io_uring_params>().toULong())
-    s.pointed.ring_fd = io_uring_setup(QUEUE_DEPTH.toUInt(), p.ptr)
+    s.pointed.ring_fd = io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr)
     val ringFd = s.pointed.ring_fd
     val mustBe = ringFd >= 0
     posixRequires(mustBe, ringFd)
@@ -105,27 +106,27 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
         /* Map in the completion queue ring buffer in older kernels separately */
         cq_ptr = posix_mmap(NULL,
             cring_sz.toULong(),
-            PROT_READ or PROT_WRITE,
-            MAP_SHARED or MAP_POPULATE,
+            platform.posix.PROT_READ or platform.posix.PROT_WRITE,
+            platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
             ringFd,
             IORING_OFF_CQ_RING.toLong())!!.reinterpret()
-        posixRequires(cq_ptr != MAP_FAILED) { "mmap" }
+        posixRequires(cq_ptr != platform.posix.MAP_FAILED) { "mmap" }
     }
     /* Save useful fields in a global app_io_sq_ring r:fo later easy reference */
     val sqLong = sq_ptr.toLong()
-    sqLong.let { sqLong ->
+    sqLong.let {
         val toLong = sqOff.head.toLong()
         val toLong1 = sqOff.tail.toLong()
         val toLong2 = sqOff.ring_mask.toLong()
         val toLong3 = sqOff.ring_entries.toLong()
         val toLong4 = sqOff.flags.toLong()
         val toLong5 = sqOff.array.toLong()
-        sring.pointed.head = (sqLong + toLong).toCPointer()
-        sring.pointed.tail = (sqLong + toLong1).toCPointer()
-        sring.pointed.ring_mask = (sqLong + toLong2).toCPointer()
-        sring.pointed.ring_entries = (sqLong + toLong3).toCPointer()
-        sring.pointed.flags = (sqLong + toLong4).toCPointer()
-        sring.pointed.array = (sqLong + toLong5).toCPointer()
+        sring.pointed.head = (it + toLong).toCPointer()
+        sring.pointed.tail = (it + toLong1).toCPointer()
+        sring.pointed.ring_mask = (it + toLong2).toCPointer()
+        sring.pointed.ring_entries = (it + toLong3).toCPointer()
+        sring.pointed.flags = (it + toLong4).toCPointer()
+        sring.pointed.array = (it + toLong5).toCPointer()
     }
 
     /* Map in the submission queue entries array */
@@ -137,13 +138,13 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     require(s.pointed.sqes != platform.posix.MAP_FAILED) { ("mmap") }
 
 
-    cq_ptr.toLong().let { cq_ptr ->
+    cq_ptr.toLong().let {
         /* Save useful fields in a global app_io_cq_ring r:fo later easy reference */
-        cring.pointed.head = (cq_ptr + cqOff.head.toLong()).toCPointer()
-        cring.pointed.tail = (cq_ptr + cqOff.tail.toLong()).toCPointer()
-        cring.pointed.ring_mask = (cq_ptr + cqOff.ring_mask.toLong()).toCPointer()
-        cring.pointed.ring_entries = (cq_ptr + cqOff.ring_entries.toLong()).toCPointer()
-        cring.pointed.cqes = (cq_ptr + cqOff.cqes.toLong()).toCPointer()
+        cring.pointed.head = (it + cqOff.head.toLong()).toCPointer()
+        cring.pointed.tail = (it + cqOff.tail.toLong()).toCPointer()
+        cring.pointed.ring_mask = (it + cqOff.ring_mask.toLong()).toCPointer()
+        cring.pointed.ring_entries = (it + cqOff.ring_entries.toLong()).toCPointer()
+        cring.pointed.cqes = (it + cqOff.cqes.toLong()).toCPointer()
     }
 
     return 0
@@ -207,7 +208,7 @@ val tehBlockSize: Long = BLOCK_SZ.toLong()
  *
  * */
 fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap.run {
-    val file_fd: Int = open(file_path, O_RDONLY)
+    val file_fd: Int = posix_open(file_path, platform.posix.O_RDONLY)
     posixRequires(file_fd >= 0) { "fileopen $file_fd" }
     val sring: CPointer<app_io_sq_ring> = s.pointed.sq_ring.ptr
     var current_block = 0U

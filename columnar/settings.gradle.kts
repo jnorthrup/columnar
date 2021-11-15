@@ -1,4 +1,12 @@
-rootProject.name = "columnar"
+
+rootProject.let {
+    it.name = "columnar"
+/*
+    it.group = "columnar"
+    it.version = "1.0.2-SNAPSHOT"
+*/
+
+}
 pluginManagement {
     repositories {
         mavenCentral()
@@ -11,6 +19,7 @@ dependencyResolutionManagement {
     repositories { mavenCentral() }
 //    includeBuild("../somethingelse")
 }
+
 
 include(*(rootDir.listFiles()
 .filter(File::isDirectory)
