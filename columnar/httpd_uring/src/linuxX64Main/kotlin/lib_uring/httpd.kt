@@ -1,120 +1,141 @@
 package lib_uring
 
-/*
+import platform.linux.*
+import kotlinx.cinterop.*
+import kotlinx.cinterop.nativeHeap.alloc
+import platform.linux.free
+import platform.posix.*
+import simple.HasDescriptor.Companion.S_ISREG
+import simple.allocWithFlex
+import simple.simple.CZero.nz
+import simple.simple.CZero.z
+import uring_httpd.*
+import kotlin.math.max
+import kotlin.math.min
+import platform.posix.exit as posixExit
+import platform.posix.fprintf as posixFprintf
+import platform.posix.malloc as posixMalloc
+import platform.posix.memset as posixMemset
+import platform.posix.perror as posix_perror
+import platform.posix.stderr as posixStderr
+
+/**
  * Utility function to convert a string to lower case.
- * */
-
-void strtolower(char *str) {
-    for (; *str; ++str)
-    *str = (char)tolower(*str);
-}
-/*
- One function that prints the system call and the error details
- and then exits with error code 1. Non-zero meaning things didn't go well.
  */
-void fatal_error(const char *syscall) {
-    perror(syscall);
-    exit(1);
+fun strtolower(str1: CPointer<ByteVar>): Unit {
+    var c = 0
+    while (str1[c].nz) str1[c] = tolower(str1[c++].toInt()).toByte()
 }
 
-/*
+/**
+One function that prints the system call and the error details
+and then exits with error code 1. Non-zero meaning things didn't go well.
+ */
+fun fatal_error(syscall: String): Unit {
+    posix_perror(syscall)
+    posixExit(1)
+}
+
+/**
  * Helper function for cleaner looking code.
- * */
+ */
 
-void *zh_malloc(size_t size) {
-    void *buf = malloc(size);
-    if (!buf) {
-        fprintf(stderr, "Fatal error: unable to allocate memory.\n");
-        exit(1);
+fun zh_malloc(size: size_t): CPointer<ByteVar> {
+    val ptr = posixMalloc(size).toLong()
+    if (ptr.z) {
+        posixFprintf(posixStderr, "Fatal error: unable to allocate memory.\n")
+        posixExit(1)
     }
-    return buf;
+    return ptr.toCPointer<ByteVar>()!!.reinterpret()
 }
 
-/*
+/**
  * This function is responsible for setting up the main listening socket used by the
  * web server.
- * */
+ */
 
-int setup_listening_socket(int port) {
-    int sock;
-    struct sockaddr_in srv_addr;
+fun setup_listening_socket(port: Int): Int = nativeHeap.run {
 
-    sock = socket(PF_INET, SOCK_STREAM, 0);
+    val srv_addr: sockaddr_in = alloc<sockaddr_in>()
+
+    val sock = socket(PF_INET, SOCK_STREAM, 0)
     if (sock == -1)
-        fatal_error("socket()");
+        fatal_error("socket()")
 
-    int enable = 1;
+    val enable: IntVar = alloc { value = 1 }
+
+
     if (setsockopt(sock,
             SOL_SOCKET, SO_REUSEADDR,
-            &enable, sizeof(int)) < 0)
-    fatal_error("setsockopt(SO_REUSEADDR)");
+            enable.ptr, Int.SIZE_BYTES.toUInt()) < 0
+    )
+        fatal_error("setsockopt(SO_REUSEADDR)")
 
 
-    memset(&srv_addr, 0, sizeof(srv_addr));
-    srv_addr.sin_family = AF_INET;
-    srv_addr.sin_port = htons(port);
-    srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    posixMemset(srv_addr.ptr, 0, sizeOf<sockaddr_in>().toULong())
+    srv_addr.sin_family = AF_INET.toUShort()
+    srv_addr.sin_port = htons(port.toUShort())
+    srv_addr.sin_addr.s_addr = htonl(INADDR_ANY)
 
     /* We bind to a port and turn this socket into a listening
      * socket.
      * */
-    if (bind(sock,
-            (const struct sockaddr *)&srv_addr,
-    sizeof(srv_addr)) < 0)
-    fatal_error("bind()");
+    if (bind(sock, srv_addr.ptr.reinterpret(), sizeOf<sockaddr_in>().toUInt()) < 0)
+        fatal_error("bind()")
 
     if (listen(sock, 10) < 0)
-        fatal_error("listen()");
+        fatal_error("listen()")
 
-    return (sock);
+    return (sock)
 }
 
-int add_accept_request(int server_socket, struct sockaddr_in *client_addr,
-socklen_t *client_addr_len) {
-    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
-    io_uring_prep_accept(sqe, server_socket, (struct sockaddr *) client_addr,
-        client_addr_len, 0);
-    struct request *req = malloc(sizeof(*req));
-    req->event_type = EVENT_TYPE_ACCEPT;
-    io_uring_sqe_set_data(sqe, req);
-    io_uring_submit(&ring);
-
-    return 0;
+fun add_accept_request(
+    server_socket: Int,
+    client_addr: CPointer<sockaddr_in>,
+    client_addr_len: CPointer<socklen_tVar>,
+): Int = nativeHeap.run {
+    val sqe: CPointer<io_uring_sqe> = io_uring_get_sqe(ring.ptr)!!
+    io_uring_prep_accept(sqe, server_socket, client_addr.reinterpret(), client_addr_len, 0)
+    val req: CPointer<request> = allocWithFlex(request::iov, 1).ptr
+    req.pointed.event_type = EVENT_TYPE_ACCEPT
+    io_uring_sqe_set_data(sqe, req)
+    io_uring_submit(ring.ptr)
+    return 0
 }
 
-int add_read_request(int client_socket) {
-    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
-    struct request *req = malloc(sizeof(*req) + sizeof(struct iovec));
-    req->iov[0].iov_base = malloc(READ_SZ);
-    req->iov[0].iov_len = READ_SZ;
-    req->event_type = EVENT_TYPE_READ;
-    req->client_socket = client_socket;
-    memset(req->iov[0].iov_base, 0, READ_SZ);
+fun add_read_request(client_socket: Int): Int = nativeHeap.run {
+    val sqe: CPointer<io_uring_sqe> = io_uring_get_sqe(ring.ptr)!!
+    val req: CPointer<request> = allocWithFlex(request::iov, 1).ptr// malloc(sizeof(*req) + sizeof(c:iove))
+    req.pointed.iov[0].iov_base = malloc(READ_SZ)
+    req.pointed.iov[0].iov_len = READ_SZ.toULong()
+    req.pointed.event_type = EVENT_TYPE_READ
+    req.pointed.client_socket = client_socket
+    posixMemset(req.pointed.iov[0].iov_base, 0, READ_SZ)
     /* Linux kernel 5.5 has support for readv, but not for recv() or read() */
-    io_uring_prep_readv(sqe, client_socket, &req->iov[0], 1, 0);
-    io_uring_sqe_set_data(sqe, req);
-    io_uring_submit(&ring);
-    return 0;
+    io_uring_prep_readv(sqe, client_socket, req.pointed.iov[0].ptr, 1, 0)
+    io_uring_sqe_set_data(sqe, req)
+    io_uring_submit(ring.ptr)
+    return 0
 }
 
-int add_write_request(struct request *req) {
-    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
-    req->event_type = EVENT_TYPE_WRITE;
-    io_uring_prep_writev(sqe, req->client_socket, req->iov, req->iovec_count, 0);
-    io_uring_sqe_set_data(sqe, req);
-    io_uring_submit(&ring);
-    return 0;
+fun add_write_request(req: CPointer<request>): Int {
+    val sqe: CPointer<io_uring_sqe> = io_uring_get_sqe(ring.ptr)!!
+    req.pointed.event_type = EVENT_TYPE_WRITE
+    io_uring_prep_writev(sqe, req.pointed.client_socket, req.pointed.iov, req.pointed.iovec_count.toUInt(), 0)
+    io_uring_sqe_set_data(sqe, req)
+    io_uring_submit(ring.ptr)
+    return 0
 }
 
-void sendStaticStringContent(const char *str, int client_socket) {
-    struct request *req = zh_malloc(sizeof(*req) + sizeof(struct iovec));
-    unsigned long slen = strlen(str);
-    req->iovec_count = 1;
-    req->client_socket = client_socket;
-    req->iov[0].iov_base = zh_malloc(slen);
-    req->iov[0].iov_len = slen;
-    memcpy(req->iov[0].iov_base, str, slen);
-    add_write_request(req);
+fun sendStaticStringContent(str: String, client_socket: Int): Unit = kotlinx.cinterop.nativeHeap.run {
+    val req: CPointer<request> = allocWithFlex(request::iov, 1).ptr// malloc(sizeof(*req) + sizeof(c:iove))
+    val slen: ULong = strlen(str)
+    req.pointed.iovec_count = 1
+    req.pointed.client_socket = client_socket
+    req.pointed.iov[0].iov_base = zh_malloc(slen)
+    req.pointed.iov[0].iov_len = slen
+    memcpy(req.pointed.iov[0].iov_base, str.cstr, slen)
+    add_write_request(req)
 }
 
 /*
@@ -122,8 +143,8 @@ void sendStaticStringContent(const char *str, int client_socket) {
  * is used to inform the client.
  * */
 
-void handle_unimplemented_method(int client_socket) {
-    sendStaticStringContent(unimplemented_content, client_socket);
+fun handle_unimplemented_method(client_socket: Int): Unit {
+    sendStaticStringContent(unimplemented_content!!.toKStringFromUtf8(), client_socket)
 }
 
 /*
@@ -131,45 +152,44 @@ void handle_unimplemented_method(int client_socket) {
  * case the file requested is not found.
  * */
 
-void handle_http_404(int client_socket) {
-    sendStaticStringContent(http_404_content, client_socket);
+fun handle_http_404(client_socket: Int): Unit {
+    sendStaticStringContent(http_404_content!!.toKStringFromUtf8(), client_socket)
 }
 
 /*
  * Once a static file is identified to be served, this function is used to read the file
- * and write it over the client socket using Linux's sendfile() system call. This saves us
- * the hassle of transferring file buffers from kernel to user space and back.
- * */
+ * and write it over the client socket ~~using Linux's sendfile() system call. This saves us
+ * the hassle of transferring file buffers from kernel to user space and back.~~
+ */
 
-void copy_file_contents(char *file_path, off_t file_size, struct iovec *iov) {
-    int fd;
-
-    char *buf = zh_malloc(file_size);
-    fd = open(file_path, O_RDONLY);
+fun copy_file_contents(file_path: CPointer<ByteVar>, file_size: off_t, iov: CPointer<iovec>): Unit = nativeHeap.run {
+    val buf: CPointer<ByteVar> = malloc(file_size.toULong())!!.reinterpret()
+    val fd = open(file_path.toKStringFromUtf8(), O_RDONLY)
     if (fd < 0)
-        fatal_error("open");
+        fatal_error("open")
 
     /* We should really check for short reads here */
-    ssize_t i = read(fd, buf, file_size);
+    val i: ssize_t = read(fd, buf, file_size.toULong())
     if (i < file_size) {
-        fprintf(stderr, "Encountered a short read.\n");
+        posixFprintf(posixStderr, "Encountered a short read.\n")
     }
-    close(fd);
-
-    iov->iov_base = buf;
-    iov->iov_len = file_size;
+    close(fd)
+    iov.pointed.iov_base = buf
+    iov.pointed.iov_len = file_size.toULong()
 }
 
 /*
  * Simple function to get the file extension of the file that we are about to serve.
  * */
 
-const char *get_filename_ext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if (!dot || dot == filename)
-        return "";
-    return dot + 1;
+fun get_filename_ext(filename: String): String =
+    filename.drop(min(filename.length, max(0, filename.lastIndexOf('.', max(0, filename.length - 5))) + 1))
+
+val sufCount: Int by lazy {
+    var c = 0
+    while (suf[c++].nz); c
 }
+
 
 /*
  * Sends the HTTP 200 OK header, the server string, for a few types of files, it can also
@@ -178,22 +198,20 @@ const char *get_filename_ext(const char *filename) {
  * and the beginning of any content.
  * */
 
-void send_headers(const char *path, off_t len, struct iovec *iov) {
-    char small_case_path[1024];
-    char send_buffer[1024];
-    strcpy(small_case_path, path);
-    strtolower(small_case_path);
+fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = memScoped {
+    val small_case_path = path.lowercase()
+    val send_buffer = ByteArray(1024)
+    val str = "HTTP/1.1 200 OK\r\n"
+    var slen = (str.length).toULong()
 
-    char *str = "HTTP/1.1 200 OK\r\n";
-    unsigned long slen = strlen(str);
-    iov[0].iov_base = zh_malloc(slen);
-    iov[0].iov_len = slen;
-    memcpy(iov[0].iov_base, str, slen);
+    iov[0].iov_base = zh_malloc(slen)
+    iov[0].iov_len = slen
+    memcpy(iov[0].iov_base, str.utf8, slen)
 
-    slen = strlen(SERVER_STRING);
-    iov[1].iov_base = zh_malloc(slen);
-    iov[1].iov_len = slen;
-    memcpy(iov[1].iov_base, SERVER_STRING, slen);
+    slen = (SERVER_STRING.length.toULong())
+    iov[1].iov_base = zh_malloc(slen)
+    iov[1].iov_len = slen
+    memcpy(iov[1].iov_base, SERVER_STRING.utf8, slen)
 
     /*
      * Check the file extension for certain common types of files
@@ -202,84 +220,87 @@ void send_headers(const char *path, off_t len, struct iovec *iov) {
      * we turn the extension into lower case before checking.
      * */
 
-    u_int32_t  ext =0L;
-    strncpy((char *) &ext, get_filename_ext(small_case_path),sizeof (uint32_t));
+    val ext: u_int32_tVar = alloc()
+    strncpy(ext.ptr.reinterpret(), get_filename_ext(small_case_path), 4UL /* = kotlin.ULong */)
 
-    int i=0;
-    const int the_end = (int) (sizeof(suf) / sizeof(suf[0]));
-    for (i = 0; i < the_end; ++i)
-    if (ext == suf[i])
-        break;
-    slen = strlen(ctype[i] );
-    strncpy(send_buffer,ctype[i],slen);
+    val i: Int = 0
+    for (i in 0 until sufCount)
+        if (ext.value == suf[i])
+            break
+    val __s = ctype[i]!!.toKStringFromUtf8()
 
-    iov[2].iov_base = zh_malloc(slen);
-    iov[2].iov_len = slen;
-    memcpy(iov[2].iov_base, send_buffer, slen);
+    strncpy(send_buffer.toCValues(), __s, slen)
+
+    iov[2].iov_base = zh_malloc(slen)
+    iov[2].iov_len = slen
+    memcpy(iov[2].iov_base, send_buffer.toCValues(), slen)
 
     /* Send the content-length header, which is the file size in this case. */
-    sprintf(send_buffer, "content-length: %ld\r\n", len);
-    slen = strlen(send_buffer);
-    iov[3].iov_base = zh_malloc(slen);
-    iov[3].iov_len = slen;
-    memcpy(iov[3].iov_base, send_buffer, slen);
+    sprintf(send_buffer.toCValues(), "content-length: %ld\r\n", len)
+    slen = strlen(send_buffer.toKString())
+    iov[3].iov_base = zh_malloc(slen)
+    iov[3].iov_len = slen
+    memcpy(iov[3].iov_base, send_buffer.toCValues(), slen)
 
     /* Send the connection header. */
-    sprintf(send_buffer, "connection: %s\r\n", "keep-alive");
-    slen = strlen(send_buffer);
-    iov[4].iov_base = zh_malloc(slen);
-    iov[4].iov_len = slen;
-    memcpy(iov[4].iov_base, send_buffer, slen);
+    sprintf(send_buffer.toCValues(), "connection: %s\r\n", "keep-alive")
+    slen = strlen(send_buffer.toKString())
+    iov[4].iov_base = zh_malloc(slen)
+    iov[4].iov_len = slen
+    memcpy(iov[4].iov_base, send_buffer.toCValues(), slen)
 
     /*
      * When the browser sees a '\r\n' sequence in a line on its own,
      * it understands there are no more headers. Content may follow.
      * */
-    strcpy(send_buffer, "\r\n");
-    slen = strlen(send_buffer);
-    iov[5].iov_base = zh_malloc(slen);
-    iov[5].iov_len = slen;
-    memcpy(iov[5].iov_base, send_buffer, slen);
+    strcpy(send_buffer.toCValues(), "\r\n")
+    slen = strlen(send_buffer.toKString())
+    iov[5].iov_base = zh_malloc(slen)
+    iov[5].iov_len = slen
+    memcpy(iov[5].iov_base, send_buffer.toCValues(), slen)
 }
 
-void handle_get_method(char *path, int client_socket) {
-    char final_path[1024];
+fun handle_get_method(path: CPointer<ByteVar>, client_socket: Int) = nativeHeap.run {
+
+    val final_path: ByteArray
 
     /*
      If a path ends in a trailing slash, the client probably wants the index
      file inside of that directory.
      */
-    if (path[strlen(path) - 1] == '/') {
-        strcpy(final_path, "public");
-        strcat(final_path, path);
-        strcat(final_path, "index.html");
-    }
-    else {
-        strcpy(final_path, "public");
-        strcat(final_path, path);
+    val path2 = path.toKStringFromUtf8()
+    if (path2.endsWith('/')) {
+        /*strcpy(final_path.toCValues(), "public")
+        strcat(final_path.toCValues(), path2)
+        strcat(final_path.toCValues(), "index.html")*/
+        final_path = "public/$path2/index.html".encodeToByteArray()
+    } else {
+        /*    strcpy(final_path.toCValues(), "public")
+            strcat(final_path.toCValues(), path2)
+        */
+        final_path = "public/$path2".encodeToByteArray()
     }
 
     /* The stat() system call will give you information about the file
      * like type (regular file, directory, etc), size, etc. */
-    struct stat path_stat;
-    if (stat(final_path, &path_stat) == -1) {
-        printf("404 Not Found: %s (%s)\n", final_path, path);
-        handle_http_404(client_socket);
-    }
-    else {
+    val path_stat: stat = nativeHeap.alloc()
+    if (stat(final_path.toKString(), path_stat.ptr) == -1) {
+        printf("404 Not Found: %s (%s)\n", final_path.toKString(), path)
+        handle_http_404(client_socket)
+    } else {
         /* Check if this is a normal/regular file and not a directory or something else */
         if (S_ISREG(path_stat.st_mode)) {
-            struct request *req = zh_malloc(sizeof(*req) + (sizeof(struct iovec) * 7));
-            req->iovec_count = 7;
-            req->client_socket = client_socket;
-            send_headers(final_path, path_stat.st_size, req->iov);
-            copy_file_contents(final_path, path_stat.st_size, &req->iov[6]);
-            printf("200 %s %ld bytes\n", final_path, path_stat.st_size);
-            add_write_request( req);
-        }
-        else {
-            handle_http_404(client_socket);
-            printf("404 Not Found: %s\n", final_path);
+            val req: CPointer<request> =
+                nativeHeap.allocWithFlex(request::iov, 7).ptr  /* zh_malloc(sizeof(*req) + (sizeof(c:iove) * 7))*/
+            req.pointed.iovec_count = 7
+            req.pointed.client_socket = client_socket
+            send_headers(final_path.toKString(), path_stat.st_size, req.pointed.iov.reinterpret())
+            copy_file_contents(final_path.pin().addressOf(0), path_stat.st_size, req.pointed.iov[6].ptr.reinterpret())
+            printf("200 %s %ld bytes\n", final_path.toKString(), path_stat.st_size)
+            add_write_request(req)
+        } else {
+            handle_http_404(client_socket)
+            printf("404 Not Found: %s\n", final_path.toKString())
         }
     }
 }
@@ -290,105 +311,111 @@ void handle_get_method(char *path, int client_socket) {
  * in case both these don't match. This sends an error to the client.
  * */
 
-void handle_http_method(char *method_buffer, int client_socket) {
-    char *method, *path, *saveptr;
+fun handle_http_method(method_buffer: CPointer<ByteVar>, client_socket: Int): Unit {
+/*
+    val method:CPointer<ByteVar>
+    val path:CPointer<ByteVar>
+    val saveptr:CPointer<ByteVar>
 
-    method = strtok_r(method_buffer, " ", &saveptr);
-    strtolower(method);
-    path = strtok_r(NULL, " ", &saveptr);
+    method = strtok_r(method_buffer!!, " ", saveptr.reinterpret())!!
+    strtolower(method)
+    path = strtok_r(NULL, " ", saveptr.ptr)
+*/
+    val (Method, path) = method_buffer.toKStringFromUtf8().split(" ".toRegex(), 2)
+    val method = Method.lowercase()
 
     if (strcmp(method, "get") == 0) {
-        handle_get_method(path, client_socket);
-    }
-    else {
-        handle_unimplemented_method(client_socket);
+        handle_get_method(path.replace("..", ".").pin().addressOf(0).reinterpret(), client_socket)
+    } else {
+        handle_unimplemented_method(client_socket)
     }
 }
 
-int get_line(const char *src, char *dest, int dest_sz) {
-    for (int i = 0; i < dest_sz; i++) {
-        dest[i] = src[i];
-        if (src[i] == '\r' && src[i+1] == '\n') {
-            dest[i] = '\0';
-            return 0;
+fun get_line(src: String, dest: CPointer<ByteVar>, dest_sz: Int): Int {
+    for (i/*as int */ in 0 until dest_sz) {
+        dest[i] = src[i].code.toByte()
+        if (src[i] == '\r' && src[i + 1] == '\n') {
+            dest[i] = 0.toByte()
+            return 0
         }
     }
-    return 1;
+    return 1
 }
 
-int handle_client_request(struct request *req) {
-    char http_request[1024];
+fun handle_client_request(req: CPointer<request>): Int {
+    val http_request = alloca(1024)
     /* Get the first line, which will be the request */
-    if(get_line(req->iov[0].iov_base, http_request, sizeof(http_request))) {
-        fprintf(stderr, "Malformed request\n");
-        exit(1);
+    if (get_line(req.pointed.iov[0].iov_base.toString(), http_request!!.reinterpret(), 1024).nz) {
+        posixFprintf(posixStderr, "Malformed request\n")
+        posixExit(1)
     }
-    handle_http_method(http_request, req->client_socket);
-    return 0;
+    handle_http_method(http_request.reinterpret(), req.pointed.client_socket)
+    return 0
 }
 
-void server_loop(int server_socket) {
-    struct io_uring_cqe *cqe;
-    struct sockaddr_in client_addr;
-    socklen_t client_addr_len = sizeof(client_addr);
+fun server_loop(server_socket: Int) = nativeHeap.run {
+    val cqe = alloc<io_uring_cqe>().ptr
+    val client_addr: sockaddr_in = alloc()
+    val client_addr_len: socklen_tVar = alloc { value = sizeOf<sockaddr_in>().toUInt(); }
 
-    add_accept_request(server_socket, &client_addr, &client_addr_len);
+    add_accept_request(server_socket, client_addr.ptr, client_addr_len.ptr)
 
-    while (1) {
-        int ret = io_uring_wait_cqe(&ring, &cqe);
+    while (1.nz) {
+        val ret: Int = io_uring_wait_cqe(ring.ptr, cqe.reinterpret())
         if (ret < 0)
-            fatal_error("io_uring_wait_cqe");
-        struct request *req = (struct request *) cqe->user_data;
-        if (cqe->res < 0) {
-            fprintf(stderr, "Async request failed: %s for event: %d\n",
-                strerror(-cqe->res), req->event_type);
-            exit(1);
+            fatal_error("io_uring_wait_cqe")
+        val req: CPointer<request> = cqe.pointed.user_data.toLong().toCPointer()!!
+        if (cqe.pointed.res < 0) {
+            posixFprintf(posixStderr, "Async request failed: %s for event: %d\n",
+                strerror(-cqe.pointed.res), req.pointed.event_type)
+            posixExit(1)
         }
 
-        switch (req->event_type) {
-            case EVENT_TYPE_ACCEPT:
-            add_accept_request(server_socket, &client_addr, &client_addr_len);
-            add_read_request(cqe->res);
-            free(req);
-            break;
-            case EVENT_TYPE_READ:
-            if (!cqe->res) {
-            close(req->client_socket);
-            fprintf(stderr, "Empty request!\n");
-            break;
-        }
-            handle_client_request(req);
-            free(req->iov[0].iov_base);
-            free(req);
-            break;
-            case EVENT_TYPE_WRITE:
-            add_read_request(req->client_socket);
-            for (int i = 0; i < req->iovec_count; i++) {
-            free(req->iov[i].iov_base);
-        }
-            free(req);
-            break;
+        when (req.pointed.event_type) {
+            EVENT_TYPE_ACCEPT -> {
+                add_accept_request(server_socket, client_addr.ptr, client_addr_len.ptr)
+                add_read_request(cqe.pointed.res)
+                free(req.pointed)
+                break
+            }
+            EVENT_TYPE_READ -> {
+
+                if (cqe.pointed.res.nz) {
+                    close(req.pointed.client_socket)
+                    posixFprintf(posixStderr, "Empty request!\n")
+                    break
+                } else {
+                    handle_client_request(req)
+                    free(req.pointed.iov[0].iov_base)
+                    free(req)
+                    break
+                }
+            }
+            EVENT_TYPE_WRITE -> {
+                add_read_request(req.pointed.client_socket)
+                for (i/*as int */ in 0 until req.pointed.iovec_count) {
+                    free(req.pointed.iov[i].iov_base)
+                }
+                free(req)
+                break
+            }
         }
         /* Mark this request as processed */
-        io_uring_cqe_seen(&ring, cqe);
+        io_uring_cqe_seen(ring.ptr, cqe)
     }
 }
 
-void sigint_handler(int signo) {
-    printf("^C pressed. Shutting down.\n");
-    io_uring_queue_exit(&ring);
-    exit(0);
+fun sigint_handler(signo: Int): Unit {
+    printf("^C pressed. Shutting down.\n")
+    io_uring_queue_exit(ring.ptr)
+    posixExit(0)
 }
 
-int main() {
-    int server_socket = setup_listening_socket(DEFAULT_SERVER_PORT);
+fun httpd() = memScoped {
+    var server_socket: Int = setup_listening_socket(DEFAULT_SERVER_PORT)
 
-    signal(SIGINT, sigint_handler);
-    io_uring_queue_init(QUEUE_DEPTH, &ring, 0);
-    server_loop(server_socket);
-
-    return 0;
-}
-fun httpd() {
-
+    signal(SIGINT,
+        ::sigint_handler.objcPtr().toLong().toCPointer<CFunction<(kotlin.Int) -> kotlin.Unit>>() as __sighandler_t)
+    io_uring_queue_init(QUEUE_DEPTH, ring.ptr, 0)
+    server_loop(server_socket)
 }
