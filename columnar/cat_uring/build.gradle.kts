@@ -7,11 +7,11 @@ kotlin {
             executable("uring_read"//, listOf(DEBUG, RELEASE)
             ) {
                 // Base name for the output file.
-                baseName = "ufoo"
+                baseName = "uring_cat"
                 // Accessing the output file.
                 println("Executable path: ${outputFile.absolutePath}")
                 // Custom entry point function.
-                entryPoint = "uring.main"
+                entryPoint = "uring.cat_file"
             }
         }
         val main by compilations.getting {

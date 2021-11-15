@@ -2,8 +2,7 @@ package uring
 
 import kotlinx.cinterop.*
 import platform.linux.memalign
-import platform.posix.NULL
-import platform.posix.sigset_t
+import platform.posix.*
 import simple.HasDescriptor.Companion.S_ISBLK
 import simple.HasDescriptor.Companion.S_ISREG
 import simple.HasPosixErr.Companion.posixRequires
@@ -27,29 +26,21 @@ import platform.posix.syscall as posix_syscall
 fun io_uring_setup(entries: UInt, p: CPointer<io_uring_params>) =
     posix_syscall(__NR_io_uring_setup.toLong(), entries, p).toInt()
 
-
-
-fun io_uring_enter(ring_fd: Int, to_submit: UInt, min_complete: UInt, flags: UInt ,sig: CPointer<sigset_t>?=null) =
+fun io_uring_enter(ring_fd: Int, to_submit: UInt, min_complete: UInt, flags: UInt, sig: CPointer<sigset_t>? = null) =
     posix_syscall(__NR_io_uring_enter.toLong(), ring_fd, to_submit, min_complete, flags, 0L, sig).toInt()
 
 /** Returns the size of the file whose open file descriptor is passed in.
- *  Properly handles regular file and block devices as well. Pretty.
- */
-
+ *  Properly handles regular file and block devices as well. Pretty. */
 fun get_file_size(fd: Int): posix_off_t = memScoped {
     val st: posix_stat = alloc()
     if (posix_fstat(fd, st.ptr as CValuesRef<posix_stat>) >= 0) {
         if (S_ISBLK(st.st_mode)) {
             val bytes: CPointerVar<LongVar> = alloc()
-            return if (posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes) == 0) bytes.pointed!!.value
-            else {
-                posix_perror("ioctl")
-                -1
-            }
-        } else if (S_ISREG(st.st_mode)) return st.st_size else return -1
+            posixRequires(posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes).z) { ("ioctl") }
+            return bytes.pointed!!.value
+        } else posixRequires(!S_ISREG(st.st_mode)) { "file handle invalid" }
     }
-    posix_perror("fstat")
-    return -1
+    return st.st_size
 }
 
 /** io_uring requires a lot of setup which looks pretty hairy, but isn't all
@@ -68,10 +59,8 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
 
     /* We need to pass in the io_uring_params structure to the io_uring_setup()
      * call zeroed out. We could set any flags if we need to, but for this
-     * example, we don't.
-     */
+     * example, we don't. */
     posix_bzero(p.ptr, sizeOf<io_uring_params>().toULong())
-
     s.pointed.ring_fd = io_uring_setup(QUEUE_DEPTH.toUInt(), p.ptr)
     val ringFd = s.pointed.ring_fd
     val mustBe = ringFd >= 0
@@ -79,8 +68,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     /* io_uring communication happens via 2 shared kernel-user space ring buffers,
      * which can be jointly mapped with a single mmap() call in recent kernels.
      * While the completion queue is directly manipulated, the submission queue
-     * has an indirection array in between. We map that in as well.
-     */
+     * has an indirection array in between. We map that in as well. */
 
     val sqOff: io_sqring_offsets = p.sq_off
     var sring_sz = (sqOff.array + p.sq_entries * UInt.SIZE_BYTES.toUInt())
@@ -92,8 +80,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
      * versions, the recommended way is to just check the features field of the
      * io_uring_params structure, which is a bit mask. If the
      * IORING_FEAT_SINGLE_MMAP is set, then we can do away with the second mmap()
-     * call to map the completion ring.
-     */
+     * call to map the completion ring. */
     if ((p.features and IORING_FEAT_SINGLE_MMAP).nz) {
         if (cring_sz > sring_sz) {
             sring_sz = cring_sz
@@ -102,9 +89,8 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     }
 
 
-   /* Map in the submission and completion queue ring buffers.
-    * Older kernels only map in the submission queue, though.
-    */
+    /* Map in the submission and completion queue ring buffers.
+     * Older kernels only map in the submission queue, though. */
     val sq_ptr = posix_mmap(NULL,
         sring_sz.toULong(),
         platform.posix.PROT_READ or platform.posix.PROT_WRITE,
@@ -117,7 +103,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
         cq_ptr = sq_ptr
     } else {
         /* Map in the completion queue ring buffer in older kernels separately */
-        cq_ptr = mmap(NULL,
+        cq_ptr = posix_mmap(NULL,
             cring_sz.toULong(),
             PROT_READ or PROT_WRITE,
             MAP_SHARED or MAP_POPULATE,
@@ -143,7 +129,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     }
 
     /* Map in the submission queue entries array */
-    s.pointed.sqes = mmap(NULL,
+    s.pointed.sqes = posix_mmap(NULL,
         (p.sq_entries * sizeOf<io_uring_sqe>().toUInt()).toULong(),
         platform.posix.PROT_READ or platform.posix.PROT_WRITE,
         platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
@@ -188,13 +174,11 @@ fun completionQueues(s: CPointer<submitter>): Unit {
     println("entering loop")
     do {
         read_barrier()
-
         /*
          * Remember, this is a ring buffer. If head == tail, it means that the
          * buffer is empty.
          * */
         if (head == cring.pointed.tail!!.pointed.value) break
-
         /* Get the entry */
         val value = head.toLong() and s.pointed.cq_ring.ring_mask!!.pointed.value.toLong()
         cqe = cring.pointed.cqes!![value.toInt()].ptr
@@ -204,11 +188,9 @@ fun completionQueues(s: CPointer<submitter>): Unit {
         var blocks: Int = (fi.pointed.file_sz / BLOCK_SZ.toLong()).toInt()
         if (0L != fi.pointed.file_sz % BLOCK_SZ) blocks++
         for (i in 0 until blocks)
-            output_to_console(fi.pointed.iovecs[i].iov_base!!.reinterpret(),
-                fi.pointed.iovecs[i].iov_len.toInt())
-
+                output_to_console(fi.pointed.iovecs[i].iov_base!!.reinterpret(),
+                    fi.pointed.iovecs[i].iov_len.toInt())
         head++
-
     } while (true)
 
     cring.pointed.head!!.pointed.value = head
@@ -236,7 +218,7 @@ fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap
         var blocks: Int = (file_sz / BLOCK_SZ).toInt()
         if (0 != (file_sz % BLOCK_SZ).toInt()) blocks++
 
-        val fi: file_info = allocWithFlex(file_info::iovecs, blocks)//malloc(sizeof(*fi) + sizeof(c:iove) * blocks)
+        val fi: file_info = allocWithFlex(file_info::iovecs, blocks)
         fi.file_sz = file_sz
 
         /*
@@ -308,17 +290,19 @@ fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap
     return 1
 }
 
-fun main(argv1: Array<String>): Unit {
+fun cat_file(argv1: Array<String>): Unit {
     val s: submitter = nativeHeap.alloc()
     val argv = argv1.takeIf { it.isNotEmpty() } ?: arrayOf("/etc/sysctl.conf")
+
     println("---setting up uring with args ${argv.toList()}")
     val appSetupUring = app_setup_uring(s.ptr)
     posixRequires(appSetupUring.z, appSetupUring)
-    println("---success setting up uring with args ${argv.toList()}")
 
+    println("---success setting up uring with args ${argv.toList()}")
     for (arg in argv) {
         //will block
         posixRequires(!submissionQueue(arg, s.ptr).nz, "Error reading file")
+
         println("---calling read_from_cq(${s})")
         //done blocking
         completionQueues(s.ptr)

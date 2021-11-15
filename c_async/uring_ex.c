@@ -21,19 +21,19 @@ static inline void  write_barrier() { __asm__ __volatile__("" ::: "memory"); }
 //#define write_barrier() __asm__ __volatile__("":::"memory")
 
 struct app_io_sq_ring {
-    unsigned *head;
+    unsigned *unused_head;
     unsigned *tail;
     unsigned *ring_mask;
-    unsigned *ring_entries;
-    unsigned *flags;
-    unsigned *array;
+    unsigned *unused_ring_entries;
+    unsigned *unused_flags;
+    unsigned *unused_array;
 };
 
 struct app_io_cq_ring {
     unsigned *head;
     unsigned *tail;
     unsigned *ring_mask;
-    unsigned *ring_entries;
+    unsigned *unused_ring_entries;
     struct io_uring_cqe *cqes;
 };
 

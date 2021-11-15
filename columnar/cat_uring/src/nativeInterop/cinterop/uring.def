@@ -16,7 +16,15 @@ compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 #include <sys/mman.h>
 #include <sys/uio.h>
 #include <linux/fs.h>
+  #include <netinet/in.h>
+ #include <ctype.h>
 
+ #include <unistd.h>
+ #include <stdlib.h>
+ #include <signal.h>
+ #include <liburing.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
 #define QUEUE_DEPTH 1
 #define BLOCK_SZ    1024
 
@@ -55,3 +63,19 @@ struct file_info {
 
  static inline void  read_barrier() { __asm__ __volatile__("" ::: "memory") ;}
  static inline void  write_barrier() { __asm__ __volatile__("" ::: "memory"); }
+
+ #define SERVER_STRING           "Server: zerohttpd/0.1\r\n"
+ #define DEFAULT_SERVER_PORT     8000
+ #define QUEUE_DEPTH             256
+ #define READ_SZ                 8192
+
+ #define EVENT_TYPE_ACCEPT       0
+ #define EVENT_TYPE_READ         1
+ #define EVENT_TYPE_WRITE        2
+
+ struct request {
+     int event_type;
+     int iovec_count;
+     int client_socket;
+     struct iovec iov[];
+ };
