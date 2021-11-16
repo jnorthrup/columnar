@@ -20,23 +20,25 @@ import platform.posix.perror as posix_perror
 import platform.posix.stderr as posixStderr
 
 typealias `*_`<T> = CPointer<T>// started simply as 'k' but deemed too likely to conflict with nested loops.  :(
-class ChunkEnding<A : CStructVar, B : CVariable, P : KProperty1<A, CPointer<B>>>(val present: NativePlacement, val prop: P)
+
+class ChunkEnding<A : CStructVar, B : CVariable, P : KProperty1<A, CPointer<B>>>(
+    val present: NativePlacement,
+    val prop: P,
+)
+
 inline val NativePlacement._k: NativePlacement get() = this
-inline operator fun <A : CStructVar, B : CVariable, P : KProperty1<A, CPointer<B>>> NativePlacement.times(x: P) = ChunkEnding(this, x)
+inline operator fun <A : CStructVar, B : CVariable, P : KProperty1<A, CPointer<B>>> NativePlacement.times(x: P) =
+    ChunkEnding(this, x)
+
 inline operator fun <reified A : CStructVar, reified B : CVariable, P : KProperty1<A, CPointer<B>>>
- ChunkEnding<A, B, P>.rem(count: Int): A = present.alloc(sizeOf<A>() + sizeOf<B>() * count, alignOf<A>()).reinterpret()
+        ChunkEnding<A, B, P>.rem(count: Int): A =
+    present.alloc(sizeOf<A>() + sizeOf<B>() * count, alignOf<A>()).reinterpret()
+
 inline infix fun <reified T : CPointed> NativePlacement.`&`(v: T): CPointer<T> = v.ptr //pointer to
+
 object `>`;inline infix operator fun <reified T : CPointed> CPointer<T>.minus(x: `>`): T = pointed
 inline infix operator fun <reified T : NativePointed, reified P : CPointer<T>> NativePlacement.times(v: P) =
- interpretPointed<T>(v.rawValue)// "*" dereference aka pointed
-
-/**
- * Utility function to convert a string to lower case.
- */
-fun strtolower(str1: `*_`<ByteVar>): Unit {
-    var c = 0
-    while (str1[c].nz) str1[c] = tolower(str1[c++].toInt()).toByte()
-}
+    interpretPointed<T>(v.rawValue)// "*" dereference aka pointed
 
 /**
 One function that prints the system call and the error details
@@ -109,17 +111,17 @@ fun add_accept_request(
 }
 
 fun add_read_request(client_socket: Int): Int = nativeHeap.run {
-    val sqe: `*_`<io_uring_sqe> = io_uring_get_sqe(_k`&` ring)!!
-    val req: `*_`<request> = _k`&` this * request::iov % 1 // malloc(sizeof(*req) + sizeof(c:iove))
-    (_k* req).iov[0].iov_base = malloc(READ_SZ) as COpaquePointer
-    (req -`>`).iov[0].iov_len = READ_SZ.toULong()
-    (_k* req).event_type = EVENT_TYPE_READ
-    (_k* req).client_socket = client_socket
-    posixMemset((_k* req).iov, 0, READ_SZ)
+    val sqe: `*_`<io_uring_sqe> = io_uring_get_sqe(_k `&` ring)!!
+    val req: `*_`<request> = _k `&` this * request::iov % 1 // malloc(sizeof(*req) + sizeof(c:iove))
+    (_k * req).iov[0].iov_base = malloc(READ_SZ) as COpaquePointer
+    (req - `>`).iov[0].iov_len = READ_SZ.toULong()
+    (_k * req).event_type = EVENT_TYPE_READ
+    (_k * req).client_socket = client_socket
+    posixMemset((_k * req).iov, 0, READ_SZ)
     /* Linux kernel 5.5 has support for readv, but not for recv() or read() */
-    io_uring_prep_readv(sqe, client_socket, (_k* req).iov[0].ptr, 1, 0)
+    io_uring_prep_readv(sqe, client_socket, (_k * req).iov[0].ptr, 1, 0)
     io_uring_sqe_set_data(sqe, req)
-    io_uring_submit((_k`&` ring))
+    io_uring_submit((_k `&` ring))
     return 0
 }
 
@@ -192,7 +194,10 @@ fun get_filename_ext(filename: String): String =
 
 val sufCount: Int by lazy {
     var c = 0
-    while (suf[c++].nz); c
+    while (suf[c].nz) {
+        ++c
+    }
+    c
 }
 
 
@@ -204,19 +209,16 @@ val sufCount: Int by lazy {
  * */
 
 fun send_headers(path: String, len: off_t, iov: `*_`<iovec>): Unit = memScoped {
-    val small_case_path = path.lowercase()
-    val send_buffer = ByteArray(1024)
+
     val str = "HTTP/1.1 200 OK\r\n"
     var slen = (str.length).toULong()
-
-    iov[0].iov_base = zh_malloc(slen)
+    iov[0].iov_base = strdup(str)
     iov[0].iov_len = slen
-    memcpy(iov[0].iov_base, str.utf8, slen)
 
     slen = (SERVER_STRING.length.toULong())
-    iov[1].iov_base = zh_malloc(slen)
+    iov[1].iov_base = strdup(SERVER_STRING)
     iov[1].iov_len = slen
-    memcpy(iov[1].iov_base, SERVER_STRING.utf8, slen)
+
 
     /*
      * Check the file extension for certain common types of files
@@ -226,43 +228,37 @@ fun send_headers(path: String, len: off_t, iov: `*_`<iovec>): Unit = memScoped {
      * */
 
     val ext: u_int32_tVar = alloc()
-    strncpy((_k `&` ext).reinterpret(), get_filename_ext(small_case_path), 4UL /* = kotlin.ULong */)
+    val filename = path.lowercase()
+    strncpy((_k `&` ext).reinterpret(), get_filename_ext(filename), 4UL)
 
-    val i: Int = 0
-    for (i in 0 until sufCount)
-        if (ext.value == suf[i])
+    var x = 0
+    for (p in 0 until sufCount)
+        if (ext.value == suf[p]) {
+            x = p
             break
-    val __s = ctype[i]!!.toKStringFromUtf8()
+        }
 
-    strncpy(send_buffer.toCValues(), __s, slen)
-
-    iov[2].iov_base = zh_malloc(slen)
-    iov[2].iov_len = slen
-    memcpy(iov[2].iov_base, send_buffer.toCValues(), slen)
+    val __s = ctype[x].toString()
+    iov[2].iov_base = strdup(__s)
+    iov[2].iov_len = __s.length.toULong()
 
     /* Send the content-length header, which is the file size in this case. */
-    sprintf(send_buffer.toCValues(), "content-length: %ld\r\n", len)
-    slen = strlen(send_buffer.toKString())
-    iov[3].iov_base = zh_malloc(slen)
-    iov[3].iov_len = slen
-    memcpy(iov[3].iov_base, send_buffer.toCValues(), slen)
+    var s = "content-length: $len\r\n"
+    iov[3].iov_base = strdup(s)
+    iov[3].iov_len = s.length.toULong()
 
     /* Send the connection header. */
-    sprintf(send_buffer.toCValues(), "connection: %s\r\n", "keep-alive")
-    slen = strlen(send_buffer.toKString())
-    iov[4].iov_base = zh_malloc(slen)
-    iov[4].iov_len = slen
-    memcpy(iov[4].iov_base, send_buffer.toCValues(), slen)
+    s = "connection: keep-alive\r\n"
+    iov[4].iov_base = strdup(s)
+    iov[4].iov_len = s.length.toULong()
 
     /*
      * When the browser sees a '\r\n' sequence in a line on its own,
      * it understands there are no more headers. Content may follow.
-     * */
-    strcpy(send_buffer.toCValues(), "\r\n")
-    slen = strlen(send_buffer.toKString())
-    iov[5].iov_base = zh_malloc(slen)
-    iov[5].iov_len = slen
-    memcpy(iov[5].iov_base, send_buffer.toCValues(), slen)
+     */
+    iov[5].iov_base = strdup("\r\n")
+    iov[5].iov_len = 2UL
+
 }
 
 fun handle_get_method(path: `*_`<ByteVar>, client_socket: Int): Unit = memScoped {
@@ -387,7 +383,7 @@ fun server_loop(server_socket: Int) = nativeHeap.run {
             }
             EVENT_TYPE_WRITE -> {
                 add_read_request((_k * req).client_socket)
-                for (i/*as int */ in 0 until (_k * req).iovec_count) {
+                for (i in 0 until (_k * req).iovec_count) {
                     free((_k * req).iov[i].iov_base)
                 }
                 free(req)
@@ -405,10 +401,13 @@ fun sigint_handler(signo: Int): Unit = nativeHeap.run {
 }
 
 fun httpd() = memScoped {
-    var server_socket: Int = setup_listening_socket(DEFAULT_SERVER_PORT)
+    val server_socket: Int = setup_listening_socket(DEFAULT_SERVER_PORT)
+    signal(SIGINT, staticCFunction<Int, Unit>(::sigint_handler))
 
-    signal(SIGINT,
-        ::sigint_handler.objcPtr().toLong().toCPointer<CFunction<(kotlin.Int) -> kotlin.Unit>>() as __sighandler_t)
+    val byteArray = ByteArray(2048)
+    val cwd=getcwd(byteArray.toCValues(),byteArray.size.toULong())
+
+    println("starting httpd in ${cwd!!.toKStringFromUtf8()}")
     io_uring_queue_init(QUEUE_DEPTH, _k `&` ring, 0)
     server_loop(server_socket)
 }
