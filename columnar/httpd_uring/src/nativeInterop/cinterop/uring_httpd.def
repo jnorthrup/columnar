@@ -3,14 +3,14 @@ headers =   liburing.h
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -luring
 ---
-#include <stdio.h>
 #include <liburing.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <ctype.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <ctype.h>
 
 #define SERVER_STRING           "Server: zerohttpd/0.1\r\n"
 #define DEFAULT_SERVER_PORT     8000

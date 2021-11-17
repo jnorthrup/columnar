@@ -19,7 +19,7 @@ sed  --in-place --regexp-extended\
  -e 's,(\s+|\W)unsigned\s+char\s+(\w+)(\W),\1\2:UByte\3,'\
  -e 's,(\s+|\W)int\s+(\w+)(\W),\1\2:Int\3,'\
  -e 's,(\s+|\W)(long\s+(int)?)+(\w+)(\W),\1\3:Long\4,'\
- -e 's,(\s+|\W)size_t\s+(\w+)(\W),\1\2:size_t\3,'\
+ -e 's,(\s+|\W)(\w+)_t\s+(\w+)(\W),\1\3:\2_t\4,'\
  -e 's,(\s+|\W)char\s*\*\s*(\w+)(\W),\1\2:CPointer<ByteVar>\3,'\
  -e 's,struct\s+(\w+)\s*(\w+)(\s|\W),\2:\1\3,'\
  -e 's,([^&])\&\s*(\w+),\1\2.ptr,g'\
