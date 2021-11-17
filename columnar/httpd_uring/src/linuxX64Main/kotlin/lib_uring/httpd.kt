@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package lib_uring
 
 import kotlinx.cinterop.*
@@ -187,10 +189,15 @@ fun get_filename_ext(filename: String): String = nativeHeap.run {
         .also { m d it }
 }
 
+val sufN by lazy { UIntArray(the_end) { htonl(suf[it]) } }
 val the_end: Int by lazy {
-    var c = 0
-    while (suf[c].nz) c++
-    c.also { nativeHeap d "suffixes counted: $c" }
+    memScoped {
+        var c = 0
+        while (suf[c].nz) {
+            c++
+        }
+        c.also { nativeHeap d "suffixes counted: $c" }
+    }
 }
 /*
  * Sends the HTTP 200 OK header, the server string, for a few types of files, it can also
@@ -201,7 +208,7 @@ val the_end: Int by lazy {
 
 fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeHeap.run {
     m d ("send_headers   + ${path}")
-    var send_buffer: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
+    val send_buffer: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
     val __dest: CPointer<ByteVar>
     val small_case_path: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
     __dest = small_case_path
@@ -227,20 +234,23 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
      * we turn the extension into lower case before checking.
      * */
 
-    val ext: u_int32_tVar = alloc { this.value = 0U /* = kotlin.UInt */ }
+    val ext: __be32Var = alloc ( )
+
     val fourBytes = ext.ptr.reinterpret<ByteVar>()
-    strncpy(fourBytes as CValuesRef<ByteVar  >,
+
+    strncpy(fourBytes as CValuesRef<ByteVar>,
         get_filename_ext(small_case_path.toKStringFromUtf8()),
-        sizeOf<uint32_tVar>().toULong())
-        m d "32bits ${fourBytes.toKStringFromUtf8()}"
+        sizeOf<__be32Var>().toULong())
+    ext.value = ext.value
+    m d "32bits ${fourBytes.toKStringFromUtf8()}"
 
 
     var c = 0
+    val actual = ext.value
+
     do {
-        if (c == the_end || ext.value.toUInt() == suf[c].toUInt()) {
-            m d "choosing suf $c - ${ext.value} ?= ${suf[c]} "
-            break
-        }
+        //m d "testing suf $c - ${actual} ?= ${sufN[c]} }"
+        if (c == the_end || actual == sufN[c]) break
         c++
     } while (true)
 
@@ -274,6 +284,10 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
     iov[5].iov_base = zh_malloc(slen)
     iov[5].iov_len = slen
     memcpy(iov[5].iov_base, send_buffer, slen)
+}
+
+fun cheeseString(uInt: UInt) = ByteArray(4) { it ->
+    ((uInt shr it) and 0xffU).toByte()
 }
 
 fun handle_get_method(path: CPointer<ByteVar>, client_socket: Int): Unit = nativeHeap.run {
@@ -337,7 +351,6 @@ fun handle_http_method(method_buffer: CPointer<ByteVar>, client_socket: Int): Un
         path.value = strtok_r(null, " ", saveptr.ptr)
         if (strcmp(method.value!!.toKStringFromUtf8(), "get") == 0) {
             handle_get_method(path.value!!.reinterpret(), client_socket)
-
         }
     } ?: handle_unimplemented_method(client_socket)
 
@@ -378,11 +391,11 @@ fun server_loop(server_socket: Int): Unit = nativeHeap.run {
         m d "loop iter ${c++}"
         val ret: Int = io_uring_wait_cqe(ring.ptr, cqe.ptr as CValuesRef<CPointerVar<io_uring_cqe>>)
         m d "$ret cqe requests fulfulled"
-        HasPosixErr.warning(ret >= 0) { "io_uring_wait_cqe" }
+        HasPosixErr.posixRequires(ret >= 0) { "io_uring_wait_cqe" }
 
         val ioUringCqe: io_uring_cqe = cqe.pointed!!
         val req: CPointer<request> = ioUringCqe.user_data.toLong().toCPointer()!!
-        HasPosixErr.warning(ioUringCqe.res >= 0) { "Async request failed: ${strerror(-ioUringCqe.res)} for event: ${req.pointed.event_type}" }
+        HasPosixErr.posixRequires(ioUringCqe.res >= 0) { "Async request failed: ${strerror(-ioUringCqe.res)} for event: ${req.pointed.event_type}" }
 
         /*
         m d "handling req.pointed.event_type=${req.pointed.event_type} among ${
@@ -435,6 +448,7 @@ fun sigint_handler(signo: Int): Unit {
 
 fun httpd() = memScoped {
 
+    the_end
     val server_socket: Int = setup_listening_socket(DEFAULT_SERVER_PORT)
     signal(SIGINT, staticCFunction(::sigint_handler))
 
