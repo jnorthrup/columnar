@@ -170,7 +170,7 @@ fun copy_file_contents(file_path: CPointer<ByteVar>, file_size: off_t, iov: CPoi
 
     /* We should really check for short reads here */
     val i: ssize_t = read(fd, buf, file_size.toULong())
-    HasPosixErr.posixRequires (!(i < file_size) ){ "Encountered a short read.\n" }
+    HasPosixErr.posixRequires(!(i < file_size)) { "Encountered a short read.\n" }
     close(fd)
 
     iov.pointed.iov_base = buf
@@ -182,13 +182,15 @@ fun copy_file_contents(file_path: CPointer<ByteVar>, file_size: off_t, iov: CPoi
  */
 
 fun get_filename_ext(filename: String): String = nativeHeap.run {
+    m d "get_filename_ext $filename"
     filename.drop(min(filename.length, max(0, filename.lastIndexOf('.', max(0, filename.length - 5))) + 1))
+        .also { m d it }
 }
 
 val the_end: Int by lazy {
     var c = 0
     while (suf[c].nz) c++
-    c
+    c.also { nativeHeap d "suffixes counted: $c" }
 }
 /*
  * Sends the HTTP 200 OK header, the server string, for a few types of files, it can also
@@ -199,9 +201,10 @@ val the_end: Int by lazy {
 
 fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeHeap.run {
     m d ("send_headers   + ${path}")
-    var small_case_path: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
     var send_buffer: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
-    val __dest = small_case_path
+    val __dest: CPointer<ByteVar>
+    val small_case_path: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
+    __dest = small_case_path
     strcpy(__dest, path)
     strtolower(__dest)
 
@@ -210,12 +213,13 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
     iov[0].iov_base = zh_malloc(slen).reinterpret()
     iov[0].iov_len = slen
     memcpy(iov[0].iov_base, str.cstr, slen)
+    m d "iov[0] http1.1"
 
     slen = strlen(SERVER_STRING)
     iov[1].iov_base = zh_malloc(slen)
     iov[1].iov_len = slen
     memcpy(iov[1].iov_base, SERVER_STRING.cstr, slen)
-
+    m d "iov[1] serverstring"
     /*
      * Check the file extension for certain common types of files
      * on web pages and send the appropriate content-type header.
@@ -224,14 +228,19 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
      * */
 
     val ext: u_int32_tVar = alloc { this.value = 0U /* = kotlin.UInt */ }
-    strncpy(ext.ptr.reinterpret(),
+    val fourBytes = ext.ptr.reinterpret<ByteVar>()
+    strncpy(fourBytes as CValuesRef<ByteVar  >,
         get_filename_ext(small_case_path.toKStringFromUtf8()),
         sizeOf<uint32_tVar>().toULong())
+        m d "32bits ${fourBytes.toKStringFromUtf8()}"
 
 
     var c = 0
     do {
-        if (c == the_end || ext.value.toUInt() == suf[c].toUInt()) break
+        if (c == the_end || ext.value.toUInt() == suf[c].toUInt()) {
+            m d "choosing suf $c - ${ext.value} ?= ${suf[c]} "
+            break
+        }
         c++
     } while (true)
 
@@ -321,16 +330,16 @@ fun handle_http_method(method_buffer: CPointer<ByteVar>, client_socket: Int): Un
     val saveptr: CPointerVar<ByteVar> = alloc()
 
     method.value = strtok_r(method_buffer, " ", saveptr.ptr)
-        method?.value?.run{
+    method.value?.run {
         m d "method ${method.value}"
         strtolower(method.value!!.reinterpret())
         m d "lower method ${method.value}"
         path.value = strtok_r(null, " ", saveptr.ptr)
         if (strcmp(method.value!!.toKStringFromUtf8(), "get") == 0) {
-            handle_get_method(path.value!!.reinterpret(), client_socket);
+            handle_get_method(path.value!!.reinterpret(), client_socket)
 
         }
-    }?:handle_unimplemented_method(client_socket)
+    } ?: handle_unimplemented_method(client_socket)
 
 }
 
@@ -352,7 +361,8 @@ fun handle_client_request(req: CPointer<request>): Int = memScoped {
     /* Get the first line, which will be the request */
     val http_request = alloc(1024, alignOf<CPointerVar<ByteVar>>()).reinterpret<ByteVar>().ptr
     HasPosixErr.warning(get_line(req.pointed.iov[0].iov_base!!.reinterpret(),
-        http_request, 1024).z) { "Malformed request\n" }
+        http_request,
+        1024).z) { "Malformed request\n" }
     handle_http_method(http_request, req.pointed.client_socket)
     return 0
 }
@@ -368,12 +378,13 @@ fun server_loop(server_socket: Int): Unit = nativeHeap.run {
         m d "loop iter ${c++}"
         val ret: Int = io_uring_wait_cqe(ring.ptr, cqe.ptr as CValuesRef<CPointerVar<io_uring_cqe>>)
         m d "$ret cqe requests fulfulled"
-        HasPosixErr.posixRequires(ret >= 0) { "io_uring_wait_cqe" }
+        HasPosixErr.warning(ret >= 0) { "io_uring_wait_cqe" }
 
         val ioUringCqe: io_uring_cqe = cqe.pointed!!
         val req: CPointer<request> = ioUringCqe.user_data.toLong().toCPointer()!!
-        HasPosixErr.posixRequires(ioUringCqe.res >= 0) { "Async request failed: ${strerror(-ioUringCqe.res)} for event: ${req.pointed.event_type}" }
+        HasPosixErr.warning(ioUringCqe.res >= 0) { "Async request failed: ${strerror(-ioUringCqe.res)} for event: ${req.pointed.event_type}" }
 
+        /*
         m d "handling req.pointed.event_type=${req.pointed.event_type} among ${
             listOf(
                 "EVENT_TYPE_ACCEPT" to EVENT_TYPE_ACCEPT,
@@ -383,6 +394,7 @@ fun server_loop(server_socket: Int): Unit = nativeHeap.run {
                 list.map { (a, b) -> "$a & $b = ${req.pointed.event_type and b}" }
             }
         }"
+        */
         when (req.pointed.event_type) {
             EVENT_TYPE_ACCEPT -> {
                 m d "EVENT_TYPE_ACCEPT ->"
