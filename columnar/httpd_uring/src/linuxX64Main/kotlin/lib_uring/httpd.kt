@@ -1,10 +1,11 @@
 package lib_uring
 
 import kotlinx.cinterop.*
-import linux_uring.socklen_tVar
 import linux_uring.tolower
 import platform.posix.*
+import platform.posix.socklen_tVar
 import simple.HasDescriptor.Companion.S_ISREG
+import simple.HasPosixErr
 import simple.allocWithFlex
 import simple.simple.CZero.nz
 import simple.simple.CZero.z
@@ -74,7 +75,7 @@ fun setup_listening_socket(port: Int): Int = nativeHeap.run {
      * */
     if (bind(sock,
             srv_addr.ptr.reinterpret(),
-            sizeOf<sockaddr_in>().toUInt() /* = kotlin.UInt */).also{m d "bind returns $it"} < 0
+            sizeOf<sockaddr_in>().toUInt() /* = kotlin.UInt */).also { m d "bind returns $it" } < 0
     ) fatal_error("bind()")
 
     if (listen(sock, 10).also { m d "listen returns $it" } < 0) fatal_error("listen()")
@@ -151,6 +152,7 @@ fun handle_unimplemented_method(client_socket: Int): Unit {
  * */
 
 fun handle_http_404(client_socket: Int): Unit {
+    nativeHeap d "handle_http_404"
     sendStaticStringContent(http_404_content!!.toKStringFromUtf8(), client_socket)
 }
 
@@ -161,16 +163,14 @@ fun handle_http_404(client_socket: Int): Unit {
  * */
 
 fun copy_file_contents(file_path: CPointer<ByteVar>, file_size: off_t, iov: CPointer<iovec>): Unit = nativeHeap.run {
-
+    m d "copy_file_contents ${file_path.toKStringFromUtf8()}"
     val buf: CPointer<ByteVar> = malloc(file_size.toULong())!!.reinterpret()
-    val fd = open(file_path!!.toKStringFromUtf8(), O_RDONLY)
-    if (fd < 0) fatal_error("open")
+    val fd = open(file_path.toKStringFromUtf8(), O_RDONLY)
+    HasPosixErr.posixRequires(fd >= 0) { "open" }
 
     /* We should really check for short reads here */
     val i: ssize_t = read(fd, buf, file_size.toULong())
-    if (i < file_size) {
-        fprintf(stderr, "Encountered a short read.\n")
-    }
+    HasPosixErr.posixRequires (!(i < file_size) ){ "Encountered a short read.\n" }
     close(fd)
 
     iov.pointed.iov_base = buf
@@ -179,7 +179,7 @@ fun copy_file_contents(file_path: CPointer<ByteVar>, file_size: off_t, iov: CPoi
 
 /*
  * Simple function to get the file extension of the file that we are about to serve.
- * */
+ */
 
 fun get_filename_ext(filename: String): String = nativeHeap.run {
     filename.drop(min(filename.length, max(0, filename.lastIndexOf('.', max(0, filename.length - 5))) + 1))
@@ -206,7 +206,7 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
     strtolower(__dest)
 
     val str = "HTTP/1.1 200 OK\r\n"
-    var slen: ULong =  str .length.toULong()
+    var slen: ULong = str.length.toULong()
     iov[0].iov_base = zh_malloc(slen).reinterpret()
     iov[0].iov_len = slen
     memcpy(iov[0].iov_base, str.cstr, slen)
@@ -224,7 +224,9 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
      * */
 
     val ext: u_int32_tVar = alloc { this.value = 0U /* = kotlin.UInt */ }
-    strncpy(ext.ptr.reinterpret(), get_filename_ext(small_case_path!!.toKStringFromUtf8()), sizeOf<uint32_tVar>().toULong())
+    strncpy(ext.ptr.reinterpret(),
+        get_filename_ext(small_case_path.toKStringFromUtf8()),
+        sizeOf<uint32_tVar>().toULong())
 
 
     var c = 0
@@ -242,14 +244,14 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
 
     /* Send the content-length header, which is the file size in this case. */
     sprintf(send_buffer, "content-length: %ld\r\n", len)
-    slen = strlen(send_buffer!!.toKStringFromUtf8())
+    slen = strlen(send_buffer.toKStringFromUtf8())
     iov[3].iov_base = zh_malloc(slen)
     iov[3].iov_len = slen
     memcpy(iov[3].iov_base, send_buffer, slen)
 
     /* Send the connection header. */
     sprintf(send_buffer, "connection: %s\r\n", "keep-alive")
-    slen = strlen(send_buffer!!.toKStringFromUtf8())
+    slen = strlen(send_buffer.toKStringFromUtf8())
     iov[4].iov_base = zh_malloc(slen)
     iov[4].iov_len = slen
     memcpy(iov[4].iov_base, send_buffer, slen)
@@ -259,33 +261,34 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
      * it understands there are no more headers. Content may follow.
      * */
     strcpy(send_buffer, "\r\n")
-    slen = strlen(send_buffer!!.toKStringFromUtf8())
+    slen = strlen(send_buffer.toKStringFromUtf8())
     iov[5].iov_base = zh_malloc(slen)
     iov[5].iov_len = slen
     memcpy(iov[5].iov_base, send_buffer, slen)
 }
 
 fun handle_get_method(path: CPointer<ByteVar>, client_socket: Int): Unit = nativeHeap.run {
+    m d "handle_get_method ${path.toKStringFromUtf8()}"
     val final_path: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
 
     /*
      If a path ends in a trailing slash, the client probably wants the index
      file inside of that directory.
      */
-    val toInt = (strlen(path!!.toKStringFromUtf8()) - 1u).toInt()
+    val toInt = (strlen(path.toKStringFromUtf8()) - 1u).toInt()
     if (path[toInt] == '/'.code.toByte()) {
         strcpy(final_path, "public")
-        strcat(final_path, path!!.toKStringFromUtf8())
+        strcat(final_path, path.toKStringFromUtf8())
         strcat(final_path, "index.html")
     } else {
         strcpy(final_path, "public")
-        strcat(final_path, path!!.toKStringFromUtf8())
+        strcat(final_path, path.toKStringFromUtf8())
     }
 
     /* The stat() system call will give you information about the file
      * like type (regular file, directory, etc), size, etc. */
     val path_stat: stat = alloc()
-    if (stat(final_path!!.toKStringFromUtf8(), path_stat.ptr) == -1) {
+    if (stat(final_path.toKStringFromUtf8(), path_stat.ptr) == -1) {
         printf("404 Not Found: %s (%s)\n", final_path, path)
         handle_http_404(client_socket)
     } else {
@@ -294,7 +297,7 @@ fun handle_get_method(path: CPointer<ByteVar>, client_socket: Int): Unit = nativ
             val req: CPointer<request> = allocWithFlex(request::iov, 7).ptr.reinterpret<request>()
             req.pointed.iovec_count = 7
             req.pointed.client_socket = client_socket
-            send_headers(final_path!!.toKStringFromUtf8(), path_stat.st_size, req.pointed.iov.reinterpret())
+            send_headers(final_path.toKStringFromUtf8(), path_stat.st_size, req.pointed.iov.reinterpret())
             copy_file_contents(final_path, path_stat.st_size, req.pointed.iov[6].ptr.reinterpret())
             printf("200 %s %ld bytes\n", final_path, path_stat.st_size)
             add_write_request(req)
@@ -312,27 +315,32 @@ fun handle_get_method(path: CPointer<ByteVar>, client_socket: Int): Unit = nativ
  * */
 
 fun handle_http_method(method_buffer: CPointer<ByteVar>, client_socket: Int): Unit = nativeHeap.run {
+    m d "handle_http_method"
     val method: CPointerVar<ByteVar> = alloc()
     val path: CPointerVar<ByteVar> = alloc()
     val saveptr: CPointerVar<ByteVar> = alloc()
 
     method.value = strtok_r(method_buffer, " ", saveptr.ptr)
-    strtolower(method.value!!.reinterpret())
-    path.value = strtok_r(null, " ", saveptr.ptr)
+        method?.value?.run{
+        m d "method ${method.value}"
+        strtolower(method.value!!.reinterpret())
+        m d "lower method ${method.value}"
+        path.value = strtok_r(null, " ", saveptr.ptr)
+        if (strcmp(method.value!!.toKStringFromUtf8(), "get") == 0) {
+            handle_get_method(path.value!!.reinterpret(), client_socket);
 
-    if (strcmp(method.value!!.toKStringFromUtf8(), "get") == 0) {
-        handle_get_method(path.value!!.reinterpret(), client_socket)
-    } else {
-        handle_unimplemented_method(client_socket)
-    }
+        }
+    }?:handle_unimplemented_method(client_socket)
+
 }
 
 fun get_line(src: CPointer<ByteVar>, dest: CPointer<ByteVar>, dest_sz: Int): Int = memScoped {
+    m d "get_line src=${src.toKStringFromUtf8()} dest=$dest len:$dest_sz"
     for (i in 0 until dest_sz) {
         dest[i] = src[i]
-        if (src[i] == '\r'.toByte() && (src[i + 1].toByte()) == '\n'.toByte()) {
+        if (src[i] == '\r'.code.toByte() && ((src[i + 1])) == '\n'.code.toByte()) {
             dest[i] = 0.toByte()
-           return 0.also{m d "getline=($dest)${dest.toKStringFromUtf8()}" }
+            return 0.also { m d "getline=($dest)${dest.toKStringFromUtf8()}" }
         }
     }
     return 1
@@ -340,57 +348,57 @@ fun get_line(src: CPointer<ByteVar>, dest: CPointer<ByteVar>, dest_sz: Int): Int
 
 fun handle_client_request(req: CPointer<request>): Int = memScoped {
     m d "handle_client_request"
-    val http_request = alloca(1024)!!.reinterpret<ByteVar>()
+
     /* Get the first line, which will be the request */
-    if (get_line(req.pointed.iov[0].iov_base!!.reinterpret() , http_request, 1024).z) {
-        fprintf(stderr, "Malformed request\n")
-        exit(1)
-    }
+    val http_request = alloc(1024, alignOf<CPointerVar<ByteVar>>()).reinterpret<ByteVar>().ptr
+    HasPosixErr.warning(get_line(req.pointed.iov[0].iov_base!!.reinterpret(),
+        http_request, 1024).z) { "Malformed request\n" }
     handle_http_method(http_request, req.pointed.client_socket)
     return 0
 }
 
 fun server_loop(server_socket: Int): Unit = nativeHeap.run {
-    val cqe: CPointer<io_uring_cqe> = alloc<io_uring_cqe>().ptr
+    val cqe: CPointerVar<io_uring_cqe> = alloc()
     val client_addr: sockaddr_in = nativeHeap.alloc()
     val client_addr_len: socklen_tVar = nativeHeap.alloc { value = sizeOf<sockaddr_in>().toUInt() }
-
     add_accept_request(server_socket, client_addr.ptr, client_addr_len.ptr)
+
     var c = 0
     while (true) {
         m d "loop iter ${c++}"
-        val ret: Int = io_uring_wait_cqe(ring.ptr, cqe.reinterpret())
+        val ret: Int = io_uring_wait_cqe(ring.ptr, cqe.ptr as CValuesRef<CPointerVar<io_uring_cqe>>)
         m d "$ret cqe requests fulfulled"
-        if (ret < 0) fatal_error("io_uring_wait_cqe")
-        val req: CPointer<request> = cqe.pointed.user_data.toLong().toCPointer()!!
+        HasPosixErr.posixRequires(ret >= 0) { "io_uring_wait_cqe" }
 
-        if (cqe.pointed.res < 0) {
-            fprintf(stderr,
-                "Async request failed: %s for event: %d\n",
-                strerror(-cqe.pointed.res),
-                req.pointed.event_type)
-            exit(1)
-        }
+        val ioUringCqe: io_uring_cqe = cqe.pointed!!
+        val req: CPointer<request> = ioUringCqe.user_data.toLong().toCPointer()!!
+        HasPosixErr.posixRequires(ioUringCqe.res >= 0) { "Async request failed: ${strerror(-ioUringCqe.res)} for event: ${req.pointed.event_type}" }
 
+        m d "handling req.pointed.event_type=${req.pointed.event_type} among ${
+            listOf(
+                "EVENT_TYPE_ACCEPT" to EVENT_TYPE_ACCEPT,
+                "EVENT_TYPE_READ" to EVENT_TYPE_READ,
+                "EVENT_TYPE_WRITE" to EVENT_TYPE_WRITE,
+            ).let { list ->
+                list.map { (a, b) -> "$a & $b = ${req.pointed.event_type and b}" }
+            }
+        }"
         when (req.pointed.event_type) {
             EVENT_TYPE_ACCEPT -> {
                 m d "EVENT_TYPE_ACCEPT ->"
                 add_accept_request(server_socket, client_addr.ptr, client_addr_len.ptr)
-                add_read_request(cqe.pointed.res)
+                add_read_request(ioUringCqe.res)
                 free(req.also { m d "freeing $it" })
-
             }
             EVENT_TYPE_READ -> {
-                m d "EVENT_TYPE_READ->"
-                if (cqe.pointed.res.nz) {
+                m d "EVENT_TYPE_READ->  res:${ioUringCqe.res}"
+                if (ioUringCqe.res.z) {
                     close(req.pointed.client_socket)
                     fprintf(stderr, "Empty request!\n")
-
                 }
                 handle_client_request(req)
-                free(req.pointed.iov[0].iov_base)
+                free(req.pointed.iov[0].iov_base.also { m d "freeing $it" })
                 free(req.also { m d "freeing $it" })
-
             }
             EVENT_TYPE_WRITE -> {
                 m d "EVENT_TYPE_WRITE ->"
@@ -399,11 +407,10 @@ fun server_loop(server_socket: Int): Unit = nativeHeap.run {
                     free(req.pointed.iov[i].iov_base.also { m d "freeing $it" })
                 }
                 free(req.also { m d "freeing $it" })
-
             }
         }
         /* Mark this request as processed */
-        io_uring_cqe_seen(ring.ptr, cqe)
+        io_uring_cqe_seen(ring.ptr, ioUringCqe.ptr)
     }
 
 }
