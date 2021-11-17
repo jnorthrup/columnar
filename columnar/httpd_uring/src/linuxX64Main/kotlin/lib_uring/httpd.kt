@@ -40,10 +40,7 @@ fun fatal_error(syscall: String): Unit {
  * Helper function for cleaner looking code.
  * */
 
-fun zh_malloc(size: size_t): CPointer<ByteVar> {
-    val buf: CPointer<ByteVar> = malloc(size)!!.reinterpret()
-    return buf
-}
+fun zh_malloc(size: size_t) =  nativeHeap.allocArray<ByteVar>(size.toInt())
 
 /*
  * This function is responsible for setting up the main listening socket used by the
@@ -105,7 +102,7 @@ fun add_read_request(client_socket: Int): Int = nativeHeap.run {
     m d "add_read_request"
     val sqe: CPointer<io_uring_sqe> = io_uring_get_sqe(ring.ptr)!!
     val req: CPointer<request> = allocWithFlex(request::iov, 7).ptr
-    req.pointed.iov[0].iov_base = malloc(READ_SZ)
+    req.pointed.iov[0].iov_base = zh_malloc (READ_SZ.toULong())
     req.pointed.iov[0].iov_len = READ_SZ.toULong()
     req.pointed.event_type = EVENT_TYPE_READ
     req.pointed.client_socket = client_socket
@@ -128,7 +125,7 @@ fun add_write_request(req: CPointer<request>): Int {
 
 fun sendStaticStringContent(str: String, client_socket: Int): Unit = nativeHeap.run {
     val req: CPointer<request> = allocWithFlex(request::iov, 7).ptr
-    var slen: ULong = strlen(str)
+    val slen: ULong = strlen(str)
     req.pointed.iovec_count = 1
     req.pointed.client_socket = client_socket
     req.pointed.iov[0].iov_base = zh_malloc(slen)
@@ -143,9 +140,7 @@ fun sendStaticStringContent(str: String, client_socket: Int): Unit = nativeHeap.
  * */
 
 fun handle_unimplemented_method(client_socket: Int): Unit {
-
     sendStaticStringContent(unimplemented_content!!.toKStringFromUtf8(), client_socket)
-
 }
 
 /*
@@ -166,7 +161,7 @@ fun handle_http_404(client_socket: Int): Unit {
 
 fun copy_file_contents(file_path: CPointer<ByteVar>, file_size: off_t, iov: CPointer<iovec>): Unit = nativeHeap.run {
     m d "copy_file_contents ${file_path.toKStringFromUtf8()}"
-    val buf: CPointer<ByteVar> = malloc(file_size.toULong())!!.reinterpret()
+    val buf: CPointer<ByteVar> = zh_malloc(file_size.toULong())
     val fd = open(file_path.toKStringFromUtf8(), O_RDONLY)
     HasPosixErr.posixRequires(fd >= 0) { "open" }
 
@@ -208,9 +203,9 @@ val the_end: Int by lazy {
 
 fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeHeap.run {
     m d ("send_headers   + ${path}")
-    val send_buffer: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
+    val send_buffer = zh_malloc(1024.toULong())
     val __dest: CPointer<ByteVar>
-    val small_case_path: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
+    val small_case_path: CPointer<ByteVar> = zh_malloc( 1024.toULong())
     __dest = small_case_path
     strcpy(__dest, path)
     strtolower(__dest)
@@ -235,9 +230,7 @@ fun send_headers(path: String, len: off_t, iov: CPointer<iovec>): Unit = nativeH
      * */
 
     val ext: __be32Var = alloc ( )
-
     val fourBytes = ext.ptr.reinterpret<ByteVar>()
-
     strncpy(fourBytes as CValuesRef<ByteVar>,
         get_filename_ext(small_case_path.toKStringFromUtf8()),
         sizeOf<__be32Var>().toULong())
@@ -292,7 +285,7 @@ fun cheeseString(uInt: UInt) = ByteArray(4) { it ->
 
 fun handle_get_method(path: CPointer<ByteVar>, client_socket: Int): Unit = nativeHeap.run {
     m d "handle_get_method ${path.toKStringFromUtf8()}"
-    val final_path: CPointer<ByteVar> = malloc(1024)!!.reinterpret()
+    val final_path: CPointer<ByteVar> = zh_malloc( 1024.toULong())
 
     /*
      If a path ends in a trailing slash, the client probably wants the index
@@ -391,51 +384,56 @@ fun server_loop(server_socket: Int): Unit = nativeHeap.run {
         m d "loop iter ${c++}"
         val ret: Int = io_uring_wait_cqe(ring.ptr, cqe.ptr as CValuesRef<CPointerVar<io_uring_cqe>>)
         m d "$ret cqe requests fulfulled"
-        HasPosixErr.posixRequires(ret >= 0) { "io_uring_wait_cqe" }
+        HasPosixErr.warning(ret >= 0) { "io_uring_wait_cqe" }
 
-        val ioUringCqe: io_uring_cqe = cqe.pointed!!
-        val req: CPointer<request> = ioUringCqe.user_data.toLong().toCPointer()!!
-        HasPosixErr.posixRequires(ioUringCqe.res >= 0) { "Async request failed: ${strerror(-ioUringCqe.res)} for event: ${req.pointed.event_type}" }
-
-        /*
-        m d "handling req.pointed.event_type=${req.pointed.event_type} among ${
-            listOf(
-                "EVENT_TYPE_ACCEPT" to EVENT_TYPE_ACCEPT,
-                "EVENT_TYPE_READ" to EVENT_TYPE_READ,
-                "EVENT_TYPE_WRITE" to EVENT_TYPE_WRITE,
-            ).let { list ->
-                list.map { (a, b) -> "$a & $b = ${req.pointed.event_type and b}" }
-            }
-        }"
-        */
-        when (req.pointed.event_type) {
-            EVENT_TYPE_ACCEPT -> {
-                m d "EVENT_TYPE_ACCEPT ->"
-                add_accept_request(server_socket, client_addr.ptr, client_addr_len.ptr)
-                add_read_request(ioUringCqe.res)
-                free(req.also { m d "freeing $it" })
-            }
-            EVENT_TYPE_READ -> {
-                m d "EVENT_TYPE_READ->  res:${ioUringCqe.res}"
-                if (ioUringCqe.res.z) {
-                    close(req.pointed.client_socket)
-                    fprintf(stderr, "Empty request!\n")
+        val ioUringCqe = cqe.pointed
+        ioUringCqe?.let {ioUringCqe->
+            val req = ioUringCqe.user_data.toLong().toCPointer<request>()
+            req?.let { req ->
+                HasPosixErr.warning(ioUringCqe.res >= 0) { "Async request failed: ${strerror(-ioUringCqe.res)?.toKString()} for event: ${req.pointed.event_type}" }
+                /*
+               m d "handling req.pointed.event_type=${req.pointed.event_type} among ${
+                   listOf(
+                       "EVENT_TYPE_ACCEPT" to EVENT_TYPE_ACCEPT,
+                       "EVENT_TYPE_READ" to EVENT_TYPE_READ,
+                       "EVENT_TYPE_WRITE" to EVENT_TYPE_WRITE,
+                   ).let { list ->
+                       list.map { (a, b) -> "$a & $b = ${req.pointed.event_type and b}" }
+                   }
+               }"
+               */
+                when (req.pointed.event_type) {
+                    EVENT_TYPE_ACCEPT -> {
+                        m d "EVENT_TYPE_ACCEPT ->"
+                        add_accept_request(server_socket, client_addr.ptr, client_addr_len.ptr)
+                        add_read_request(ioUringCqe.res)
+                        platform.posix.free(req.also { m d "freeing $it" })
+                    }
+                    EVENT_TYPE_READ -> {
+                        m d "EVENT_TYPE_READ->  res:${ioUringCqe.res}"
+                        if (ioUringCqe.res.z) {
+                            close(req.pointed.client_socket)
+                            fprintf(stderr, "Empty request!\n")
+                        }
+                        handle_client_request(req)
+                        free(req.pointed.iov[0].iov_base.also { m d "freeing $it" })
+                        platform.posix.free(req.also { m d "freeing $it" })
+                        //add_read_request(ioUringCqe.res)//http 1.1
+                    }
+                    EVENT_TYPE_WRITE -> {
+                        m d "EVENT_TYPE_WRITE ->"
+                                        add_read_request(req.pointed.client_socket)
+                            //add_read_request(ioUringCqe.res)
+                        for (i/*as int */ in 0 until req.pointed.iovec_count) {
+                            free(req.pointed.iov[i].iov_base.also { m d "freeing $it" })
+                        }
+                        platform.posix.free(req.also { m d "freeing $it" })
+                    }
                 }
-                handle_client_request(req)
-                free(req.pointed.iov[0].iov_base.also { m d "freeing $it" })
-                free(req.also { m d "freeing $it" })
-            }
-            EVENT_TYPE_WRITE -> {
-                m d "EVENT_TYPE_WRITE ->"
-                add_read_request(req.pointed.client_socket)
-                for (i/*as int */ in 0 until req.pointed.iovec_count) {
-                    free(req.pointed.iov[i].iov_base.also { m d "freeing $it" })
-                }
-                free(req.also { m d "freeing $it" })
+                /* Mark this request as processed */
+                io_uring_cqe_seen(ring.ptr, ioUringCqe.ptr)
             }
         }
-        /* Mark this request as processed */
-        io_uring_cqe_seen(ring.ptr, ioUringCqe.ptr)
     }
 
 }
