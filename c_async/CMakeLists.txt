@@ -9,7 +9,8 @@ add_executable(uring_ex uring_ex.c )
 #link_libraries(uring)
 #add_executable(lib_uring_ex.c )
 #add_executable(lib_uring_poll_kernel_thread_ex.c )
-add_executable(webserver webserver_liburing.c )
+#add_executable(webserver webserver_liburing.c )
+add_executable(uring_echo uring_echo.c )
 
 
 #

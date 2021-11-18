@@ -39,7 +39,7 @@ fun get_file_size(fd: Int): posix_off_t = memScoped {
             val bytes: CPointerVar<LongVar> = alloc()
             posixRequires(posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes).z) { ("ioctl") }
             return bytes.pointed!!.value
-        } else posixRequires(!S_ISREG(st.st_mode)) { "file handle invalid" }
+        } else posixRequires(S_ISREG(st.st_mode)) { "file handle invalid" }
     }
     return st.st_size
 }
@@ -65,7 +65,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     s.pointed.ring_fd = io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr)
     val ringFd = s.pointed.ring_fd
     val mustBe = ringFd >= 0
-    posixRequires(mustBe, ringFd)
+    posixRequires(mustBe, { ringFd })
     /* io_uring communication happens via 2 shared kernel-user space ring buffers,
      * which can be jointly mapped with a single mmap() call in recent kernels.
      * While the completion queue is directly manipulated, the submission queue
@@ -283,7 +283,7 @@ fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap
          *
          */
         io_uring_enter(s.pointed.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS).let { ret ->
-            posixRequires(ret.nz, "io_uring_enter $ret")
+            posixRequires(ret.nz) { "io_uring_enter $ret" }
         }
 
         return 0
@@ -297,12 +297,12 @@ fun cat_file(argv1: Array<String>): Unit {
 
     println("---setting up uring with args ${argv.toList()}")
     val appSetupUring = app_setup_uring(s.ptr)
-    posixRequires(appSetupUring.z, appSetupUring)
+    posixRequires(appSetupUring.z) { appSetupUring }
 
     println("---success setting up uring with args ${argv.toList()}")
     for (arg in argv) {
         //will block
-        posixRequires(!submissionQueue(arg, s.ptr).nz, "Error reading file")
+        posixRequires(!submissionQueue(arg, s.ptr).nz) { "Error reading file" }
 
         println("---calling read_from_cq(${s})")
         //done blocking

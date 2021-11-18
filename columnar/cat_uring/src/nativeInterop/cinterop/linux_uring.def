@@ -23,9 +23,6 @@ compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 #define CATQUEUE_DEPTH 1
 #define BLOCK_SZ    1024
 
-/* This is x86 specific
-#define read_barrier()  __asm__ __volatile__("":::"memory")
-#define write_barrier() __asm__ __volatile__("":::"memory") */
 
 struct app_io_sq_ring {
     unsigned *head;
@@ -55,6 +52,11 @@ struct file_info {
     off_t file_sz;
     struct iovec iovecs[];      /* Referred by readv/writev */
 };
+
+
+/* This is x86 specific
+#define read_barrier()  __asm__ __volatile__("":::"memory")
+#define write_barrier() __asm__ __volatile__("":::"memory") */
 
  static inline void  read_barrier() { __asm__ __volatile__("" ::: "memory") ;}
  static inline void  write_barrier() { __asm__ __volatile__("" ::: "memory"); }

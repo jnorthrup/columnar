@@ -13,8 +13,8 @@ interface HasPosixErr {
         /**
          * more terse when errno
          */
-        fun posixRequires(mustBe: Boolean, res: Any?) {
-            require(mustBe) { HasPosixErr.reportErr(res) }
+        fun posixRequires(mustBe: Boolean, res: ()->Any?) {
+            require(mustBe){ reportErr(res())}
         }
 
         /**a non-throwing require*/
