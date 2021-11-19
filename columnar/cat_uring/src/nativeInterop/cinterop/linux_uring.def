@@ -58,5 +58,5 @@ struct file_info {
 #define read_barrier()  __asm__ __volatile__("":::"memory")
 #define write_barrier() __asm__ __volatile__("":::"memory") */
 
- static inline void  read_barrier() { __asm__ __volatile__("" ::: "memory") ;}
- static inline void  write_barrier() { __asm__ __volatile__("" ::: "memory"); }
+static inline void  read_barrier() { __asm__ __volatile__("" ::: "memory") ;}
+static inline void  write_barrier() { __asm__ __volatile__("" ::: "memory"); }

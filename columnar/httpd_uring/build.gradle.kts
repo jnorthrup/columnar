@@ -33,6 +33,5 @@ kotlin {
         val linuxX64Main by getting {
             dependsOn(commonMain)
         }
-
     }
 }
