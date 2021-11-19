@@ -7,10 +7,6 @@ import bbcursive.ann.Skipper;
 import bbcursive.lib.u8tf;
 import bbcursive.vtables._edge;
 import bbcursive.vtables._ptr;
-import com.databricks.fastbuffer.ByteBufferReader;
-import com.databricks.fastbuffer.JavaByteBufferReader;
-import com.databricks.fastbuffer.UnsafeDirectByteBufferReader;
-import com.databricks.fastbuffer.UnsafeHeapByteBufferReader;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -289,23 +285,23 @@ public class std {
         return b1;
     }
 
-    public static <S extends WantsZeroCopy> ByteBufferReader fast(S zc) {
-        return fast(zc.asByteBuffer());
-    }
+//     public static <S extends WantsZeroCopy> ByteBufferReader fast(S zc) {
+//         return fast(zc.asByteBuffer());
+//     }
 
-    public static ByteBufferReader fast(ByteBuffer buf) {
-        ByteBufferReader r;
-        try {
-            if (buf.hasArray())
-                r = new UnsafeHeapByteBufferReader(buf);
-            else
-                r = new UnsafeDirectByteBufferReader(buf);
-
-        } catch (UnsupportedOperationException e) {
-            r = new JavaByteBufferReader(buf);
-        }
-        return r;
-    }
+//     public static ByteBufferReader fast(ByteBuffer buf) {
+//         ByteBufferReader r;
+//         try {
+//             if (buf.hasArray())
+//                 r = new UnsafeHeapByteBufferReader(buf);
+//             else
+//                 r = new UnsafeDirectByteBufferReader(buf);
+//
+//         } catch (UnsupportedOperationException e) {
+//             r = new JavaByteBufferReader(buf);
+//         }
+//         return r;
+//     }
 
     /**
      * convenience method
@@ -395,9 +391,9 @@ public class std {
         return null != getAllocator() ? getAllocator().allocate(size) : allocateDirect(size);
     }
 
-    public static ByteBufferReader alloca(int size) {
-        return fast(alloc(size));
-    }
+//     public static ByteBufferReader alloca(int size) {
+//         return fast(alloc(size));
+//     }
 
     public static ByteBuffer consumeString(ByteBuffer buffer) {
         //TODO unicode wat?
