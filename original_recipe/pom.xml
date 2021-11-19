@@ -14,13 +14,14 @@
         <module>cursor</module>
         <module>trie</module>
         <module>vector-like</module>
+        <module>bbcursive</module>
     </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-        <kotlin.version>1.6.0-M1</kotlin.version>
+        <kotlin.version>1.6.0</kotlin.version>
     </properties>
 
     <licenses>
@@ -195,7 +196,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-<!--                                    <keyname>A13271F9D1D2951E</keyname>-->
+                                    <!--                                    <keyname>A13271F9D1D2951E</keyname>-->
                                     <keyname>E4EAB75CCBCCC55D</keyname>
                                     <passphraseServerId>keyserver.ubuntu.com</passphraseServerId>
 
