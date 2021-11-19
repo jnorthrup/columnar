@@ -2,6 +2,7 @@ package bbcursive.lib;
 
 import bbcursive.ann.ForwardOnly;
 import bbcursive.ann.Infix;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.function.UnaryOperator;
@@ -23,10 +24,12 @@ public class value_ implements UnaryOperator<ByteBuffer> {
     private value_() {
     }
 
+    @NotNull
     public static value_ value() {
         return VALUE_;
     }
 
+    @NotNull
     @Override
     public ByteBuffer apply(ByteBuffer buffer) {
         return (ByteBuffer) infix(opt(chlit("0")), anyOf_.anyIn("1.0"), opt(repeat(anyOf_.anyIn("1029384756"))));

@@ -1,12 +1,16 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
 
 /**
  * Created by jim on 1/17/16.
  */
 public class Int {
-    public static Integer parseInt(ByteBuffer r) {
+    @Nullable
+    public static Integer parseInt(@NotNull ByteBuffer r) {
         long x = 0;
         boolean neg = false;
 
@@ -58,7 +62,8 @@ public class Int {
         return res;
     }
 
-    public static Integer parseInt(String r) {
+    @Nullable
+    public static Integer parseInt(@NotNull String r) {
         long x = 0;
         boolean neg = false;
 

@@ -1,5 +1,8 @@
 package bbcursive;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
 
 import static bbcursive.lib.log.log;
@@ -11,6 +14,7 @@ import static bbcursive.lib.log.log;
  */
 public class Allocator {
 
+     @Nullable
      ByteBuffer DIRECT_HEAP;
     public static int MEG = (1<<10)<<10,BLOCKSIZE=MEG*2;
 
@@ -21,7 +25,7 @@ public class Allocator {
 
      int size = initialCapacity;
 
-    public Allocator(int... bytes) {
+    public Allocator(@NotNull int... bytes) {
         if(bytes.length>0)
             initialCapacity = bytes[0];
 
@@ -30,9 +34,9 @@ public class Allocator {
             try {
 
                 if (isDirect())
-                    buffer = (ByteBuffer) ByteBuffer.allocateDirect(size) .limit(0);
+                    buffer = ByteBuffer.allocateDirect(size) .limit(0);
                 else
-                    buffer = (ByteBuffer) ByteBuffer.allocate(size) .limit(0);
+                    buffer = ByteBuffer.allocate(size) .limit(0);
 
                 DIRECT_HEAP = buffer;
                 log("Heap allocated at " + size / MEG + " megs");
@@ -54,9 +58,9 @@ public class Allocator {
             try {
 
                 if (isDirect())
-                    buffer = (ByteBuffer) ByteBuffer.allocateDirect(size) .limit(0);
+                    buffer = ByteBuffer.allocateDirect(size) .limit(0);
                 else
-                    buffer = (ByteBuffer) ByteBuffer.allocate(size) .limit(0);
+                    buffer = ByteBuffer.allocate(size) .limit(0);
 
                 DIRECT_HEAP = buffer;
                 log("Heap allocated at " + size / MEG + " megs");
@@ -79,7 +83,7 @@ public class Allocator {
             init();
             return allocate(size);
         }
-        ByteBuffer ret = (ByteBuffer) DIRECT_HEAP.slice().limit(size).mark();
+        ByteBuffer ret = DIRECT_HEAP.slice().limit(size).mark();
         DIRECT_HEAP.position(DIRECT_HEAP.limit());
         return ret;
     }

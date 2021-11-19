@@ -1,5 +1,7 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.function.UnaryOperator;
@@ -11,8 +13,10 @@ import static bbcursive.std.bb;
  * Created by jim on 1/17/16.
  */
 public class confix_ {
-    public static UnaryOperator<ByteBuffer> confix(UnaryOperator<ByteBuffer> operator, char... chars) {
+    @NotNull
+    public static UnaryOperator<ByteBuffer> confix(UnaryOperator<ByteBuffer> operator, @NotNull char... chars) {
         return new UnaryOperator<ByteBuffer>() {
+            @NotNull
             @Override
             public String toString() {
                 return "confix_:"+ Arrays.toString(chars)+" : "+operator;
@@ -27,10 +31,12 @@ public class confix_ {
             }
         };
     }
+ @NotNull
  public    static UnaryOperator<ByteBuffer> confix(UnaryOperator<ByteBuffer> before, UnaryOperator<ByteBuffer> after, UnaryOperator<ByteBuffer> operator) {
 
      return new UnaryOperator<ByteBuffer>() {
 
+         @NotNull
          @Override
          public String toString() {
              return "confix"+Arrays.deepToString(new UnaryOperator[]{before, operator, after});
@@ -43,13 +49,14 @@ public class confix_ {
      };
     }
 
+    @NotNull
     public static UnaryOperator<ByteBuffer> confix(char open, UnaryOperator<ByteBuffer> unaryOperator, char close) {
         return confix(unaryOperator, open, close);
     }
 
-    public static UnaryOperator<ByteBuffer> confix(String s, UnaryOperator<ByteBuffer> unaryOperator) {
+    @NotNull
+    public static UnaryOperator<ByteBuffer> confix(@NotNull String s, UnaryOperator<ByteBuffer> unaryOperator) {
         return confix(unaryOperator, s.toCharArray());
     }
 
 }
-;

@@ -1,5 +1,7 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.util.function.UnaryOperator;
 
@@ -19,13 +21,15 @@ public class lim implements UnaryOperator<ByteBuffer> {
      * @param position
      * @return
      */
+    @NotNull
     public static UnaryOperator<ByteBuffer> lim(int position) {
         return new lim(position);
 
     }
 
+    @NotNull
     @Override
-    public ByteBuffer apply(ByteBuffer target) {
-        return (ByteBuffer) target.limit(position);
+    public ByteBuffer apply(@NotNull ByteBuffer target) {
+        return target.limit(position);
     }
 }

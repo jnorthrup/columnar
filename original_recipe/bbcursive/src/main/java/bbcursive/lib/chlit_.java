@@ -1,5 +1,6 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
@@ -9,11 +10,13 @@ import java.util.function.UnaryOperator;
 char literal
  */
 public class chlit_ {
+    @NotNull
     public static UnaryOperator<ByteBuffer> chlit(char c) {
         return new ByteBufferUnaryOperator(c);
     }
 
-    public static UnaryOperator<ByteBuffer> chlit(CharSequence s) {
+    @NotNull
+    public static UnaryOperator<ByteBuffer> chlit(@NotNull CharSequence s) {
         return chlit(s.charAt(0));
     }
 
@@ -21,10 +24,11 @@ public class chlit_ {
     private static class ByteBufferUnaryOperator implements UnaryOperator<ByteBuffer> {
         private final char c;
 
-        public ByteBufferUnaryOperator(char c) {
+        ByteBufferUnaryOperator(char c) {
             this.c = c;
         }
 
+        @NotNull
         @Override
         public String toString() {
             return "c8'" +
@@ -33,7 +37,7 @@ public class chlit_ {
 
         @Nullable
         @Override
-        public ByteBuffer apply(ByteBuffer buf) {
+        public ByteBuffer apply(@Nullable ByteBuffer buf) {
             if (null == buf) {
                 return null;
             }

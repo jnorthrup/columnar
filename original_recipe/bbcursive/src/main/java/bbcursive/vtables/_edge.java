@@ -1,5 +1,8 @@
 package bbcursive.vtables;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -22,8 +25,10 @@ public abstract class _edge<coreType, addressType> {
      */
     private coreType core;
 
+    @Nullable
     protected abstract addressType at();
 
+    @Nullable
     protected abstract addressType goTo(addressType addressType);
 
 
@@ -34,7 +39,7 @@ public abstract class _edge<coreType, addressType> {
      * @param e
      * @return
      */
-    public coreType core(_edge<coreType, addressType>... e) {
+    public coreType core(@NotNull _edge<coreType, addressType>... e) {
         boolean empty = 0 == e.length;
 
         boolean isMe = !empty&&this == e[0];
@@ -55,7 +60,8 @@ public abstract class _edge<coreType, addressType> {
      * @param notnullorself null for self.  non-empty set for induction
      * @return typically what is returned is what is passed in most recently to any of the Pair.second mutators (this.at, this.goto, this.location).
      */
-    protected final addressType at(addressType... notnullorself) {
+    @Nullable
+    protected final addressType at(@NotNull addressType... notnullorself) {
         addressType addressType1 = notnullorself[0];
         return 0 != notnullorself.length && !Objects.equals(this, addressType1) ? goTo(addressType1) : r$();
     }
@@ -65,6 +71,7 @@ public abstract class _edge<coreType, addressType> {
      *
      * @return
      */
+    @Nullable
     protected abstract addressType r$();
 
     /**
@@ -73,7 +80,8 @@ public abstract class _edge<coreType, addressType> {
      * @param e
      * @return
      */
-    public final addressType location(_edge<coreType, addressType>... e) {
+    @Nullable
+    public final addressType location(@NotNull _edge<coreType, addressType>... e) {
         _edge<coreType, addressType> subj = this;
         boolean empty = 0 == e.length;
         boolean alien = !empty &&subj != e[0];
@@ -87,6 +95,7 @@ public abstract class _edge<coreType, addressType> {
      * @param address
      * @return fused arc
      */
+    @NotNull
     public _edge<coreType, addressType> bind(coreType coreType
             , addressType address) {
         core= (coreType);

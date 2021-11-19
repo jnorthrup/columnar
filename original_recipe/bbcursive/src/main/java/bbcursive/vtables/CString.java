@@ -1,6 +1,7 @@
 package bbcursive.vtables;
 
 import bbcursive.std;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -16,14 +17,16 @@ import static bbcursive.std.str;
 public class CString {
     private final _mutator$ mutator = new _mutator$();
     private final _reifier$ reifier = new _reifier$();
+    @NotNull
     public _mutator<String> getMutator() {
         return mutator;
     }
+    @NotNull
     public _reifier<String> getReifier() { return reifier; }
 
     private class _mutator$ extends _mutator<String> {
         @Override
-        public _ptr apply(String s) {
+        public _ptr apply(@NotNull String s) {
 
             ByteBufferContext context = getContext();
             _ptr at = context.at();
@@ -33,7 +36,7 @@ public class CString {
     }
     private class _reifier$ implements _reifier<String> {
         @Override
-        public String apply(_ptr ptr) {
+        public String apply(@NotNull _ptr ptr) {
             ByteBuffer b = bb(ptr.core(ptr), mark, slice);
             while (b.hasRemaining() && b.get() > 0) ;
             return str(b.flip());

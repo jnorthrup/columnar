@@ -1,5 +1,8 @@
 package bbcursive.vtables;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.function.Function;
 
 /**
@@ -21,6 +24,7 @@ import java.util.function.Function;
 public abstract class _mutator<endPojo> implements Function<endPojo, _ptr> {
     private final ByteBufferContext context = new ByteBufferContext();
 
+    @NotNull
     public ByteBufferContext getContext() {
         return context;
     }
@@ -29,33 +33,40 @@ public abstract class _mutator<endPojo> implements Function<endPojo, _ptr> {
      *
      */
     protected class ByteBufferContext extends _edge<endPojo, _ptr> {
+        @Nullable
         protected _ptr at() {
             return this.location();
         }
 
+        @Nullable
         protected _ptr goTo(_ptr ptr) {
             return at(ptr);
         }
 
+        @NotNull
         protected _ptr r$() {
             return r$();
         }
 
+        @NotNull
         public endPojo apply(_ptr ptr) {
             return apply(ptr);
         }
     }
     protected class StringifiedContext extends _edge<String,ByteBufferContext>{
+        @Nullable
         @Override
         protected ByteBufferContext at() {
             return null;
         }
 
+        @Nullable
         @Override
         protected ByteBufferContext goTo(ByteBufferContext byteBufferContext) {
             return null;
         }
 
+        @Nullable
         @Override
         protected ByteBufferContext r$() {
             return null;

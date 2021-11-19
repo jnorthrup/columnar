@@ -8,6 +8,7 @@ import bbcursive.lib.u8tf;
 import bbcursive.vtables._edge;
 import bbcursive.vtables._ptr;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -51,33 +52,30 @@ public class std {
      * Integer -- length, to save time moving and scoring the artifact
      * _ptr -- _edge[ByteBuffer,Integer] state pair
      */
-    public static ThreadLocal<Consumer<_edge<_edge<Set<traits>,
+    public static final ThreadLocal<Consumer<_edge<_edge<Set<traits>,
             _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>>>
-            outbox = ThreadLocal.withInitial(() -> new Consumer<_edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>>() {
-        @Override
-        public void accept(_edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> edge_ptr_edge) {
-            // exhaust core()+location() fanout in intellij for a representational constant
-            // automate later.
-            _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> edge_ptr_edge1 = edge_ptr_edge;
-            _ptr location = edge_ptr_edge1.location();
-            Integer startPosition = location.location();
-            _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> set_edge_edge = edge_ptr_edge1.core();
-            Set<traits> traitsSet = set_edge_edge.core();
-            _edge<UnaryOperator<ByteBuffer>, Integer> operatorIntegerEdge = set_edge_edge.location();
-            Integer endPosition = operatorIntegerEdge.location();
-            UnaryOperator<ByteBuffer> unaryOperator = operatorIntegerEdge.core();
-            String s = deepToString(new Integer[]{startPosition, endPosition});
-            System.err.println("+++ " + s + unaryOperator + " " + traitsSet);
+            outbox = ThreadLocal.withInitial(() -> edge_ptr_edge -> {
+                // exhaust core()+location() fanout in intellij for a representational constant
+                // automate later.
+                _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> edge_ptr_edge1 = edge_ptr_edge;
+                _ptr location = edge_ptr_edge1.location();
+                Integer startPosition = location.location();
+                _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> set_edge_edge = edge_ptr_edge1.core();
+                Set<traits> traitsSet = set_edge_edge.core();
+                _edge<UnaryOperator<ByteBuffer>, Integer> operatorIntegerEdge = set_edge_edge.location();
+                Integer endPosition = operatorIntegerEdge.location();
+                UnaryOperator<ByteBuffer> unaryOperator = operatorIntegerEdge.core();
+                String s = deepToString(new Integer[]{startPosition, endPosition});
+                System.err.println("+++ " + s + unaryOperator + " " + traitsSet);
 
-        }
-    });
+            });
 
     /**
      * when you want to change the behaviors of the main IO parser, insert a new {@link BiFunction} to intercept
      * parameters and returns to fire events and clean up using {@link ThreadLocal#set(Object)}
      */
     public enum traits {
-        debug, backtracking, skipper;
+        debug, backtracking, skipper
 
     }
 
@@ -92,18 +90,18 @@ public class std {
      * @param ops
      * @return
      */
-    public static ByteBuffer bb(ByteBuffer b, UnaryOperator<ByteBuffer>... ops) {
+    @Nullable
+    public static ByteBuffer bb(@Nullable ByteBuffer b, @NotNull UnaryOperator<ByteBuffer>... ops) {
         ByteBuffer r = null;
         Set<traits> restoration = null;
         UnaryOperator<ByteBuffer> op = null;
         if (null != b && 0 < ops.length && null != (op = ops[0])) {
-            ;
             if (debug_bbcursive) System.err.println("??? " + op);
             int startPosition = b.position();
 
             if (flags.get().contains(traits.skipper)) {
                 boolean rem=false;
-                while ((rem = b.hasRemaining()) && isWhitespace(((ByteBuffer) b.mark()).get() & 0xff));
+                while ((rem = b.hasRemaining()) && isWhitespace(b.mark().get() & 0xff));
                 if (rem) b.reset();
             }
             restoration = induct(op.getClass());
@@ -140,8 +138,8 @@ public class std {
 
             if (null == r && flags.get().contains(traits.backtracking)) {
                 if (debug_bbcursive)
-                    System.err.println("--- " + deepToString(new Integer[]{startPosition, b.position()}) + " " + String.valueOf(op));
-                r = (ByteBuffer) b.position(startPosition);
+                    System.err.println("--- " + deepToString(new Integer[]{startPosition, b.position()}) + " " + op);
+                r = b.position(startPosition);
 
             } else if (null != outbox.get()) {
                 onSuccess(b, op, startPosition);
@@ -154,7 +152,7 @@ public class std {
     }
 
     public
-    static void onSuccess(ByteBuffer b, UnaryOperator<ByteBuffer> byteBufferUnaryOperator, int startPosition) {
+    static void onSuccess(@NotNull ByteBuffer b, @NotNull UnaryOperator<ByteBuffer> byteBufferUnaryOperator, int startPosition) {
         int endPos = b.position();
         Set<traits> immutableTraits = copyOf(flags.get());
 
@@ -165,13 +163,15 @@ public class std {
     }
 
     @NotNull
-    public static _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> createSuccessTuple(final ByteBuffer b, final UnaryOperator<ByteBuffer> byteBufferUnaryOperator, final int startPosition, final int endPos, final Set<traits> immutableTraits) {
+    public static _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> createSuccessTuple(@NotNull final ByteBuffer b, @NotNull final UnaryOperator<ByteBuffer> byteBufferUnaryOperator, final int startPosition, final int endPos, @NotNull final Set<traits> immutableTraits) {
         return new _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>() {
+            @NotNull
             @Override
             protected _ptr at() {
                 return r$();
             }
 
+            @NotNull
             @Override
             protected _ptr goTo(_ptr ptr) {
                 throw new Error("trifling with an immutable pointer");
@@ -184,32 +184,38 @@ public class std {
              *
              * @return the _ptr
              */
+            @NotNull
             @Override
 
             protected _ptr r$() {
 
                 return (_ptr) new _ptr().bind(
-                        (ByteBuffer) b.duplicate().limit(endPos), startPosition);
+                        b.duplicate().limit(endPos), startPosition);
             }
 
+            @NotNull
             @Override
             public _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> core(_edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>... e) {
                 return new _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>() {
+                    @NotNull
                     @Override
                     public Set<traits> core(_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>... e) {
                         return immutableTraits;
                     }
 
+                    @NotNull
                     @Override
                     protected _edge<UnaryOperator<ByteBuffer>, Integer> at() {
                         return r$();
                     }
 
+                    @NotNull
                     @Override
                     protected _edge<UnaryOperator<ByteBuffer>, Integer> goTo(_edge<UnaryOperator<ByteBuffer>, Integer> unaryOperatorInteger_edge) {
                         throw new Error("cant move this");
                     }
 
+                    @NotNull
                     @Override
                     protected _edge<UnaryOperator<ByteBuffer>, Integer> r$() {
                         return new _edge<UnaryOperator<ByteBuffer>, Integer>() {
@@ -218,11 +224,13 @@ public class std {
                                 return r$();
                             }
 
+                            @NotNull
                             @Override
                             protected Integer goTo(Integer integer) {
                                 throw new Error("immutable");
                             }
 
+                            @NotNull
                             @Override
                             public UnaryOperator<ByteBuffer> core(_edge<UnaryOperator<ByteBuffer>, Integer>... e) {
                                 return byteBufferUnaryOperator;
@@ -240,6 +248,7 @@ public class std {
     }
 
 
+    @NotNull
     static Map<Class, Set<traits>> termCache = new WeakHashMap<>();
 
     /**
@@ -250,7 +259,8 @@ public class std {
      * @param aClass
      * @return the previous (restoration) state
      */
-    static Set<traits> induct(Class<? extends UnaryOperator> aClass) {
+    @Nullable
+    static Set<traits> induct(@NotNull Class<? extends UnaryOperator> aClass) {
         Set<traits> c = flags.get();
         Set<traits> traitses = copyOf(c);
         AtomicBoolean dirty = new AtomicBoolean(false);
@@ -272,8 +282,9 @@ public class std {
     }
 
 
-    public static <S extends WantsZeroCopy> ByteBuffer bb(S b, UnaryOperator<ByteBuffer>... ops) {
-        ByteBuffer b1 = b.asByteBuffer();
+    @Nullable
+    public static <S extends WantsZeroCopy> ByteBuffer bb(@NotNull S b, @NotNull UnaryOperator<ByteBuffer>... ops) {
+        @Nullable ByteBuffer b1 = b.asByteBuffer();
         for (int i = 0, opsLength = ops.length; i < opsLength; i++) {
             UnaryOperator<ByteBuffer> op = ops[i];
             if (null == op) {
@@ -310,6 +321,7 @@ public class std {
      * @param operations
      * @return
      */
+    @NotNull
     public static String str(ByteBuffer bytes, UnaryOperator<ByteBuffer>... operations) {
         ByteBuffer bb = bb(bytes, operations);
         return UTF_8.decode(bb).toString();
@@ -322,7 +334,8 @@ public class std {
      * @param atoms
      * @return
      */
-    public static String str(WantsZeroCopy something, UnaryOperator<ByteBuffer>... atoms) {
+    @NotNull
+    public static String str(@NotNull WantsZeroCopy something, UnaryOperator<ByteBuffer>... atoms) {
         return str(something.asByteBuffer(), atoms);
     }
 
@@ -333,7 +346,8 @@ public class std {
      * @param atoms
      * @return
      */
-    public static String str(AtomicReference<? extends WantsZeroCopy> something, UnaryOperator<ByteBuffer>... atoms) {
+    @NotNull
+    public static String str(@NotNull AtomicReference<? extends WantsZeroCopy> something, UnaryOperator<ByteBuffer>... atoms) {
         return str(something.get(), atoms);
     }
 
@@ -354,20 +368,21 @@ public class std {
      * @param operations
      * @return
      */
+    @Nullable
     public static <T extends CharSequence> ByteBuffer bb(T src, UnaryOperator<ByteBuffer>... operations) {
         return bb(u8tf.c2b(String.valueOf(src)), operations);
     }
 
-    public static ByteBuffer grow(ByteBuffer src) {
+    public static ByteBuffer grow(@NotNull ByteBuffer src) {
         return allocateDirect(src.capacity() << 1).put(src);
     }
 
-    public static ByteBuffer cat(List<ByteBuffer> byteBuffers) {
+    public static ByteBuffer cat(@NotNull List<ByteBuffer> byteBuffers) {
         ByteBuffer[] byteBuffers1 = byteBuffers.toArray(new ByteBuffer[byteBuffers.size()]);
         return cat(byteBuffers1);
     }
 
-    public static ByteBuffer cat(ByteBuffer... src) {
+    public static ByteBuffer cat(@NotNull ByteBuffer... src) {
         ByteBuffer cursor;
         int total = 0;
         if (1 >= src.length) {
@@ -387,6 +402,7 @@ public class std {
         return cursor;
     }
 
+    @NotNull
     public static ByteBuffer alloc(int size) {
         return null != getAllocator() ? getAllocator().allocate(size) : allocateDirect(size);
     }
@@ -395,7 +411,8 @@ public class std {
 //         return fast(alloc(size));
 //     }
 
-    public static ByteBuffer consumeString(ByteBuffer buffer) {
+    @NotNull
+    public static ByteBuffer consumeString(@NotNull ByteBuffer buffer) {
         //TODO unicode wat?
         while (buffer.hasRemaining()) {
             byte current = buffer.get();
@@ -414,8 +431,9 @@ public class std {
         return buffer;
     }
 
-    public static ByteBuffer consumeNumber(ByteBuffer slice) {
-        byte b = ((ByteBuffer) slice.mark()).get();
+    @Nullable
+    public static ByteBuffer consumeNumber(@NotNull ByteBuffer slice) {
+        byte b = slice.mark().get();
 
         boolean sign = '-' == b || '+' == b;
         if (!sign) {
@@ -427,7 +445,7 @@ public class std {
         boolean esign = false;
         ByteBuffer r = null;
         while (slice.hasRemaining()) {
-            while (slice.hasRemaining() && isDigit(b = ((ByteBuffer) slice.mark()).get())) ;
+            while (slice.hasRemaining() && isDigit(b = slice.mark().get())) ;
             switch (b) {
                 case '.':
                     assert !dot : "extra dot";
@@ -441,7 +459,7 @@ public class std {
                     assert !esign : "bad exponent sign";
                     esign = true;
                 default:
-                    if (!isDigit(b)) r = (ByteBuffer) slice.reset();
+                    if (!isDigit(b)) r = slice.reset();
                     break;
             }
         }

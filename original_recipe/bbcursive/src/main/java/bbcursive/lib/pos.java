@@ -1,5 +1,8 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
 import java.util.function.UnaryOperator;
 
@@ -19,8 +22,10 @@ public class pos implements UnaryOperator<ByteBuffer> {
      * @param position
      * @return
      */
+    @NotNull
     public static UnaryOperator<ByteBuffer> pos(int position) {
         return new pos(position){
+            @NotNull
             @Override
             public String toString() {
                 return "pos("+position+")";
@@ -28,8 +33,9 @@ public class pos implements UnaryOperator<ByteBuffer> {
         };
     }
 
+    @NotNull
     @Override
-    public ByteBuffer apply(ByteBuffer t) {
-        return null == t ? t : (ByteBuffer) t.position(position);
+    public ByteBuffer apply(@Nullable ByteBuffer t) {
+        return null == t ? t : t.position(position);
     }
 }

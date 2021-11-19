@@ -4,6 +4,8 @@ import bbcursive.Cursive.pre;
 import bbcursive.ann.Backtracking;
 import bbcursive.vtables._edge;
 import bbcursive.vtables._ptr;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -25,22 +27,25 @@ public class anyOf_ {
 
     public static final EnumSet<traits> NONE_OF = EnumSet.noneOf(traits.class);
 
-    public static UnaryOperator<ByteBuffer> anyOf(UnaryOperator<ByteBuffer>... anyOf) {
+    @NotNull
+    public static UnaryOperator<ByteBuffer> anyOf(@NotNull UnaryOperator<ByteBuffer>... anyOf) {
 
 
         return new UnaryOperator<ByteBuffer>() {
 
+            @NotNull
             @Override
             public String toString() {
                 return "any" + deepToString(anyOf);
             }
 
+            @Nullable
             @Override
-            public ByteBuffer apply(ByteBuffer buffer) {
+            public ByteBuffer apply(@NotNull ByteBuffer buffer) {
                 int mark = buffer.position();
                 if (flags.get().contains(traits.skipper)) {
                     ByteBuffer apply = pre.skipWs.apply(buffer);
-                    buffer = apply == null ? (ByteBuffer) buffer.position(mark) : apply;
+                    buffer = apply == null ? buffer.position(mark) : apply;
                     if (!buffer.hasRemaining()) {
                         return null;
                     }
@@ -59,11 +64,13 @@ public class anyOf_ {
                                 op -> new _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>() {
                                     private final ByteBuffer buffer = finalBuffer[0];
 
+                                    @NotNull
                                     @Override
                                     protected _ptr at() {
                                         return r$();
                                     }
 
+                                    @NotNull
                                     @Override
                                     protected _ptr goTo(_ptr ptr) {
                                         throw new Error("trifling with an immutable pointer");
@@ -76,14 +83,16 @@ public class anyOf_ {
                                      *
                                      * @return the _ptr
                                      */
+                                    @NotNull
                                     @Override
 
                                     protected _ptr r$() {
 
                                         return (_ptr) new _ptr().bind(
-                                                (ByteBuffer) buffer.duplicate().position(offsets[1]), offsets[0]);
+                                                buffer.duplicate().position(offsets[1]), offsets[0]);
                                     }
 
+                                    @NotNull
                                     @Override
                                     public _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> core(_edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>... e) {
                                         return new _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>() {
@@ -92,16 +101,19 @@ public class anyOf_ {
                                                 return flaggs[0];
                                             }
 
+                                            @NotNull
                                             @Override
                                             protected _edge<UnaryOperator<ByteBuffer>, Integer> at() {
                                                 return r$();
                                             }
 
+                                            @NotNull
                                             @Override
                                             protected _edge<UnaryOperator<ByteBuffer>, Integer> goTo(_edge<UnaryOperator<ByteBuffer>, Integer> unaryOperatorInteger_edge) {
                                                 throw new Error("cant move this");
                                             }
 
+                                            @NotNull
                                             @Override
                                             protected _edge<UnaryOperator<ByteBuffer>, Integer> r$() {
                                                 return new _edge<UnaryOperator<ByteBuffer>, Integer>() {
@@ -110,6 +122,7 @@ public class anyOf_ {
                                                         return r$();
                                                     }
 
+                                                    @NotNull
                                                     @Override
                                                     protected Integer goTo(Integer integer) {
                                                         throw new Error("immutable");
@@ -132,7 +145,7 @@ public class anyOf_ {
                         ed -> {
                             UnaryOperator<ByteBuffer> op = ed.core().location().core();
                             Integer newPosition = ed.location().location();
-                            ByteBuffer byteBuffer = (ByteBuffer) ed.location().core().duplicate().position(newPosition);
+                            ByteBuffer byteBuffer = ed.location().core().duplicate().position(newPosition);
                             ByteBuffer res = op.apply(byteBuffer);
                             if (null != res) {
                                 offsets[1] = res.position();
@@ -145,7 +158,7 @@ public class anyOf_ {
                         edge_ptr_edge -> {
                             Consumer<_edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>> edgeConsumer = outbox.get();
                             edgeConsumer.accept(edge_ptr_edge);
-                            r[0] = (ByteBuffer) finalBuffer[0].position(offsets[1]);
+                            r[0] = finalBuffer[0].position(offsets[1]);
                         });
 
                 return r[0];
@@ -154,10 +167,12 @@ public class anyOf_ {
     }
 
 
+    @NotNull
     @Backtracking
-    public static UnaryOperator<ByteBuffer> anyIn(CharSequence s) {
+    public static UnaryOperator<ByteBuffer> anyIn(@NotNull CharSequence s) {
         int[] ints = s.chars().sorted().toArray();
         return new UnaryOperator<ByteBuffer>() {
+            @NotNull
             @Override
             public String toString() {
                 StringBuilder b=new StringBuilder();
@@ -165,8 +180,9 @@ public class anyOf_ {
                 return "in"+Arrays.deepToString(new String[]{b.toString()});
             }
 
+            @Nullable
             @Override
-            public ByteBuffer apply(ByteBuffer b) {
+            public ByteBuffer apply(@Nullable ByteBuffer b) {
                 ByteBuffer r = null;
                 if (null != b && b.hasRemaining()) {
                     byte b1 = b.get();

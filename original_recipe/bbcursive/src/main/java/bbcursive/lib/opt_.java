@@ -1,5 +1,7 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.function.UnaryOperator;
@@ -12,13 +14,15 @@ import static bbcursive.std.bb;
 public enum opt_ {
     ;
 
+    @NotNull
     public static UnaryOperator<ByteBuffer> opt(UnaryOperator<ByteBuffer>... unaryOperators) {
         return new ByteBufferUnaryOperator(unaryOperators);
     }
 
     public static class ByteBufferUnaryOperator implements UnaryOperator<ByteBuffer> {
-        private UnaryOperator<ByteBuffer>[] allOrPrevious;
+        private final UnaryOperator<ByteBuffer>[] allOrPrevious;
 
+        @NotNull
         @Override
         public String toString() {
             return "opt:" + Arrays.deepToString(allOrPrevious);
@@ -29,8 +33,9 @@ public enum opt_ {
             this.allOrPrevious = allOrPrevious;
         }
 
+        @NotNull
         @Override
-        public ByteBuffer apply(ByteBuffer buffer) {
+        public ByteBuffer apply(@NotNull ByteBuffer buffer) {
             int position = buffer.position();
             ByteBuffer r = bb(buffer, allOrPrevious);
             if (null == r) {

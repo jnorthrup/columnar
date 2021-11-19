@@ -2,14 +2,16 @@ package bbcursive.lib;
 
 import bbcursive.ann.Infix;
 import bbcursive.std;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.function.UnaryOperator;
 
-public interface infix_ {;
-@Infix
-    public static UnaryOperator<ByteBuffer> infix(UnaryOperator<ByteBuffer>... allOf) {
+public interface infix_ {
+    @NotNull
+    @Infix
+static UnaryOperator<ByteBuffer> infix(UnaryOperator<ByteBuffer>... allOf) {
     return new ByteBufferUnaryOperator(allOf);
 
 }
@@ -22,6 +24,7 @@ class ByteBufferUnaryOperator implements UnaryOperator<ByteBuffer> {
             this.allOf = allOf;
         }
 
+        @NotNull
         @Override
         public String toString() {
             return "infix"+ Arrays.deepToString(allOf);

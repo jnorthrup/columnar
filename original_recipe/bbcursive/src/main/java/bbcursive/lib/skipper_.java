@@ -2,6 +2,7 @@ package bbcursive.lib;
 
 import bbcursive.ann.Skipper;
 import bbcursive.std;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -10,8 +11,9 @@ import java.util.function.UnaryOperator;
 import static bbcursive.std.bb;
 
 @Skipper
-public interface skipper_ {;
+public interface skipper_ {
 
+    @NotNull
     @Skipper
     static UnaryOperator<ByteBuffer> skipper(UnaryOperator<ByteBuffer>... allOf) {
 
@@ -27,6 +29,7 @@ public interface skipper_ {;
             this.allOf = allOf;
         }
 
+        @NotNull
         @Override
         public String toString() {
             return "skipper"+ Arrays.deepToString(allOf);

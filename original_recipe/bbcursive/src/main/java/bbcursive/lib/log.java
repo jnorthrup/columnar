@@ -2,6 +2,7 @@ package bbcursive.lib;
 
 import bbcursive.WantsZeroCopy;
 import bbcursive.std;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
@@ -29,7 +30,7 @@ public class log {
      * @param prefixSuffix
      * @return
      */
-    public static boolean log$(Object ob, String...prefixSuffix) {
+    public static boolean log$(Object ob, @NotNull String...prefixSuffix) {
         boolean hasSuffix = 1 < prefixSuffix.length;
         if (0 < prefixSuffix.length)
             System.err.print(prefixSuffix[0] + "\t");

@@ -1,5 +1,7 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -12,14 +14,14 @@ public class push {
      * @return
      */
 
-    public static ByteBuffer push(ByteBuffer src, ByteBuffer dest) {
+    public static ByteBuffer push(@NotNull ByteBuffer src, @NotNull ByteBuffer dest) {
         int need = src
                 .remaining(),
                 have = dest.remaining();
         if (have > need) {
             return dest.put(src);
         }
-        dest.put((ByteBuffer) src.slice().limit(have));
+        dest.put(src.slice().limit(have));
         src.position(src.position() + have);
         return dest;
     }

@@ -1,6 +1,7 @@
 package bbcursive.lib;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -19,12 +20,14 @@ public enum repeat_ {
          return new UnaryOperator<ByteBuffer>() {
 
 
+            @NotNull
             public String toString() {
                 return "rep:"+ Arrays.deepToString(op);
             }
 
+            @Nullable
             @Override
-            public ByteBuffer apply(ByteBuffer byteBuffer) {
+            public ByteBuffer apply(@NotNull ByteBuffer byteBuffer) {
                 int mark = byteBuffer.position();
                 int matches = 0;
                 ByteBuffer handle = byteBuffer;

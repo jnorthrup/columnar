@@ -1,5 +1,7 @@
 package bbcursive.lib;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -14,7 +16,8 @@ public enum u8tf {
      * @param charseq
      * @return
      */
-    public static ByteBuffer c2b(String charseq) {
+    @NotNull
+    public static ByteBuffer c2b(@NotNull String charseq) {
         return StandardCharsets.UTF_8.encode(charseq);
     }
 
@@ -24,7 +27,8 @@ public enum u8tf {
      * @param buffer
      * @return defered  string translation decision
      */
-    public static CharSequence b2c(ByteBuffer buffer) {
+    @NotNull
+    public static CharSequence b2c(@NotNull ByteBuffer buffer) {
         return StandardCharsets.UTF_8.decode(buffer);
     }
 }
