@@ -4,9 +4,8 @@ import bbcursive.ann.Backtracking;
 import bbcursive.ann.ForwardOnly;
 import bbcursive.ann.Infix;
 import bbcursive.ann.Skipper;
+import bbcursive.func.UnaryOperator;
 import bbcursive.lib.u8tf;
-import bbcursive.vtables._edge;
-import bbcursive.vtables._ptr;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +19,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 
 import static java.lang.Character.isDigit;
 import static java.lang.Character.isWhitespace;
@@ -52,23 +50,23 @@ public class std {
      * Integer -- length, to save time moving and scoring the artifact
      * _ptr -- _edge[ByteBuffer,Integer] state pair
      */
-    public static final ThreadLocal<Consumer<_edge<_edge<Set<traits>,
-            _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>>>
-            outbox = ThreadLocal.withInitial(() -> edge_ptr_edge -> {
-                // exhaust core()+location() fanout in intellij for a representational constant
-                // automate later.
-                _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> edge_ptr_edge1 = edge_ptr_edge;
-                _ptr location = edge_ptr_edge1.location();
-                Integer startPosition = location.location();
-                _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> set_edge_edge = edge_ptr_edge1.core();
-                Set<traits> traitsSet = set_edge_edge.core();
-                _edge<UnaryOperator<ByteBuffer>, Integer> operatorIntegerEdge = set_edge_edge.location();
-                Integer endPosition = operatorIntegerEdge.location();
-                UnaryOperator<ByteBuffer> unaryOperator = operatorIntegerEdge.core();
-                String s = deepToString(new Integer[]{startPosition, endPosition});
-                System.err.println("+++ " + s + unaryOperator + " " + traitsSet);
-
-            });
+//    public static final ThreadLocal<Consumer<_edge<_edge<Set<traits>,
+//            _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>>>
+//            outbox = ThreadLocal.withInitial(() -> edge_ptr_edge -> {
+//                // exhaust core()+location() fanout in intellij for a representational constant
+//                // automate later.
+//                _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> edge_ptr_edge1 = edge_ptr_edge;
+//                _ptr location = edge_ptr_edge1.location();
+//                Integer startPosition = location.location();
+//                _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> set_edge_edge = edge_ptr_edge1.core();
+//                Set<traits> traitsSet = set_edge_edge.core();
+//                _edge<UnaryOperator<ByteBuffer>, Integer> operatorIntegerEdge = set_edge_edge.location();
+//                Integer endPosition = operatorIntegerEdge.location();
+//                UnaryOperator<ByteBuffer> unaryOperator = operatorIntegerEdge.core();
+//                String s = deepToString(new Integer[]{startPosition, endPosition});
+//                System.err.println("+++ " + s + unaryOperator + " " + traitsSet);
+//
+//            });
 
     /**
      * when you want to change the behaviors of the main IO parser, insert a new {@link BiFunction} to intercept
@@ -110,7 +108,7 @@ public class std {
                     r = b;
                     break;
                 case 1:
-                    r = op.apply(b);
+                    r = op.invoke(b);
                     break;
 
 /*save
@@ -141,9 +139,9 @@ public class std {
                     System.err.println("--- " + deepToString(new Integer[]{startPosition, b.position()}) + " " + op);
                 r = b.position(startPosition);
 
-            } else if (null != outbox.get()) {
+            } /*else if (null != outbox.get()) {
                 onSuccess(b, op, startPosition);
-            }
+            }*/
 
         }
         if (restoration != null)
@@ -159,94 +157,8 @@ public class std {
         /**
          * creates a slice.  probably a bad idea due to array() b000gz
          */
-        std.outbox.get().accept(createSuccessTuple(b, byteBufferUnaryOperator, startPosition, endPos, immutableTraits));
+//        std.outbox.get().accept(createSuccessTuple(b, byteBufferUnaryOperator, startPosition, endPos, immutableTraits));
     }
-
-    @NotNull
-    public static _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> createSuccessTuple(@NotNull final ByteBuffer b, @NotNull final UnaryOperator<ByteBuffer> byteBufferUnaryOperator, final int startPosition, final int endPos, @NotNull final Set<traits> immutableTraits) {
-        return new _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>() {
-            @NotNull
-            @Override
-            protected _ptr at() {
-                return r$();
-            }
-
-            @NotNull
-            @Override
-            protected _ptr goTo(_ptr ptr) {
-                throw new Error("trifling with an immutable pointer");
-            }
-
-            /**
-             * this binds a pointer to a pair of ByteBuffer and Integer.  note the bytebuffer is mutated by this
-             * operation and will corrupt the source stream if this isn't a slice or a duplicate
-             *
-             *
-             * @return the _ptr
-             */
-            @NotNull
-            @Override
-
-            protected _ptr r$() {
-
-                return (_ptr) new _ptr().bind(
-                        b.duplicate().limit(endPos), startPosition);
-            }
-
-            @NotNull
-            @Override
-            public _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> core(_edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>... e) {
-                return new _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>() {
-                    @NotNull
-                    @Override
-                    public Set<traits> core(_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>... e) {
-                        return immutableTraits;
-                    }
-
-                    @NotNull
-                    @Override
-                    protected _edge<UnaryOperator<ByteBuffer>, Integer> at() {
-                        return r$();
-                    }
-
-                    @NotNull
-                    @Override
-                    protected _edge<UnaryOperator<ByteBuffer>, Integer> goTo(_edge<UnaryOperator<ByteBuffer>, Integer> unaryOperatorInteger_edge) {
-                        throw new Error("cant move this");
-                    }
-
-                    @NotNull
-                    @Override
-                    protected _edge<UnaryOperator<ByteBuffer>, Integer> r$() {
-                        return new _edge<UnaryOperator<ByteBuffer>, Integer>() {
-                            @Override
-                            protected Integer at() {
-                                return r$();
-                            }
-
-                            @NotNull
-                            @Override
-                            protected Integer goTo(Integer integer) {
-                                throw new Error("immutable");
-                            }
-
-                            @NotNull
-                            @Override
-                            public UnaryOperator<ByteBuffer> core(_edge<UnaryOperator<ByteBuffer>, Integer>... e) {
-                                return byteBufferUnaryOperator;
-                            }
-
-                            @Override
-                            protected Integer r$() {
-                                return endPos;
-                            }
-                        };
-                    }
-                };
-            }
-        };
-    }
-
 
     @NotNull
     static Map<Class, Set<traits>> termCache = new WeakHashMap<>();
@@ -291,7 +203,7 @@ public class std {
                 b1 = null;
                 break;
             }
-            b1 = op.apply(b1);
+            b1 = op.invoke(b1);
         }
         return b1;
     }

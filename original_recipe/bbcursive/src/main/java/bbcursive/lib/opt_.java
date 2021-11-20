@@ -1,10 +1,10 @@
 package bbcursive.lib;
 
+import bbcursive.func.UnaryOperator;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.function.UnaryOperator;
 
 import static bbcursive.std.bb;
 
@@ -35,7 +35,7 @@ public enum opt_ {
 
         @NotNull
         @Override
-        public ByteBuffer apply(@NotNull ByteBuffer buffer) {
+        public ByteBuffer invoke(@NotNull ByteBuffer buffer) {
             int position = buffer.position();
             ByteBuffer r = bb(buffer, allOrPrevious);
             if (null == r) {

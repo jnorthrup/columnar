@@ -1,12 +1,12 @@
 package bbcursive.lib;
 
 import bbcursive.ann.Backtracking;
+import bbcursive.func.UnaryOperator;
 import bbcursive.std;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.function.UnaryOperator;
 
 import static bbcursive.std.bb;
 
@@ -35,7 +35,7 @@ public enum backtrack_ {;
 
 
         @Override
-        public ByteBuffer apply(ByteBuffer buffer) {
+        public ByteBuffer invoke(ByteBuffer buffer) {
             std.flags.get().add(std.traits.skipper);
 
             return bb(buffer, allOf);

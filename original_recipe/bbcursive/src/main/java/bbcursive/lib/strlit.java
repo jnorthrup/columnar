@@ -1,11 +1,11 @@
 package bbcursive.lib;
 
+import bbcursive.func.UnaryOperator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.text.MessageFormat;
-import java.util.function.UnaryOperator;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -34,7 +34,7 @@ public class strlit {
 
         @Nullable
         @Override
-        public ByteBuffer apply(@NotNull ByteBuffer buffer) {
+        public ByteBuffer invoke(@NotNull ByteBuffer buffer) {
             ByteBuffer encode = UTF_8.encode(String.valueOf(s));
             while (encode.hasRemaining() && buffer.hasRemaining() && encode.get() == buffer.get()) ;
             return encode.hasRemaining() ? null : buffer;

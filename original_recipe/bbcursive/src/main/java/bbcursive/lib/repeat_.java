@@ -1,11 +1,11 @@
 package bbcursive.lib;
 
+import bbcursive.func.UnaryOperator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.function.UnaryOperator;
 
 import static bbcursive.std.bb;
 
@@ -27,7 +27,7 @@ public enum repeat_ {
 
             @Nullable
             @Override
-            public ByteBuffer apply(@NotNull ByteBuffer byteBuffer) {
+            public ByteBuffer invoke(@NotNull ByteBuffer byteBuffer) {
                 int mark = byteBuffer.position();
                 int matches = 0;
                 ByteBuffer handle = byteBuffer;

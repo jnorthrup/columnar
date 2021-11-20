@@ -1,9 +1,9 @@
 package bbcursive.lib;
 
+import bbcursive.func.UnaryOperator;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
-import java.util.function.UnaryOperator;
 
 /**
  * Created by jim on 1/17/16.
@@ -29,7 +29,7 @@ public class lim implements UnaryOperator<ByteBuffer> {
 
     @NotNull
     @Override
-    public ByteBuffer apply(@NotNull ByteBuffer target) {
+    public ByteBuffer invoke(@NotNull ByteBuffer target) {
         return target.limit(position);
     }
 }

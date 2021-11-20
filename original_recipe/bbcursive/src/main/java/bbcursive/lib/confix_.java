@@ -1,10 +1,10 @@
 package bbcursive.lib;
 
+import bbcursive.func.UnaryOperator;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.function.UnaryOperator;
 
 import static bbcursive.lib.allOf_.allOf;
 import static bbcursive.std.bb;
@@ -23,7 +23,7 @@ public class confix_ {
             }
 
             @Override
-            public ByteBuffer apply(ByteBuffer buffer) {
+            public ByteBuffer invoke(ByteBuffer buffer) {
                 UnaryOperator<ByteBuffer> chlit = chlit_.chlit(chars[0]);
                 char aChar = chars[2 > chars.length ? 0 : 1];
                 UnaryOperator<ByteBuffer> chlit1 = chlit_.chlit(aChar);
@@ -43,7 +43,7 @@ public class confix_ {
          }
 
          @Override
-         public ByteBuffer apply(ByteBuffer buffer) {
+         public ByteBuffer invoke(ByteBuffer buffer) {
              return bb(buffer,allOf(before, operator, after));
          }
      };

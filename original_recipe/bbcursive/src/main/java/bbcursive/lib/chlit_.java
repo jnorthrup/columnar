@@ -1,10 +1,10 @@
 package bbcursive.lib;
 
+import bbcursive.func.UnaryOperator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
-import java.util.function.UnaryOperator;
 
 /**
 char literal
@@ -37,7 +37,7 @@ public class chlit_ {
 
         @Nullable
         @Override
-        public ByteBuffer apply(@Nullable ByteBuffer buf) {
+        public ByteBuffer invoke(@Nullable ByteBuffer buf) {
             if (null == buf) {
                 return null;
             }

@@ -1,39 +1,28 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.ann.Infix;
-import bbcursive.std;
-import org.jetbrains.annotations.NotNull;
+import bbcursive.ann.Infix
+import bbcursive.func.UnaryOperator
+import bbcursive.std
+import java.nio.ByteBuffer
+import java.util.*
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.function.UnaryOperator;
-
-public interface infix_ {
-    @NotNull
+interface infix_ {
     @Infix
-static UnaryOperator<ByteBuffer> infix(UnaryOperator<ByteBuffer>... allOf) {
-    return new ByteBufferUnaryOperator(allOf);
 
-}
+    class infix(  vararg val allOf: UnaryOperator<ByteBuffer?>) : UnaryOperator<ByteBuffer?> {
 
-    @Infix
-class ByteBufferUnaryOperator implements UnaryOperator<ByteBuffer> {
-        private final UnaryOperator<ByteBuffer>[] allOf;
-
-        public ByteBufferUnaryOperator(UnaryOperator<ByteBuffer>... allOf) {
-            this.allOf = allOf;
+        override operator fun invoke(buffer: ByteBuffer?): ByteBuffer {
+            return std.bb(buffer, *allOf) as ByteBuffer
         }
-
-        @NotNull
-        @Override
-        public String toString() {
-            return "infix"+ Arrays.deepToString(allOf);
+        override fun toString(): String {
+            return "infix" + Arrays.deepToString(allOf)
         }
+    }
 
-        @Override
-        public ByteBuffer apply(ByteBuffer buffer) {
-
-            return std.bb(buffer, allOf);
+    companion object {
+        @Infix
+        fun infix(vararg allOf: UnaryOperator<ByteBuffer?>): UnaryOperator<ByteBuffer?> {
+            return infix(*allOf)
         }
     }
 }

@@ -1,10 +1,10 @@
 package bbcursive.lib;
 
+import bbcursive.func.UnaryOperator;
 import bbcursive.std;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
-import java.util.function.UnaryOperator;
 
 import static java.util.Arrays.deepToString;
 
@@ -29,7 +29,7 @@ public interface  allOf_ {
             }
 
             @Override
-            public ByteBuffer apply(ByteBuffer target) {
+            public ByteBuffer invoke(ByteBuffer target) {
                 return   std.bb(target, allOf);
             }
         };

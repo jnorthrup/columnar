@@ -1,11 +1,11 @@
 package bbcursive;
 
+import bbcursive.func.UnaryOperator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.util.function.UnaryOperator;
 
 import static bbcursive.std.bb;
 
@@ -26,30 +26,30 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
   enum pre implements UnaryOperator<ByteBuffer> {
     duplicate {
 
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.duplicate();
       }
     }, flip {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.flip();
       }
     }, slice {
 
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.slice();
       }
     }, mark {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.mark();
       }
     }, reset {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.reset();
       }
     },
@@ -59,7 +59,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     rewind {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.rewind();
       }
     },
@@ -68,13 +68,13 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
      */
     debug {
 
-      public ByteBuffer apply(final ByteBuffer target) {
+      public ByteBuffer invoke(final ByteBuffer target) {
         System.err.println("%%: " + std.str(target, pre.duplicate, pre.rewind));
         return target;
       }
     }, ro {
 
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.asReadOnlyBuffer();
       }
     },
@@ -89,7 +89,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
 
     forceSkipWs {
       @Nullable
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         final int position = target.position();
 
         while (target.hasRemaining() && Character.isWhitespace(target.get()));
@@ -102,7 +102,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     },
     skipWs {
       @Nullable
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         boolean rem,captured = false;
         boolean r;
         while (rem=target.hasRemaining() && (captured|=(r=Character.isWhitespace( 0xff& target.mark().get())))&&r);
@@ -112,7 +112,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     toWs {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         while (target.hasRemaining() && !Character.isWhitespace(target.get())) {
         }
         return target;
@@ -124,7 +124,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     forceToEol {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         while (target.hasRemaining() && '\n' != target.get()) {
         }
         if (!target.hasRemaining()) {
@@ -139,7 +139,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     toEol {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         while (target.hasRemaining() && '\n' != target.get()) { }
         return target;
       }
@@ -147,7 +147,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     back1 {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         final int position = target.position();
         return 0 < position ? target.position(position - 1) : target;
       }
@@ -158,7 +158,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     back2 {
 
       @Nullable
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         final int position = target.position();
         return 1 < position ? target.position(position - 2) : bb(target, pre.back1);
       }
@@ -167,7 +167,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
      */rtrim {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         final int start = target.position();
         int i = start;
         --i;
@@ -184,13 +184,13 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
      * noop
      */
     noop {
-      public ByteBuffer apply(final ByteBuffer target) {
+      public ByteBuffer invoke(final ByteBuffer target) {
         return target;
       }
     }, skipDigits {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         while (target.hasRemaining() && Character.isDigit(target.get())) {
         }
         return target;
@@ -201,37 +201,37 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
   enum post implements Cursive {
     compact {
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.compact();
       }
     }, reset {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.reset();
       }
     }, rewind {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.rewind();
       }
     }, clear {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.clear();
       }
 
     }, grow {
 
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return std.grow(target);
       }
 
     }, ro {
 
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         return target.asReadOnlyBuffer();
       }
     },
@@ -241,7 +241,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
     pad0 {
 
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         while (target.hasRemaining()) {
           target.put((byte) 0);
         }
@@ -253,7 +253,7 @@ public interface Cursive extends UnaryOperator<ByteBuffer>{
      */
     pad0Until {
       @NotNull
-      public ByteBuffer apply(@NotNull final ByteBuffer target) {
+      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
         final int limit = target.limit();
         target.flip();
         while (target.hasRemaining()) {
