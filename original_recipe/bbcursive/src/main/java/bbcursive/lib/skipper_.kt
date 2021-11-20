@@ -1,46 +1,34 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.ann.Skipper;
-import bbcursive.func.UnaryOperator;
-import bbcursive.std;
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import static bbcursive.std.bb;
+import bbcursive.ann.Skipper
+import bbcursive.func.UnaryOperator
+import bbcursive.std
+import bbcursive.std.traits.skipper
+import java.nio.ByteBuffer
+import java.util.*
 
 @Skipper
-public interface skipper_ {
-
-    @NotNull
+interface skipper_ {
     @Skipper
-    static UnaryOperator<ByteBuffer> skipper(UnaryOperator<ByteBuffer>... allOf) {
+    class ByteBufferUnaryOperator(
+        vararg val allOf: UnaryOperator<ByteBuffer?>
+    ) : UnaryOperator<ByteBuffer?> {
+        override fun toString(): String {
+            return "skipper" + Arrays.deepToString(allOf)
+        }
 
-
-        return new ByteBufferUnaryOperator(allOf);
-
+        override operator fun invoke(p1: ByteBuffer?): ByteBuffer? {
+            std.flags.apply{
+                set(get() + skipper as Set<std.traits>)
+            }
+            return std.bb(p1!!,  *allOf)!!
+        }
     }
 
-    @Skipper class ByteBufferUnaryOperator implements UnaryOperator<ByteBuffer> {
-        private final UnaryOperator<ByteBuffer>[] allOf;
-
-        public ByteBufferUnaryOperator(UnaryOperator<ByteBuffer>... allOf) {
-            this.allOf = allOf;
-        }
-
-        @NotNull
-        @Override
-        public String toString() {
-            return "skipper"+ Arrays.deepToString(allOf);
-        }
-
-
-        @Override
-        public ByteBuffer invoke(ByteBuffer buffer) {
-            std.flags.get().add(std.traits.skipper);
-
-            return bb(buffer, allOf);
+    companion object {
+        @Skipper
+        fun skipper(vararg allOf: UnaryOperator<ByteBuffer?> ): UnaryOperator<ByteBuffer?> {
+            return ByteBufferUnaryOperator(    *allOf)
         }
     }
 }

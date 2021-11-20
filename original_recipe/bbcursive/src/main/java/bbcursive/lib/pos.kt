@@ -1,41 +1,19 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.func.UnaryOperator;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
+import bbcursive.func.UnaryOperator
+import java.nio.ByteBuffer
 
 /**
  * Created by jim on 1/17/16.
  */
-public class pos implements UnaryOperator<ByteBuffer> {
-    private final int position;
+open class pos(private val position: Int) : UnaryOperator<ByteBuffer?> {
 
-    public pos(int position) {
-        this.position = position;
+
+    override fun invoke(t: ByteBuffer?): ByteBuffer? {
+        return if (null == t) t!! else t.position(position)
     }
 
-    /**
-     * reposition
-     *
-     * @param position
-     * @return
-     */
-    @NotNull
-    public static UnaryOperator<ByteBuffer> pos(int position) {
-        return new pos(position){
-            @NotNull
-            @Override
-            public String toString() {
-                return "pos("+position+")";
-            }
-        };
-    }
-
-    @NotNull
-    @Override
-    public ByteBuffer invoke(@Nullable ByteBuffer t) {
-        return null == t ? t : t.position(position);
+    override fun toString(): String {
+        return "pos($position)"
     }
 }

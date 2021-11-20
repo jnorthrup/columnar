@@ -1,17 +1,15 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.WantsZeroCopy;
-import bbcursive.std;
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-
-import static bbcursive.Cursive.pre.debug;
+import bbcursive.Cursive.pre
+import bbcursive.WantsZeroCopy
+import bbcursive.func.UnaryOperator
+import bbcursive.std.bb
+import java.nio.ByteBuffer
 
 /**
  * Created by jim on 1/17/16.
  */
-public class log {
+object log {
     /**
      * conditional debug output assert log(Object,[prefix[,suffix]])
      *
@@ -19,8 +17,8 @@ public class log {
      * @param prefixSuffix
      * @return
      */
-    public static void log(Object ob, String... prefixSuffix) {
-        assert log$(ob, prefixSuffix);
+    fun log(ob: Any, vararg prefixSuffix: String) {
+        assert(`log$`(ob, *prefixSuffix))
     }
 
     /**
@@ -30,23 +28,19 @@ public class log {
      * @param prefixSuffix
      * @return
      */
-    public static boolean log$(Object ob, @NotNull String...prefixSuffix) {
-        boolean hasSuffix = 1 < prefixSuffix.length;
-        if (0 < prefixSuffix.length)
-            System.err.print(prefixSuffix[0] + "\t");
-        if (!(ob instanceof ByteBuffer)) {
-            if (ob instanceof WantsZeroCopy) {
-                WantsZeroCopy wantsZeroCopy = (WantsZeroCopy) ob;
-                std.bb(wantsZeroCopy.asByteBuffer(), debug);
+    fun `log$`(ob: Any, vararg prefixSuffix: String): Boolean {
+        val hasSuffix = 1 < prefixSuffix.size
+        if (0 < prefixSuffix.size) System.err.print(prefixSuffix[0] + "\t")
+        if (ob !is ByteBuffer) {
+            if (ob is WantsZeroCopy) {
+                bb(ob.asByteBuffer(), pre.debug as UnaryOperator<ByteBuffer?>)
             } else {
-                std.bb(String.valueOf(ob), debug);
+                bb(ob.toString(), pre.debug)
             }
-        } else {
-            std.bb((ByteBuffer) ob, debug);
-        }
+        } else bb(ob, pre.debug)
         if (hasSuffix) {
-            System.err.println(prefixSuffix[1] + "\t");
+            System.err.println(prefixSuffix[1] + "\t")
         }
-        return true;
+        return true
     }
 }

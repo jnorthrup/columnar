@@ -1,10 +1,9 @@
-package bbcursive.ann;
+package bbcursive.ann
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
 
 /**
-  */@Retention(RetentionPolicy.RUNTIME)
-public @interface ParseDebug
-{
-}
+ */
+@Retention(RetentionPolicy.RUNTIME)
+annotation class ParseDebug 

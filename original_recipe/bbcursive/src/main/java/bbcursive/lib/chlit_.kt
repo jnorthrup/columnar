@@ -1,54 +1,37 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.func.UnaryOperator;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
+import bbcursive.func.UnaryOperator
+import java.nio.ByteBuffer
 
 /**
-char literal
+ * char literal
  */
-public class chlit_ {
-    @NotNull
-    public static UnaryOperator<ByteBuffer> chlit(char c) {
-        return new ByteBufferUnaryOperator(c);
+object chlit_ {
+      @JvmStatic
+  fun chlit(c: Char): UnaryOperator<ByteBuffer?> {
+        return ByteBufferUnaryOperator1(c)
     }
 
-    @NotNull
-    public static UnaryOperator<ByteBuffer> chlit(@NotNull CharSequence s) {
-        return chlit(s.charAt(0));
+    @JvmStatic
+    fun chlit(s: String): UnaryOperator<ByteBuffer?> {
+        return chlit(s[0])
     }
 
-
-    private static class ByteBufferUnaryOperator implements UnaryOperator<ByteBuffer> {
-        private final char c;
-
-        ByteBufferUnaryOperator(char c) {
-            this.c = c;
-        }
-
-        @NotNull
-        @Override
-        public String toString() {
+    private class ByteBufferUnaryOperator1(private val c: Char) : UnaryOperator<ByteBuffer?> {
+        override fun toString(): String {
             return "c8'" +
-                    c+"'";
+                    c + "'"
         }
 
-        @Nullable
-        @Override
-        public ByteBuffer invoke(@Nullable ByteBuffer buf) {
+        override fun invoke(buf: ByteBuffer?): ByteBuffer? {
             if (null == buf) {
-                return null;
+                return null
             }
             if (buf.hasRemaining()) {
-                byte b = buf.get();
-                return (c & 0xff) == (b & 0xff) ? buf : null;
+                val b = buf.get()
+                return if (c.code .toUByte() == b .toUByte()) buf else null
             }
-            return null;
-
-
-
+            return null
         }
     }
 }

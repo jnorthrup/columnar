@@ -1,43 +1,28 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.func.UnaryOperator;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.text.MessageFormat;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import bbcursive.func.UnaryOperator
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.text.MessageFormat
 
 /**
  * Created by jim on 1/17/16.
  */
-public class strlit {
-
-    @NotNull
-    public static UnaryOperator<ByteBuffer> strlit(CharSequence s) {
-        return new ByteBufferUnaryOperator(s);
+object strlit {
+    fun strlit(s: CharSequence): UnaryOperator<ByteBuffer?> {
+        return ByteBufferUnaryOperator(s)
     }
 
-    private static class ByteBufferUnaryOperator implements UnaryOperator<ByteBuffer> {
-        private final CharSequence s;
-
-        ByteBufferUnaryOperator(CharSequence s) {
-            this.s = s;
+    private class ByteBufferUnaryOperator(private val s: CharSequence) :
+        UnaryOperator<ByteBuffer?> {
+        override fun toString(): String {
+            return MessageFormat.format("u8\"{0}\"", s)
         }
 
-        @NotNull
-        @Override
-        public String toString() {
-            return MessageFormat.format("u8\"{0}\"", s);
-        }
-
-        @Nullable
-        @Override
-        public ByteBuffer invoke(@NotNull ByteBuffer buffer) {
-            ByteBuffer encode = UTF_8.encode(String.valueOf(s));
-            while (encode.hasRemaining() && buffer.hasRemaining() && encode.get() == buffer.get()) ;
-            return encode.hasRemaining() ? null : buffer;
+        override operator fun invoke(buffer: ByteBuffer?): ByteBuffer? {
+            val encode = StandardCharsets.UTF_8.encode(s.toString())
+            while (encode.hasRemaining() && buffer!!.hasRemaining() && encode.get() == buffer.get());
+            return if (encode.hasRemaining()) null else buffer
         }
     }
 }

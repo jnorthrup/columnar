@@ -1,85 +1,27 @@
-package bbcursive;
+package bbcursive
 
-import bbcursive.ann.Backtracking;
-import bbcursive.ann.ForwardOnly;
-import bbcursive.ann.Infix;
-import bbcursive.ann.Skipper;
-import bbcursive.func.UnaryOperator;
-import bbcursive.lib.u8tf;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import static java.lang.Character.isDigit;
-import static java.lang.Character.isWhitespace;
-import static java.nio.ByteBuffer.allocateDirect;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.copyOfRange;
-import static java.util.Arrays.deepToString;
-import static java.util.EnumSet.copyOf;
-import static java.util.EnumSet.noneOf;
-
+import bbcursive.ann.Backtracking
+import bbcursive.ann.ForwardOnly
+import bbcursive.ann.Infix
+import bbcursive.ann.Skipper
+import bbcursive.func.UnaryOperator
+import bbcursive.lib.abort
+import bbcursive.lib.anyOf_
+import bbcursive.lib.u8tf
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Created by jim on 8/8/14.
  */
-public class std {
+object std {
+    private const val debug_bbcursive = true // Objects.equals("true", System.getenv("debug_bbcursive"));
+    var allocator: Allocator? = null
 
-
-    final private static boolean debug_bbcursive = true;// Objects.equals("true", System.getenv("debug_bbcursive"));
-    private static Allocator allocator;
-
-    /**
-     * the outbox -- when a parse term successfully returns and a {@link Consumer}is installed as the outbox the
-     * following state is published allowing for a recreation of the event elsewhere within the jvm
-     * <p>
-     * in reverse order of resolution:
-     * <p>
-     * flags -- from annotations from lambda class
-     * UnaryOperator -- the lambda that fired,
-     * Integer -- length, to save time moving and scoring the artifact
-     * _ptr -- _edge[ByteBuffer,Integer] state pair
-     */
-//    public static final ThreadLocal<Consumer<_edge<_edge<Set<traits>,
-//            _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr>>>
-//            outbox = ThreadLocal.withInitial(() -> edge_ptr_edge -> {
-//                // exhaust core()+location() fanout in intellij for a representational constant
-//                // automate later.
-//                _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>>, _ptr> edge_ptr_edge1 = edge_ptr_edge;
-//                _ptr location = edge_ptr_edge1.location();
-//                Integer startPosition = location.location();
-//                _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer>, Integer>> set_edge_edge = edge_ptr_edge1.core();
-//                Set<traits> traitsSet = set_edge_edge.core();
-//                _edge<UnaryOperator<ByteBuffer>, Integer> operatorIntegerEdge = set_edge_edge.location();
-//                Integer endPosition = operatorIntegerEdge.location();
-//                UnaryOperator<ByteBuffer> unaryOperator = operatorIntegerEdge.core();
-//                String s = deepToString(new Integer[]{startPosition, endPosition});
-//                System.err.println("+++ " + s + unaryOperator + " " + traitsSet);
-//
-//            });
-
-    /**
-     * when you want to change the behaviors of the main IO parser, insert a new {@link BiFunction} to intercept
-     * parameters and returns to fire events and clean up using {@link ThreadLocal#set(Object)}
-     */
-    public enum traits {
-        debug, backtracking, skipper
-
-    }
-
-
-    public static final ThreadLocal<Set<traits>> flags = ThreadLocal.withInitial((Supplier<? extends Set<traits>>) () -> noneOf(traits.class));
-
+    @JvmField
+    val flags: ThreadLocal<Set<traits>> = ThreadLocal.withInitial { anyOf_.NONE_OF }
 
     /**
      * this is the main bytebuffer io parser most easily coded for.
@@ -88,144 +30,106 @@ public class std {
      * @param ops
      * @return
      */
-    @Nullable
-    public static ByteBuffer bb(@Nullable ByteBuffer b, @NotNull UnaryOperator<ByteBuffer>... ops) {
-        ByteBuffer r = null;
-        Set<traits> restoration = null;
-        UnaryOperator<ByteBuffer> op = null;
-        if (null != b && 0 < ops.length && null != (op = ops[0])) {
-            if (debug_bbcursive) System.err.println("??? " + op);
-            int startPosition = b.position();
-
+    fun bb(b: ByteBuffer, vararg  ops: UnaryOperator<ByteBuffer?>): ByteBuffer? {
+        var r: ByteBuffer? = null
+        var restoration: Set<traits> = anyOf_.NONE_OF
+        var op =ops[0]
+        if (ops.isNotEmpty()) {
+            val startPosition = b.position()
             if (flags.get().contains(traits.skipper)) {
-                boolean rem=false;
-                while ((rem = b.hasRemaining()) && isWhitespace(b.mark().get() & 0xff));
-                if (rem) b.reset();
+                var rem = false
+                while (b.hasRemaining().also { rem = it } && Character.isWhitespace(b.mark().get().toUByte().toInt()));
+                if (rem) b.reset()
             }
-            restoration = induct(op.getClass());
-            switch (ops.length) {
-                case 0:
-                    r = b;
-                    break;
-                case 1:
-                    r = op.invoke(b);
-                    break;
-
-/*save
-                case 2:
-                    r = bb(bb(b, op), ops[1]);
-                    break;
-                case 3:
-                    r = bb(bb(bb(b, op), ops[1]), ops[2]);
-                    break;
-                case 4:
-                    r = bb(bb(bb(bb(b, op), ops[1]), ops[2]), ops[3]);
-                    break;
-                case 5:
-                    r = bb(bb(bb(bb(bb(b, op), ops[1]), ops[2]), ops[3]), ops[4]);
-                    break;
-                case 6:
-                    r = bb(bb(bb(bb(bb(bb(b, op), ops[1]), ops[2]), ops[3]), ops[4]), ops[5]);
-                    break;
-*/
-
-                default:
-                    r = /*bb(bb(bb(bb(*/bb(bb(b, op), copyOfRange(ops, 1, ops.length));
-                    break;
+            restoration = op.run { induct(op.javaClass) }
+            r = when (ops.size) {
+                0 -> b
+                1 -> op(b)
+                else -> bb(bb(b, op)!!,
+                    *Arrays.copyOfRange(ops, 1, ops.size))
             }
-
             if (null == r && flags.get().contains(traits.backtracking)) {
-                if (debug_bbcursive)
-                    System.err.println("--- " + deepToString(new Integer[]{startPosition, b.position()}) + " " + op);
-                r = b.position(startPosition);
-
-            } /*else if (null != outbox.get()) {
-                onSuccess(b, op, startPosition);
-            }*/
-
+                if (debug_bbcursive) System.err.println("--- " + Arrays.deepToString(arrayOf(startPosition,
+                    b.position())) + " " + op)
+                r = b.position(startPosition)
+            }
         }
-        if (restoration != null)
-            flags.set(restoration);
-        return r;
+        if (restoration != null) flags.set(restoration)
+        return r
     }
 
-    public
-    static void onSuccess(@NotNull ByteBuffer b, @NotNull UnaryOperator<ByteBuffer> byteBufferUnaryOperator, int startPosition) {
-        int endPos = b.position();
-        Set<traits> immutableTraits = copyOf(flags.get());
-
+    fun onSuccess(b: ByteBuffer, byteBufferUnaryOperator: UnaryOperator<ByteBuffer?>, startPosition: Int) {
+        val endPos = b.position()
+        val immutableTraits: Set<traits> = EnumSet.copyOf(flags.get())
         /**
          * creates a slice.  probably a bad idea due to array() b000gz
          */
 //        std.outbox.get().accept(createSuccessTuple(b, byteBufferUnaryOperator, startPosition, endPos, immutableTraits));
     }
 
-    @NotNull
-    static Map<Class, Set<traits>> termCache = new WeakHashMap<>();
+    var termCache: Map<Class<*>, Set<traits>> = WeakHashMap()
 
     /**
      * cache terminal flags and use them by class.
-     * <p>
+     *
+     *
      * if class is gc'd, no leak.
      *
      * @param aClass
      * @return the previous (restoration) state
      */
-    @Nullable
-    static Set<traits> induct(@NotNull Class<? extends UnaryOperator> aClass) {
-        Set<traits> c = flags.get();
-        Set<traits> traitses = copyOf(c);
-        AtomicBoolean dirty = new AtomicBoolean(false);
-        if (aClass.isAnnotationPresent(Skipper.class)) {
-            dirty.set(true);
-            c.add(traits.skipper);
-        } else if (aClass.isAnnotationPresent(Infix.class)) {
-            dirty.set(true);
-            c.remove(traits.skipper);
+    fun induct(aClass: Class<UnaryOperator<ByteBuffer?>>): Set<traits> {
+        var c = flags.get()
+        val traitses: Set<traits> = c.takeIf {  it.isNotEmpty()}?.let { EnumSet.copyOf(it) }?:c
+        val dirty = AtomicBoolean(false)
+        if (aClass.isAnnotationPresent(Skipper::class.java)) {
+            dirty.set(true)
+            c+=(traits.skipper)
+        } else if (aClass.isAnnotationPresent(Infix::class.java)) {
+            dirty.set(true)
+            c-=(traits.skipper)
         }
-        if (aClass.isAnnotationPresent(Backtracking.class)) {
-            dirty.set(true);
-            c.add(traits.backtracking);
-        } else if (aClass.isAnnotationPresent(ForwardOnly.class)) {
-            dirty.set(true);
-            c.remove(traits.backtracking);
+        if (aClass.isAnnotationPresent(Backtracking::class.java)) {
+            dirty.set(true)
+            c+=(traits.backtracking)
+        } else if (aClass.isAnnotationPresent(ForwardOnly::class.java)) {
+            dirty.set(true)
+            c-=(traits.backtracking)
         }
-        return !dirty.get() ? null : traitses;
+        return if (!dirty.get()) emptySet() else traitses
     }
 
-
-    @Nullable
-    public static <S extends WantsZeroCopy> ByteBuffer bb(@NotNull S b, @NotNull UnaryOperator<ByteBuffer>... ops) {
-        @Nullable ByteBuffer b1 = b.asByteBuffer();
-        for (int i = 0, opsLength = ops.length; i < opsLength; i++) {
-            UnaryOperator<ByteBuffer> op = ops[i];
+    fun <S : WantsZeroCopy?> bb(b: S, vararg ops: UnaryOperator<ByteBuffer?>): ByteBuffer? {
+        var b1: ByteBuffer? = b!!.asByteBuffer()
+        var i = 0
+        val opsLength = ops.size
+        while (i < opsLength) {
+            val op = ops[i]
             if (null == op) {
-                b1 = null;
-                break;
+                b1 = null
+                break
             }
-            b1 = op.invoke(b1);
+            b1 = op.invoke(b1)
+            i++
         }
-        return b1;
+        return b1
     }
-
-//     public static <S extends WantsZeroCopy> ByteBufferReader fast(S zc) {
-//         return fast(zc.asByteBuffer());
-//     }
-
-//     public static ByteBufferReader fast(ByteBuffer buf) {
-//         ByteBufferReader r;
-//         try {
-//             if (buf.hasArray())
-//                 r = new UnsafeHeapByteBufferReader(buf);
-//             else
-//                 r = new UnsafeDirectByteBufferReader(buf);
-//
-//         } catch (UnsupportedOperationException e) {
-//             r = new JavaByteBufferReader(buf);
-//         }
-//         return r;
-//     }
-
+    //     public static <S extends WantsZeroCopy> ByteBufferReader fast(S zc) {
+    //         return fast(zc.asByteBuffer());
+    //     }
+    //     public static ByteBufferReader fast(ByteBuffer buf) {
+    //         ByteBufferReader r;
+    //         try {
+    //             if (buf.hasArray())
+    //                 r = new UnsafeHeapByteBufferReader(buf);
+    //             else
+    //                 r = new UnsafeDirectByteBufferReader(buf);
+    //
+    //         } catch (UnsupportedOperationException e) {
+    //             r = new JavaByteBufferReader(buf);
+    //         }
+    //         return r;
+    //     }
     /**
      * convenience method
      *
@@ -233,10 +137,9 @@ public class std {
      * @param operations
      * @return
      */
-    @NotNull
-    public static String str(ByteBuffer bytes, UnaryOperator<ByteBuffer>... operations) {
-        ByteBuffer bb = bb(bytes, operations);
-        return UTF_8.decode(bb).toString();
+    fun str(bytes: ByteBuffer?, vararg operations: UnaryOperator<ByteBuffer?>): String {
+        val bb = bb(bytes?: abort.EMPTY_BUFF, *operations)
+        return StandardCharsets.UTF_8.decode(bb).toString()
     }
 
     /**
@@ -246,22 +149,24 @@ public class std {
      * @param atoms
      * @return
      */
-    @NotNull
-    public static String str(@NotNull WantsZeroCopy something, UnaryOperator<ByteBuffer>... atoms) {
-        return str(something.asByteBuffer(), atoms);
+    fun str(something: WantsZeroCopy, vararg atoms: UnaryOperator<ByteBuffer?>): String {
+        return str(something.asByteBuffer(), *atoms)
     }
 
+/*
+    */
     /**
      * just saves a few chars
      *
      * @param something toString will run on this
      * @param atoms
      * @return
-     */
-    @NotNull
-    public static String str(@NotNull AtomicReference<? extends WantsZeroCopy> something, UnaryOperator<ByteBuffer>... atoms) {
-        return str(something.get(), atoms);
+     *//*
+
+    fun str(something: AtomicReference<ByteBuffer>, vararg atoms: UnaryOperator<ByteBuffer?>?): String {
+        return str(something.get(), *atoms)
     }
+*/
 
     /**
      * just saves a few chars
@@ -269,8 +174,8 @@ public class std {
      * @param something toString will run on this
      * @return
      */
-    public static String str(Object something) {
-        return String.valueOf(something);
+    fun str(something: Any): String {
+        return something.toString()
     }
 
     /**
@@ -280,111 +185,148 @@ public class std {
      * @param operations
      * @return
      */
-    @Nullable
-    public static <T extends CharSequence> ByteBuffer bb(T src, UnaryOperator<ByteBuffer>... operations) {
-        return bb(u8tf.c2b(String.valueOf(src)), operations);
+    @JvmStatic
+    fun <T : CharSequence?> bb(src: T, vararg operations: UnaryOperator<ByteBuffer?>): ByteBuffer? {
+        return bb(u8tf.c2b(src.toString()), *operations)
     }
 
-    public static ByteBuffer grow(@NotNull ByteBuffer src) {
-        return allocateDirect(src.capacity() << 1).put(src);
+    @JvmStatic
+    fun grow(src: ByteBuffer): ByteBuffer {
+        return ByteBuffer.allocateDirect(src.capacity() shl 1).put(src)
     }
 
-    public static ByteBuffer cat(@NotNull List<ByteBuffer> byteBuffers) {
-        ByteBuffer[] byteBuffers1 = byteBuffers.toArray(new ByteBuffer[byteBuffers.size()]);
-        return cat(byteBuffers1);
+    fun cat(byteBuffers: List<ByteBuffer>): ByteBuffer {
+        val byteBuffers1 = byteBuffers.toTypedArray()
+        return cat(*byteBuffers1)
     }
 
-    public static ByteBuffer cat(@NotNull ByteBuffer... src) {
-        ByteBuffer cursor;
-        int total = 0;
-        if (1 >= src.length) {
-            cursor = src[0];
+    fun cat(vararg src: ByteBuffer): ByteBuffer {
+        val cursor: ByteBuffer
+        var total = 0
+        if (1 >= src.size) {
+            cursor = src[0]
         } else {
-            for (int i = 0, payloadLength = src.length; i < payloadLength; i++) {
-                ByteBuffer byteBuffer = src[i];
-                total += byteBuffer.remaining();
+            run {
+                var i = 0
+                val payloadLength = src.size
+                while (i < payloadLength) {
+                    val byteBuffer = src[i]
+                    total += byteBuffer.remaining()
+                    i++
+                }
             }
-            cursor = alloc(total);
-            for (int i = 0, payloadLength = src.length; i < payloadLength; i++) {
-                ByteBuffer byteBuffer = src[i];
-                cursor.put(byteBuffer);
+            cursor = alloc(total)
+            var i = 0
+            val payloadLength = src.size
+            while (i < payloadLength) {
+                val byteBuffer = src[i]
+                cursor.put(byteBuffer)
+                i++
             }
-            cursor.rewind();
+            cursor.rewind()
         }
-        return cursor;
+        return cursor
     }
 
-    @NotNull
-    public static ByteBuffer alloc(int size) {
-        return null != getAllocator() ? getAllocator().allocate(size) : allocateDirect(size);
+    fun alloc(size: Int): ByteBuffer {
+        return if (null != allocator) allocator!!.allocate(size) else ByteBuffer.allocateDirect(size)
     }
 
-//     public static ByteBufferReader alloca(int size) {
-//         return fast(alloc(size));
-//     }
-
-    @NotNull
-    public static ByteBuffer consumeString(@NotNull ByteBuffer buffer) {
+    //     public static ByteBufferReader alloca(int size) {
+    //         return fast(alloc(size));
+    //     }
+    fun consumeString(buffer: ByteBuffer): ByteBuffer {
         //TODO unicode wat?
         while (buffer.hasRemaining()) {
-            byte current = buffer.get();
-            switch (current) {
-                case '"':
-                    return buffer;
-                case '\\':
-                    byte next = buffer.get();
-                    switch (next) {
-                        case 'u':
-                            buffer.position(buffer.position() + 4);
-                        default:
+            val current = buffer.get()
+            when (current.toInt().toChar()) {
+                '"' -> return buffer
+                '\\' -> {
+                    val next = buffer.get()
+                    when (next.toInt().toChar()) {
+                        'u' -> buffer.position(buffer.position() + 4)
+                        else -> {}
                     }
+                }
             }
         }
-        return buffer;
+        return buffer
     }
 
-    @Nullable
-    public static ByteBuffer consumeNumber(@NotNull ByteBuffer slice) {
-        byte b = slice.mark().get();
-
-        boolean sign = '-' == b || '+' == b;
+    fun consumeNumber(slice: ByteBuffer): ByteBuffer? {
+        var b = slice.mark().get()
+        val sign = '-'.code.toByte() == b || '+'.code.toByte() == b
         if (!sign) {
-            slice.reset();
+            slice.reset()
         }
-
-        boolean dot = false;
-        boolean etoken = false;
-        boolean esign = false;
-        ByteBuffer r = null;
+        var dot = false
+        var etoken = false
+        var esign = false
+        var r: ByteBuffer? = null
         while (slice.hasRemaining()) {
-            while (slice.hasRemaining() && isDigit(b = slice.mark().get())) ;
-            switch (b) {
-                case '.':
-                    assert !dot : "extra dot";
-                    dot = true;
-                case 'E':
-                case 'e':
-                    assert !etoken : "missing digits or redundant exponent";
-                    etoken = true;
-                case '+':
-                case '-':
-                    assert !esign : "bad exponent sign";
-                    esign = true;
-                default:
-                    if (!isDigit(b)) r = slice.reset();
-                    break;
+            while (slice.hasRemaining() && Character.isDigit(slice.mark().get().also { b = it }.toInt()));
+            when (b.toInt().toChar()) {
+                '.' -> {
+                    assert(!dot) { "extra dot" }
+                    dot = true
+                    assert(!etoken) { "missing digits or redundant exponent" }
+                    etoken = true
+                    assert(!esign) { "bad exponent sign" }
+                    esign = true
+                    if (!Character.isDigit(b.toInt())) r = slice.reset()
+                }
+                'E', 'e' -> {
+                    assert(!etoken) { "missing digits or redundant exponent" }
+                    etoken = true
+                    assert(!esign) { "bad exponent sign" }
+                    esign = true
+                    if (!Character.isDigit(b.toInt())) r = slice.reset()
+                }
+                '+', '-' -> {
+                    assert(!esign) { "bad exponent sign" }
+                    esign = true
+                    if (!Character.isDigit(b.toInt())) r = slice.reset()
+                }
+                else -> if (!Character.isDigit(b.toInt())) r = slice.reset()
             }
         }
-        return r;
+        return r
     }
-
-    public static Allocator getAllocator() {
-        return allocator;
+    /**
+     * the outbox -- when a parse term successfully returns and a [Consumer]is installed as the outbox the
+     * following state is published allowing for a recreation of the event elsewhere within the jvm
+     *
+     *
+     * in reverse order of resolution:
+     *
+     *
+     * flags -- from annotations from lambda class
+     * UnaryOperator -- the lambda that fired,
+     * Integer -- length, to save time moving and scoring the artifact
+     * _ptr -- _edge[ByteBuffer,Integer] state pair
+     */
+    //    public static final ThreadLocal<Consumer<_edge<_edge<Set<traits>,
+    //            _edge<UnaryOperator<ByteBuffer> , Integer>>, _ptr>>>
+    //            outbox = ThreadLocal.withInitial(() -> edge_ptr_edge -> {
+    //                // exhaust core()+location() fanout in intellij for a representational constant
+    //                // automate later.
+    //                _edge<_edge<Set<traits>, _edge<UnaryOperator<ByteBuffer> , Integer>>, _ptr> edge_ptr_edge1 = edge_ptr_edge;
+    //                _ptr location = edge_ptr_edge1.location();
+    //                Integer startPosition = location.location();
+    //                _edge<Set<traits>, _edge<UnaryOperator<ByteBuffer> , Integer>> set_edge_edge = edge_ptr_edge1.core();
+    //                Set<traits> traitsSet = set_edge_edge.core();
+    //                _edge<UnaryOperator<ByteBuffer> , Integer> operatorIntegerEdge = set_edge_edge.location();
+    //                Integer endPosition = operatorIntegerEdge.location();
+    //                UnaryOperator<ByteBuffer>  unaryOperator = operatorIntegerEdge.core();
+    //                String s = deepToString(new Integer[]{startPosition, endPosition});
+    //                System.err.println("+++ " + s + unaryOperator + " " + traitsSet);
+    //
+    //            });
+    /**
+     * when you want to change the behaviors of the main IO parser, insert a new [BiFunction] to intercept
+     * parameters and returns to fire events and clean up using [ThreadLocal.set]
+     */
+    enum class traits {
+        debug, backtracking, skipper
     }
-
-    public static void setAllocator(Allocator allocator) {
-        std.allocator = allocator;
-    }
-
-
 }

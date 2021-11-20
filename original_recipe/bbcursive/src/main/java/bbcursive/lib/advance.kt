@@ -1,50 +1,35 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.func.UnaryOperator;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
+import bbcursive.func.UnaryOperator
+import java.nio.ByteBuffer
 
 /**
  * Created by jim on 1/17/16.
  */
-public class advance {
+object advance {
     /**
      * consumes a token from the current ByteBuffer position.  null signals fail and should reset.
      *
      * @param exemplar ussually name().getBytes(), but might be other value also.
      * @return null if no match -- rollback not done here use Narsive.$ for whitespace and rollback
      */
-    @NotNull
-    public static UnaryOperator<ByteBuffer> genericAdvance(@Nullable byte... exemplar) {
-
-        return new UnaryOperator<ByteBuffer>() {
-
-              @Nullable
-              byte[] bytes=exemplar;
-
-            @NotNull
-            @Override
-            public String toString() {
-                return asString();
+    fun genericAdvance(vararg exemplar: Byte): UnaryOperator<ByteBuffer?> {
+        return object : UnaryOperator<ByteBuffer?> {
+            var bytes: ByteArray? = exemplar
+            override fun toString(): String {
+                return asString()!!
             }
 
-
-            @Nullable
-            public String asString() {
-                bytes = exemplar;
-                return  "advance->"+new String(bytes);
+            fun asString(): String? {
+                bytes = exemplar
+                return "advance->" + String(bytes!!)
             }
 
-            @Nullable
-            @Override
-            public ByteBuffer invoke(@Nullable ByteBuffer target) {
-                int c = 0;
-                while (null != exemplar && null != target && target.hasRemaining() && c < exemplar.length && exemplar[c] == target.get())
-                    c++;
-                return !(null != target && c == exemplar.length) ? null : target;
+            override fun invoke(target: ByteBuffer?): ByteBuffer? {
+                var c = 0
+                while (null != exemplar && null != target && target.hasRemaining() && c < exemplar.size && exemplar[c] == target.get()) c++
+                return if (!(null != target && c == exemplar.size)) null else target
             }
-        };
+        }
     }
 }

@@ -1,28 +1,26 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Created by jim on 1/17/16.
  */
-public class push {
+object push {
     /**
      * @param src
      * @param dest
      * @return
      */
-
-    public static ByteBuffer push(@NotNull ByteBuffer src, @NotNull ByteBuffer dest) {
-        int need = src
-                .remaining(),
-                have = dest.remaining();
-        if (have > need) {
-            return dest.put(src);
+    fun push(src: ByteBuffer, dest: ByteBuffer): ByteBuffer {
+        val need = src
+            .remaining()
+        val have = dest.remaining()
+        return if (have <= need) {
+            dest.put(src.slice().limit(have))
+            src.position(src.position() + have)
+            dest
+        } else {
+            dest.put(src)
         }
-        dest.put(src.slice().limit(have));
-        src.position(src.position() + have);
-        return dest;
     }
 }

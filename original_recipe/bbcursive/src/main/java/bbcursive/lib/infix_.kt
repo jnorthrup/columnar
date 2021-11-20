@@ -9,10 +9,13 @@ import java.util.*
 interface infix_ {
     @Infix
 
-    class infix(  vararg val allOf: UnaryOperator<ByteBuffer?>) : UnaryOperator<ByteBuffer?> {
+    class infix(
+        vararg val allOf: UnaryOperator<ByteBuffer?>
+    ) : UnaryOperator<ByteBuffer?>
+ {
 
         override operator fun invoke(buffer: ByteBuffer?): ByteBuffer {
-            return std.bb(buffer, *allOf) as ByteBuffer
+            return std.bb(buffer?:abort.EMPTY_BUFF, *allOf) as ByteBuffer
         }
         override fun toString(): String {
             return "infix" + Arrays.deepToString(allOf)
@@ -21,7 +24,9 @@ interface infix_ {
 
     companion object {
         @Infix
-        fun infix(vararg allOf: UnaryOperator<ByteBuffer?>): UnaryOperator<ByteBuffer?> {
+        fun infix(
+            vararg allOf: UnaryOperator<ByteBuffer?>
+        ): UnaryOperator<ByteBuffer?> {
             return infix(*allOf)
         }
     }

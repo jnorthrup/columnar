@@ -1,62 +1,52 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.func.UnaryOperator;
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import static bbcursive.lib.allOf_.allOf;
-import static bbcursive.std.bb;
+import bbcursive.func.UnaryOperator
+import bbcursive.lib.allOf_.Companion.allOf
+import bbcursive.lib.chlit_.chlit
+import bbcursive.std.bb
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Created by jim on 1/17/16.
  */
-public class confix_ {
-    @NotNull
-    public static UnaryOperator<ByteBuffer> confix(UnaryOperator<ByteBuffer> operator, @NotNull char... chars) {
-        return new UnaryOperator<ByteBuffer>() {
-            @NotNull
-            @Override
-            public String toString() {
-                return "confix_:"+ Arrays.toString(chars)+" : "+operator;
+object confix_ {
+    fun confix(operator: UnaryOperator<ByteBuffer?>, vararg chars: Char): UnaryOperator<ByteBuffer?> {
+        return object : UnaryOperator<ByteBuffer?> {
+            override fun toString(): String {
+                return "confix_:" + Arrays.toString(chars) + " : " + operator
             }
 
-            @Override
-            public ByteBuffer invoke(ByteBuffer buffer) {
-                UnaryOperator<ByteBuffer> chlit = chlit_.chlit(chars[0]);
-                char aChar = chars[2 > chars.length ? 0 : 1];
-                UnaryOperator<ByteBuffer> chlit1 = chlit_.chlit(aChar);
-                return bb(buffer,confix(chlit, chlit1, operator));
+            override operator fun invoke(p1: ByteBuffer?): ByteBuffer? {
+                val chlit = chlit(chars[0])
+                val aChar = chars[if (2 > chars.size) 0 else 1]
+                val chlit1 = chlit(aChar)
+                return bb(p1!!, confix(chlit, chlit1, operator))!!
             }
-        };
-    }
- @NotNull
- public    static UnaryOperator<ByteBuffer> confix(UnaryOperator<ByteBuffer> before, UnaryOperator<ByteBuffer> after, UnaryOperator<ByteBuffer> operator) {
-
-     return new UnaryOperator<ByteBuffer>() {
-
-         @NotNull
-         @Override
-         public String toString() {
-             return "confix"+Arrays.deepToString(new UnaryOperator[]{before, operator, after});
-         }
-
-         @Override
-         public ByteBuffer invoke(ByteBuffer buffer) {
-             return bb(buffer,allOf(before, operator, after));
-         }
-     };
+        }
     }
 
-    @NotNull
-    public static UnaryOperator<ByteBuffer> confix(char open, UnaryOperator<ByteBuffer> unaryOperator, char close) {
-        return confix(unaryOperator, open, close);
+    fun confix(
+        before: UnaryOperator<ByteBuffer?>,
+        after: UnaryOperator<ByteBuffer?>,
+        operator: UnaryOperator<ByteBuffer?>
+    ): UnaryOperator<ByteBuffer?> {
+        return object : UnaryOperator<ByteBuffer?> {
+            override fun toString(): String {
+                return "confix" + Arrays.deepToString(arrayOf<UnaryOperator<*>>(before, operator, after))
+            }
+
+            override operator fun invoke(p1: ByteBuffer?): ByteBuffer? {
+                return bb(p1!!, allOf(before, operator, after))!!
+            }
+        }
     }
 
-    @NotNull
-    public static UnaryOperator<ByteBuffer> confix(@NotNull String s, UnaryOperator<ByteBuffer> unaryOperator) {
-        return confix(unaryOperator, s.toCharArray());
+    fun confix(open: Char, unaryOperator: UnaryOperator<ByteBuffer?>, close: Char): UnaryOperator<ByteBuffer?> {
+        return confix(unaryOperator, open, close)
     }
 
+    fun confix(s: String, unaryOperator: UnaryOperator<ByteBuffer?>): UnaryOperator<ByteBuffer?> {
+        return confix(unaryOperator, *s.toCharArray())
+    }
 }

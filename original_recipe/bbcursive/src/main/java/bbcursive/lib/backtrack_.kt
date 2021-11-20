@@ -1,44 +1,28 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.ann.Backtracking;
-import bbcursive.func.UnaryOperator;
-import bbcursive.std;
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import static bbcursive.std.bb;
+import bbcursive.ann.Backtracking
+import bbcursive.func.UnaryOperator
+import bbcursive.std
+import java.nio.ByteBuffer
+import java.util.*
 
 @Backtracking
-public enum backtrack_ {;
-
-    @NotNull
+internal object backtrack_ {
     @Backtracking
-    public static UnaryOperator<ByteBuffer> backtracker(UnaryOperator<ByteBuffer>...allOf) {
-        return new backTracker(allOf);
+    fun backtracker(vararg allOf: UnaryOperator<ByteBuffer?>): UnaryOperator<ByteBuffer> {
 
-    }
-    @Backtracking
-    private static class backTracker implements UnaryOperator<ByteBuffer> {
-        private final UnaryOperator<ByteBuffer>[] allOf;
+        @Backtracking
+        class backTracker(vararg val allOf: UnaryOperator<ByteBuffer?>) :
+            UnaryOperator<ByteBuffer?> {
+            override fun toString(): String {
+                return "backtracker" + Arrays.deepToString(allOf)
+            }
 
-        backTracker(UnaryOperator<ByteBuffer>... allOf) {
-            this.allOf = allOf;
+            override operator fun invoke(p1: ByteBuffer?): ByteBuffer? {
+                std.flags.apply { set(get() + std.traits.skipper) }
+                return std.bb(p1!!, *allOf)
+            }
         }
-
-        @NotNull
-        @Override
-        public String toString() {
-            return "backtracker" + Arrays.deepToString(allOf);
-        }
-
-
-        @Override
-        public ByteBuffer invoke(ByteBuffer buffer) {
-            std.flags.get().add(std.traits.skipper);
-
-            return bb(buffer, allOf);
-        }
+        return backtracker(*allOf)
     }
 }

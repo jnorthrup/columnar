@@ -1,17 +1,16 @@
-package bbcursive;
+package bbcursive
 
-import bbcursive.func.UnaryOperator;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-
-import static bbcursive.std.bb;
+import bbcursive.func.UnaryOperator
+import bbcursive.std.bb
+import bbcursive.std.str
+import org.jetbrains.annotations.NotNull
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
 
 /**
  * some kind of less painful way to do byteBuffer operations and a few new ones thrown in.
- * <p/>
+ *
+ *
  * evidence that this can be more terse than what jdk pre-8 allows:
  * <pre>
  *
@@ -19,248 +18,211 @@ import static bbcursive.std.bb;
  * res.add((ByteBuffer) nextChunk.rewind());
  *
  *
- * </pre>
+</pre> *
  */
-@FunctionalInterface
-public interface Cursive extends UnaryOperator<ByteBuffer>{
-  enum pre implements UnaryOperator<ByteBuffer> {
-    duplicate {
+interface Cursive : UnaryOperator<ByteBuffer?> {
+    enum class pre : UnaryOperator<ByteBuffer?> {
+        duplicate {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? = target!!.duplicate()
+        },
+        flip {
+            override operator fun invoke(@NotNull target: ByteBuffer?): ByteBuffer? = target!!.flip()
+        },
+        slice {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? = target!!.slice()
+        },
+        mark {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? = target!!.mark()
+        },
+        reset {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? = target!!.reset()
+        },
 
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.duplicate();
-      }
-    }, flip {
+        /**
+         * exists in both pre and post Cursive atoms.
+         */
+        rewind {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target!!.rewind()
+            }
+        },
 
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.flip();
-      }
-    }, slice {
+        /**
+         * rewinds, dumps to console but returns unchanged buffer
+         */
+        debug {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                System.err.println("%%: " + str(target, duplicate, rewind))
+                return target
+            }
+        },
+        ro {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target!!.asReadOnlyBuffer()
+            }
+        },
 
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.slice();
-      }
-    }, mark {
+        /**
+         * perfoms get until non-ws returned.  then backtracks.by one.
+         *
+         *
+         *
+         *
+         * resets position and throws BufferUnderFlow if runs out of space before success
+         */
+        forceSkipWs {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer?? {
+                val position = target!!.position()
+                while (target. hasRemaining() && Character.isWhitespace(target.get().toInt()));
+                if (!target.hasRemaining()) {
+                    target.position(position)
+                    throw BufferUnderflowException()
+                }
+                return bb(target, back1)
+            }
+        },
+        skipWs {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer?? {
+                var rem: Boolean=false
+                var captured = false
+                var r: Boolean=false
+                while (target!!.hasRemaining() && Character.isWhitespace(0xff and target.mark().get().toInt())
+                        .also { r = it }
+                        .let { captured = captured or it; captured } && r.also { rem = it }
+                );
+                return if (captured && rem) target.reset() else if (captured) target else null
+            }
+        },
+        toWs {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                while (target!!.hasRemaining() && !Character.isWhitespace(target.get().toInt())) {
+                }
+                return target
+            }
+        },
 
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.mark();
-      }
-    }, reset {
+        /**
+         * @throws java.nio.BufferUnderflowException if EOL was not reached
+         */
+        forceToEol {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                while (target!!.hasRemaining() && '\n'.code.toByte() != target.get()) {
+                }
+                if (!target.hasRemaining()) {
+                    throw BufferUnderflowException()
+                }
+                return target
+            }
+        },
 
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.reset();
-      }
-    },
-    /**
-     * exists in both pre and post Cursive atoms.
-     */
-    rewind {
+        /**
+         * makes best-attempt at reaching eol or returns end of buffer
+         */
+        toEol {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                while (target!!.hasRemaining() && '\n'.code.toByte() != target.get()) {
+                }
+                return target
+            }
+        },
+        back1 {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                val position = target!!.position()
+                return if (0 < position) target.position(position - 1) else target
+            }
+        },
 
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.rewind();
-      }
-    },
-    /**
-     * rewinds, dumps to console but returns unchanged buffer
-     */
-    debug {
+        /**
+         * reverses position _up to_ 2.
+         */
+        back2 {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer?? {
+                val position = target!!.position()
+                return if (1 < position) target.position(position - 2) else bb(target, back1)
+            }
+        },
 
-      public ByteBuffer invoke(final ByteBuffer target) {
-        System.err.println("%%: " + std.str(target, pre.duplicate, pre.rewind));
-        return target;
-      }
-    }, ro {
+        /**
+         * reduces the position of target until the character is non-white.
+         */
+        rtrim {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                val start = target!!.position()
+                var i = start
+                --i
+                while (0 <= i && Character.isWhitespace(target[i].toInt())) {
+                    --i
+                }
+                ++i
+                return target.position(i)
+            }
+        },
 
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.asReadOnlyBuffer();
-      }
-    },
-
-    /**
-     * perfoms get until non-ws returned.  then backtracks.by one.
-     * <p/>
-     * <p/>
-     * resets position and throws BufferUnderFlow if runs out of space before success
-     */
-
-
-    forceSkipWs {
-      @Nullable
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        final int position = target.position();
-
-        while (target.hasRemaining() && Character.isWhitespace(target.get()));
-        if (!target.hasRemaining()) {
-          target.position(position);
-          throw new BufferUnderflowException();
+        /**
+         * noop
+         */
+        noop {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target
+            }
+        },
+        skipDigits {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                while (target!!.hasRemaining() && Character.isDigit(target.get().toInt())) {
+                }
+                return target
+            }
         }
-        return bb(target, pre.back1);
-      }
-    },
-    skipWs {
-      @Nullable
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        boolean rem,captured = false;
-        boolean r;
-        while (rem=target.hasRemaining() && (captured|=(r=Character.isWhitespace( 0xff& target.mark().get())))&&r);
-        return captured&&rem ? target.reset() :captured?target:null;
-      }
-    },
-    toWs {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        while (target.hasRemaining() && !Character.isWhitespace(target.get())) {
-        }
-        return target;
-      }
-    },
-    /**
-     * @throws java.nio.BufferUnderflowException if EOL was not reached
-     */
-    forceToEol {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        while (target.hasRemaining() && '\n' != target.get()) {
-        }
-        if (!target.hasRemaining()) {
-          throw new BufferUnderflowException();
-        }
-        return target;
-      }
-    },
-    /**
-     * makes best-attempt at reaching eol or returns end of buffer
-     */
-    toEol {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        while (target.hasRemaining() && '\n' != target.get()) { }
-        return target;
-      }
-    },
-    back1 {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        final int position = target.position();
-        return 0 < position ? target.position(position - 1) : target;
-      }
-    },
-    /**
-     * reverses position _up to_ 2.
-     */
-    back2 {
-
-      @Nullable
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        final int position = target.position();
-        return 1 < position ? target.position(position - 2) : bb(target, pre.back1);
-      }
-    }, /**
-     * reduces the position of target until the character is non-white.
-     */rtrim {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        final int start = target.position();
-        int i = start;
-        --i;
-        while (0 <= i && Character.isWhitespace(target.get(i))) {
-          --i;
-        }
-
-        ++i;
-        return target.position(i);
-      }
-    },
-
-    /**
-     * noop
-     */
-    noop {
-      public ByteBuffer invoke(final ByteBuffer target) {
-        return target;
-      }
-    }, skipDigits {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        while (target.hasRemaining() && Character.isDigit(target.get())) {
-        }
-        return target;
-      }
     }
-  }
 
-  enum post implements Cursive {
-    compact {
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.compact();
-      }
-    }, reset {
+    enum class post : Cursive {
+        compact {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target!!.compact() }
+        },
+        reset {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target!!.reset() }
+        },
+        rewind {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target!!.rewind() }
+        },
+        clear {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target!!.clear() }
+        },
+        grow {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return std.grow(target!!) }
+        },
+        ro {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                return target!!.asReadOnlyBuffer() }
+        },
 
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.reset();
-      }
-    }, rewind {
+        /**
+         * fills remainder of buffer to 0's
+         */
+        pad0 {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                while (target!!.hasRemaining()) target.put(0.toByte())
+                return target
+            }
+        },
 
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.rewind();
-      }
-    }, clear {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.clear();
-      }
-
-    }, grow {
-
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return std.grow(target);
-      }
-
-    }, ro {
-
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        return target.asReadOnlyBuffer();
-      }
-    },
-    /**
-     * fills remainder of buffer to 0's
-     */
-    pad0 {
-
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        while (target.hasRemaining()) {
-          target.put((byte) 0);
+        /**
+         * fills prior bytes to current position with 0's
+         */
+        pad0Until {
+            override operator fun invoke(target: ByteBuffer?): ByteBuffer? {
+                val limit = target!!.limit()
+                target.flip()
+                while (target.hasRemaining()) {
+                    target.put(0.toByte())
+                }
+                return target.limit(limit)
+            }
         }
-        return target;
-      }
-    },
-    /**
-     * fills prior bytes to current position with 0's
-     */
-    pad0Until {
-      @NotNull
-      public ByteBuffer invoke(@NotNull final ByteBuffer target) {
-        final int limit = target.limit();
-        target.flip();
-        while (target.hasRemaining()) {
-          target.put((byte) 0);
-        }
-        return target.limit(limit);
-      }
     }
-  }
 }

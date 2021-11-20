@@ -1,55 +1,37 @@
-package bbcursive.lib;
+package bbcursive.lib
 
-import bbcursive.func.UnaryOperator;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import static bbcursive.std.bb;
+import bbcursive.func.UnaryOperator
+import bbcursive.std
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Created by jim on 1/17/16.
  */
-public enum repeat_ {
-    ;
-
-    @NotNull
-    public static UnaryOperator<ByteBuffer> repeat(UnaryOperator<ByteBuffer>... op) {
-         return new UnaryOperator<ByteBuffer>() {
-
-
-            @NotNull
-            public String toString() {
-                return "rep:"+ Arrays.deepToString(op);
+internal object repeat_ {
+    @JvmStatic
+    fun repeat(vararg op: UnaryOperator<ByteBuffer?> ): UnaryOperator<ByteBuffer?> {
+        return object : UnaryOperator<ByteBuffer?> {
+            override fun toString(): String {
+                return "rep:" + Arrays.deepToString(op)
             }
 
-            @Nullable
-            @Override
-            public ByteBuffer invoke(@NotNull ByteBuffer byteBuffer) {
-                int mark = byteBuffer.position();
-                int matches = 0;
-                ByteBuffer handle = byteBuffer;
-                ByteBuffer last = null;
-                while (handle.hasRemaining()) {
-                    last = handle;
-    //                if (null != (handle=op.apply(handle))) {
-                    if (null != (handle=bb(last,op))){
-                        matches++;
-                        mark = handle.position();
-                    }else break;
+            override operator fun invoke(byteBuffer: ByteBuffer?): ByteBuffer? {
+                var mark = byteBuffer!!.position()
+                var matches = 0
+                var handle = byteBuffer
+                var last: ByteBuffer? = null
+                while (handle!!.hasRemaining()) {
+                    last = handle
+                    //                if (null != (handle=op.apply(handle))) {
+                    if (null != std.bb(last, *op ).also { handle = it!! }) {
+                        matches++
+                        mark = handle!!.position()
+                    } else break
                 }
-
-                if (matches > 0 && last.hasRemaining())
-                    last.position(mark);
-
-                return matches > 0 ? last: null;
+                if (matches > 0 && last!!.hasRemaining()) last.position(mark)
+                return if (matches > 0) last else null
             }
-        };
+        }
     }
-
 }
-
-
-

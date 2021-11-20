@@ -13,8 +13,11 @@ import java.util.*
  */
 object anyOf_ {
     val NONE_OF = EnumSet.noneOf(traits::class.java)
+
     @SafeVarargs
-    fun anyOf(vararg anyOf: UnaryOperator<ByteBuffer?>): UnaryOperator<ByteBuffer?> {
+    fun anyOf(
+        vararg anyOf: UnaryOperator<ByteBuffer?>
+    ): UnaryOperator<ByteBuffer?> {
         return object : UnaryOperator<ByteBuffer?> {
             override fun toString(): String {
                 return "any${Arrays.deepToString(anyOf)}"
@@ -26,14 +29,14 @@ object anyOf_ {
                 if (std.flags.get().contains(traits.skipper)) {
                     val apply = pre.skipWs.invoke(buffer)
                     buffer = apply ?: buffer.position(mark)
-                    if (!buffer.hasRemaining()) {
+                    if (!buffer!!.hasRemaining()) {
                         return null
                     }
                 }
-                mark = buffer!!.position()
+                mark = buffer.position()
                 for (function in anyOf) {
                     val function1 = function.invoke(buffer)
-                    if(function1 !=null)return buffer
+                    if (function1 != null) return buffer
 
                 }
                 buffer.position(mark)
