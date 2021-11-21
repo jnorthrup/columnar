@@ -20,26 +20,9 @@ compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 #include <sys/uio.h>
 #include <unistd.h>
 
-#define CATQUEUE_DEPTH 1
+#define CATQUEUE_DEPTH 256
 #define BLOCK_SZ    1024
 
-
-struct app_io_sq_ring {
-    unsigned *head;
-    unsigned *tail;
-    unsigned *ring_mask;
-    unsigned *ring_entries;
-    unsigned *flags;
-    unsigned *array;
-};
-
-struct app_io_cq_ring {
-    unsigned *head;
-    unsigned *tail;
-    unsigned *ring_mask;
-    unsigned *ring_entries;
-    struct io_uring_cqe *cqes;
-};
 
 
 
@@ -47,7 +30,6 @@ struct file_info {
     off_t file_sz;
     struct iovec iovecs[];      /* Referred by readv/writev */
 };
-
 
 /* This is x86 specific
 #define read_barrier()  __asm__ __volatile__("":::"memory")

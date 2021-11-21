@@ -4,6 +4,7 @@ import kotlinx.cinterop.*
 import linux_uring.uring_opcode.*
 import platform.linux.*
 import platform.posix.*
+import platform.posix.sigset_t
 import simple.HasDescriptor.Companion.S_ISBLK
 import simple.HasDescriptor.Companion.S_ISREG
 import simple.HasPosixErr.Companion.posixRequires
@@ -16,17 +17,33 @@ import platform.posix.fstat as posix_fstat
 import platform.posix.ioctl as posix_ioctl
 import platform.posix.mmap as posix_mmap
 import platform.posix.off_t as posix_off_t
+import platform.posix.open as posix_open
 import platform.posix.stat as posix_stat
 import platform.posix.syscall as posix_syscall
-import platform.posix.sigset_t
-import platform.posix.open as posix_open
+
+class app_io_sq_ring(
+    val head: CPointer<UIntVar>?,
+    val tail: CPointer<UIntVar>?,
+    val ring_mask: CPointer<UIntVar>?,
+    val ring_entries: CPointer<UIntVar>?,
+    val flags: CPointer<UIntVar>?,
+    val array: CPointer<UIntVar>?,
+)
+
+class app_io_cq_ring(
+    val head: CPointer<UIntVar>?,
+    val tail: CPointer<UIntVar>?,
+    val ring_mask: CPointer<UIntVar>?,
+    val ring_entries: CPointer<UIntVar>?,
+    val cqes: CPointer<io_uring_cqe>?
+)
 
 
 class submitter {
-    var ring_fd:Int=0
-    val sq_ring: app_io_sq_ring = nativeHeap.alloc()
+    var ring_fd: Int = 0
+    lateinit var sq_ring: app_io_sq_ring
     lateinit var sqes: CPointer<io_uring_sqe>
-    val cq_ring: app_io_cq_ring = nativeHeap.alloc()
+    lateinit var cq_ring: app_io_cq_ring
 }
 
 /** This code is written in the days when io_uring-related system calls are not
@@ -54,7 +71,7 @@ fun get_file_size(fd: Int): posix_off_t = memScoped {
 private fun MemScope.getBlockDeviceBlockSize(fd: Int): platform.posix.off_t {
     val bytes: LongVar = alloc()
     posixRequires(posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes.ptr).z) { ("ioctl") }
-    return bytes.value as platform.posix.off_t /* = kotlin.Long */
+    return bytes.value /* = kotlin.Long */
 }
 
 /** io_uring requires a lot of setup which looks pretty hairy, but isn't all
@@ -103,24 +120,28 @@ fun app_setup_uring(s: submitter): Int = kotlinx.cinterop.nativeHeap.run {
         }
         /* Map in the submission and completion queue ring buffers.
          * Older kernels only map in the submission queue, though. */
-        val sq_ptr = posix_mmap(NULL,
+        val sq_ptr = posix_mmap(
+            NULL,
             sring_sz.toULong(),
             platform.posix.PROT_READ or platform.posix.PROT_WRITE,
             platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
             ringFd,
-            IORING_OFF_SQ_RING.toLong())!!.reinterpret<ByteVar>()
+            IORING_OFF_SQ_RING.toLong()
+        )!!.reinterpret<ByteVar>()
         posixRequires(sq_ptr != platform.posix.MAP_FAILED) { "mmap" }
         val cq_ptr: CPointer<ByteVar>
         if ((p.features and IORING_FEAT_SINGLE_MMAP).nz) {
             cq_ptr = sq_ptr
         } else {
             /* Map in the completion queue ring buffer in older kernels separately */
-            cq_ptr = posix_mmap(NULL,
+            cq_ptr = posix_mmap(
+                NULL,
                 cring_sz.toULong(),
                 platform.posix.PROT_READ or platform.posix.PROT_WRITE,
                 platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
                 ringFd,
-                IORING_OFF_CQ_RING.toLong())!!.reinterpret()
+                IORING_OFF_CQ_RING.toLong()
+            )!!.reinterpret()
             posixRequires(cq_ptr != platform.posix.MAP_FAILED) { "mmap" }
         }
         sq_ptr to cq_ptr
@@ -129,34 +150,39 @@ fun app_setup_uring(s: submitter): Int = kotlinx.cinterop.nativeHeap.run {
     /* Save useful fields in a global app_io_sq_ring r:fo later easy reference */
     s.run {
 
-        sq_ring.also {
-            sq_ptr.toLong().let { sqptr ->
-                it.head = (sqptr + sqOff.head.toLong()).toCPointer()
-                it.tail = (sqptr + sqOff.tail.toLong()).toCPointer()
-                it.ring_mask = (sqptr + sqOff.ring_mask.toLong()).toCPointer()
-                it.ring_entries = (sqptr + sqOff.ring_entries.toLong()).toCPointer()
-                it.flags = (sqptr + sqOff.flags.toLong()).toCPointer()
-                it.array = (sqptr + sqOff.array.toLong()).toCPointer()
-            }
+
+        sq_ptr.toLong().let { sqptr ->
+            sq_ring = app_io_sq_ring(
+                (sqptr + sqOff.head.toLong()).toCPointer<UIntVar>()!!,
+                (sqptr + sqOff.tail.toLong()).toCPointer<UIntVar>()!!,
+                (sqptr + sqOff.ring_mask.toLong()).toCPointer<UIntVar>()!!,
+                (sqptr + sqOff.ring_entries.toLong()).toCPointer<UIntVar>()!!,
+                (sqptr + sqOff.flags.toLong()).toCPointer<UIntVar>()!!,
+                (sqptr + sqOff.array.toLong()).toCPointer<UIntVar>()!!
+            )
         }
+
         read_barrier()
-        sqes = posix_mmap(NULL,
+        sqes = posix_mmap(
+            NULL,
             (p.sq_entries * sizeOf<io_uring_sqe>().toUInt()).toULong(),
             platform.posix.PROT_READ or platform.posix.PROT_WRITE,
             platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
             ringFd,
-            IORING_OFF_SQES.toLong())!!.reinterpret()
+            IORING_OFF_SQES.toLong()
+        )!!.reinterpret()
         posixRequires(s.sqes != platform.posix.MAP_FAILED) { "mmap" }
 
-        cq_ring.apply {
-            cq_ptr.toLong().let { cqptr ->
-                /* Save useful fields in a global app_io_cq_ring r:fo later easy reference */
-                head = (cqptr + cqOff.head.toLong()).toCPointer()
-                tail = (cqptr + cqOff.tail.toLong()).toCPointer()
-                ring_mask = (cqptr + cqOff.ring_mask.toLong()).toCPointer()
-                ring_entries = (cqptr + cqOff.ring_entries.toLong()).toCPointer()
-                cqes = (cqptr + cqOff.cqes.toLong()).toCPointer()
-            }
+
+        cq_ptr.toLong().let { cqptr ->
+            /* Save useful fields in a global app_io_cq_ring r:fo later easy reference */
+            cq_ring = app_io_cq_ring(
+                head = (cqptr + cqOff.head.toLong()).toCPointer()!!,
+                (cqptr + cqOff.tail.toLong()).toCPointer()!!,
+                (cqptr + cqOff.ring_mask.toLong()).toCPointer()!!,
+                (cqptr + cqOff.ring_entries.toLong()).toCPointer()!!,
+                (cqptr + cqOff.cqes.toLong()).toCPointer()!!
+            )
         }
     }
     return 0
@@ -185,9 +211,9 @@ fun output_to_console(buf: CPointer<ByteVar>, len: Int): Unit {
 
 fun completionQueues(s: submitter) {
     var fi: CPointer<file_info>
-    val cring: CPointer<app_io_cq_ring> = s.cq_ring.ptr
     var cqe: CPointer<io_uring_cqe>
-    var head = cring.pointed.head!!.pointed.value
+    val cring  = s.cq_ring
+    var head = cring .head!!.pointed.value
     println("entering loop")
     do {
         read_barrier()
@@ -195,22 +221,24 @@ fun completionQueues(s: submitter) {
          * Remember, this is a ring buffer. If head == tail, it means that the
          * buffer is empty.
          * */
-        if (head == cring.pointed.tail!!.pointed.value) break
+        if (head == cring. tail!!.pointed.value) break
         /* Get the entry */
-        val value = head.toLong() and s.cq_ring.ring_mask!!.pointed.value.toLong()
-        cqe = cring.pointed.cqes!![value.toInt()].ptr
+        val value = head.toLong() and s.cq_ring.ring_mask!!.pointed.value!!.toLong()
+        cqe = cring .cqes!![value.toInt()].ptr
         fi = cqe.pointed.user_data.toLong().toCPointer()!!
         posixRequires(cqe.pointed.res >= 0) { "Error: ${cqe.pointed.res}" }
 
         var blocks: Int = (fi.pointed.file_sz / BLOCK_SZ.toLong()).toInt()
         if (0L != fi.pointed.file_sz % BLOCK_SZ) blocks++
-        for (i in 0 until blocks) output_to_console(fi.pointed.iovecs[i].iov_base!!.reinterpret(),
-            fi.pointed.iovecs[i].iov_len.toInt())
+        for (i in 0 until blocks) output_to_console(
+            fi.pointed.iovecs[i].iov_base!!.reinterpret(),
+            fi.pointed.iovecs[i].iov_len.toInt()
+        )
         head++
     } while (true)
 
     write_barrier()
-    cring.pointed.head!!.pointed.value = head
+    cring. head!!.pointed.value = head
     write_barrier()
 }
 
@@ -224,7 +252,7 @@ val tehBlockSize: Long = BLOCK_SZ.toLong()
 fun submissionQueue(file_path: String, s: submitter): Int = nativeHeap.run {
     val file_fd: Int = posix_open(file_path, platform.posix.O_RDONLY)
     posixRequires(file_fd >= 0) { "fileopen $file_fd" }
-    val sring: CPointer<app_io_sq_ring> = s.sq_ring.ptr
+    val sring = s.sq_ring
     var current_block = 0U
 
     val file_sz: posix_off_t = get_file_size(file_fd)
@@ -256,12 +284,12 @@ fun submissionQueue(file_path: String, s: submitter): Int = nativeHeap.run {
         }
 
         /* Add our submission queue entry to the tail of the SQE ring buffer */
-        var tail = sring.pointed.tail!!.pointed.value
+        var tail = sring. tail!!.pointed.value
         var next_tail = tail
         next_tail++
         read_barrier()
         val index = tail and s.sq_ring.ring_mask!!.pointed.value
-        val sqe: CPointer<io_uring_sqe> = s.sqes!![index.toInt()].ptr
+        val sqe: CPointer<io_uring_sqe> = s.sqes[index.toInt()].ptr
 
 
         sqe.pointed.run {
@@ -274,13 +302,13 @@ fun submissionQueue(file_path: String, s: submitter): Int = nativeHeap.run {
             user_data = fi.ptr.toLong().toULong()
         }
         write_barrier()
-        sring.pointed.array!![index.toInt()] = index
+        sring. array!![index.toInt()] = index
         tail = next_tail
 
 
         /* Update the tail so the kernel can see it. */
-        if (sring.pointed.tail!!.pointed.value != tail) {
-            sring.pointed.tail!!.pointed.value = tail
+        if (sring. tail!!.pointed.value != tail) {
+            sring. tail!!.pointed.value = tail
             write_barrier()
         }
 
@@ -306,8 +334,8 @@ fun submissionQueue(file_path: String, s: submitter): Int = nativeHeap.run {
     return 1
 }
 
-fun cat_file(argv1: Array<String>): Unit = memScoped{
-    val s= submitter()
+fun cat_file(argv1: Array<String>): Unit = memScoped {
+    val s = submitter()
     val argv = argv1.takeIf { it.isNotEmpty() } ?: arrayOf("/etc/sysctl.conf")
 
     println("---setting up uring with args ${argv.toList()}")
@@ -317,11 +345,11 @@ fun cat_file(argv1: Array<String>): Unit = memScoped{
     println("---success setting up uring with args ${argv.toList()}")
     for (arg in argv) {
         //will block
-        posixRequires(!submissionQueue(arg, s ).nz) { "Error reading file" }
+        posixRequires(!submissionQueue(arg, s).nz) { "Error reading file" }
 
         println("---calling read_from_cq(${s})")
         //done blocking
-        completionQueues(s )
+        completionQueues(s)
         println("---back from read_from_cq(${s})")
     }
     println("---exiting")

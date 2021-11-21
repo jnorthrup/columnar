@@ -19,7 +19,6 @@ interface HasPosixErr {
 
         /**a non-throwing require*/
         fun warning(cond: Boolean, lazyz: () -> Any?) = Unit.also { if (!cond) println("**warning: ${lazyz()}") }
-
     }
 }
 
