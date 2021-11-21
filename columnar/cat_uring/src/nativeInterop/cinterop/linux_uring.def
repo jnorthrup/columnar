@@ -41,12 +41,7 @@ struct app_io_cq_ring {
     struct io_uring_cqe *cqes;
 };
 
-struct submitter {
-    int ring_fd;
-    struct app_io_sq_ring sq_ring;
-    struct io_uring_sqe *sqes;
-    struct app_io_cq_ring cq_ring;
-};
+
 
 struct file_info {
     off_t file_sz;

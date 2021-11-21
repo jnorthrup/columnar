@@ -1,6 +1,7 @@
 package linux_uring
 
 import kotlinx.cinterop.*
+import linux_uring.uring_opcode.*
 import platform.linux.*
 import platform.posix.*
 import simple.HasDescriptor.Companion.S_ISBLK
@@ -20,6 +21,14 @@ import platform.posix.syscall as posix_syscall
 import platform.posix.sigset_t
 import platform.posix.open as posix_open
 
+
+class submitter {
+    var ring_fd:Int=0
+    val sq_ring: app_io_sq_ring = nativeHeap.alloc()
+    lateinit var sqes: CPointer<io_uring_sqe>
+    val cq_ring: app_io_cq_ring = nativeHeap.alloc()
+}
+
 /** This code is written in the days when io_uring-related system calls are not
  *  part of standard C libraries. So, we roll our own system call wrapper
  *  functions.
@@ -36,12 +45,16 @@ fun get_file_size(fd: Int): posix_off_t = memScoped {
     val st: posix_stat = alloc()
     if (posix_fstat(fd, st.ptr as CValuesRef<posix_stat>) >= 0) {
         if (S_ISBLK(st.st_mode)) {
-            val bytes: CPointerVar<LongVar> = alloc()
-            posixRequires(posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes).z) { ("ioctl") }
-            return bytes.pointed!!.value
+            return getBlockDeviceBlockSize(fd)
         } else posixRequires(S_ISREG(st.st_mode)) { "file handle invalid" }
     }
     return st.st_size
+}
+
+private fun MemScope.getBlockDeviceBlockSize(fd: Int): platform.posix.off_t {
+    val bytes: LongVar = alloc()
+    posixRequires(posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes.ptr).z) { ("ioctl") }
+    return bytes.value as platform.posix.off_t /* = kotlin.Long */
 }
 
 /** io_uring requires a lot of setup which looks pretty hairy, but isn't all
@@ -52,7 +65,7 @@ fun get_file_size(fd: Int): posix_off_t = memScoped {
  *  it does offer you a certain strange geeky peace.
  */
 
-fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.run {
+fun app_setup_uring(s: submitter): Int = kotlinx.cinterop.nativeHeap.run {
     val p: io_uring_params = alloc()
 
 
@@ -60,8 +73,8 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
      * call zeroed out. We could set any flags if we need to, but for this
      * example, we don't. */
     posix_bzero(p.ptr, sizeOf<io_uring_params>().toULong())
-    s.pointed.ring_fd = io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr)
-    val ringFd = s.pointed.ring_fd
+    s.ring_fd = io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr)
+    val ringFd = s.ring_fd
     val mustBe = ringFd >= 0
     posixRequires(mustBe, { ringFd })
     /* io_uring communication happens via 2 shared kernel-user space ring buffers,
@@ -114,7 +127,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
     }
 
     /* Save useful fields in a global app_io_sq_ring r:fo later easy reference */
-    s.pointed.run {
+    s.run {
 
         sq_ring.also {
             sq_ptr.toLong().let { sqptr ->
@@ -133,7 +146,7 @@ fun app_setup_uring(s: CPointer<submitter>): Int = kotlinx.cinterop.nativeHeap.r
             platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
             ringFd,
             IORING_OFF_SQES.toLong())!!.reinterpret()
-        posixRequires(s.pointed.sqes != platform.posix.MAP_FAILED) { "mmap" }
+        posixRequires(s.sqes != platform.posix.MAP_FAILED) { "mmap" }
 
         cq_ring.apply {
             cq_ptr.toLong().let { cqptr ->
@@ -170,9 +183,9 @@ fun output_to_console(buf: CPointer<ByteVar>, len: Int): Unit {
  * the data buffer that will have the file data and print it to the console.
  * */
 
-fun completionQueues(s: CPointer<submitter>) {
+fun completionQueues(s: submitter) {
     var fi: CPointer<file_info>
-    val cring: CPointer<app_io_cq_ring> = s.pointed.cq_ring.ptr
+    val cring: CPointer<app_io_cq_ring> = s.cq_ring.ptr
     var cqe: CPointer<io_uring_cqe>
     var head = cring.pointed.head!!.pointed.value
     println("entering loop")
@@ -184,7 +197,7 @@ fun completionQueues(s: CPointer<submitter>) {
          * */
         if (head == cring.pointed.tail!!.pointed.value) break
         /* Get the entry */
-        val value = head.toLong() and s.pointed.cq_ring.ring_mask!!.pointed.value.toLong()
+        val value = head.toLong() and s.cq_ring.ring_mask!!.pointed.value.toLong()
         cqe = cring.pointed.cqes!![value.toInt()].ptr
         fi = cqe.pointed.user_data.toLong().toCPointer()!!
         posixRequires(cqe.pointed.res >= 0) { "Error: ${cqe.pointed.res}" }
@@ -207,13 +220,11 @@ val tehBlockSize: Long = BLOCK_SZ.toLong()
  * Submit to submission queue.
  * In this function, we submit requests to the submission queue. You can submit
  * many types of requests. Ours is going to be the readv() request, which we
- * specify via IORING_OP_READV.
- *
- * */
-fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap.run {
+ * specify via IORING_OP_READV. */
+fun submissionQueue(file_path: String, s: submitter): Int = nativeHeap.run {
     val file_fd: Int = posix_open(file_path, platform.posix.O_RDONLY)
     posixRequires(file_fd >= 0) { "fileopen $file_fd" }
-    val sring: CPointer<app_io_sq_ring> = s.pointed.sq_ring.ptr
+    val sring: CPointer<app_io_sq_ring> = s.sq_ring.ptr
     var current_block = 0U
 
     val file_sz: posix_off_t = get_file_size(file_fd)
@@ -249,14 +260,14 @@ fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap
         var next_tail = tail
         next_tail++
         read_barrier()
-        val index = tail and s.pointed.sq_ring.ring_mask!!.pointed.value
-        val sqe: CPointer<io_uring_sqe> = s.pointed.sqes!![index.toInt()].ptr
+        val index = tail and s.sq_ring.ring_mask!!.pointed.value
+        val sqe: CPointer<io_uring_sqe> = s.sqes!![index.toInt()].ptr
 
 
         sqe.pointed.run {
             fd = file_fd
             flags = 0.toUByte()
-            opcode = IORING_OP_READV.toUByte()
+            opcode = Op_Readv.opConstant.toUByte()
             addr = fi.iovecs.toLong().toULong()
             len = blocks.toUInt()
             off = 0.toULong()
@@ -286,7 +297,7 @@ fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap
          * ************** BLOCKS HERE
          *
          */
-        io_uring_enter(s.pointed.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS).let { ret ->
+        io_uring_enter(s.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS).let { ret ->
             posixRequires(ret.nz) { "io_uring_enter $ret" }
         }
 
@@ -295,22 +306,22 @@ fun submissionQueue(file_path: String, s: CPointer<submitter>): Int = nativeHeap
     return 1
 }
 
-fun cat_file(argv1: Array<String>): Unit {
-    val s: submitter = nativeHeap.alloc()
+fun cat_file(argv1: Array<String>): Unit = memScoped{
+    val s= submitter()
     val argv = argv1.takeIf { it.isNotEmpty() } ?: arrayOf("/etc/sysctl.conf")
 
     println("---setting up uring with args ${argv.toList()}")
-    val appSetupUring = app_setup_uring(s.ptr)
+    val appSetupUring = app_setup_uring(s)
     posixRequires(appSetupUring.z) { appSetupUring }
 
     println("---success setting up uring with args ${argv.toList()}")
     for (arg in argv) {
         //will block
-        posixRequires(!submissionQueue(arg, s.ptr).nz) { "Error reading file" }
+        posixRequires(!submissionQueue(arg, s ).nz) { "Error reading file" }
 
         println("---calling read_from_cq(${s})")
         //done blocking
-        completionQueues(s.ptr)
+        completionQueues(s )
         println("---back from read_from_cq(${s})")
     }
     println("---exiting")
