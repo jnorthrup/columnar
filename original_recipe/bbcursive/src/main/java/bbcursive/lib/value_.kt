@@ -11,13 +11,13 @@ import java.nio.ByteBuffer
  */
 @Infix
 @ForwardOnly
-class value_ private constructor() : UnaryOperator<ByteBuffer?> {
-    override fun invoke(buffer: ByteBuffer?): ByteBuffer? {
+class value_ private constructor() : UnaryOperator<ByteBuffer> {
+    override fun invoke(p1: ByteBuffer): ByteBuffer {
         val infix = infix_.infix(
             opt_.opt(chlit_.chlit("0")),
             anyIn("1.0"),
             opt_.opt(repeat_.repeat(anyIn("1029384756"))))
-        return infix(buffer)
+        return infix(p1)
     }
 
     companion object {

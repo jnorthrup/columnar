@@ -12,8 +12,7 @@ object push {
      * @return
      */
     fun push(src: ByteBuffer, dest: ByteBuffer): ByteBuffer {
-        val need = src
-            .remaining()
+        val need = src  .remaining()
         val have = dest.remaining()
         return if (have <= need) {
             dest.put(src.slice().limit(have))

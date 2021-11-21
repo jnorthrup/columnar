@@ -5,7 +5,6 @@ import bbcursive.ann.ForwardOnly
 import bbcursive.ann.Infix
 import bbcursive.ann.Skipper
 import bbcursive.func.UnaryOperator
-import bbcursive.lib.abort
 import bbcursive.lib.anyOf_
 import bbcursive.lib.u8tf
 import java.nio.ByteBuffer
@@ -17,6 +16,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Created by jim on 8/8/14.
  */
 object std {
+    val NULL_BUFF = ByteBuffer.allocate(0);
+
+    object ABORT_ONLY : UnaryOperator<ByteBuffer> {
+        override fun invoke(p1: ByteBuffer): ByteBuffer = TODO("handle ABORT_ONLY")
+    }
+
     private const val debug_bbcursive = true // Objects.equals("true", System.getenv("debug_bbcursive"));
     var allocator: Allocator? = null
 
@@ -30,10 +35,10 @@ object std {
      * @param ops
      * @return
      */
-    fun bb(b: ByteBuffer, vararg  ops: UnaryOperator<ByteBuffer?>): ByteBuffer? {
-        var r: ByteBuffer? = null
+    fun bb(b: ByteBuffer, vararg ops: UnaryOperator<ByteBuffer>): ByteBuffer {
+        var r: ByteBuffer = NULL_BUFF
         var restoration: Set<traits> = anyOf_.NONE_OF
-        var op =ops[0]
+        var op = ops[0]
         if (ops.isNotEmpty()) {
             val startPosition = b.position()
             if (flags.get().contains(traits.skipper)) {
@@ -58,7 +63,7 @@ object std {
         return r
     }
 
-    fun onSuccess(b: ByteBuffer, byteBufferUnaryOperator: UnaryOperator<ByteBuffer?>, startPosition: Int) {
+    fun onSuccess(b: ByteBuffer, byteBufferUnaryOperator: UnaryOperator<ByteBuffer>, startPosition: Int) {
         val endPos = b.position()
         val immutableTraits: Set<traits> = EnumSet.copyOf(flags.get())
         /**
@@ -78,35 +83,35 @@ object std {
      * @param aClass
      * @return the previous (restoration) state
      */
-    fun induct(aClass: Class<UnaryOperator<ByteBuffer?>>): Set<traits> {
+    fun induct(aClass: Class<UnaryOperator<ByteBuffer>>): Set<traits> {
         var c = flags.get()
-        val traitses: Set<traits> = c.takeIf {  it.isNotEmpty()}?.let { EnumSet.copyOf(it) }?:c
+        val traitses: Set<traits> = c.takeIf { it.isNotEmpty() }?.let { EnumSet.copyOf(it) } ?: c
         val dirty = AtomicBoolean(false)
         if (aClass.isAnnotationPresent(Skipper::class.java)) {
             dirty.set(true)
-            c+=(traits.skipper)
+            c += (traits.skipper)
         } else if (aClass.isAnnotationPresent(Infix::class.java)) {
             dirty.set(true)
-            c-=(traits.skipper)
+            c -= (traits.skipper)
         }
         if (aClass.isAnnotationPresent(Backtracking::class.java)) {
             dirty.set(true)
-            c+=(traits.backtracking)
+            c += (traits.backtracking)
         } else if (aClass.isAnnotationPresent(ForwardOnly::class.java)) {
             dirty.set(true)
-            c-=(traits.backtracking)
+            c -= (traits.backtracking)
         }
         return if (!dirty.get()) emptySet() else traitses
     }
 
-    fun <S : WantsZeroCopy?> bb(b: S, vararg ops: UnaryOperator<ByteBuffer?>): ByteBuffer? {
-        var b1: ByteBuffer? = b!!.asByteBuffer()
+    fun <S : WantsZeroCopy?> bb(b: S, vararg ops: UnaryOperator<ByteBuffer>): ByteBuffer {
+        var b1: ByteBuffer = b!!.asByteBuffer()
         var i = 0
         val opsLength = ops.size
         while (i < opsLength) {
             val op = ops[i]
-            if (null == op) {
-                b1 = null
+            if (op == ABORT_ONLY) {
+                b1 = NULL_BUFF
                 break
             }
             b1 = op.invoke(b1)
@@ -137,8 +142,8 @@ object std {
      * @param operations
      * @return
      */
-    fun str(bytes: ByteBuffer?, vararg operations: UnaryOperator<ByteBuffer?>): String {
-        val bb = bb(bytes?: abort.EMPTY_BUFF, *operations)
+    fun str(bytes: ByteBuffer?, vararg operations: UnaryOperator<ByteBuffer>): String {
+        val bb = bb(bytes ?: NULL_BUFF, *operations)
         return StandardCharsets.UTF_8.decode(bb).toString()
     }
 
@@ -149,7 +154,7 @@ object std {
      * @param atoms
      * @return
      */
-    fun str(something: WantsZeroCopy, vararg atoms: UnaryOperator<ByteBuffer?>): String {
+    fun str(something: WantsZeroCopy, vararg atoms: UnaryOperator<ByteBuffer>): String {
         return str(something.asByteBuffer(), *atoms)
     }
 
@@ -163,7 +168,7 @@ object std {
      * @return
      *//*
 
-    fun str(something: AtomicReference<ByteBuffer>, vararg atoms: UnaryOperator<ByteBuffer?>?): String {
+    fun str(something: AtomicReference<ByteBuffer>, vararg atoms: UnaryOperator<ByteBuffer>?): String {
         return str(something.get(), *atoms)
     }
 */
@@ -186,7 +191,7 @@ object std {
      * @return
      */
     @JvmStatic
-    fun <T : CharSequence?> bb(src: T, vararg operations: UnaryOperator<ByteBuffer?>): ByteBuffer? {
+    fun <T : CharSequence?> bb(src: T, vararg operations: UnaryOperator<ByteBuffer>): ByteBuffer {
         return bb(u8tf.c2b(src.toString()), *operations)
     }
 
@@ -329,4 +334,5 @@ object std {
     enum class traits {
         debug, backtracking, skipper
     }
+
 }

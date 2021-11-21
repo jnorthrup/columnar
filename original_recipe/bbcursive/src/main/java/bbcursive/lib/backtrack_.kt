@@ -9,16 +9,16 @@ import java.util.*
 @Backtracking
 internal object backtrack_ {
     @Backtracking
-    fun backtracker(vararg allOf: UnaryOperator<ByteBuffer?>): UnaryOperator<ByteBuffer> {
+    fun backtracker(vararg allOf: UnaryOperator<ByteBuffer>): UnaryOperator<ByteBuffer> {
 
         @Backtracking
-        class backTracker(vararg val allOf: UnaryOperator<ByteBuffer?>) :
-            UnaryOperator<ByteBuffer?> {
+        class backTracker(vararg val allOf: UnaryOperator<ByteBuffer>) :
+            UnaryOperator<ByteBuffer> {
             override fun toString(): String {
                 return "backtracker" + Arrays.deepToString(allOf)
             }
 
-            override operator fun invoke(p1: ByteBuffer?): ByteBuffer? {
+            override operator fun invoke(p1: ByteBuffer): ByteBuffer {
                 std.flags.apply { set(get() + std.traits.skipper) }
                 return std.bb(p1!!, *allOf)
             }

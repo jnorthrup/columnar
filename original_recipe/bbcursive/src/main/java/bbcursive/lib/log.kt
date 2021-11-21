@@ -33,7 +33,7 @@ object log {
         if (0 < prefixSuffix.size) System.err.print(prefixSuffix[0] + "\t")
         if (ob !is ByteBuffer) {
             if (ob is WantsZeroCopy) {
-                bb(ob.asByteBuffer(), pre.debug as UnaryOperator<ByteBuffer?>)
+                bb(ob.asByteBuffer(), pre.debug as UnaryOperator<ByteBuffer>)
             } else {
                 bb(ob.toString(), pre.debug)
             }

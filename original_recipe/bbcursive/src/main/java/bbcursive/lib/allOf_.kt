@@ -17,13 +17,13 @@ interface allOf_ {
          * @return null if not bbcursive.lib.allOf_ match in sequence
          */
         @JvmStatic
-        fun allOf(vararg allOf: UnaryOperator<ByteBuffer?>): UnaryOperator<ByteBuffer?> {
-            return object : UnaryOperator<ByteBuffer?> {
+        fun allOf(vararg allOf: UnaryOperator<ByteBuffer>): UnaryOperator<ByteBuffer> {
+            return object : UnaryOperator<ByteBuffer> {
                 override fun toString(): String {
                     return "all" + Arrays.deepToString(allOf)
                 }
 
-                override operator fun invoke(p1: ByteBuffer?): ByteBuffer? {
+                override operator fun invoke(p1: ByteBuffer): ByteBuffer {
                     return bb(p1!!, *allOf)!!
                 }
             }

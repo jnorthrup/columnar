@@ -4,6 +4,7 @@ import bbcursive.Cursive.pre
 import bbcursive.ann.Backtracking
 import bbcursive.func.UnaryOperator
 import bbcursive.std
+import bbcursive.std.NULL_BUFF
 import bbcursive.std.traits
 import java.nio.ByteBuffer
 import java.util.*
@@ -16,21 +17,21 @@ object anyOf_ {
 
     @SafeVarargs
     fun anyOf(
-        vararg anyOf: UnaryOperator<ByteBuffer?>
-    ): UnaryOperator<ByteBuffer?> {
-        return object : UnaryOperator<ByteBuffer?> {
+        vararg anyOf: UnaryOperator<ByteBuffer>
+    ): UnaryOperator<ByteBuffer> {
+        return object : UnaryOperator<ByteBuffer> {
             override fun toString(): String {
                 return "any${Arrays.deepToString(anyOf)}"
             }
 
-            override fun invoke(p1: ByteBuffer?): ByteBuffer? {
+            override fun invoke(p1: ByteBuffer): ByteBuffer {
                 var buffer = p1
                 var mark = buffer!!.position()
                 if (std.flags.get().contains(traits.skipper)) {
                     val apply = pre.skipWs.invoke(buffer)
                     buffer = apply ?: buffer.position(mark)
                     if (!buffer!!.hasRemaining()) {
-                        return null
+                        return NULL_BUFF
                     }
                 }
                 mark = buffer.position()
@@ -40,16 +41,16 @@ object anyOf_ {
 
                 }
                 buffer.position(mark)
-                return null
+                return NULL_BUFF
             }
         }
     }
 
     @JvmStatic
     @Backtracking
-    fun anyIn(s: String): UnaryOperator<ByteBuffer?> {
+    fun anyIn(s: String): UnaryOperator<ByteBuffer> {
         val ints = s.chars().sorted().toArray()
-        return object : UnaryOperator<ByteBuffer?> {
+        return object : UnaryOperator<ByteBuffer> {
             override fun toString(): String {
                 val b = StringBuilder()
                 for (i in ints)
@@ -57,10 +58,10 @@ object anyOf_ {
                 return "in ${Arrays.deepToString(arrayOf(b.toString()))}"
             }
 
-            override fun invoke(b: ByteBuffer?): ByteBuffer? {
-                var r: ByteBuffer? = null
+            override fun invoke(b: ByteBuffer): ByteBuffer {
+                var r: ByteBuffer = NULL_BUFF
                 when {
-                    null != b && b.hasRemaining() -> {
+                    NULL_BUFF != b && b.hasRemaining() -> {
                         val b1 = b.get()
                         if (-1 < Arrays.binarySearch(ints, b1.toUByte().toInt())) r = b
                     }

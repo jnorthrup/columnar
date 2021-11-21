@@ -10,27 +10,27 @@ import java.util.*
  */
 internal object repeat_ {
     @JvmStatic
-    fun repeat(vararg op: UnaryOperator<ByteBuffer?> ): UnaryOperator<ByteBuffer?> {
-        return object : UnaryOperator<ByteBuffer?> {
+    fun repeat(vararg op: UnaryOperator<ByteBuffer> ): UnaryOperator<ByteBuffer> {
+        return object : UnaryOperator<ByteBuffer> {
             override fun toString(): String {
                 return "rep:" + Arrays.deepToString(op)
             }
 
-            override operator fun invoke(byteBuffer: ByteBuffer?): ByteBuffer? {
+            override operator fun invoke( byteBuffer: ByteBuffer): ByteBuffer {
                 var mark = byteBuffer!!.position()
                 var matches = 0
                 var handle = byteBuffer
-                var last: ByteBuffer? = null
+                var last: ByteBuffer = std.NULL_BUFF
                 while (handle!!.hasRemaining()) {
                     last = handle
                     //                if (null != (handle=op.apply(handle))) {
-                    if (null != std.bb(last, *op ).also { handle = it!! }) {
+                    if (std.NULL_BUFF != std.bb(last, *op ).also { handle = it!! }) {
                         matches++
                         mark = handle!!.position()
                     } else break
                 }
                 if (matches > 0 && last!!.hasRemaining()) last.position(mark)
-                return if (matches > 0) last else null
+                return if (matches > 0) last else std.NULL_BUFF
             }
         }
     }

@@ -1,6 +1,7 @@
 package bbcursive.lib
 
 import bbcursive.func.UnaryOperator
+import bbcursive.std
 import java.nio.ByteBuffer
 
 /**
@@ -13,8 +14,8 @@ object advance {
      * @param exemplar ussually name().getBytes(), but might be other value also.
      * @return null if no match -- rollback not done here use Narsive.$ for whitespace and rollback
      */
-    fun genericAdvance(vararg exemplar: Byte): UnaryOperator<ByteBuffer?> {
-        return object : UnaryOperator<ByteBuffer?> {
+    fun genericAdvance(vararg exemplar: Byte): UnaryOperator<ByteBuffer> {
+        return object : UnaryOperator<ByteBuffer> {
             var bytes: ByteArray? = exemplar
             override fun toString(): String {
                 return asString()!!
@@ -25,10 +26,10 @@ object advance {
                 return "advance->" + String(bytes!!)
             }
 
-            override fun invoke(target: ByteBuffer?): ByteBuffer? {
+            override fun invoke(target: ByteBuffer): ByteBuffer {
                 var c = 0
                 while (null != exemplar && null != target && target.hasRemaining() && c < exemplar.size && exemplar[c] == target.get()) c++
-                return if (!(null != target && c == exemplar.size)) null else target
+                return if (!(null != target && c == exemplar.size)) std.NULL_BUFF else target
             }
         }
     }

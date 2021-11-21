@@ -11,13 +11,13 @@ import java.util.*
 interface skipper_ {
     @Skipper
     class ByteBufferUnaryOperator(
-        vararg val allOf: UnaryOperator<ByteBuffer?>
-    ) : UnaryOperator<ByteBuffer?> {
+        vararg val allOf: UnaryOperator<ByteBuffer>
+    ) : UnaryOperator<ByteBuffer> {
         override fun toString(): String {
             return "skipper" + Arrays.deepToString(allOf)
         }
 
-        override operator fun invoke(p1: ByteBuffer?): ByteBuffer? {
+        override operator fun invoke(p1: ByteBuffer): ByteBuffer {
             std.flags.apply{
                 set(get() + skipper as Set<std.traits>)
             }
@@ -27,7 +27,7 @@ interface skipper_ {
 
     companion object {
         @Skipper
-        fun skipper(vararg allOf: UnaryOperator<ByteBuffer?> ): UnaryOperator<ByteBuffer?> {
+        fun skipper(vararg allOf: UnaryOperator<ByteBuffer> ): UnaryOperator<ByteBuffer> {
             return ByteBufferUnaryOperator(    *allOf)
         }
     }

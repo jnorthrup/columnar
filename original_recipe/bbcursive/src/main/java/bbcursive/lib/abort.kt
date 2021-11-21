@@ -9,13 +9,11 @@ import java.nio.ByteBuffer
  */
 object abort {
     @JvmStatic
-    fun abort(rollbackPosition: Int): UnaryOperator<ByteBuffer?> = object :
-        UnaryOperator<ByteBuffer?> {
-        override fun invoke(it: ByteBuffer?): ByteBuffer?{
-            return if (null == it) null else std.bb(it,pos (rollbackPosition),ABORT_ONLY)
+    fun abort(rollbackPosition: Int): UnaryOperator<ByteBuffer> = object :
+        UnaryOperator<ByteBuffer> {
+        override fun invoke(it: ByteBuffer): ByteBuffer {
+            return if (std.NULL_BUFF != it) std.bb(it, pos(rollbackPosition), std.ABORT_ONLY) else std.NULL_BUFF
         }
     }
 
-    val  EMPTY_BUFF :ByteBuffer get()= TODO()
-    object  ABORT_ONLY:UnaryOperator<ByteBuffer?> { override fun invoke(p1: ByteBuffer?): ByteBuffer? = TODO("handle ABORT_ONLY") }
 }
