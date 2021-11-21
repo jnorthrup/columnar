@@ -1,9 +1,10 @@
 package linux_uring
 
 import kotlinx.cinterop.*
-import linux_uring.uring_opcode.*
-import platform.linux.*
-import platform.posix.*
+import linux_uring.include.UringOpcode.Op_Readv
+import linux_uring.include.UringSetupFeatures
+import platform.linux.memalign
+import platform.posix.NULL
 import platform.posix.sigset_t
 import simple.HasDescriptor.Companion.S_ISBLK
 import simple.HasDescriptor.Companion.S_ISREG
@@ -12,7 +13,6 @@ import simple.allocWithFlex
 import simple.simple.CZero.nz
 import simple.simple.CZero.z
 import platform.linux.BLKGETSIZE64 as PlatformLinuxBLKGETSIZE64
-import platform.posix.bzero as posix_bzero
 import platform.posix.fstat as posix_fstat
 import platform.posix.ioctl as posix_ioctl
 import platform.posix.mmap as posix_mmap
@@ -81,16 +81,21 @@ private fun MemScope.getBlockDeviceBlockSize(fd: Int): platform.posix.off_t {
  *  good to know how it all works underneath. Apart from bragging rights,
  *  it does offer you a certain strange geeky peace.
  */
-
 fun app_setup_uring(s: submitter): Int = kotlinx.cinterop.nativeHeap.run {
-    val p: io_uring_params = alloc()
+    val p: io_uring_params = alloc {
 
+    }
 
-    /* We need to pass in the io_uring_params structure to the io_uring_setup()
-     * call zeroed out. We could set any flags if we need to, but for this
-     * example, we don't. */
-    posix_bzero(p.ptr, sizeOf<io_uring_params>().toULong())
     s.ring_fd = io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr)
+    val feat = p.features.toUInt()
+    val featuresInUse = UringSetupFeatures.values().fold(setOf<UringSetupFeatures>()) { a, x ->
+        when {
+            (x.feat_const and feat).nz -> a + x
+            else -> a
+        }
+    }
+    fprintf(stderr, "io_uring features: $featuresInUse")
+
     val ringFd = s.ring_fd
     val mustBe = ringFd >= 0
     posixRequires(mustBe, { ringFd })
@@ -147,18 +152,18 @@ fun app_setup_uring(s: submitter): Int = kotlinx.cinterop.nativeHeap.run {
         sq_ptr to cq_ptr
     }
 
-    /* Save useful fields in a global app_io_sq_ring r:fo later easy reference */
+/* Save useful fields in a global app_io_sq_ring r:fo later easy reference */
     s.run {
 
 
         sq_ptr.toLong().let { sqptr ->
             sq_ring = app_io_sq_ring(
-                (sqptr + sqOff.head.toLong()).toCPointer<UIntVar>()!!,
-                (sqptr + sqOff.tail.toLong()).toCPointer<UIntVar>()!!,
-                (sqptr + sqOff.ring_mask.toLong()).toCPointer<UIntVar>()!!,
-                (sqptr + sqOff.ring_entries.toLong()).toCPointer<UIntVar>()!!,
-                (sqptr + sqOff.flags.toLong()).toCPointer<UIntVar>()!!,
-                (sqptr + sqOff.array.toLong()).toCPointer<UIntVar>()!!
+                head = (sqptr + sqOff.head.toLong()).toCPointer<UIntVar>()!!,
+                tail = (sqptr + sqOff.tail.toLong()).toCPointer<UIntVar>()!!,
+                ring_mask = (sqptr + sqOff.ring_mask.toLong()).toCPointer<UIntVar>()!!,
+                ring_entries = (sqptr + sqOff.ring_entries.toLong()).toCPointer<UIntVar>()!!,
+                flags = (sqptr + sqOff.flags.toLong()).toCPointer<UIntVar>()!!,
+                array = (sqptr + sqOff.array.toLong()).toCPointer<UIntVar>()!!
             )
         }
 
@@ -178,10 +183,10 @@ fun app_setup_uring(s: submitter): Int = kotlinx.cinterop.nativeHeap.run {
             /* Save useful fields in a global app_io_cq_ring r:fo later easy reference */
             cq_ring = app_io_cq_ring(
                 head = (cqptr + cqOff.head.toLong()).toCPointer()!!,
-                (cqptr + cqOff.tail.toLong()).toCPointer()!!,
-                (cqptr + cqOff.ring_mask.toLong()).toCPointer()!!,
-                (cqptr + cqOff.ring_entries.toLong()).toCPointer()!!,
-                (cqptr + cqOff.cqes.toLong()).toCPointer()!!
+                tail = (cqptr + cqOff.tail.toLong()).toCPointer()!!,
+                ring_mask = (cqptr + cqOff.ring_mask.toLong()).toCPointer()!!,
+                ring_entries = (cqptr + cqOff.ring_entries.toLong()).toCPointer()!!,
+                cqes = (cqptr + cqOff.cqes.toLong()).toCPointer()!!
             )
         }
     }
@@ -212,8 +217,8 @@ fun output_to_console(buf: CPointer<ByteVar>, len: Int): Unit {
 fun completionQueues(s: submitter) {
     var fi: CPointer<file_info>
     var cqe: CPointer<io_uring_cqe>
-    val cring  = s.cq_ring
-    var head = cring .head!!.pointed.value
+    val cring = s.cq_ring
+    var head = cring.head!!.pointed.value
     println("entering loop")
     do {
         read_barrier()
@@ -221,10 +226,10 @@ fun completionQueues(s: submitter) {
          * Remember, this is a ring buffer. If head == tail, it means that the
          * buffer is empty.
          * */
-        if (head == cring. tail!!.pointed.value) break
+        if (head == cring.tail!!.pointed.value) break
         /* Get the entry */
-        val value = head.toLong() and s.cq_ring.ring_mask!!.pointed.value!!.toLong()
-        cqe = cring .cqes!![value.toInt()].ptr
+        val value = head.toLong() and s.cq_ring.ring_mask!!.pointed.value.toLong()
+        cqe = cring.cqes!![value.toInt()].ptr
         fi = cqe.pointed.user_data.toLong().toCPointer()!!
         posixRequires(cqe.pointed.res >= 0) { "Error: ${cqe.pointed.res}" }
 
@@ -238,7 +243,7 @@ fun completionQueues(s: submitter) {
     } while (true)
 
     write_barrier()
-    cring. head!!.pointed.value = head
+    cring.head.pointed.value = head
     write_barrier()
 }
 
@@ -284,7 +289,7 @@ fun submissionQueue(file_path: String, s: submitter): Int = nativeHeap.run {
         }
 
         /* Add our submission queue entry to the tail of the SQE ring buffer */
-        var tail = sring. tail!!.pointed.value
+        var tail = sring.tail!!.pointed.value
         var next_tail = tail
         next_tail++
         read_barrier()
@@ -302,13 +307,13 @@ fun submissionQueue(file_path: String, s: submitter): Int = nativeHeap.run {
             user_data = fi.ptr.toLong().toULong()
         }
         write_barrier()
-        sring. array!![index.toInt()] = index
+        sring.array!![index.toInt()] = index
         tail = next_tail
 
 
         /* Update the tail so the kernel can see it. */
-        if (sring. tail!!.pointed.value != tail) {
-            sring. tail!!.pointed.value = tail
+        if (sring.tail.pointed.value != tail) {
+            sring.tail.pointed.value = tail
             write_barrier()
         }
 
