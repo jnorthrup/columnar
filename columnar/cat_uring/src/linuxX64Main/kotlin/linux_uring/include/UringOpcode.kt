@@ -5,29 +5,51 @@ package linux_uring.include
 import linux_uring.*
 
 /**
-io_uring_enter() is used to initiate and complete I/O using the shared submission and completion queues setup by a call to io_uring_setup(2). A single call can both submit new I/O and wait for completions of I/O initiated by this call or previous calls to io_uring_enter().
+io_uring_enter() is used to initiate and complete I/O using the shared submission and completion queues setup by a cal
+l to io_uring_setup(2). A single call can both submit new I/O and wait for completions of I/O initiated by this call or
+previous calls to io_uring_enter().
 
-fd is the file descriptor returned by io_uring_setup(2). to_submit specifies the number of I/Os to submit from the submission queue. flags is a bitmask of the following values:
+fd is the file descriptor returned by io_uring_setup(2). to_submit specifies the number of I/Os to submit from the
+submission queue. flags is a bitmask of the following values:
 
 IORING_ENTER_GETEVENTS
-If this flag is set, then the system call will wait for the specificied number of events in min_complete before returning. This flag can be set along with to_submit to both submit and complete events in a single system call.
+If this flag is set, then the system call will wait for the specificied number of events in min_complete before
+returning. This flag can be set along with to_submit to both submit and complete events in a single system call.
 
 IORING_ENTER_SQ_WAKEUP
-If the ring has been created with IORING_SETUP_SQPOLL, then this flag asks the kernel to wakeup the SQ kernel thread to submit IO.
+If the ring has been created with IORING_SETUP_SQPOLL, then this flag asks the kernel to wakeup the SQ kernel thread
+to submit IO.
 
 IORING_ENTER_SQ_WAIT
-If the ring has been created with IORING_SETUP_SQPOLL, then the application has no real insight into when the SQ kernel thread has consumed entries from the SQ ring. This can lead to a situation where the application can no longer get a free SQE entry to submit, without knowing when it one becomes available as the SQ kernel thread consumes them. If the system call is used with this flag set, then it will wait until at least one entry is free in the SQ ring.
+If the ring has been created with IORING_SETUP_SQPOLL, then the application has no real insight into when the SQ kernel
+thread has consumed entries from the SQ ring. This can lead to a situation where the application can no longer get a
+free SQE entry to submit, without knowing when it one becomes available as the SQ kernel thread consumes them. If the
+system call is used with this flag set, then it will wait until at least one entry is free in the SQ ring.
 
-If the io_uring instance was configured for polling, by specifying IORING_SETUP_IOPOLL in the call to io_uring_setup(2), then min_complete has a slightly different meaning.  Passing a value of 0 instructs the kernel to return any events which are already complete, without blocking.  If min_complete is a non-zero value, the kernel will still return immediately if any completion events are available.  If no event completions are available, then the call will poll either until one or more completions become available, or until the process has exceeded its scheduler time slice.
+If the io_uring instance was configured for polling, by specifying IORING_SETUP_IOPOLL in the call to io_uring_setup(2),
+then min_complete has a slightly different meaning.  Passing a value of 0 instructs the kernel to return any events
+which are already complete, without blocking.  If min_complete is a non-zero value, the kernel will still return
+immediately if any completion events are available.  If no event completions are available, then the call will poll
+either until one or more completions become available, or until the process has exceeded its scheduler time slice.
 
-Note that, for interrupt driven I/O (where IORING_SETUP_IOPOLL was not specified in the call to io_uring_setup(2)), an application may check the completion queue for event completions without entering the kernel at all.
+Note that, for interrupt driven I/O (where IORING_SETUP_IOPOLL was not specified in the call to io_uring_setup(2)),
+an application may check the completion queue for event completions without entering the kernel at all.
 
-When the system call returns that a certain amount of SQEs have been consumed and submitted, it's safe to reuse SQE entries in the ring. This is true even if the actual IO submission had to be punted to async context, which means that the SQE may in fact not have been submitted yet. If the kernel requires later use of a particular SQE entry, it will have made a private copy of it.
+When the system call returns that a certain amount of SQEs have been consumed and submitted, it's safe to reuse SQE
+entries in the ring. This is true even if the actual IO submission had to be punted to async context, which means
+that the SQE may in fact not have been submitted yet. If the kernel requires later use of a particular SQE entry, it
+will have made a private copy of it.
 
-sig is a pointer to a signal mask (see sigprocmask(2)); if sig is not NULL, io_uring_enter() first replaces the current signal mask by the one pointed to by sig, then waits for events to become available in the completion queue, and then restores the original signal mask.  The following io_uring_enter() call:
+sig is a pointer to a signal mask (see sigprocmask(2)); if sig is not NULL, io_uring_enter() first replaces the current
+signal mask by the one pointed to by sig, then waits for events to become available in the completion queue, and then
+restores the original signal mask.  The following io_uring_enter() call:
 
+```
 ret = io_uring_enter(fd, 0, 1, IORING_ENTER_GETEVENTS, &sig);
+```
+
 is equivalent to atomically executing the following calls:
+
 ```C
 pthread_sigmask(SIG_SETMASK, &sig, &orig);
 ret = io_uring_enter(fd, 0, 1, IORING_ENTER_GETEVENTS, NULL);
@@ -88,7 +110,7 @@ __u64    __pad2[3];
 };
 };
 ```
-The opcode describes the operation to be performed.  It can be one of:*/
+The opcode describes the operation to be performed.  */
 
 enum class UringOpcode(val opConstant: UInt) {
 
@@ -297,17 +319,21 @@ enum class UringOpcode(val opConstant: UInt) {
      */
     Op_Fallocate(IORING_OP_FALLOCATE),
 
-    /** Issue the equivalent of aposix_fadv ise(2)system call.fd mustbe set to the file descriptor,off
-     * must contain the offset on which to operate,len must contain the length, and fadv ise_advice must contain the
-     * advice associated with the operation. See alsoposix_fadv ise(2) for the general description of the related system
-     * call.
+    /** Issue the equivalent of a posix_fadvise(2) system call
+     * @param fd mustbe set to the file descriptor
+     * @param  off  must contain the offset on which to operate
+     * @param len must contain the length
+     * @param fadv ise_advice must contain the advice associated with the operation.
+     * @see posix_fadvise(2) for the general description of the related system call.
      * @since 5.6.
      */
     Op_Fadvise(IORING_OP_FADVISE),
 
-    /** Issue the equivalent of a madvise(2) system call.addr must contain the address to operate on,len
-     * must contain the length on which to operate,and fadvise_advice must contain the advice associated with
-     * the operation. See also madvise(2) for the general description of the related system call.
+    /** Issue the equivalent of a madvise(2) system call
+     * @param addr must contain the address to operate on
+     * @param len must contain the length on which to operate
+     * @param fadvise_advice must contain the advice associated with the operation.
+     * @see madvise(2) for the general description of the related system call.
      *
      * @since 5.6.
      */
@@ -319,19 +345,18 @@ enum class UringOpcode(val opConstant: UInt) {
      * int openat(int dirfd, const char *pathname, int flags);
      * ```
      *
-     *
-
      * @param fd is the dirfd argument,
      * @param addr must contain a pointer to the pathname argument
      * @param open_flags should contain any flags passed in,
      * @param len is access mode of the file
+     * @param file_index field if set to a positive number, the file won't be installed into the normal file table as
+     * usual but will be placed into the fixed file table at
+     * index `file_index-1`.
      * @see openat  for the general description of the related system call.
-     * @return returning a file descriptor, the result will contain either 0 on success or an error.
-     * Only io_uring has access to such files and no other syscall can use them.
+     * @return returning a file descriptor, the result will contain either 0 on success or an error. Only io_uring has
+     * access to such files and no other syscall can use them.
      *
      * @since 5.6.
-     * @param file_index field if set to a positive number, the file won't be installed into the normal file table as usual but will be placed into the fixed file table at
-     * index `file_index-1`.
      *
      * @exception  EBADF*-1  If there is already a file registered at this index, the request will fail
      * @see IOSQE_FIXED_FILE and
@@ -341,6 +366,7 @@ enum class UringOpcode(val opConstant: UInt) {
     Op_Openat(IORING_OP_OPENAT),
 
     /**        Issue the equivalent of a openat2(2)system call.
+     *  Only io_uring has access to such files and no other syscall can use them.
      * ```
      * long syscall(SYS_openat2, int dirfd, const char *pathname, struct open_how *how, size_t size);
      * ```
@@ -354,8 +380,7 @@ enum class UringOpcode(val opConstant: UInt) {
      * @param file_index if set to a positive number, the file won't be installed into the normal
      * file table as usual but will be placed into the fixed file table at index `file_index - 1`. In this case,
      * instead of returning a file descriptor, the result will contain either 0 on success or an error.
-     * Only io_uring has access to such files and no other syscall can use them.
-     * @return an fd opened
+     * @return an fd opened or zero if private and success
      * @exception EBADF (minus) If there is already a file registered at this index, the request will fail.
      * @see`IOSQE_FIXED_FILE`
      * @see `IORING_REGISTER_FILES`
@@ -363,68 +388,92 @@ enum class UringOpcode(val opConstant: UInt) {
      */
     Op_Openat2(IORING_OP_OPENAT2),
 
-    /** Issue the equivalent of a close(2) system call.fd is the file descriptor to be closed. See also close(2) for
-     *  the general description of the related system call.
-     *
+    /** Issue the equivalent of a close(2) system call
+     * @param fd is the file descriptor to be closed
+     * @see close(2) for the general description of the related system call.
      * @since 5.6.
      */
     Op_Close(IORING_OP_CLOSE),
 
-    /**Issue the equivalent of as tatx(2) system call.fd is the dirfd argument, addr must contain a pointer to the
-     * pathname string,statx_flags is the flags argument,len should be the mask argument, and off must contain a pointer to
-     * the statxbufto be filled in. See alsostatx(2) for the general description of the related system call.
+    /**Issue the equivalent of a statx(2) system call
+     *   @param fd is the dirfd argument
+     *   @param addr must contain a pointer to the pathname string
+     *   @param statx_flags is the flags argument
+     *   @param len should be the mask argument
+     *   @param off must contain a pointer to the statxbuf to be filled in.
+     *   @see statx(2) for the general description of the related system call.
      *
-     * @since 5.6.
+     *   @since 5.6.
      */
     Op_Statx(IORING_OP_STATX),
 
-    /**        Issue the equivalent of apread(2)orpwrite(2)system call.fd is the file descriptor to be operated on,addr
-     * contains the buffer in question,lencontains the length of the IO operation, and offscontains the read or write
-     * offset. Iffddoes not refer to a seekable file,off mustbe set to zero. Ifoffs is set to -1, the offset will use
-     * (and advance) the file position, like theread(2)and write(2)system calls. the se are non-vectored versions of
-     * the IORING_OP_READVand IORING_OP_WRITEVopcodes. See alsoread(2)and write(2)for the general description of the
-     * related system call.
+    /**
+     * Issue the equivalent of a pread(2)
+     * @param fd is the file descriptor to be operated on
+     * @param addr contains the buffer in question
+     * @param len contains the length of the IO operation
+     * @param offs contains the read or write offset. If fd does not refer to a seekable file,off mustbe set to zero. If offs is set to -1, the offset will use
+     * (and advance) the file position, like theread(2) and write(2) system calls. these are non-vectored versions of
+     * the IORING_OP_READV and IORING_OP_WRITEV opcodes.
+     * @see read(2)
      *
      * @since 5.6.
      */
     Op_Read(IORING_OP_READ),
 
-    /**        Issue the equivalent of a pread(2) or pwrite(2) system call. fd is the file descriptor to be operated on,
-     * addr contains the buffer in question,len contains the length of the IO operation, and offs contains the
-     * read or write offset. If fd does not refer to a seekable file,off mustbe set to zero. If offs is set to -1,
-     * the offset will use (and advance) the file position, like the read(2) and write(2) system calls. these are
-     * non-vectored versions of the `IORING_OP_READV` and `IORING_OP_WRITEV` opcodes. See also read(2) and write(2)
-     * for the general description of the related system call.
+    /**
+     * Issue the equivalent of a pwrite(2)
+     * @param fd is the file descriptor to be operated on
+     * @param addr contains the buffer in question
+     * @param len contains the length of the IO operation
+     * @param offs contains the read or write offset. If fd does not refer to a seekable file,off mustbe set to zero. If offs is set to -1, the offset will use
+     * (and advance) the file position, like theread(2) and write(2) system calls. these are non-vectored versions of
+     * the IORING_OP_READV and IORING_OP_WRITEV opcodes.
+     * @see write(2)
      *
      * @since 5.6.
      */
     Op_Write(IORING_OP_WRITE),
 
-    /** Issue the equivalent of asplice(2)system call.splice_fd_in is the file descriptor to read
-     *  from, splice_off_in is an offset to read from,fd is the file descriptor to write to,off is an offset from which
-     *  to start writing to. A sentinel value of -1 is usedto pass the equivalent of a `NULL` for the offsets tosplice(2).
-     *  lencontains the number of bytes to copy.splice_flagscontains a bit mask for the flag field associated with the
-     *  system call.Please note that one of the file descriptors must refer to a pipe.See alsosplice(2)for the general
-     *  description of the related system call.
+    /** Issue the equivalent of a splice(2)system call
+     *
+     * Please note that one of the file descriptors must refer to a pipe
+     * @param splice_fd_in is the file descriptor to read from
+     * @param splice_off_in is an offset to read from
+     * @param fd is the file descriptor to write to
+     * @param off is an offset from which to start writing to. A sentinel value of -1 is used to pass the equivalent
+     *  of a `NULL` for the offsets to splice(2).
+     *
+     * @param len contains the number of bytes to copy
+     * @param splice_flags contains a bit mask for the flag field associated with the system call
+     * @see splice(2)for the general description of the related system call.
      *
      * @since 5.7.
      */
     Op_Splice(IORING_OP_SPLICE),
 
-    /** Issue the equivalent of atee(2)system call.splice_fd_in is the file descriptor to read from,fd is the file
-     *  descriptor to write to,lencontains the number of bytes to copy, and splice_flagscontains a bit mask for the
-     *  flag field associated with the system call.Please note that both of the file descriptors must refer to a pipe.
-     *  See alsotee(2)for the general description of the related system call.
+    /** Issue the equivalent of a tee(2) system call
+     *
+     * Please note that both of the file descriptors must refer to a pipe.
+     * @param splice_fd_in is the file descriptor to read from
+     * @param fd is the file descriptor to write to
+     * @param len contains the number of bytes to copy
+     * @param  splice_flagscontains a bit mask for the
+     *  flag field associated with the system call.
+     *@see  tee(2) for the general description of the related system call.
      *
      * @since 5.8.
      */
     Op_Tee(IORING_OP_TEE),
 
-    /**This command is an alternative to usingIORING_REGISTER_FILES_UPDATEwhich the n works in an async fashion,
-     *  like the rest of the io_uring command s.The arguments passed in are the same.addr must contain a pointer to the
-     *  array of file descriptors,len must contain the length of the array, and off must contain the offset at which to
-     *  operate. Note that the array of filedescriptors pointed to inaddr mustremain valid until
-     *  this operation has completed.
+    /**This command is an alternative to using IORING_REGISTER_FILES_UPDATE which then works in an async fashion,
+     * like the rest of the io_uring commands. The arguments passed in are the same.
+     *
+     * Note that the array of file descriptors pointed to in addr must remain valid until this operation has completed.
+     *
+     *  @param addr must contain a pointer to the array of file descriptors
+     * @param len must contain the length of the array
+     * @param off must contain the offset at which to operate.
      * @since 5.6.
      */
     Op_Files_update(IORING_OP_FILES_UPDATE),
@@ -452,21 +501,20 @@ enum class UringOpcode(val opConstant: UInt) {
      * `IOSQE_BUFFER_SELECT` flag must be set, and buf_group must be set to the desired buffer group ID where
      * the buffer should be selected from.
      *
-     *
      * @since 5.7.
      */
     Op_Provide_buffers(IORING_OP_PROVIDE_BUFFERS),
 
     /**Remove buffers previously registered with `IORING_OP_PROVIDE_BUFFERS`
      * @param fd must contain the number of buffers to remove
-     *  @param buf_group must contain the buffer group ID from which to remove the buffers.
+     * @param buf_group must contain the buffer group ID from which to remove the buffers.
      *
-     *  @since  5.7.
+     * @since  5.7.
      */
     Op_Remove_buffers(IORING_OP_REMOVE_BUFFERS),
 
-    /**        Issue the equivalent of ashutdown(2)system call.fd is the file descriptor to the socket being shutdown,
-     * no othe r fields shouldbe set.
+    /**        Issue the equivalent of a shutdown(2) system call.
+     * @param fd is the file descriptor to the socket being shutdown, no other fields should be set.
      * @since 5.11.
      */
     Op_Shutdown(IORING_OP_SHUTDOWN),
@@ -474,8 +522,7 @@ enum class UringOpcode(val opConstant: UInt) {
     /**
      * Issue the equivalent of a renameat2(2) system call
      * @param fdshould be set to the old dirfd
-     * @param addr should be set to
-     * the oldpath
+     * @param addr should be set to the oldpath
      * @param lenshould be set to thenewdirfd
      * @param  addrshould be set to theoldpath
      * @param addr2 should be set to thenewpath
@@ -494,35 +541,28 @@ enum class UringOpcode(val opConstant: UInt) {
 
     /**        Issue the equivalent of a mkdirat2(2) system call
      * @param fd should be set to the dir fd
-     * @param addr should be set to
-     *  the pathname
-     *  @param len should be set to the mode being passed in to mkdirat(2).
-     *
+     * @param addr should be set to the pathname
+     * @param len should be set to the mode being passed in to mkdirat(2).
      * @since 5.15.
      */
     Op_Mkdirat(IORING_OP_MKDIRAT),
 
     /** Issue the equivalent of a symlinkat2(2) system call.
      * @param  fd should be set to the new dir fd
-     * @param addr should be set to
-     *  the target
-     *  @param  addr2 should be set to the link path being passed in to symlinkat(2).
-     *
+     * @param addr should be set to the target
+     * @param  addr2 should be set to the link path being passed in to symlinkat(2).
      * @since 5.15.
      */
     Op_Symlinkat(IORING_OP_SYMLINKAT),
 
     /**        Issue the equivalent of a linkat2(2) system call
      * @param fd should be set to the old dirfd
-     * @param addr should be set to
-     *  the oldpath
-     *  @param lenshould be set to the new dirfd
-     *  @param addr2 should be set to the newpath
-     *  @param hardlink_flagsshould be set to
-     *  the flagsbeing passed in to linkat(2).
+     * @param addr should be set to the oldpath
+     * @param lenshould be set to the new dirfd
+     * @param addr2 should be set to the newpath
+     * @param hardlink_flagsshould be set to the flags being passed in to linkat(2).
      *
      * @since 5.15.
-
      */
     Op_Linkat(IORING_OP_LINKAT),
 }

@@ -1,7 +1,8 @@
 package simple
 
-import kotlinx.cinterop.*
 import platform.posix.*
+import kotlinx.cinterop.*
+import linux_uring.AT_FDCWD
 import simple.HasPosixErr.Companion.posixRequires
 import simple.HasPosixErr.Companion.reportErr
 import simple.HasPosixErr.Companion.warning
@@ -124,7 +125,22 @@ class PosixFile(
 
             return cPointer!!
 
+
+        }
+        fun getDirFd(namedDirAndFile: List<String>): Int = if (namedDirAndFile.first().isNullOrEmpty()) {
+            AT_FDCWD
+        } else {
+            posix_open(namedDirAndFile.first(), linux_uring.O_DIRECTORY).also {
+                posixRequires(it > 0) { "opendir ${namedDirAndFile.first()}" }
+            }
+        }
+
+        fun namedDirAndFile(file_path: String) = file_path.lastIndexOf('/').let { tail ->
+
+            if (tail == -1) listOf("", file_path) else listOf(
+                file_path.substring(0, tail),
+                file_path.substring(tail.inc())
+            )
         }
     }
 }
-

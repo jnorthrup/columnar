@@ -1,27 +1,29 @@
 package linux_uring
 
 import kotlinx.cinterop.*
-import linux_uring.include.UringOpcode
+import linux_uring.include.UringOpcode.Op_Close
 import linux_uring.include.UringOpcode.Op_Readv
 import linux_uring.include.UringSetupFeatures
 import linux_uring.include.UringSetupFeatures.featSingle_mmap
-import linux_uring.include.UringSqeFlags
+import linux_uring.include.UringSqeFlags.sqeIo_hardlink
+import linux_uring.include.UringSqeFlags.sqeIo_link
 import platform.linux.memalign
 import platform.posix.NULL
 import platform.posix.sigset_t
 import simple.HasDescriptor.Companion.S_ISBLK
 import simple.HasDescriptor.Companion.S_ISREG
 import simple.HasPosixErr.Companion.posixRequires
-import simple.PosixFile.Companion.open
+import simple.PosixFile.Companion.getDirFd
+import simple.PosixFile.Companion.namedDirAndFile
 import simple.allocWithFlex
 import simple.simple.CZero.nz
 import simple.simple.CZero.z
+import kotlin.math.min
 import platform.linux.BLKGETSIZE64 as PlatformLinuxBLKGETSIZE64
 import platform.posix.fstat as posix_fstat
 import platform.posix.ioctl as posix_ioctl
 import platform.posix.mmap as posix_mmap
 import platform.posix.off_t as posix_off_t
-import platform.posix.open as posix_open
 import platform.posix.stat as posix_stat
 import platform.posix.syscall as posix_syscall
 
@@ -47,12 +49,16 @@ class submitter {
     val p: io_uring_params = nativeHeap.alloc()
     val ring_fd =
         io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr).also { ring_fd -> posixRequires(ring_fd >= 0, { ring_fd }) }
-    val featuresInUse: Set<UringSetupFeatures> =(UringSetupFeatures.values().fold(setOf<UringSetupFeatures>()) { a, x ->
+    val featuresInUse: Set<UringSetupFeatures> =
+        (UringSetupFeatures.values().fold(setOf<UringSetupFeatures>()) { a, x ->
             when {
                 (x.feat_const and p.features).nz -> a + x
                 else -> a
             }
-        }).also { fprintf(stderr, "io_uring features: $it") }
+        }).also {
+            fprintf(stderr, "p.sq_entries: ${p.sq_entries}")
+            fprintf(stderr, "io_uring features: $it")
+        }
 
     val singleMmap = featSingle_mmap in featuresInUse
 
@@ -60,7 +66,7 @@ class submitter {
     val cring_sz = (p.cq_off.cqes + p.cq_entries * sizeOf<io_uring_cqe>().toUInt())
     val sqes = run {
         read_barrier()
-          posix_mmap(
+        posix_mmap(
             NULL,
             (p.sq_entries * sizeOf<io_uring_sqe>().toUInt()).toULong(),
             platform.posix.PROT_READ or platform.posix.PROT_WRITE,
@@ -107,17 +113,101 @@ class submitter {
         val cqes get() = (cqptr + p.cq_off.cqes.toLong()).toCPointer<io_uring_cqe>()
     }
 
-    fun mapIORingQueue(
-        __len: ULong,
-        __prot: Int,
-        __flags: Int,
-        __offset: Long
-    ): CPointer<ByteVar> {
+    fun mapIORingQueue(__len: ULong, __prot: Int, __flags: Int, __offset: Long): CPointer<ByteVar> {
         read_barrier()
-
         val qringPtr = posix_mmap(NULL, __len, __prot, __flags, ring_fd, __offset)!!.reinterpret<ByteVar>()
         posixRequires(qringPtr != platform.posix.MAP_FAILED) { "mmap" }
         return qringPtr
+    }
+
+    fun opReadWholeFile(file_fd: Int) = nativeHeap.run {
+        val triple = sqePreamble()
+        val sqe: CPointer<io_uring_sqe> = sqes[triple.third.toInt()].ptr
+        //---opcode
+        createfileInfoReaderSqe(file_fd, sqe)
+        //---end opcode
+        sqeSubmit(triple)
+    }
+
+    fun opCloseCatFile(file_fd: Int) = nativeHeap.run {
+        val triple = sqePreamble()
+        val sqe: CPointer<io_uring_sqe> = sqes[triple.third.toInt()].ptr
+        //---opcode
+        createfileInfoReaderSqe(file_fd, sqe)
+        //---end opcode
+        sqeSubmit(triple)
+    }
+
+    fun sqePreamble() = nativeHeap.run {
+        val tail: UIntVar = alloc { value = sqRing.tail.pointed.value }
+        var next_tail = tail.value
+        next_tail++
+        read_barrier()
+        val index = tail.value and sqRing.ring_mask.pointed.value
+        Triple(tail, next_tail, index)
+    }
+
+    fun sqeSubmit(triple: Triple<UIntVar, UInt, UInt>) {
+        write_barrier()
+        sqRing.array[triple.third.toInt()] = triple.third
+        triple.first.value = triple.second
+        /* Update the tail so the kernel can see it. */
+        if (sqRing.tail.pointed.value != triple.first.value) {
+            sqRing.tail.pointed.value = triple.first.value
+            write_barrier()
+        }
+    }
+
+    fun createfileInfoReaderSqe(
+        file_fd: Int,
+        sqe: CPointer<io_uring_sqe>
+    ) = nativeHeap.run {
+        val file_sz: posix_off_t = get_file_size(file_fd)
+        var blocks: Int = (file_sz / BLOCK_SZ).toInt()
+        val fi: file_info = allocWithFlex(file_info::iovecs, blocks)
+        fi.file_sz = file_sz
+        if (file_sz >= 0L && 0 != (file_sz % BLOCK_SZ).toInt()) blocks++
+        /* For each block of the file we need to read, we allocate an iovec struct
+             * which is indexed into the iovecs array. This array is passed in as part
+             * of the submission. If you don't understand this, then you need to look
+             * up how the readv() and writev() system calls work.
+             */
+        for ((chunk, remains) in (file_sz downTo 0L step tehBlockSize).withIndex())
+            fi.iovecs[chunk].run {
+                iov_len = min(remains, tehBlockSize).toULong()
+                iov_base = memalign(BLOCK_SZ, BLOCK_SZ)
+            }
+        opReadToFileinfo(sqe, file_fd, fi, blocks)
+    }
+
+    fun opReadToFileinfo(
+        sqe: CPointer<io_uring_sqe>,
+        file_fd: Int,
+        fi: file_info,
+        blocks: Int
+    ) {
+        sqe.pointed.run {
+            fd = file_fd
+            flags = (sqeIo_link.flagConstant or sqeIo_hardlink.flagConstant).toUByte()
+            opcode = Op_Readv.opConstant.toUByte()
+            addr = fi.iovecs.toLong().toULong()
+            len = blocks.toUInt()
+            off = 0.toULong()
+            user_data = fi.ptr.toLong().toULong()
+        }
+    }
+
+    fun opCloseFd(
+        sqe: CPointer<io_uring_sqe>,
+        file_fd: Int,
+    ) {
+        val triple=sqePreamble()
+        sqe.pointed.run {
+            fd = file_fd
+            flags = sqeIo_link.flagConstant.toUByte()
+            opcode = Op_Close.opConstant.toUByte()
+        }
+        sqeSubmit(triple)
     }
 }
 
@@ -208,113 +298,34 @@ val pvtHandle = 2113u
  * In this function, we submit requests to the submission queue. You can submit
  * many types of requests. Ours is going to be the readv() request, which we
  * specify via IORING_OP_READV. */
-fun createSubmission(file_path: String, s: submitter): Int = nativeHeap.run {
-        if (false && s.featuresInUse.contains(UringSetupFeatures.featRw_cur_pos) ) {
+fun createSubmission(file_path: String, s: submitter): Int {
+    val namedDirAndFile1 = namedDirAndFile(file_path)
+    nativeHeap.run {
+        val dirfd = getDirFd(namedDirAndFile1)// never closed
+        val file_fd = openat(dirfd, file_path, platform.posix.O_RDONLY)// never closed
+        posixRequires(file_fd >= 0) { "fileopen $file_fd" }
 
-            val tail = file_path.lastIndexOf('/', 0)
-
-            val dirfd: Int
-            val path: ULong
-            val oa: io_uring_sqe = alloc()
-            if (tail == -1) {
-                dirfd = open(file_path.substring(0, tail), O_DIRECTORY)
-                posixRequires(dirfd > 0) { "opendir" }
-                path = file_path.substring(tail + 1).cstr.objcPtr().toLong().toULong()
-
-            } else {
-                dirfd = AT_FDCWD
-                path = file_path.cstr.objcPtr().toLong().toULong()
-            }
-            oa.fd = dirfd
-            oa.len = 444U
-            oa.open_flags = O_RDONLY.toUInt()
-            oa.file_index = pvtHandle
-            oa.opcode = UringOpcode.Op_Openat.opConstant.toUByte()
-            oa.flags = UringSqeFlags.sqeIo_link.flagConstant.toUByte()
-
-            UringSqeFlags.sqeIo_link.flagConstant
-            UringOpcode.Op_Openat
-            UringOpcode.Op_Provide_buffers
-            UringOpcode.Op_Read_fixed
-        } else {
-
-            val file_fd: Int = posix_open(file_path, platform.posix.O_RDONLY)
-            posixRequires(file_fd >= 0) { "fileopen $file_fd" }
-            val sring = s.sqRing
-            var current_block = 0U
-
-            val file_sz: posix_off_t = get_file_size(file_fd)
-            if (file_sz >= 0L) {
-                var bytes_remaining: posix_off_t = file_sz
-                var blocks: Int = (file_sz / BLOCK_SZ).toInt()
-                if (0 != (file_sz % BLOCK_SZ).toInt()) blocks++
-
-                val fi: file_info = allocWithFlex(file_info::iovecs, blocks)
-                fi.file_sz = file_sz
-
-                /*
-             * For each block of the file we need to read, we allocate an iovec struct
-             * which is indexed into the iovecs array. This array is passed in as part
-             * of the submission. If you don't understand this, then you need to look
-             * up how the readv() and writev() system calls work.
-             */
-                while (0L != bytes_remaining) {
-                    var bytes_to_read: posix_off_t = bytes_remaining
-
-                    if (bytes_to_read > tehBlockSize) bytes_to_read = tehBlockSize
-
-                    val curBlock = current_block.toInt()
-                    fi.iovecs[curBlock].iov_len = bytes_to_read.toULong()
-                    fi.iovecs[curBlock].iov_base = memalign(BLOCK_SZ, BLOCK_SZ)
-
-                    current_block++
-                    bytes_remaining -= bytes_to_read
-                }
-
-                /* Add our submission queue entry to the tail of the SQE ring buffer */
-                var tail = sring.tail.pointed.value
-                var next_tail = tail
-                next_tail++
-                read_barrier()
-                val index = tail and s.sqRing.ring_mask.pointed.value
-                val sqe: CPointer<io_uring_sqe> = s.sqes[index.toInt()].ptr
-
-                sqe.pointed.run {
-                    fd = file_fd
-                    flags = 0.toUByte()
-                    opcode = Op_Readv.opConstant.toUByte()
-                    addr = fi.iovecs.toLong().toULong()
-                    len = blocks.toUInt()
-                    off = 0.toULong()
-                    user_data = fi.ptr.toLong().toULong()
-                }
-                write_barrier()
-                sring.array[index.toInt()] = index
-                tail = next_tail
-
-                /* Update the tail so the kernel can see it. */
-                if (sring.tail.pointed.value != tail) {
-                    sring.tail.pointed.value = tail
-                    write_barrier()
-                }
-
-            /***************************************************************************
-             * Tell the kernel we have submitted events with the io_uring_enter() system
-             * call. We also pass in the IOURING_ENTER_GETEVENTS flag which causes the
-             * io_uring_enter() call to wait until min_complete events (the 3rd param)
-             * complete.
-             *
-             * ************** BLOCKS HERE
-             *
-             */
-                io_uring_enter(s.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS).let { ret ->
-                    posixRequires(ret.nz) { "io_uring_enter $ret" }
-                }
-        }
-        return 0
+        s.opReadWholeFile(file_fd)
     }
-    return 1
+
+
+    /***************************************************************************
+     * Tell the kernel we have submitted events with the io_uring_enter() system
+     * call. We also pass in the IOURING_ENTER_GETEVENTS flag which causes the
+     * io_uring_enter() call to wait until min_complete events (the 3rd param)
+     * complete.
+     *
+     * ************** BLOCKS HERE
+     *
+     */
+    io_uring_enter(s.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS).let { ret ->
+        posixRequires(ret.nz) { "io_uring_enter $ret" }
+    }
+
+
+    return 0
 }
+
 
 fun cat_file(argv1: Array<String>): Unit = memScoped {
     val argv = argv1.takeIf { it.isNotEmpty() } ?: arrayOf("/etc/sysctl.conf")

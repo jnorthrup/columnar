@@ -23,12 +23,14 @@ enum class UringSetupFeatures(val feat_const: UInt) {
      * the CQ ring is full, the kernel stores the event internally until such a time that the CQ ring has room for
      * more entries. If this overflow condition is entered, attempting to submit more IO will fail with the `-EBUSY`
      * error value, if it can't flush the overflown events to the CQ ring. If this happens, the application must
-     * reap events from the CQ ring and attempt the submit again. Available since kernel 5.5.
+     * reap events from the CQ ring and attempt the submit again. 
+ * @since 5.5.
      */
     featNodrop(IORING_FEAT_NODROP),
 
     /**If this flag is set, applications can be certain that any data for async offload has been consumed when
-     * the kernel has consumed the SQE. Available since kernel 5.5.
+     * the kernel has consumed the SQE. 
+ * @since 5.5.
      */
     featSubmit_stable(IORING_FEAT_SUBMIT_STABLE),
 
@@ -37,7 +39,8 @@ enum class UringSetupFeatures(val feat_const: UInt) {
      * preadv2(2) and pwritev2(2) with offset == -1. It'll use (and update) the current file position. This obviously
      * comes with the caveat that if the application has multiple reads or writes in flight, then the end result will
      * not be as expected. This is similar to threads sharing a file descriptor and doing IO using the current file
-     * position. Available since kernel 5.6.
+     * position. 
+ * @since 5.6.
      */
     featRw_cur_pos(IORING_FEAT_RW_CUR_POS),
 
@@ -46,7 +49,8 @@ enum class UringSetupFeatures(val feat_const: UInt) {
      *  requests are issued with the credentials of the task that originally registered the io_uring. If only one task
      *  is using a ring, then this flag doesn't matter as the credentials will always be the same. Note that this is
      *  the default behavior, tasks can still register different personalities through io_uring_register(2) with
-     *  `IORING_REGISTER_PERSONALITY` and specify the personality to use in the sqe. Available since kernel 5.6.
+     *  `IORING_REGISTER_PERSONALITY` and specify the personality to use in the sqe. 
+ * @since 5.6.
      */
     featCur_personality(IORING_FEAT_CUR_PERSONALITY),
 
@@ -54,17 +58,20 @@ enum class UringSetupFeatures(val feat_const: UInt) {
      *  means that requests that cannot read or write data to a file no longer need to be punted to an async thread for
      *  handling, instead they will begin operation when the file is ready. This is similar to doing poll + read/write
      *  in userspace, but eliminates the need to do so. If this flag is set, requests waiting on space/data consume a
-     *  lot less resources doing so as they are not blocking a thread. Available since kernel 5.7.
+     *  lot less resources doing so as they are not blocking a thread. 
+ * @since 5.7.
      */
     featFast_poll(IORING_FEAT_FAST_POLL),
 
     /**    If this flag is set, the `IORING_OP_POLL_ADD` command accepts the full 32-bit range of epoll based flags. Most
-     * notably `EPOLLEXCLUSIVE` which allows exclusive (waking single waiters) behavior. Available since kernel 5.9.
+     * notably `EPOLLEXCLUSIVE` which allows exclusive (waking single waiters) behavior. 
+ * @since 5.9.
      */
     featPoll_32bits(IORING_FEAT_POLL_32BITS),
 
     /** If this flag is set, the `IORING_SETUP_SQPOLL` feature no longer requires the use of fixed files. Any normal file
-     *  descriptor can be used for IO commands without needing registration. Available since kernel 5.11.
+     *  descriptor can be used for IO commands without needing registration. 
+ * @since 5.11.
      */
     featSqpoll_nonfixed(IORING_FEAT_SQPOLL_NONFIXED),
 
@@ -81,18 +88,21 @@ enum class UringSetupFeatures(val feat_const: UInt) {
     };
     ```
     and a pointer to this struct must be passed in if `IORING_ENTER_EXT_ARG` is set in the flags for the enter system call.
-    Available since kernel 5.11.            */
+    
+ * @since 5.11.            */
     featEnter_ext_arg(IORING_FEAT_EXT_ARG),
 
     /** If this flag is set, io_uring is using native workers for its async helpers. Previous kernels used kernel
      *  threads that assumed the identity of the original io_uring owning task, but later kernels will actively create
-     *  what looks more like regular process threads instead. Available since kernel 5.12.             */
+     *  what looks more like regular process threads instead. 
+ * @since 5.12.             */
     featNative_workers(IORING_FEAT_NATIVE_WORKERS),
 
     /**
      * If this flag is set, then io_uring supports a variety of features related to fixed files and buffers. In
-     * particular, it indicates that registered buffers can be updated in -place, whereas before the full set would
-     * have to be unregistered first. Available since kernel 5.13. */
+     * particular, it indicates that registered buffers can be updated in-place, whereas before the full set would
+     * have to be unregistered first. 
+     * @since kernel 5.13. */
     featRsrc_tags(IORING_FEAT_RSRC_TAGS),
 
 }
