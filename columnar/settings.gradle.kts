@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 include(*(rootDir.listFiles()
 .filter(File::isDirectory)
 .filter { !it.isHidden }
-.map(File::getName)-"buildSrc"-"gradle").toTypedArray())
+.map(File::getName)-"buildSrc"-"gradle"-"build").toTypedArray())

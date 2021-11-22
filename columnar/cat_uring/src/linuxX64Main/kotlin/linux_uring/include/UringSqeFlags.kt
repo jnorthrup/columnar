@@ -9,7 +9,7 @@ import linux_uring.*
 The flagsfield is a bit mask. The supported flags are:
  */
 
-enum class SqeFlags(val flagConstant: UInt) {
+enum class UringSqeFlags(val flagConstant: UInt) {
     /** When this flag is specified, fd is an index into the files array registered with the io_uring instance (see
      * the `IORING_REGISTER_FILES` section of the io_uring_register(2) man page). Note that this isn't always available
      * for all command s. If used on a command that doesn't support fixed files, the `SQE` will error with-EBADF.

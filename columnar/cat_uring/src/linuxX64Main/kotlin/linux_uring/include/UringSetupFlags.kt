@@ -11,7 +11,7 @@ import linux_uring.*
  *  params is used by the application to pass options to the kernel, and by the kernel to convey information about the
  *  ring buffers.
  *
- *  ```
+ *  ```#!C
  *  struct io_uring_params {
  *  __u32 sq_entries;
  *  __u32 cq_entries;
