@@ -16,10 +16,12 @@ import simple.HasPosixErr.Companion.posixRequires
 import simple.PosixFile.Companion.getDirFd
 import simple.PosixFile.Companion.namedDirAndFile
 import simple.allocWithFlex
+import simple.mallocWithFlex
 import simple.simple.CZero.nz
 import simple.simple.CZero.z
 import kotlin.math.min
 import platform.linux.BLKGETSIZE64 as PlatformLinuxBLKGETSIZE64
+import platform.posix.free as posix_free
 import platform.posix.fstat as posix_fstat
 import platform.posix.ioctl as posix_ioctl
 import platform.posix.mmap as posix_mmap
@@ -45,11 +47,10 @@ import platform.posix.syscall as posix_syscall
 //)
 
 
-class submitter {
+class KioUring {
     val p: io_uring_params = nativeHeap.alloc()
-    val ring_fd =
-        io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr).also { ring_fd -> posixRequires(ring_fd >= 0, { ring_fd }) }
-    val featuresInUse: Set<UringSetupFeatures> =
+    val ring_fd =io_uring_setup(CATQUEUE_DEPTH.toUInt(), p.ptr).also { ring_fd -> posixRequires(ring_fd >= 0, { ring_fd }) }
+    val featuresInUse: Set<UringSetupFeatures> by lazy {
         (UringSetupFeatures.values().fold(setOf<UringSetupFeatures>()) { a, x ->
             when {
                 (x.feat_const and p.features).nz -> a + x
@@ -59,8 +60,9 @@ class submitter {
             fprintf(stderr, "p.sq_entries: ${p.sq_entries}")
             fprintf(stderr, "io_uring features: $it")
         }
+    }
 
-    val singleMmap = featSingle_mmap in featuresInUse
+    val singleMmap get()= featSingle_mmap in featuresInUse
 
     val sring_sz = (p.sq_off.array + p.sq_entries * UInt.SIZE_BYTES.toUInt())
     val cring_sz = (p.cq_off.cqes + p.cq_entries * sizeOf<io_uring_cqe>().toUInt())
@@ -69,8 +71,8 @@ class submitter {
         posix_mmap(
             NULL,
             (p.sq_entries * sizeOf<io_uring_sqe>().toUInt()).toULong(),
-            platform.posix.PROT_READ or platform.posix.PROT_WRITE,
-            platform.posix.MAP_SHARED or platform.posix.MAP_POPULATE,
+             platform.posix.PROT_READ + platform.posix.PROT_WRITE,
+            platform.posix.MAP_SHARED + platform.posix.MAP_POPULATE,
             ring_fd,
             IORING_OFF_SQES.toLong()
         )!!.reinterpret<io_uring_sqe>().also {
@@ -128,7 +130,7 @@ class submitter {
         return qringPtr
     }
 
-    fun opReadWholeFile(file_fd: Int) = nativeHeap.run {
+    fun opReadWholeFile(file_fd: Int) = memScoped {
         val triple = sqePreamble()
         val sqe: CPointer<io_uring_sqe> = sqes[triple.third.toInt()].ptr
         //---opcode
@@ -137,7 +139,7 @@ class submitter {
         sqeSubmit(triple)
     }
 
-    fun opCloseCatFile(file_fd: Int) = nativeHeap.run {
+    fun opCloseCatFile(file_fd: Int): Unit =memScoped{
         val triple = sqePreamble()
         val sqe: CPointer<io_uring_sqe> = sqes[triple.third.toInt()].ptr
         //---opcode
@@ -146,7 +148,7 @@ class submitter {
         sqeSubmit(triple)
     }
 
-    fun sqePreamble() = nativeHeap.run {
+    fun MemScope.sqePreamble() = run {
         val tail: UIntVar = alloc { value = sqRing.tail.pointed.value }
         var next_tail = tail.value
         next_tail++
@@ -155,7 +157,7 @@ class submitter {
         Triple(tail, next_tail, index)
     }
 
-    fun sqeSubmit(triple: Triple<UIntVar, UInt, UInt>)=triple.let {
+    fun   sqeSubmit(triple: Triple<UIntVar, UInt, UInt>): Unit =triple.let {
         (tail, next_tail, index)->
         write_barrier()
         sqRing.array[index.toInt()] = index
@@ -170,10 +172,11 @@ class submitter {
     fun createfileInfoReaderSqe(
         file_fd: Int,
         sqe: CPointer<io_uring_sqe>
-    ) = nativeHeap.run {
+    ) = run {
         val file_sz: posix_off_t = get_file_size(file_fd)
         var blocks: Int = (file_sz / BLOCK_SZ).toInt()
-        val fi: file_info = allocWithFlex(file_info::iovecs, blocks)
+        val fi_ptr = mallocWithFlex(file_info::iovecs, blocks)
+        val fi: file_info = fi_ptr.pointed
         fi.file_sz = file_sz
         if (file_sz >= 0L && 0 != (file_sz % BLOCK_SZ).toInt()) blocks++
         /* For each block of the file we need to read, we allocate an iovec struct
@@ -209,7 +212,7 @@ class submitter {
     fun opCloseFd(
         sqe: CPointer<io_uring_sqe>,
         file_fd: Int,
-    ) {
+    ): Unit = memScoped{
         val triple=sqePreamble()
         sqe.pointed.run {
             fd = file_fd
@@ -266,7 +269,7 @@ fun output_to_console(buf: CPointer<ByteVar>, len: Int): Unit {
  * the data buffer that will have the file data and print it to the console.
  * */
 
-fun completionQueues(s: submitter) {
+fun completionQueues(s: KioUring) {
     var fi: CPointer<file_info>
     var cqe: CPointer<io_uring_cqe>
     val cring = s.cqRing
@@ -281,10 +284,9 @@ fun completionQueues(s: submitter) {
         if (head == cring.tail.pointed.value) break
         /* Get the entry */
         val value = head.toLong() and s.cqRing.ring_mask.pointed.value.toLong()
-        cqe = cring.cqes!![value.toInt()].ptr
+        cqe = cring.cqes[value.toInt()].ptr
         fi = cqe.pointed.user_data.toLong().toCPointer()!!
         posixRequires(cqe.pointed.res >= 0) { "Error: ${cqe.pointed.res}" }
-
         var blocks: Int = (fi.pointed.file_sz / BLOCK_SZ.toLong()).toInt()
         if (0L != fi.pointed.file_sz % BLOCK_SZ) blocks++
         for (i in 0 until blocks) {
@@ -293,7 +295,7 @@ fun completionQueues(s: submitter) {
                 iovBase!!.reinterpret(),
                 fi.pointed.iovecs[i].iov_len.toInt()
             )
-            free(iovBase)
+            posix_free(iovBase)
         }
         write_barrier()
         head++
@@ -304,23 +306,21 @@ fun completionQueues(s: submitter) {
     write_barrier()
 }
 
-val tehBlockSize: Long = BLOCK_SZ.toLong()
-val pvtHandle = 2113u
+const val tehBlockSize: Long = BLOCK_SZ.toLong()
+const val pvtHandleSpec = 2113U
+val pvtHandle: UInt   = pvtHandleSpec.dec()
 
 /*
  * Submit to submission queue.
  * In this function, we submit requests to the submission queue. You can submit
  * many types of requests. Ours is going to be the readv() request, which we
  * specify via IORING_OP_READV. */
-fun createSubmission(file_path: String, s: submitter): Int {
-    val namedDirAndFile1 = namedDirAndFile(file_path)
-    nativeHeap.run {
+fun createSubmission(file_path: String, s: KioUring): Int {
+    val namedDirAndFile1: List<String> = namedDirAndFile(file_path)
         val dirfd = getDirFd(namedDirAndFile1)// never closed
         val file_fd = openat(dirfd, file_path, platform.posix.O_RDONLY)// never closed
         posixRequires(file_fd >= 0) { "fileopen $file_fd" }
-
         s.opReadWholeFile(file_fd)
-    }
 
 
     /***************************************************************************
@@ -345,7 +345,7 @@ fun cat_file(argv1: Array<String>): Unit = memScoped {
     val argv = argv1.takeIf { it.isNotEmpty() } ?: arrayOf("/etc/sysctl.conf")
 
     println("---setting up uring with args ${argv.toList()}")
-    val s = submitter()
+    val s = KioUring()
 
     println("---success setting up uring with args ${argv.toList()}")
     for (arg in argv) {
