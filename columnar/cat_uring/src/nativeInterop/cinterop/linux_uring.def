@@ -2,8 +2,9 @@
 #bits/stat.h ac.h
 #headerFilter = liburing/* sys/*
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
-#linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu
+linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -luring
 ---
+#include <stdatomic.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <linux/fs.h>
@@ -19,12 +20,10 @@ compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 #include <sys/syscall.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <liburing.h>
 
 #define CATQUEUE_DEPTH 256
 #define BLOCK_SZ    1024
-
-
-
 
 struct file_info {
     off_t file_sz;
@@ -37,3 +36,52 @@ struct file_info {
 
 static inline void  read_barrier() { __asm__ __volatile__("" ::: "memory") ;}
 static inline void  write_barrier() { __asm__ __volatile__("" ::: "memory"); }
+static inline long read_once(atomic_long *var1) {
+/////IO_URING_READ_ONCE
+
+    return IO_URING_READ_ONCE (var1);;
+}
+
+
+static inline void atomic_read_once(atomic_long *var1, long val1) {
+
+/////IO_URING_WRITE_ONCE
+    return IO_URING_WRITE_ONCE(var1, val1);;
+};
+
+//type void
+static inline void smpStoreRelease(atomic_long *var1, long val1) {
+    return io_uring_smp_store_release(var1, val1);
+}
+
+//#define io_uring_smp_load_acquire(p)				\
+//	atomic_load_explicit((_Atomic typeof(*(p)) *)(p),	\
+//			     memory_order_acquire)
+//#endif
+static inline long smp_loadAcquire(atomic_long *val1) {
+    return io_uring_smp_load_acquire(val1);
+}
+
+//static inline forEachCqe(void *block(), struct io_uring *ring, uint    head, struct io_uring_cqe *cqe){
+//        io_uring_for_each_cqe( ring,head,cqe)
+//        block(cqe);
+//
+//}
+//static inline forEachCqe(void *block(), struct io_uring *ring, uint    head,  uint cqe) {
+//    unsigned int i = cqe = (head != __extension__ ({
+//        __auto_type atomicLoadPtr = ((_Atomic typeof(*((ring)->cq.ktail)) *) ((ring)->cq.ktail));
+//        __typeof__((void) 0, *atomicLoadPtr) atomicLoadTmp;
+//        __atomic_load(atomicLoadPtr, &atomicLoadTmp, memory_order_acquire);
+//        atomicLoadTmp;
+//    }) ? &(ring)->cq.cqes[head & (*(ring)->cq.kring_mask)] : NULL);
+//    for (head = *(ring)->cq.khead; i; head++)
+//        block(cqe);
+//}
+static inline forEachCqe(void *block(struct io_uring_cqe *cqe), struct io_uring *ring, uint head, struct io_uring_cqe *cqe) {
+    for (head = *(ring)->cq.khead; (cqe = head != __extension__ ({
+        __auto_type __atomic_load_ptr = ((_Atomic typeof(*((ring)->cq.ktail)) *) ((ring)->cq.ktail));
+        __typeof__((void) 0, *__atomic_load_ptr) __atomic_load_tmp;
+        __atomic_load(__atomic_load_ptr, &__atomic_load_tmp, (memory_order_acquire));
+        __atomic_load_tmp;
+    }) ? &(ring)->cq.cqes[head & (*(ring)->cq.kring_mask)] : ((void *) 0)); head++) { block(cqe); }
+}
