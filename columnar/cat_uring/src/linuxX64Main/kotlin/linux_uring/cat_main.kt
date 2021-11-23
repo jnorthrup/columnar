@@ -97,20 +97,28 @@ class submitter {
     val cqRing = appIOCqRing(cqPtr)
 
     inner class appIOSqRing(sqptr1: CPointer<ByteVar>, val sqptr: Long = sqptr1.toLong()) {
-        val head get() = (sqptr + p.sq_off.head.toLong()).toCPointer<UIntVar>()!!
-        val tail get() = (sqptr + p.sq_off.tail.toLong()).toCPointer<UIntVar>()!!
-        val ring_mask get() = (sqptr + p.sq_off.ring_mask.toLong()).toCPointer<UIntVar>()!!
-        val ring_entries get() = (sqptr + p.sq_off.ring_entries.toLong()).toCPointer<UIntVar>()!!
-        val flags get() = (sqptr + p.sq_off.flags.toLong()).toCPointer<UIntVar>()!!
-        val array get() = (sqptr + p.sq_off.array.toLong()).toCPointer<UIntVar>()!!
+
+        public final val array get() = (sqptr + p.sq_off.array.toLong()).toCPointer<__u32Var >()!!
+        public final val dropped get() = (sqptr + p.sq_off.dropped.toLong()).toCPointer<__u32Var >()!!
+        public final val flags get() = (sqptr + p.sq_off.flags.toLong()).toCPointer<__u32Var >()!!
+        public final val head get() = (sqptr + p.sq_off.head.toLong()).toCPointer<__u32Var >()!!
+        public final val resv1 get() = (sqptr + p.sq_off.resv1.toLong()).toCPointer<__u32Var >()!!
+        public final val resv2 get() = (sqptr + p.sq_off.resv2.toLong()).toCPointer<__u64Var >()!!
+        public final val ring_entries get() = (sqptr + p.sq_off.ring_entries.toLong()).toCPointer<__u32Var >()!!
+        public final val ring_mask get() = (sqptr + p.sq_off.ring_mask.toLong()).toCPointer<__u32Var >()!!
+        public final val tail get() = (sqptr + p.sq_off.tail.toLong()).toCPointer<__u32Var >()!!
     }
 
     inner class appIOCqRing(cqptr1: CPointer<ByteVar>, val cqptr: Long = cqptr1.toLong()) {
-        val head get() = (cqptr + p.cq_off.head.toLong()).toCPointer<UIntVar>()!!
-        val tail get() = (cqptr + p.cq_off.tail.toLong()).toCPointer<UIntVar>()!!
-        val ring_mask get() = (cqptr + p.cq_off.ring_mask.toLong()).toCPointer<UIntVar>()!!
-        val ring_entries get() = (cqptr + p.cq_off.ring_entries.toLong()).toCPointer<UIntVar>()!!
-        val cqes get() = (cqptr + p.cq_off.cqes.toLong()).toCPointer<io_uring_cqe>()
+        public final val cqes  get() = (cqptr + p.cq_off.cqes.toLong()).toCPointer<io_uring_cqe>()!!
+        public final val flags  get() = (cqptr + p.cq_off.flags.toLong()).toCPointer<__u32Var>()!!
+        public final val head  get() = (cqptr + p.cq_off.head.toLong()).toCPointer<__u32Var>()!!
+        public final val overflow  get() = (cqptr + p.cq_off.overflow.toLong()).toCPointer<__u32Var>()!!
+        public final val resv1  get() = (cqptr + p.cq_off.resv1.toLong()).toCPointer<__u32Var>()!!
+        public final val resv2  get() = (cqptr + p.cq_off.resv2.toLong()).toCPointer<__u64Var>()!!
+        public final val ring_entries  get() = (cqptr + p.cq_off.ring_entries.toLong()).toCPointer<__u32Var>()!!
+        public final val ring_mask  get() = (cqptr + p.cq_off.ring_mask.toLong()).toCPointer<__u32Var>()!!
+        public final val tail  get() = (cqptr + p.cq_off.tail.toLong()).toCPointer<__u32Var>()!!
     }
 
     fun mapIORingQueue(__len: ULong, __prot: Int, __flags: Int, __offset: Long): CPointer<ByteVar> {
@@ -147,13 +155,14 @@ class submitter {
         Triple(tail, next_tail, index)
     }
 
-    fun sqeSubmit(triple: Triple<UIntVar, UInt, UInt>) {
+    fun sqeSubmit(triple: Triple<UIntVar, UInt, UInt>)=triple.let {
+        (tail, next_tail, index)->
         write_barrier()
-        sqRing.array[triple.third.toInt()] = triple.third
-        triple.first.value = triple.second
+        sqRing.array[index.toInt()] = index
+        tail.value = next_tail
         /* Update the tail so the kernel can see it. */
-        if (sqRing.tail.pointed.value != triple.first.value) {
-            sqRing.tail.pointed.value = triple.first.value
+        if (sqRing.tail.pointed.value != tail.value) {
+            sqRing.tail.pointed.value = tail.value
             write_barrier()
         }
     }
@@ -278,10 +287,15 @@ fun completionQueues(s: submitter) {
 
         var blocks: Int = (fi.pointed.file_sz / BLOCK_SZ.toLong()).toInt()
         if (0L != fi.pointed.file_sz % BLOCK_SZ) blocks++
-        for (i in 0 until blocks) output_to_console(
-            fi.pointed.iovecs[i].iov_base!!.reinterpret(),
-            fi.pointed.iovecs[i].iov_len.toInt()
-        )
+        for (i in 0 until blocks) {
+            val iovBase = fi.pointed.iovecs[i].iov_base
+            output_to_console(
+                iovBase!!.reinterpret(),
+                fi.pointed.iovecs[i].iov_len.toInt()
+            )
+            free(iovBase)
+        }
+        write_barrier()
         head++
     } while (true)
 
