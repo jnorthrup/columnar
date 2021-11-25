@@ -15,5 +15,5 @@ inline fun <reified A : CStructVar, reified B : CVariable> mallocWithFlex(
     count: Int,
 ): CPointer<A> {
     val size_t_ = sizeOf<A>() + sizeOf<B>() * count
-    return posix_malloc(size_t_.toULong())!!.reinterpret<A>().also { HasPosixErr.posixRequires(it!=null&&it.toLong()>0L){"malloc $size_t_"} }
+    return posix_malloc(size_t_.toULong())!!.reinterpret<A>().also { HasPosixErr.posixRequires(it.toLong()>0L){"malloc $size_t_"} }
 }

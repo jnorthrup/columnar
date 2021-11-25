@@ -1,7 +1,6 @@
 package linux_uring
 
 import kotlinx.cinterop.*
-import linux_uring.include.UringEnter
 import linux_uring.include.UringOpcode.Op_Close
 import linux_uring.include.UringOpcode.Op_Readv
 import linux_uring.include.UringSetupFeatures
@@ -16,6 +15,7 @@ import simple.HasDescriptor.Companion.S_ISREG
 import simple.HasPosixErr.Companion.posixRequires
 import simple.PosixFile.Companion.getDirFd
 import simple.PosixFile.Companion.namedDirAndFile
+import simple.allocWithFlex
 import simple.mallocWithFlex
 import simple.simple.CZero.nz
 import simple.simple.CZero.z
@@ -98,28 +98,29 @@ class KioUring {
 
     val cqRing = appIOCqRing(cqPtr)
 
-    inner class appIOSqRing(sqptr1: CPointer<ByteVar>, private val sqptr: Long = sqptr1.toLong()) {
+    inner class appIOSqRing(sqptr1: CPointer<ByteVar>, val sqptr: Long = sqptr1.toLong()) {
+
         public final val array get() = (sqptr + p.sq_off.array.toLong()).toCPointer<__u32Var >()!!
-        public final val dropped get() = (sqptr + p.sq_off.dropped.toLong()).toCPointer<__u32Var >()!!.pointed
-        public final val flags get() = (sqptr + p.sq_off.flags.toLong()).toCPointer<__u32Var >()!!.pointed
-        public final val head get() = (sqptr + p.sq_off.head.toLong()).toCPointer<__u32Var >()!!.pointed
-        public final val resv1 get() = (sqptr + p.sq_off.resv1.toLong()).toCPointer<__u32Var >()!!.pointed
-        public final val resv2 get() = (sqptr + p.sq_off.resv2.toLong()).toCPointer<__u64Var >()!!.pointed
-        public final val ring_entries get() = (sqptr + p.sq_off.ring_entries.toLong()).toCPointer<__u32Var >()!!.pointed
-        public final val ring_mask get() = (sqptr + p.sq_off.ring_mask.toLong()).toCPointer<__u32Var >()!!.pointed
-        public final val tail get() = (sqptr + p.sq_off.tail.toLong()).toCPointer<__u32Var >()!!.pointed
+        public final val dropped get() = (sqptr + p.sq_off.dropped.toLong()).toCPointer<__u32Var >()!!
+        public final val flags get() = (sqptr + p.sq_off.flags.toLong()).toCPointer<__u32Var >()!!
+        public final val head get() = (sqptr + p.sq_off.head.toLong()).toCPointer<__u32Var >()!!
+        public final val resv1 get() = (sqptr + p.sq_off.resv1.toLong()).toCPointer<__u32Var >()!!
+        public final val resv2 get() = (sqptr + p.sq_off.resv2.toLong()).toCPointer<__u64Var >()!!
+        public final val ring_entries get() = (sqptr + p.sq_off.ring_entries.toLong()).toCPointer<__u32Var >()!!
+        public final val ring_mask get() = (sqptr + p.sq_off.ring_mask.toLong()).toCPointer<__u32Var >()!!
+        public final val tail get() = (sqptr + p.sq_off.tail.toLong()).toCPointer<__u32Var >()!!
     }
 
-    inner class appIOCqRing(cqptr1: CPointer<ByteVar>, private val cqptr: Long = cqptr1.toLong()) {
+    inner class appIOCqRing(cqptr1: CPointer<ByteVar>, val cqptr: Long = cqptr1.toLong()) {
         public final val cqes  get() = (cqptr + p.cq_off.cqes.toLong()).toCPointer<io_uring_cqe>()!!
-        public final val flags  get() = (cqptr + p.cq_off.flags.toLong()).toCPointer<__u32Var>()!!.pointed
-        public final val head  get() = (cqptr + p.cq_off.head.toLong()).toCPointer<__u32Var>()!!.pointed
-        public final val overflow  get() = (cqptr + p.cq_off.overflow.toLong()).toCPointer<__u32Var>()!!.pointed
-        public final val resv1  get() = (cqptr + p.cq_off.resv1.toLong()).toCPointer<__u32Var>()!!.pointed
-        public final val resv2  get() = (cqptr + p.cq_off.resv2.toLong()).toCPointer<__u64Var>()!!.pointed
-        public final val ring_entries  get() = (cqptr + p.cq_off.ring_entries.toLong()).toCPointer<__u32Var>()!!.pointed
-        public final val ring_mask  get() = (cqptr + p.cq_off.ring_mask.toLong()).toCPointer<__u32Var>()!!.pointed
-        public final val tail  get() = (cqptr + p.cq_off.tail.toLong()).toCPointer<__u32Var>()!!.pointed
+        public final val flags  get() = (cqptr + p.cq_off.flags.toLong()).toCPointer<__u32Var>()!!
+        public final val head  get() = (cqptr + p.cq_off.head.toLong()).toCPointer<__u32Var>()!!
+        public final val overflow  get() = (cqptr + p.cq_off.overflow.toLong()).toCPointer<__u32Var>()!!
+        public final val resv1  get() = (cqptr + p.cq_off.resv1.toLong()).toCPointer<__u32Var>()!!
+        public final val resv2  get() = (cqptr + p.cq_off.resv2.toLong()).toCPointer<__u64Var>()!!
+        public final val ring_entries  get() = (cqptr + p.cq_off.ring_entries.toLong()).toCPointer<__u32Var>()!!
+        public final val ring_mask  get() = (cqptr + p.cq_off.ring_mask.toLong()).toCPointer<__u32Var>()!!
+        public final val tail  get() = (cqptr + p.cq_off.tail.toLong()).toCPointer<__u32Var>()!!
     }
 
     fun mapIORingQueue(__len: ULong, __prot: Int, __flags: Int, __offset: Long): CPointer<ByteVar> {
@@ -133,7 +134,7 @@ class KioUring {
         val triple = sqePreamble()
         val sqe: CPointer<io_uring_sqe> = sqes[triple.third.toInt()].ptr
         //---opcode
-        createfileInfoReaderSqe(sqe, file_fd)
+        createfileInfoReaderSqe(file_fd, sqe)
         //---end opcode
         sqeSubmit(triple)
     }
@@ -142,17 +143,17 @@ class KioUring {
         val triple = sqePreamble()
         val sqe: CPointer<io_uring_sqe> = sqes[triple.third.toInt()].ptr
         //---opcode
-        opCloseFd(sqe, file_fd)
+        createfileInfoReaderSqe(file_fd, sqe)
         //---end opcode
         sqeSubmit(triple)
     }
 
     fun MemScope.sqePreamble() = run {
-        val tail: UIntVar = alloc { value = sqRing.tail.value }
+        val tail: UIntVar = alloc { value = sqRing.tail.pointed.value }
         var next_tail = tail.value
         next_tail++
         read_barrier()
-        val index = tail.value and sqRing.ring_mask.value
+        val index = tail.value and sqRing.ring_mask.pointed.value
         Triple(tail, next_tail, index)
     }
 
@@ -162,22 +163,22 @@ class KioUring {
         sqRing.array[index.toInt()] = index
         tail.value = next_tail
         /* Update the tail so the kernel can see it. */
-        if (sqRing.tail.value != tail.value) {
-            sqRing.tail.value = tail.value
+        if (sqRing.tail.pointed.value != tail.value) {
+            sqRing.tail.pointed.value = tail.value
             write_barrier()
         }
     }
 
     fun createfileInfoReaderSqe(
-        sqe: CPointer<io_uring_sqe>,
-        file_fd: Int
+        file_fd: Int,
+        sqe: CPointer<io_uring_sqe>
     ) = run {
         val file_sz: posix_off_t = get_file_size(file_fd)
-        var blockCount: Int = (file_sz / BLOCK_SZ).toInt()
-        val fi_ptr = mallocWithFlex(file_info::iovecs, blockCount)
+        var blocks: Int = (file_sz / BLOCK_SZ).toInt()
+        val fi_ptr = mallocWithFlex(file_info::iovecs, blocks)
         val fi: file_info = fi_ptr.pointed
         fi.file_sz = file_sz
-        if (file_sz >= 0L && 0 != (file_sz % BLOCK_SZ).toInt()) blockCount++
+        if (file_sz >= 0L && 0 != (file_sz % BLOCK_SZ).toInt()) blocks++
         /* For each block of the file we need to read, we allocate an iovec struct
              * which is indexed into the iovecs array. This array is passed in as part
              * of the submission. If you don't understand this, then you need to look
@@ -188,7 +189,7 @@ class KioUring {
                 iov_len = min(remains, tehBlockSize).toULong()
                 iov_base = memalign(BLOCK_SZ, BLOCK_SZ)
             }
-        opReadToFileinfo(sqe, file_fd, fi, blockCount)
+        opReadToFileinfo(sqe, file_fd, fi, blocks)
     }
 
     fun opReadToFileinfo(
@@ -230,11 +231,7 @@ class KioUring {
 fun io_uring_setup(entries: UInt, p: CPointer<io_uring_params>) =
     posix_syscall(__NR_io_uring_setup.toLong(), entries, p).toInt()
 
-fun io_uring_enter(ring_fd: Int,
-                   to_submit: UInt,
-                   min_complete: UInt,
-                   flags: UInt,
-                   sig: CPointer<sigset_t>? = null) =
+fun io_uring_enter(ring_fd: Int, to_submit: UInt, min_complete: UInt, flags: UInt, sig: CPointer<sigset_t>? = null) =
     posix_syscall(__NR_io_uring_enter.toLong(), ring_fd, to_submit, min_complete, flags, 0L, sig).toInt()
 
 /** Returns the size of the file whose open file descriptor is passed in.
@@ -249,10 +246,10 @@ fun get_file_size(fd: Int): posix_off_t = memScoped {
     return st.st_size
 }
 
-private fun getBlockDeviceBlockSize(fd: Int): platform.posix.off_t = memScoped{
+private fun MemScope.getBlockDeviceBlockSize(fd: Int): platform.posix.off_t {
     val bytes: LongVar = alloc()
     posixRequires(posix_ioctl(fd, PlatformLinuxBLKGETSIZE64, bytes.ptr).z) { ("ioctl") }
-    return bytes.value
+    return bytes.value /* = kotlin.Long */
 }
 
 
@@ -276,7 +273,7 @@ fun completionQueues(s: KioUring) {
     var fi: CPointer<file_info>
     var cqe: CPointer<io_uring_cqe>
     val cring = s.cqRing
-    var head = cring.head.value
+    var head = cring.head.pointed.value
     println("entering loop")
     do {
         read_barrier()
@@ -284,9 +281,9 @@ fun completionQueues(s: KioUring) {
          * Remember, this is a ring buffer. If head == tail, it means that the
          * buffer is empty.
          * */
-        if (head == cring.tail.value) break
+        if (head == cring.tail.pointed.value) break
         /* Get the entry */
-        val value = head and s.cqRing.ring_mask.value
+        val value = head.toLong() and s.cqRing.ring_mask.pointed.value.toLong()
         cqe = cring.cqes[value.toInt()].ptr
         fi = cqe.pointed.user_data.toLong().toCPointer()!!
         posixRequires(cqe.pointed.res >= 0) { "Error: ${cqe.pointed.res}" }
@@ -305,7 +302,7 @@ fun completionQueues(s: KioUring) {
     } while (true)
 
     write_barrier()
-    cring.head.value = head
+    cring.head.pointed.value = head
     write_barrier()
 }
 
@@ -324,19 +321,22 @@ fun createSubmission(file_path: String, s: KioUring): Int {
         val file_fd = openat(dirfd, file_path, platform.posix.O_RDONLY)// never closed
         posixRequires(file_fd >= 0) { "fileopen $file_fd" }
         s.opReadWholeFile(file_fd)
-        s.opCloseCatFile(file_fd)
+
 
     /***************************************************************************
      * Tell the kernel we have submitted events with the io_uring_enter() system
      * call. We also pass in the IOURING_ENTER_GETEVENTS flag which causes the
      * io_uring_enter() call to wait until min_complete events (the 3rd param)
      * complete.
+     *
      * ************** BLOCKS HERE
      *
      */
-    io_uring_enter(s.ring_fd, 1.toUInt(), 1.toUInt(), UringEnter.GetEvents.modeFlag).let { ret ->
+    io_uring_enter(s.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS).let { ret ->
         posixRequires(ret.nz) { "io_uring_enter $ret" }
     }
+
+
     return 0
 }
 
