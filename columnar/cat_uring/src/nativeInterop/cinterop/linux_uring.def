@@ -1,33 +1,9 @@
-#headers =   ac.h
-#bits/stat.h ac.h
+headers.linux =ctype.h errno.h fcntl.h liburing.h linux/fs.h linux/io_uring.h netinet/in.h signal.h stdatomic.h stdio.h stdlib.h string.h sys/ioctl.h sys/mman.h sys/resource.h sys/stat.h sys/syscall.h sys/types.h sys/uio.h unistd.h bits/stat.h
+#ac.h
 #headerFilter = liburing/* sys/*
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu
 linkerOpts.linux = -L/usr/lib/x86_64-linux-gnu -L/usr/lib -luring
 ---
-#include <stdatomic.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <linux/fs.h>
-#include <linux/io_uring.h>
-#include <netinet/in.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/syscall.h>
-#include <sys/uio.h>
-#include <unistd.h>
-#include <liburing.h>
-#include <errno.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/types.h>
 
 #define CATQUEUE_DEPTH 256
 #define BLOCK_SZ    1024
