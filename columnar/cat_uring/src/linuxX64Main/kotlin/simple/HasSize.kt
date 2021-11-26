@@ -7,7 +7,6 @@ import platform.posix.ioctl
 import platform.posix.stat
 import simple.HasDescriptor.Companion.S_ISBLK
 import simple.HasDescriptor.Companion.S_ISREG
-import simple.simple.CZero.nz
 
 interface HasSize : HasDescriptor {
     val  size: ULong get(): ULong = memScoped {
@@ -16,7 +15,7 @@ interface HasSize : HasDescriptor {
             require(fstat >= 0) { HasPosixErr.reportErr(fstat) }
             if (S_ISBLK(st.st_mode )) {
                 val bytes: CPointerVar<LongVar> = alloc()
-                HasPosixErr.posixRequires(ioctl(fd, BLKGETSIZE64, bytes).nz){"ioctl(fd, BLKGETSIZE64, bytes)"}
+                HasPosixErr.posixRequires(0 != ioctl(fd, BLKGETSIZE64, bytes)) { "ioctl(fd, BLKGETSIZE64, bytes)" }
                 return bytes.pointed!!.value.toULong()
             }
             HasPosixErr.posixRequires(S_ISREG(st.st_mode )) { "size only for BLK or Regular File" }

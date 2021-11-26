@@ -15,7 +15,6 @@ import simple.HasDescriptor.Companion.S_ISREG
 import simple.HasPosixErr.Companion.posixRequires
 import simple.PosixFile.Companion.getDirFd
 import simple.PosixFile.Companion.namedDirAndFile
-import simple.allocWithFlex
 import simple.mallocWithFlex
 import simple.simple.CZero.nz
 import simple.simple.CZero.z
@@ -333,7 +332,7 @@ fun createSubmission(file_path: String, s: KioUring): Int {
      *
      */
     io_uring_enter(s.ring_fd, 1.toUInt(), 1.toUInt(), IORING_ENTER_GETEVENTS).let { ret ->
-        posixRequires(ret.nz) { "io_uring_enter $ret" }
+        posixRequires(0 != ret) { "io_uring_enter $ret" }
     }
 
 
@@ -350,7 +349,7 @@ fun cat_file(argv1: Array<String>): Unit = memScoped {
     println("---success setting up uring with args ${argv.toList()}")
     for (arg in argv) {
         //will block
-        posixRequires(!createSubmission(arg, s).nz) { "Error reading file" }
+        posixRequires(!(0 != createSubmission(arg, s))) { "Error reading file" }
 
         println("---calling read_from_cq(${s})")
         //done blocking

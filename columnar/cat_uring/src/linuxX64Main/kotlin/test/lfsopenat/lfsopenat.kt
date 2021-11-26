@@ -7,9 +7,7 @@ import platform.posix.O_RDWR
 import platform.posix.S_IRUSR
 import platform.posix.iovec
 import simple.HasPosixErr
-import simple.simple.CZero.nz
 import simple.simple.CZero.z
-import linux_uring.calloc as linux_uringCalloc
 import linux_uring.strerror as posix_strerror1
 import platform.posix.calloc as posixCalloc
 import platform.posix.close as posixClose

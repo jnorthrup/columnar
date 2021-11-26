@@ -3,22 +3,17 @@
  * Description: test io_uring link io with drain io
  *
  */
-#include <errno.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
+//#include <errno.h>
+//#include <stdio.h>
+//#include <unistd.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <fcntl.h>
+//
+//#include "helpers.h"
+//#include "liburing.h"
 
-#include "helpers.h"
-#include "liburing.h"
-
-static test_link_drain_one:Int(ring:CPointer<io_uring>)
-{
-	cqe:CPointer<io_uring_cqe>;
-	sqe:CPointer<io_uring_sqe>[5];
-	iovecs:iovec;
-	i:Int, fd, ret;
+ fun test_link_drain_one:Int(ring:CPointer<io_uring>){
 	off:off_t = 0;
 	char data[5] = {0};
 	char expect[5] = {0, 1, 2, 3, 4};
