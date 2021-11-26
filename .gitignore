@@ -25,3 +25,5 @@ target*.ipr
 /superannuate/superannuated1909.fwf
 /cursor/${project.build.directory}/
 *.releaseBackup
+.gradle
+gradle
