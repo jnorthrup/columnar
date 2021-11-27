@@ -1,8 +1,25 @@
-headers.linux =ur_syscall.h ctype.h errno.h fcntl.h liburing.h \
-  linux/fs.h linux/io_uring.h netinet/in.h signal.h \
-  stdatomic.h stdio.h stdlib.h string.h sys/ioctl.h \
-   sys/mman.h sys/resource.h sys/stat.h sys/syscall.h \
-    sys/types.h sys/uio.h unistd.h bits/stat.h
+headers.linux = ur_syscall.h         \
+ctype.h                              \
+errno.h                              \
+fcntl.h                              \
+liburing.h                           \
+linux/fs.h                           \
+linux/io_uring.h                     \
+netinet/in.h                         \
+signal.h                             \
+stdatomic.h                          \
+stdio.h stdlib.h                     \
+string.h                             \
+sys/ioctl.h                          \
+sys/mman.h                           \
+sys/resource.h                       \
+sys/stat.h                           \
+sys/syscall.h                        \
+sys/types.h                          \
+sys/uio.h                            \
+sys/wait.h                           \
+unistd.h
+
 #ac.h
 #headerFilter = liburing/* sys/*
 compilerOpts.linux = -I/usr/include -I/usr/include/x86_64-linux-gnu -Isrc/nativeInterop/cinterop/
