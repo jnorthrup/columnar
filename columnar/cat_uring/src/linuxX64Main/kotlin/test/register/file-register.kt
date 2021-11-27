@@ -2,6 +2,7 @@ package test.register
 
 import kotlinx.cinterop.*
 import linux_uring.*
+import linux_uring.include.fromOctal
 import platform.linux.getrlimit
 import platform.linux.setrlimit
 import simple.HasPosixErr
@@ -53,7 +54,7 @@ fun open_files(nr_files: Int, extra: Int, add: Int): IntArray {
              (  ".reg.$i" )
         else
              (  ".add.${ i + add}")
-        files[i] = open(__file, O_RDWR or O_CREAT  , 644)
+        files[i] = open(__file, O_RDWR or O_CREAT  , 644.fromOctal())
         if (files[i] < 0) {
             perror("open $__file")
             break
@@ -435,7 +436,7 @@ fun test_huge(ring: CPointer<io_uring>): Int {
            HasPosixErr.posixFailOn(true) { "$__FUNCTION__: register ret=$ret"   }
         }
 
-        files[7193] = open(".reg.7193", O_RDWR or O_CREAT, 644)
+        files[7193] = open(".reg.7193", O_RDWR or O_CREAT,  644.fromOctal())
         HasPosixErr.posixFailOn(files[7193] < 0) {
             fprintf(stderr, "%s: open=%d\n", __FUNCTION__, errno)
         }

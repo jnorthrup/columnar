@@ -11,6 +11,7 @@ kotlin {
             "lfsopenat".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.$it" }}
             "teardown".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
             "update".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
+            "iopoll".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.readwrite.iopoll" }}
         }
         val main by compilations.getting {
             compilations["main"].cinterops {

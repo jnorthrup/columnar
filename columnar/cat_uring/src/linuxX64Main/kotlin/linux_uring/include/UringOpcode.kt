@@ -472,7 +472,7 @@ enum class UringOpcode(val opConstant: UInt) {
      *
      * Note that the array of file descriptors pointed to in addr must remain valid until this operation has completed.
      *
-     *  @param addr must contain a pointer to the array of file descriptors
+     * @param addr must contain a pointer to the array of file descriptors
      * @param len must contain the length of the array
      * @param off must contain the offset at which to operate.
      * @since 5.6.

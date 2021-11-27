@@ -2,8 +2,7 @@
 /*
  * Description: Helpers for tests.
  */
-#ifndef LIBURING_HELPERS_H
-#define LIBURING_HELPERS_H
+# pragma  once
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,6 +62,4 @@ enum t_setup_ret t_register_buffers(struct io_uring *ring,
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
