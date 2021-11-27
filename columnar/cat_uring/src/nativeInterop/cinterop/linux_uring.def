@@ -6,6 +6,7 @@ liburing.h                           \
 linux/fs.h                           \
 linux/io_uring.h                     \
 netinet/in.h                         \
+pthread.h                            \
 signal.h                             \
 stdatomic.h                          \
 stdio.h stdlib.h                     \
