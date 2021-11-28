@@ -8,6 +8,7 @@ import linux_uring.include.t_create_file
 import linux_uring.include.t_create_ring
 import linux_uring.include.t_register_buffers
 import simple.simple.CZero.nz
+import test.readwrite.AppState.Companion.end.*
 
 /* SPDX-License-Identifier: MIT */
 /*
@@ -37,10 +38,6 @@ class AppState() : NativePlacement by nativeHeap {
     var no_buf_select: IntVar = alloc()
     var no_iopoll: IntVar = alloc()
 
-    class end
-
-    val err = end()
-    val out = end()
 
     fun provide_buffers(ring: CPointer<io_uring>): Int {
 
@@ -489,6 +486,13 @@ class AppState() : NativePlacement by nativeHeap {
          * situation regardless of any perceived atomicity.
          */
         return ktail.toInt() - sq.pointed.khead!!.pointed.value.toInt()
+    }
+
+    companion object {
+        enum class end {
+           err  ,
+           out
+        }
     }
 }
 

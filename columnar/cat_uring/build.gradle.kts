@@ -3,13 +3,15 @@ plugins {
 }
 kotlin {
     linuxX64 {
-        binaries { val main by compilations.getting {
+        val main by compilations.getting {
             compilations["main"].cinterops {
                 create("native") {
                     defFile = project.file("src/nativeInterop/cinterop/linux_uring.def")
                 }
             }
-        }
+        };
+        binaries {
+
             "fixedlink".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.$it" }}
             //"iopoll".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.readwrite.iopoll" }}
             "lfsopenat".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.$it" }}
@@ -20,6 +22,5 @@ kotlin {
             "timeout".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" } }
             "uring_cat".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "linux_uring.cat_file" } }
         }
-
     }
 }
