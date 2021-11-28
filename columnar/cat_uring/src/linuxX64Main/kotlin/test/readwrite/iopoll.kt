@@ -32,8 +32,8 @@ const val BS = 4096
 const val BUFFERS = (FILE_SIZE / BS)
 
 
-class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap {
-    var vecs: CPointerVar<iovec> = alloc()
+class AppState() : NativePlacement by nativeHeap {
+    var vecs:  CValuesRef<iovec>  = cValue()
     var no_buf_select: IntVar = alloc()
     var no_iopoll: IntVar = alloc()
 
@@ -51,7 +51,17 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
 
         for (i in 0 until BUFFERS) {
             sqe = io_uring_get_sqe(ring)!!
-            io_uring_prep_provide_buffers(sqe, vecs.value!![i].iov_base, vecs.value!![i].iov_len.toInt(), 1, 1, i)
+            memScoped{
+                val iovec = vecs.getPointer(this)[i]
+                io_uring_prep_provide_buffers(
+                    sqe,
+                    iovec.iov_base,
+                    iovec.iov_len.toInt(),
+                    1,
+                    1,
+                    i
+                )
+            }
         }
 
         if (ret != BUFFERS) {
@@ -72,7 +82,9 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
         return 0
     }
 
-    fun __test_io(file: String, ring: CPointer<io_uring>, write: Int, sqthread: Int, fixed: Int, buf_select: Int): Int {
+    fun __test_io(file: String, ring: CPointer<io_uring>, write: Int, sqthread: Int, fixed: Int, buf_select: Int): Int =
+        memScoped {
+            val vp = vecs.getPointer(this)
         val fd: IntVar = alloc()
         val cqe: CPointerVar<io_uring_cqe> = alloc()
 
@@ -97,7 +109,7 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
 
         do {
             if (fixed.nz) {
-                val ret = t_register_buffers(ring, vecs.reinterpret(), BUFFERS.toUInt())
+                val ret = t_register_buffers(ring, vecs , BUFFERS.toUInt())
                 if (ret == T_SETUP_SKIP) return 0
                 if (ret != T_SETUP_OK) {
                     fprintf(stderr, "buffer reg failed: %d\n", ret)
@@ -137,14 +149,15 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
                     if (fixed.nz && (i and 1).nz)
                         do_fixed = 0
                     if (do_fixed.nz) {
+                        val iovec = vp[i]
                         io_uring_prep_write_fixed(
-                            sqe, use_fd, vecs.value!![i].iov_base,
-                            vecs.value!![i].iov_len.toUInt(),
+                            sqe, use_fd, iovec.iov_base,
+                            iovec.iov_len.toUInt(),
                             offset.value.toULong(), i
                         )
                     } else {
                         io_uring_prep_writev(
-                            sqe, use_fd, vecs.ptr[i], 1,
+                            sqe, use_fd, vp[i].reinterpret(), 1,
                             offset.value.toULong()
                         )
                     }
@@ -158,13 +171,13 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
                         do_fixed = 0
                     if (do_fixed.nz) {
                         io_uring_prep_read_fixed(
-                            sqe, use_fd, vecs.value!![i].iov_base,
-                            vecs.value!![i].iov_len.toUInt(),
+                            sqe, use_fd, vecs.getPointer(memScope)[i].iov_base,
+                            vp[i].iov_len.toUInt(),
                             offset.value.toULong(), i
                         )
                     } else {
                         io_uring_prep_readv(
-                            sqe, use_fd, vecs.ptr[i], 1,
+                            sqe, use_fd, vp[i].ptr, 1,
                             offset.value.toULong()
                         )
                     }
@@ -236,7 +249,8 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
      * if we are polling io_uring_submit needs to always enter the
      * kernel to fetch events
      */
-    fun test_io_uring_submit_enters(file: String): Int {
+    fun test_io_uring_submit_enters(file: String): Int = memScoped{
+        var vp = vecs.getPointer(this)
         val ring: io_uring = alloc()
         if (no_iopoll.value.nz)
             return 0
@@ -262,7 +276,7 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
 
                 val offset: off_t = (BS * (rand() % BUFFERS)).toLong()
                 val sqe: CPointer<io_uring_sqe> = io_uring_get_sqe(ring.ptr)!!
-                io_uring_prep_writev(sqe, fd, vecs.ptr[i], 1, offset.toULong())
+                io_uring_prep_writev(sqe, fd, vp [i].ptr, 1, offset.toULong())
                 sqe.pointed.user_data = 1UL
             }
 
@@ -392,8 +406,7 @@ class AppState(val heap: NativePlacement = nativeHeap) : NativePlacement by heap
 
         val buf_num = BUFFERS.toULong()
         val buf_size = BS.toULong()
-        val tCreateBuffers = t_create_buffers(buf_num, buf_size)
-        vecs.value = tCreateBuffers.reinterpret()
+        vecs = t_create_buffers(buf_num, buf_size).reinterpret()
 
         var nr = 16
         if (no_buf_select.value.nz)

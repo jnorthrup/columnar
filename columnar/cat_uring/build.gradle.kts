@@ -3,22 +3,23 @@ plugins {
 }
 kotlin {
     linuxX64 {
-        binaries {
-            "uring_cat".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "linux_uring.cat_file" } }
-            "fixedlink".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.$it" }}
-            "link".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
-            "register".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
-            "lfsopenat".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.$it" }}
-            "teardown".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
-            "update".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
-            "iopoll".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.readwrite.iopoll" }}
-        }
-        val main by compilations.getting {
+        binaries { val main by compilations.getting {
             compilations["main"].cinterops {
                 create("native") {
                     defFile = project.file("src/nativeInterop/cinterop/linux_uring.def")
                 }
             }
         }
+            "fixedlink".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.$it" }}
+            //"iopoll".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.readwrite.iopoll" }}
+            "lfsopenat".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.$it" }}
+            "link".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
+            "register".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
+            "teardown".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
+            //"update".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" }}
+            "timeout".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "test.$it.main" } }
+            "uring_cat".let { executable(it, listOf(DEBUG/*, RELEASE*/)) { baseName = it; entryPoint = "linux_uring.cat_file" } }
+        }
+
     }
 }
