@@ -115,7 +115,7 @@ fun test_grow(ring: CPointer<io_uring>): Int {
     var off = 50
     do {
         val fds = open_files(1, 0, off)
-        ret = io_uring_register_files_update(ring, off.toUInt(), fds.toCValues(), 1)
+        ret = io_uring_register_files_update(ring, off.toUInt(), fds.refTo(0), 1)
         if (ret != 1) {
             if (off == 300 && ret == -EINVAL)
                 break
@@ -150,7 +150,7 @@ fun test_replace_all(ring: CPointer<io_uring>): Int {
 
     val fds = IntArray(100) { -1 }
 
-    ret = io_uring_register_files_update(ring, 0, fds.toCValues(), 100)
+    ret = io_uring_register_files_update(ring, 0, fds.refTo(0), 100)
     HasPosixErr.posixFailOn(ret != 100) {
         fprintf(stderr, "%s: update ret=%d\n", __FUNCTION__, ret)
     }
@@ -173,7 +173,7 @@ fun test_replace(ring: CPointer<io_uring>): Int {
     }
 
     val fds = open_files(10, 0, 1)
-    ret = io_uring_register_files_update(ring, 90, fds.toCValues(), 10)
+    ret = io_uring_register_files_update(ring, 90, fds.refTo(0), 10)
     HasPosixErr.posixFailOn(ret != 10) {
         fprintf(stderr, "%s: update ret=%d\n", __FUNCTION__, ret)
     }
@@ -201,7 +201,7 @@ fun test_removals(ring: CPointer<io_uring>): Int {
     val fds = IntArray(10) { -1 }
 
 
-    ret = io_uring_register_files_update(ring, 50, fds.toCValues(), 10)
+    ret = io_uring_register_files_update(ring, 50, fds.refTo(0), 10)
     HasPosixErr.posixFailOn(ret != 10) {
         fprintf(stderr, "%s: update ret=%d\n", __FUNCTION__, ret)
     }
@@ -227,7 +227,7 @@ fun test_additions(ring: CPointer<io_uring>): Int {
     }
 
     val fds = open_files(2, 0, 1)
-    ret = io_uring_register_files_update(ring, 100, fds.toCValues(), 2)
+    ret = io_uring_register_files_update(ring, 100, fds.refTo(0), 2)
     HasPosixErr.posixFailOn(ret != 2) {
         fprintf(stderr, "%s: update ret=%d\n", __FUNCTION__, ret)
     }
@@ -325,7 +325,7 @@ fun test_zero(ring: CPointer<io_uring>): Int {
     }
 
     val fds = open_files(1, 0, 1)
-    ret = io_uring_register_files_update(ring, 0, fds.toCValues(), 1)
+    ret = io_uring_register_files_update(ring, 0, fds.refTo(0), 1)
     HasPosixErr.posixFailOn(ret != 1) {
         fprintf(stderr, "%s: update ret=%d\n", __FUNCTION__, ret)
     }
@@ -511,7 +511,7 @@ val     ring:io_uring=alloc()
 
     val fds = IntArray(256){-1}
 
-    ret = io_uring_register_files(ring.ptr, fds.toCValues(), 256)
+    ret = io_uring_register_files(ring.ptr, fds.refTo(0), 256)
     if (ret.nz) {
         fprintf(stderr, "file_register: %d\n", ret)
         return ret
@@ -530,7 +530,7 @@ val     ring:io_uring=alloc()
 
     fds .fill(1)
 
-    ret = io_uring_register_files(ring.ptr, fds.toCValues(), 256)
+    ret = io_uring_register_files(ring.ptr, fds.refTo(0), 256)
     if (ret.nz) {
         fprintf(stderr, "file_register: %d\n", ret)
         return ret

@@ -52,3 +52,9 @@ enum t_setup_ret {
 
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+static inline void io_uring_prep_writevFail(struct io_uring_sqe *sqe, int fd,
+					const struct iovec *iovecs,
+					unsigned nr_vecs, __u64 offset)
+{
+	io_uring_prep_rw(IORING_OP_WRITEV, sqe, fd, NULL, nr_vecs, offset);
+}

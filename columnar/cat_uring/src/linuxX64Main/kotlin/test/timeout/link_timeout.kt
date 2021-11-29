@@ -2,10 +2,10 @@ package test.timeout
 
 import kotlinx.cinterop.*
 import linux_uring.*
-import linux_uring.include.UringSqeFlags.*
+import linux_uring.include.UringSqeFlags.sqeIo_link
 import platform.posix.POLLIN
 import simple.simple.CZero.nz
-import test.timeout.TimeoutAppState.Companion.end.*
+import test.timeout.TimeoutAppState.Companion.end.err
 
 /* SPDX-License-Identifier: MIT */
 /*
@@ -23,24 +23,20 @@ import test.timeout.TimeoutAppState.Companion.end.*
 //#include "liburing.h"
 
 class TimeoutAppState : NativePlacement by nativeHeap {
-
-    fun test_fail_lone_link_timeouts(ring: CPointer<io_uring>): Int {
+    private fun test_fail_lone_link_timeouts(ring: CPointer<io_uring>): Int {
         val ts: __kernel_timespec = alloc()
 
 
         var ret: Int
-        val sqe = io_uring_get_sqe(ring)
+        val sqe = io_uring_get_sqe(ring)!!
         var goto: end? = null; do {
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                break.also { goto = err }
-            }
+
             io_uring_prep_link_timeout(sqe, ts.ptr, 0)
             ts.tv_sec = 1
             ts.tv_nsec = 0
             val sqeref = sqe.pointed
             sqeref.user_data = 1.toULong()
-            sqeref.flags = (sqeref.flags + sqeIo_link.flagConstant).toUByte()
+            sqeref.flags = (sqeref.flags + sqeIo_link.ub).toUByte()
 
             ret = io_uring_submit(ring)
             if (ret != 1) {
@@ -72,110 +68,86 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         return goto?.let { 1 } ?: 0
     }
 
-    fun test_fail_two_link_timeouts(ring: CPointer<io_uring>): Int {
-        val ts: __kernel_timespec = alloc()
-        val cqe: CPointerVar<io_uring_cqe> = alloc()
+    private fun test_fail_two_link_timeouts(ring: CPointer<io_uring>): Int {
+        val ts: __kernel_timespec = alloc {
+            tv_sec = 1
+            tv_nsec = 0
+        }
 
-        ts.tv_sec = 1
-        ts.tv_nsec = 0
+        val cqe: CPointerVar<io_uring_cqe> = alloc()
+        val sqe: CPointerVar<io_uring_sqe> = alloc()
+
 
         /*
          * sqe_1: write destined to fail
          * use buf=NULL, to do that during the issuing stage
          */
-        var sqe = io_uring_get_sqe(ring)
-        var goto: end? = null;do {
-            if (!sqe.toLong().nz) {
-                printf("get sqe failed\n")
-                goto = err;break
+        sqe.value = io_uring_get_sqe(ring)!!
+
+        io_uring_prep_writevFail(sqe.value, 0, 0L.toCPointer()   , 1, 0)
+        sqe.pointed!!.flags = sqe.pointed!!.flags.or(IOSQE_IO_LINK.toUByte())
+        sqe.pointed!!.user_data = 1uL
+
+
+        /* sqe_2: valid linked timeout */
+        sqe.value = io_uring_get_sqe(ring)
+
+        io_uring_prep_link_timeout(sqe.value,   ts.ptr, 0)
+        sqe.pointed!!.flags = sqe.pointed!!.flags.or(IOSQE_IO_LINK.toUByte())
+        sqe.pointed!!.user_data = 2uL
+
+
+        /* sqe_3: invalid linked timeout */
+        sqe.value = io_uring_get_sqe(ring)
+        io_uring_prep_link_timeout(sqe.value,   ts.ptr, 0)
+        sqe.pointed!!.flags = sqe.pointed!!.flags.or(IOSQE_IO_LINK.toUByte())
+        sqe.pointed!!.user_data = 3uL
+
+        /* sqe_4: invalid linked timeout */
+        sqe.value = io_uring_get_sqe(ring)
+        io_uring_prep_link_timeout(sqe.value,  ts.ptr, 0)
+        sqe.pointed!!.flags = sqe.pointed!!.flags.or(IOSQE_IO_LINK.toUByte())
+        sqe.pointed!!.user_data = 4uL
+
+        var ret = io_uring_submit(ring)
+        if (ret < 3) {
+            printf("sqe submit failed: %d\n", ret)
+            return 1
+        }
+        val nr_wait = ret
+
+        for (i in 0 until  nr_wait ) {
+            ret = io_uring_wait_cqe(ring,   cqe.ptr)
+            if (ret < 0) {
+                printf("wait completion %d\n", ret)
+                return 1
             }
-            io_uring_prep_writev(sqe, 0, null, 1, 0)
-            val pointed = sqe!!.pointed
-            pointed.flags = pointed.flags.or(sqeIo_link.flagConstant)
-            sqe.pointed.user_data = 1UL
 
-
-            /* sqe_2: valid linked timeout */
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-            sqe.pointed.user_data = 2.toULong()
-            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant).toUByte()
-
-
-            /* sqe_3: invalid linked timeout */
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant).toUByte()
-            sqe.pointed.user_data = 3u
-
-            /* sqe_4: invalid linked timeout */
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
-            sqe.pointed.user_data = 4u
-
-            var ret = io_uring_submit(ring)
-            if (ret < 3) {
-                printf("sqe submit failed: %d\n", ret)
-                goto = err;break
-            }
-            val nr_wait = ret
-
-            for (i in 0 until nr_wait) {
-                ret = io_uring_wait_cqe(ring, cqe.ptr)
-                if (ret < 0) {
-                    printf("wait completion %d\n", ret)
-                    goto = err;break
+            when (cqe.pointed!!.user_data.toInt()) {
+                1->            if (cqe.pointed!!.res != -EFAULT && cqe.pointed!!.res != -ECANCELED) {
+                    fprintf(
+                        stderr, "write got %d, wanted -EFAULT or -ECANCELED\n", cqe.pointed!!.res)
+                    return 1
                 }
-
-                when (cqe.pointed!!.user_data.toInt()) {
-                    1 ->
-                        if (cqe.pointed!!.res != -EFAULT && cqe.pointed!!.res != -ECANCELED) {
-                            fprintf(
-                                stderr, "write got %d, wanted -EFAULT  or -ECANCELED\n", cqe.pointed!!.res
-                            )
-                            goto = err;break
-                        }
-                    2 ->
-                        if (cqe.pointed!!.res != -ECANCELED) {
-                            fprintf(stderr, "Link timeout got %d, wanted -ECACNCELED\n", cqe.pointed!!.res)
-                            goto = err;break
-                        }
-                    3,/* fall through */ 4 ->
-                        if (cqe.pointed!!.res != -ECANCELED && cqe.pointed!!.res != -EINVAL) {
-                            fprintf(
-                                stderr,
-                                "Invalid link timeout got %d, wanted -ECACNCELED || -EINVAL\n",
-                                cqe.pointed!!.res
-                            )
-                            goto = err;break
-                        }
+                2-> if (cqe.pointed!!.res != -ECANCELED) { fprintf(stderr, "Link timeout got %d, wanted -ECACNCELED\n", cqe.pointed!!.res)
+                    return 1
                 }
-                io_uring_cqe_seen(ring, cqe.value)
-            }
-        } while (false);return goto?.let { 1 } ?: 0
+                3,/* fall through */   4->            if (cqe.pointed!!.res != -ECANCELED && cqe.pointed!!.res != -EINVAL) {
+                    fprintf(
+                        stderr, "Invalid link timeout got %d, wanted -ECACNCELED || -EINVAL\n",cqe.pointed!!.res )
+                    return 1        }
+            }; io_uring_cqe_seen(ring, cqe.value) }
+
+        return 0
     }
 
     /*
      * Test linked timeout with timeout (timeoutception)
      */
-    fun test_single_link_timeout_ception(ring: CPointer<io_uring>): Int {
+    private fun test_single_link_timeout_ception(ring: CPointer<io_uring>): Int {
         val ts1: __kernel_timespec = alloc()
         val ts2: __kernel_timespec = alloc()
         val cqe: CPointerVar<io_uring_cqe> = alloc()
-
 
         var goto: end? = null;do {
             var sqe = io_uring_get_sqe(ring)
@@ -186,9 +158,9 @@ class TimeoutAppState : NativePlacement by nativeHeap {
 
             ts1.tv_sec = 1
             ts1.tv_nsec = 0
-            val count = (-1).toInt().toUInt()
+            val count = (-1).toUInt()
             io_uring_prep_timeout(sqe, ts1.ptr, count, 0)
-            sqe.pointed.flags = sqe.pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
+            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
             sqe.pointed.user_data = 1u
 
             sqe = io_uring_get_sqe(ring)
@@ -226,6 +198,7 @@ class TimeoutAppState : NativePlacement by nativeHeap {
                         }
                     }
                     2 ->
+
                         if (pointed.res != -ECANCELED) {
                             fprintf(stderr, "Link timeout got %d, wanted -ECANCELED\n", pointed.res)
                             goto = err;break
@@ -242,32 +215,23 @@ class TimeoutAppState : NativePlacement by nativeHeap {
     /*
      * Test linked timeout with NOP
      */
-    fun test_single_link_timeout_nop(ring: CPointer<io_uring>): Int {
+    private fun test_single_link_timeout_nop(ring: CPointer<io_uring>): Int {
         val ts: __kernel_timespec = alloc()
         val cqe: CPointerVar<io_uring_cqe> = alloc()
         var ret: Int
         var goto: end? = null;do {
             var sqe = io_uring_get_sqe(ring)!!
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
 
             io_uring_prep_nop(sqe)
-            val pointed = sqe.pointed
-            pointed.flags = pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
-            pointed.user_data = 1u
+            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+            sqe.pointed.user_data = 1u
 
             sqe = io_uring_get_sqe(ring)!!
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
 
             ts.tv_sec = 1
             ts.tv_nsec = 0
             io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-            pointed.user_data = 2u
+            sqe.pointed.user_data = 2u
 
             ret = io_uring_submit(ring)
             if (ret != 2) {
@@ -302,7 +266,7 @@ class TimeoutAppState : NativePlacement by nativeHeap {
      * Test read that will not complete, with a linked timeout behind it that
      * has errors in the SQE
      */
-    fun test_single_link_timeout_error(ring: CPointer<io_uring>): Int = memScoped {
+    private fun test_single_link_timeout_error(ring: CPointer<io_uring>): Int = memScoped {
         val ts: __kernel_timespec = alloc()
         val cqe: CPointerVar<io_uring_cqe> = alloc()
         val iov: iovec = alloc()
@@ -310,36 +274,25 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         val buffer = ByteArray(256)
 
 
-        if (pipe(fds.toCValues() as CValuesRef<IntVar>).nz) {
+        if (pipe(fds.refTo(0)).nz) {
             perror("pipe")
             return 1
         }
-        var goto: end? = null;do {
-        var sqe = io_uring_get_sqe(ring)
-        if (null == sqe) {
-            printf("get sqe failed\n")
-            goto = err;break
-        }
-
-        iov.iov_base = buffer.toCValues().ptr
+        var goto: end? = null; do {
+        var sqe = io_uring_get_sqe(ring)!!
+        iov.iov_base = buffer.refTo(0).getPointer(this)
         iov.iov_len = buffer.size.toULong()
         io_uring_prep_readv(sqe, fds[0], iov.ptr, 1, 0)
-        val pointed1 = sqe.pointed
-        pointed1.flags = pointed1.flags.plus(sqeIo_link.flagConstant).toUByte()
-        pointed1.user_data = 1u
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 1u
 
-        sqe = io_uring_get_sqe(ring)
-        if (null == sqe) {
-            printf("get sqe failed\n")
-            goto = err;break
-        }
-
+        sqe = io_uring_get_sqe(ring)!!
         ts.tv_sec = 1
         ts.tv_nsec = 0
         io_uring_prep_link_timeout(sqe, ts.ptr, 0)
         /* set invalid field, it'll get failed */
-        pointed1.ioprio = 89u
-        pointed1.user_data = 2u
+        sqe.pointed.ioprio = 89u
+        sqe.pointed.user_data = 2u
 
         var ret = io_uring_submit(ring)
         if (ret != 2) {
@@ -370,43 +323,36 @@ class TimeoutAppState : NativePlacement by nativeHeap {
                     }
             }; io_uring_cqe_seen(ring, cqe.value)
         }
-
     } while (false);return goto?.let { 1 } ?: 0
     }
 
     /*
      * Test read that will complete, with a linked timeout behind it
      */
-    fun test_single_link_no_timeout(ring: CPointer<io_uring>): Int = memScoped {
+    private fun test_single_link_no_timeout(ring: CPointer<io_uring>): Int = memScoped {
         val ts: __kernel_timespec = alloc()
         val cqe: CPointerVar<io_uring_cqe> = alloc()
         val fds = IntArray(2)
         val iov: iovec = alloc()
         val buffer = ByteArray(256)
 
-        if (pipe(fds.toCValues()).nz) {
+        if (pipe(fds.refTo(0)).nz) {
             perror("pipe")
             return 1
         }
         var goto: end? = null;do {
 
         var sqe = io_uring_get_sqe(ring)!!
-        if (null == sqe) {
-            printf("get sqe failed\n")
-            goto = err;break
-        }
+
 
         iov.iov_base = buffer.toCValues().getPointer(this)
         iov.iov_len = buffer.size.toULong()
         io_uring_prep_readv(sqe, fds[0], iov.ptr, 1, 0)
-        sqe.pointed.flags = sqe.pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
         sqe.pointed.user_data = 1u
 
         sqe = io_uring_get_sqe(ring)!!
-        if (null == sqe) {
-            printf("get sqe failed\n")
-            goto = err;break
-        }
+
 
         ts.tv_sec = 1
         ts.tv_nsec = 0
@@ -414,12 +360,8 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         sqe.pointed.user_data = 2u
 
         sqe = io_uring_get_sqe(ring)!!
-        if (null == sqe) {
-            printf("get sqe failed\n")
-            goto = err;break
-        }
 
-        iov.iov_base = buffer.toCValues().ptr
+        iov.iov_base = buffer.refTo(0).getPointer(this)
         iov.iov_len = (buffer).size.toULong()
         io_uring_prep_writev(sqe, fds[1], iov.ptr, 1, 0)
         sqe.pointed.user_data = 3u
@@ -447,7 +389,7 @@ class TimeoutAppState : NativePlacement by nativeHeap {
                 }
                 2 -> if (pointed.res != -ECANCELED) {
                     fprintf(
-                        stderr, "Link timeout %d, wanted -ECANCELED\n",
+                        stderr, "Link timeout %d, wanted -ECANCELED ${-ECANCELED}\n",
                         pointed.res
                     )
                     goto = err;break
@@ -464,13 +406,13 @@ class TimeoutAppState : NativePlacement by nativeHeap {
     /*
      * Test read that will not complete, with a linked timeout behind it
      */
-    fun test_single_link_timeout(ring: CPointer<io_uring>, nsec: UInt): Int = memScoped {
+    private fun test_single_link_timeout(ring: CPointer<io_uring>, nsec: UInt): Int = memScoped {
         val ts: __kernel_timespec = alloc()
         val cqe: CPointerVar<io_uring_cqe> = alloc()
         val fds = IntArray(2)
         val iov: iovec = alloc()
 
-        if (pipe(fds.toCValues()).nz) {
+        if (pipe(fds.refTo(0)).nz) {
             perror("pipe")
             return 1
         }
@@ -479,11 +421,11 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         io_uring_get_sqe(ring)!!.let { sqe ->
 
             val buffer = ByteArray(256)
-            iov.iov_base = buffer.toCValues().ptr
+            iov.iov_base = buffer.refTo(0).getPointer(this)
             iov.iov_len = (buffer).size.toULong()
             io_uring_prep_readv(sqe, fds[0], iov.ptr, 1, 0)
             val pointed: io_uring_sqe = sqe.pointed
-            pointed.flags = pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
+            pointed.flags = pointed.flags.or(sqeIo_link.ub)
             pointed.user_data = 1u
         }
         io_uring_get_sqe(ring)!!.let { sqe ->
@@ -512,9 +454,7 @@ class TimeoutAppState : NativePlacement by nativeHeap {
                     fprintf(stderr, "Read got %d\n", pointed.res)
                     goto = err;break
                 }
-                2 -> if (pointed.res != -EALREADY && pointed.res != -ETIME &&
-                    pointed.res != 0
-                ) {
+                2 -> if (pointed.res != -EALREADY && pointed.res != -ETIME && pointed.res != 0) {
                     fprintf(stderr, "Link timeout got %d\n", pointed.res)
                     goto = err;break
                 }
@@ -526,36 +466,33 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         return goto?.let { 1 } ?: 0
     }
 
-    fun test_timeout_link_chain1(ring: CPointer<io_uring>): Int = memScoped {
+    private fun test_timeout_link_chain1(ring: CPointer<io_uring>): Int = memScoped {
         val ts: __kernel_timespec = alloc()
-        var cqe: CPointerVar<io_uring_cqe> = alloc()
+        val cqe: CPointerVar<io_uring_cqe> = alloc()
         val fds = IntArray(2)
         val iov: iovec = alloc()
 
 
-        if (pipe(fds.toCValues()).nz) {
+        if (pipe(fds.refTo(0)).nz) {
             perror("pipe")
             return 1
         }
+        println(" test_timeout_link_chain1 pipe using fds ${fds.toList()}")
         var goto: end? = null;do {
 
         var sqe = io_uring_get_sqe(ring)!!
-        var buffer = ByteArray(256)
-        iov.iov_base = buffer.toCValues().ptr
+        val buffer = ByteArray(256)
+        iov.iov_base = buffer.refTo(0).getPointer(this)
         iov.iov_len = (buffer).size.toULong()
         io_uring_prep_readv(sqe, fds[0], iov.ptr, 1, 0)
-        sqe.pointed.flags = sqe.pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
         sqe.pointed.user_data = 1u
 
         sqe = io_uring_get_sqe(ring)!!
-        if (null == sqe) {
-            printf("get sqe failed\n")
-            goto = err;break
-        }
         ts.tv_sec = 0
         ts.tv_nsec = 1000000
         io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-        sqe.pointed.flags = sqe.pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
         sqe.pointed.user_data = 2U
 
         sqe = io_uring_get_sqe(ring)!!
@@ -576,30 +513,106 @@ class TimeoutAppState : NativePlacement by nativeHeap {
                 goto = err;break
             }
             val ioUringCqe = cqe.pointed!!
-            when (ioUringCqe!!.user_data.toInt()) {
-                1 ->
-                    if (ioUringCqe!!.res != -EINTR && ioUringCqe!!.res != -ECANCELED) {
-                        fprintf(
-                            stderr, "Req   PRIu64 ? got %d\n", ioUringCqe.user_data,
-                            ioUringCqe!!.res
-                        )
-                        goto = err;break
-                    }
-                2 ->/* FASTPOLL kernels can cancel successfully */
-                    if (ioUringCqe!!.res != -EALREADY && ioUringCqe!!.res != -ETIME) {
-                        fprintf(
-                            stderr, "Req   PRIu64 ? got %d\n", ioUringCqe.user_data,
-                            ioUringCqe!!.res
-                        )
-                        goto = err;break
-                    }
-                3 -> if (ioUringCqe!!.res != -ECANCELED) {
+            when (ioUringCqe.user_data.toInt()) {
+                1 -> if (ioUringCqe.res != -EINTR && ioUringCqe.res != -ECANCELED) {
                     fprintf(
-                        stderr, "Req   PRIu64 ? got %d\n", ioUringCqe.user_data,
-                        ioUringCqe!!.res
+                        stderr, "Req  -EINTR ${-EINTR} or -ECANCELED ${-ECANCELED}? got %d\n", ioUringCqe.res
                     )
                     goto = err;break
                 }
+                2 -> if (ioUringCqe.res != -EALREADY && ioUringCqe.res != -ETIME) {
+                    fprintf(
+                        stderr, "Req -EALREADY  ${-EALREADY} or -ETIME ${-ETIME} got %d\n", ioUringCqe.user_data,
+                        ioUringCqe.res
+                    )
+                    goto = err;break
+                }
+                3 -> if (ioUringCqe.res != -ECANCELED) {
+                    fprintf(
+                        stderr, "Req  ECANCELED $ECANCELED ? got %d\n", ioUringCqe.user_data,
+                        ioUringCqe.res
+                    )
+                    goto = err;break
+                }
+            }
+            io_uring_cqe_seen(ring, cqe.value)
+        }
+    } while (false)
+        close(fds[0])
+        close(fds[1])
+        return goto?.let { 1 } ?: 0
+    }
+
+    private fun test_timeout_link_chain2(ring: CPointer<io_uring>): Int = memScoped {
+        val ts: __kernel_timespec = alloc()
+        val cqe: CPointerVar<io_uring_cqe> = alloc()
+        val fds = IntArray(2)
+
+        if (pipe(fds.refTo(0)).nz) {
+            perror("pipe")
+            return 1
+        }
+        var goto: end? = null;do {
+
+        var sqe = io_uring_get_sqe(ring)!!
+
+        io_uring_prep_poll_add(sqe, fds[0], POLLIN)
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 1u
+        sqe = io_uring_get_sqe(ring)!!
+
+        ts.tv_sec = 0
+        ts.tv_nsec = 1000000
+        io_uring_prep_link_timeout(sqe, ts.ptr, 0)
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 2u
+
+        sqe = io_uring_get_sqe(ring)!!
+        io_uring_prep_nop(sqe)
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 3u
+
+        sqe = io_uring_get_sqe(ring)!!
+        io_uring_prep_nop(sqe)
+        sqe.pointed.user_data = 4u
+
+        var ret = io_uring_submit(ring)
+        if (ret != 4) {
+            printf("sqe submit failed: %d\n", ret)
+            goto = err;break
+        }
+
+        for (i in 0 until 4) {
+            ret = io_uring_wait_cqe(ring, cqe.ptr)
+            if (ret < 0) {
+                printf("wait completion %d\n", ret)
+                goto = err;break
+            }
+            val pointed = cqe.pointed!!
+            when (pointed.user_data.toInt()) {
+                /* poll cancel really should return -ECANCEL... */
+                1 -> if (pointed.res != -ECANCELED) {
+                    fprintf(
+                        stderr, "Req ECANCELED ${-ECANCELED} ? got %d\n", pointed.user_data,
+                        pointed.res
+                    )
+                    goto = err;break
+                }
+                2 -> if (pointed.res != -ETIME) {
+                    fprintf(
+                        stderr, "Req  ETIME ${-ETIME} ? got %d\n", pointed.user_data,
+                        pointed.res
+                    )
+                    goto = err;break
+                }
+                3, 4 ->
+                    if (pointed.res != -ECANCELED) {
+                        fprintf(
+                            stderr, "Req   ECANCELED $ECANCELED ? got %d\n", pointed.user_data,
+                            pointed.res
+                        )
+                        goto = err;break
+                    }
             }; io_uring_cqe_seen(ring, cqe.value)
         }
     } while (false)
@@ -608,106 +621,12 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         return goto?.let { 1 } ?: 0
     }
 
-    fun test_timeout_link_chain2(ring: CPointer<io_uring>): Int= memScoped {
+    private fun test_timeout_link_chain3(ring: CPointer<io_uring>): Int = memScoped {
         val ts: __kernel_timespec = alloc()
-        val cqe: CPointerVar<io_uring_cqe> =alloc() 
+        val cqe: CPointerVar<io_uring_cqe> = alloc()
         val fds = IntArray(2)
 
-        if (pipe(fds.toCValues()).nz) {
-            perror("pipe")
-            return 1
-        }
-        var goto: end? = null;do {
-
-            var sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_poll_add(sqe, fds[0], POLLIN)
-        sqe.pointed.flags = sqe.pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
-            sqe.pointed.user_data = 1u
-
-            sqe = io_uring_get_sqe(ring)!!
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            ts.tv_sec = 0
-            ts.tv_nsec = 1000000
-            io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-        sqe.pointed.flags = sqe.pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
-            sqe.pointed.user_data = 2u
-
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_nop(sqe)
-        sqe.pointed.flags = sqe.pointed.flags.plus(sqeIo_link.flagConstant).toUByte()
-            sqe.pointed.user_data = 3u
-
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_nop(sqe)
-            sqe.pointed.user_data = 4u
-
-        var ret = io_uring_submit(ring)
-        if (ret != 4) {
-                printf("sqe submit failed: %d\n", ret)
-                goto = err;break
-            }
-
-            for (i in 0 until 4) {
-                ret = io_uring_wait_cqe(ring, cqe.ptr)
-                if (ret < 0) {
-                    printf("wait completion %d\n", ret)
-                    goto = err;break
-                }
-                val pointed = cqe.pointed!!
-                when (pointed.user_data.toInt()) {
-                    /* poll cancel really should return -ECANCEL... */
-                    1 ->
-                        if (pointed.res != -ECANCELED) {
-                            fprintf(
-                                stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
-                                pointed.res
-                            )
-                            goto = err;break
-                        }
-                    2 -> if (pointed.res != -ETIME) {
-                        fprintf(
-                            stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
-                            pointed.res
-                        )
-                        goto = err;break
-                    }
-                    3, 4 ->
-                        if (pointed.res != -ECANCELED) {
-                            fprintf(
-                                stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
-                                pointed.res
-                            )
-                            goto = err;break
-                        }
-                }; io_uring_cqe_seen(ring, cqe.value)
-            }
-        } while (false)
-        close(fds[0])
-        close(fds[1])
-        return goto?.let { 1 } ?: 0
-    }
-
-    fun test_timeout_link_chain3(ring: CPointer<io_uring>): Int = memScoped{
-        val ts: __kernel_timespec = alloc()
-        var cqe: CPointerVar<io_uring_cqe> =alloc()
-        val fds = IntArray(2)
-
-        if (pipe(fds.toCValues()).nz) {
+        if (pipe(fds.refTo(0)).nz) {
             perror("pipe")
             return 1
         }
@@ -715,119 +634,119 @@ class TimeoutAppState : NativePlacement by nativeHeap {
 
         var sqe = io_uring_get_sqe(ring)
         if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_poll_add(sqe, fds[0], POLLIN)
-        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
-            sqe.pointed.user_data = 1u
+            printf("get sqe failed\n")
+            goto = err;break
+        }
+        io_uring_prep_poll_add(sqe, fds[0], POLLIN)
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 1u
 
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            ts.tv_sec = 0
-            ts.tv_nsec = 1000000
-            io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
-            sqe.pointed.user_data = 2u
+        sqe = io_uring_get_sqe(ring)
+        if (null == sqe) {
+            printf("get sqe failed\n")
+            goto = err;break
+        }
+        ts.tv_sec = 0
+        ts.tv_nsec = 1000000
+        io_uring_prep_link_timeout(sqe, ts.ptr, 0)
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 2u
 
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_nop(sqe)
-        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
-            sqe.pointed.user_data = 3u
+        sqe = io_uring_get_sqe(ring)
+        if (null == sqe) {
+            printf("get sqe failed\n")
+            goto = err;break
+        }
+        io_uring_prep_nop(sqe)
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 3u
 
-            /* POLL.pointed.TIMEOUT  -> NOP */
+        /* POLL.pointed.TIMEOUT  -> NOP */
 
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_poll_add(sqe, fds[0], POLLIN)
-        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
-            sqe.pointed.user_data = 4u
+        sqe = io_uring_get_sqe(ring)
+        if (null == sqe) {
+            printf("get sqe failed\n")
+            goto = err;break
+        }
+        io_uring_prep_poll_add(sqe, fds[0], POLLIN)
+        sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
+        sqe.pointed.user_data = 4u
 
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            ts.tv_sec = 0
-            ts.tv_nsec = 1000000
-            io_uring_prep_link_timeout(sqe, ts.ptr, 0)
-            sqe.pointed.user_data = 5u
+        sqe = io_uring_get_sqe(ring)
+        if (null == sqe) {
+            printf("get sqe failed\n")
+            goto = err;break
+        }
+        ts.tv_sec = 0
+        ts.tv_nsec = 1000000
+        io_uring_prep_link_timeout(sqe, ts.ptr, 0)
+        sqe.pointed.user_data = 5u
 
-            /* poll on pipe + timeout */
+        /* poll on pipe + timeout */
 
-            sqe = io_uring_get_sqe(ring)
-            if (null == sqe) {
-                printf("get sqe failed\n")
-                goto = err;break
-            }
-            io_uring_prep_nop(sqe)
-            sqe.pointed.user_data = 6u
+        sqe = io_uring_get_sqe(ring)
+        if (null == sqe) {
+            printf("get sqe failed\n")
+            goto = err;break
+        }
+        io_uring_prep_nop(sqe)
+        sqe.pointed.user_data = 6u
 
-            /* nop */
+        /* nop */
 
         var ret = io_uring_submit(ring)
         if (ret != 6) {
-                printf("sqe submit failed: %d\n", ret)
+            printf("sqe submit failed: %d\n", ret)
+            goto = err;break
+        }
+
+        for (i in 0 until 6) {
+            ret = io_uring_wait_cqe(ring, cqe.ptr)
+            if (ret < 0) {
+                printf("wait completion %d\n", ret)
                 goto = err;break
             }
-
-            for (i in 0 until 6) {
-                ret = io_uring_wait_cqe(ring, cqe.ptr)
-                if (ret < 0) {
-                    printf("wait completion %d\n", ret)
+            val pointed = cqe.pointed!!
+            when (pointed.user_data.toInt()) {
+                2 -> if (pointed.res != -ETIME) {
+                    fprintf(
+                        stderr, "Req   ETIME $ETIME ? got %d\n", pointed.user_data,
+                        pointed.res
+                    )
                     goto = err;break
                 }
-                val     pointed = cqe.pointed!!
-                when (pointed.user_data.toInt()) {
-                    2 -> if (pointed.res != -ETIME) {
+                1, 3, 4, 5 ->
+                    if (pointed.res != -ECANCELED) {
                         fprintf(
-                            stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
+                            stderr, "Req   ECANCELED $ECANCELED ? got %d\n", pointed.user_data,
                             pointed.res
                         )
                         goto = err;break
                     }
-                    1, 3, 4, 5 ->
-                        if (pointed.res != -ECANCELED) {
-                            fprintf(
-                                stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
-                                pointed.res
-                            )
-                            goto = err;break
-                        }
-                    6 ->
-                        if (pointed.res.nz) {
-                            fprintf(
-                                stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
-                                pointed.res
-                            )
-                            goto = err;break
-                        }
-                }
-                io_uring_cqe_seen(ring, cqe.value)
+                6 ->
+                    if (pointed.res.nz) {
+                        fprintf(
+                            stderr, "Req   0 ? got %d\n", pointed.user_data,
+                            pointed.res
+                        )
+                        goto = err;break
+                    }
             }
+            io_uring_cqe_seen(ring, cqe.value)
+        }
 
-        } while (false)
+    } while (false)
         close(fds[0])
         close(fds[1])
         return goto?.let { 1 } ?: 0
     }
 
-    fun test_timeout_link_chain4(ring: CPointer<io_uring>): Int {
+    private fun test_timeout_link_chain4(ring: CPointer<io_uring>): Int {
         val ts: __kernel_timespec = alloc()
-        var cqe: CPointerVar<io_uring_cqe > =alloc()
+        val cqe: CPointerVar<io_uring_cqe> = alloc()
         val fds = IntArray(2)
 
-        if (pipe(fds.toCValues()).nz) {
+        if (pipe(fds.refTo(0)).nz) {
             perror("pipe")
             return 1
         }
@@ -835,12 +754,12 @@ class TimeoutAppState : NativePlacement by nativeHeap {
 
             var sqe = io_uring_get_sqe(ring)!!
             io_uring_prep_nop(sqe)
-            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
+            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
             sqe.pointed.user_data = 1u
 
             sqe = io_uring_get_sqe(ring)!!
             io_uring_prep_poll_add(sqe, fds[0], POLLIN)
-            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
+            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
             sqe.pointed.user_data = 2u
 
             sqe = io_uring_get_sqe(ring)!!
@@ -849,7 +768,7 @@ class TimeoutAppState : NativePlacement by nativeHeap {
             io_uring_prep_link_timeout(sqe, ts.ptr, 0)
             sqe.pointed.user_data = 3u
 
-            var ret = io_uring_submit(ring)!!
+            var ret = io_uring_submit(ring)
             if (ret != 3) {
                 printf("sqe submit failed: %d\n", ret)
                 goto = err;break
@@ -864,29 +783,29 @@ class TimeoutAppState : NativePlacement by nativeHeap {
                 val pointed = cqe.pointed!!
                 when (pointed.user_data.toInt()) {
                     /* poll cancel really should return -ECANCEL... */
-                    1 ->
-                        if (pointed.res.nz) {
-                            fprintf(
-                                stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
-                                pointed.res
-                            )
-                            goto = err;break
-                        }
+                    1 -> if (pointed.res.nz) {
+                        fprintf(
+                            stderr, "Req   ${-0}   got %d\n", pointed.user_data,
+                            pointed.res
+                        )
+                        goto = err;break
+                    }
                     2 -> if (pointed.res != -ECANCELED) {
                         fprintf(
-                            stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
+                            stderr, "Req ECANCELED  ${-ECANCELED} ? got %d\n", pointed.user_data,
                             pointed.res
                         )
                         goto = err;break
                     }
                     3 -> if (pointed.res != -ETIME) {
                         fprintf(
-                            stderr, "Req   PRIu64 ? got %d\n",  pointed. user_data,
+                            stderr, "Req ETIME  ${-ETIME} ? got %d\n", pointed.user_data,
                             pointed.res
                         )
                         goto = err;break
                     }
-                }; io_uring_cqe_seen(ring, cqe.value)
+                }
+                io_uring_cqe_seen(ring, cqe.value)
             }
 
 
@@ -894,10 +813,10 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         close(fds[1]);return goto?.let { 1 } ?: 0
     }
 
-    fun test_timeout_link_chain5(ring: CPointer<io_uring>): Int {
-   var   ts1:__kernel_timespec =alloc()
- var ts2:__kernel_timespec   =alloc()
-   var   cqe:CPointerVar<io_uring_cqe > =alloc()
+    private fun test_timeout_link_chain5(ring: CPointer<io_uring>): Int {
+        val ts1: __kernel_timespec = alloc()
+        val ts2: __kernel_timespec = alloc()
+        val cqe: CPointerVar<io_uring_cqe> = alloc()
 
         var goto: end? = null;do {
 
@@ -907,7 +826,7 @@ class TimeoutAppState : NativePlacement by nativeHeap {
                 goto = err;break
             }
             io_uring_prep_nop(sqe)
-            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
+            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
             sqe.pointed.user_data = 1u
 
             sqe = io_uring_get_sqe(ring)!!
@@ -918,7 +837,7 @@ class TimeoutAppState : NativePlacement by nativeHeap {
             ts1.tv_sec = 1
             ts1.tv_nsec = 0
             io_uring_prep_link_timeout(sqe, ts1.ptr, 0)
-            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.flagConstant)
+            sqe.pointed.flags = sqe.pointed.flags.or(sqeIo_link.ub)
             sqe.pointed.user_data = 2u
 
             sqe = io_uring_get_sqe(ring)!!
@@ -966,8 +885,8 @@ class TimeoutAppState : NativePlacement by nativeHeap {
         } while (false);return goto?.let { 1 } ?: 0
     }
 
-    fun main( ): Int {
-      var   ring:io_uring=alloc()
+    fun main(): Int {
+        val ring: io_uring = alloc()
 
         var ret = io_uring_queue_init(8, ring.ptr, 0)
         if (ret.nz) {
@@ -1011,13 +930,13 @@ class TimeoutAppState : NativePlacement by nativeHeap {
             return ret
         }
 
-        ret = test_single_link_timeout(ring.ptr, 100000UL .toUInt())
+        ret = test_single_link_timeout(ring.ptr, 100000UL.toUInt())
         if (ret.nz) {
             printf("test_single_link_timeout 100000 failed\n")
             return ret
         }
 
-        ret = test_single_link_timeout(ring.ptr, 500000000UL .toUInt())
+        ret = test_single_link_timeout(ring.ptr, 500000000UL.toUInt())
         if (ret.nz) {
             printf("test_single_link_timeout 500000000 failed\n")
             return ret
@@ -1070,5 +989,5 @@ class TimeoutAppState : NativePlacement by nativeHeap {
 }
 
 fun main() {
-    TimeoutAppState().main( )
+    exit(TimeoutAppState().main())
 }
