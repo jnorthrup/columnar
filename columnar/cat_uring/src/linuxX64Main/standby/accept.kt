@@ -42,7 +42,7 @@ static void queue_send(ring:CPointer<io_uring>, fd:Int) {
  sqe.pointed.user_data  = 1;
 }
 
-static void queue_recv(ring:CPointer<io_uring>, fd:Int, bool fixed) {
+static void queue_recv(ring:CPointer<io_uring>, fd:Int, fixed:Boolean) {
     sqe:CPointer<io_uring_sqe>;
     d:CPointer<data>;
 
@@ -57,7 +57,7 @@ static void queue_recv(ring:CPointer<io_uring>, fd:Int, bool fixed) {
  sqe.pointed.flags  |= IOSQE_FIXED_FILE;
 }
 
-static accept_conn:Int(ring:CPointer<io_uring>, fd:Int, bool fixed) {
+static accept_conn:Int(ring:CPointer<io_uring>, fd:Int, fixed:Boolean) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ret:Int, fixed_idx = 0;
@@ -115,7 +115,7 @@ static start_accept_listen:Int(addr:CPointer<sockaddr_in>, port_off:Int) {
     return fd;
 }
 
-static test:Int(ring:CPointer<io_uring>, accept_should_error:Int, bool fixed) {
+static test:Int(ring:CPointer<io_uring>, accept_should_error:Int, fixed:Boolean) {
     cqe:CPointer<io_uring_cqe>;
     addr:sockaddr_in;
     head:uint32_t, count = 0;

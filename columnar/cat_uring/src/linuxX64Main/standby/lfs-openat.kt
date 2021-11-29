@@ -73,7 +73,7 @@ static prepare_file:Int(dfd:Int, fn:String) {
     return res < 0 ? res : 0;
 }
 
-static test_linked_files:Int(dfd:Int, fn:String, bool async) {
+static test_linked_files:Int(dfd:Int, fn:String, async:Boolean) {
     ring:io_uring;
     sqe:CPointer<io_uring_sqe>;
     char buffer[128];
@@ -126,7 +126,7 @@ static test_linked_files:Int(dfd:Int, fn:String, bool async) {
     return 0;
 }
 
-static test_drained_files:Int(dfd:Int, fn:String, bool linked, bool prepend) {
+static test_drained_files:Int(dfd:Int, fn:String, linked:Boolean, prepend:Boolean) {
     ring:io_uring;
     sqe:CPointer<io_uring_sqe>;
     char buffer[128];

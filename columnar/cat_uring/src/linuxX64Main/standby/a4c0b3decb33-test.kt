@@ -34,7 +34,7 @@ static current_time_ms:uint64_t(void) {
     return (uint64_t) ts.tv_sec * 1000 + (uint64_t) ts.tv_nsec / 1000000;
 }
 
-static bool write_file(file:String, const what:CPointer<ByteVar>, ...) {
+static write_file:Boolean(file:String, const what:CPointer<ByteVar>, ...) {
     char buf[1024];
     va_list args;
     va_start(args, what);

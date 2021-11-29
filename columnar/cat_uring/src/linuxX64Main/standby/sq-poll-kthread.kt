@@ -29,7 +29,7 @@ enum {
     TEST_FAILED = 2,
 };
 
-static do_test_sq_poll_kthread_stopped:Int(bool do_exit) {
+static do_test_sq_poll_kthread_stopped:Int(do_exit:Boolean) {
     ret:Int = 0, pipe1[2];
     param:io_uring_params;
     ring:io_uring;
@@ -115,7 +115,7 @@ static do_test_sq_poll_kthread_stopped:Int(bool do_exit) {
     return ret;
 }
 
-fun test_sq_poll_kthread_stopped(bool do_exit):Int{
+fun test_sq_poll_kthread_stopped(do_exit:Boolean):Int{
     pid:pid_t;
     status:Int = 0;
 

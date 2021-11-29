@@ -49,7 +49,7 @@ static test_return_before_timeout:Int(ring:CPointer<io_uring>) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     ret:Int;
-    bool retried = false;
+    retried:Boolean = false;
     ts:__kernel_timespec;
 
     msec_to_ts(ts.ptr, TIMEOUT_MSEC);
@@ -135,7 +135,7 @@ fun reap_thread_fn1(data:CPointer<ByteVar> ): CPointer<ByteVar> {
 fun test_multi_threads_timeout():Int{
     ring:io_uring;
     ret:Int;
-    bool both_wait = false;
+    both_wait:Boolean = false;
     reap_thread0:pthread_t, reap_thread1;
     sqe:CPointer<io_uring_sqe>;
 

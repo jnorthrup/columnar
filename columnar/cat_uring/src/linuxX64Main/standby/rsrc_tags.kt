@@ -22,7 +22,7 @@ enum {
     TEST_IORING_RSRC_BUFFER = 1,
 };
 
-static bool check_cq_empty(ring:CPointer<io_uring>) {
+static check_cq_empty:Boolean(ring:CPointer<io_uring>) {
     cqe:CPointer<io_uring_cqe> = NULL;
     ret:Int;
 
@@ -77,7 +77,7 @@ static update_rsrc:Int(ring:CPointer<io_uring>, type:Int, nr:Int, off:Int,
     return ret < 0 ? -errno : ret;
 }
 
-static bool has_rsrc_update(void) {
+static has_rsrc_update:Boolean(void) {
     ring:io_uring;
     ret:Int;
 

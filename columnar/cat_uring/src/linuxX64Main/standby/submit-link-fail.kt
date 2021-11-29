@@ -14,7 +14,7 @@
 
 #define DRAIN_USER_DATA 42
 
-static test_underprep_fail:Int(bool hardlink, bool drain, bool link_last,
+static test_underprep_fail:Int(hardlink:Boolean, drain:Boolean, link_last:Boolean,
                                link_size:Int, fail_idx:Int) {
     const invalid_fd:Int = 42;
     link_flags:Int = IOSQE_IO_LINK;
@@ -130,9 +130,9 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     for (link_size  in 0 until  3) {
         for (fail_idx  in 0 until  link_size) {
             for (i  in 0 until  8) {
-                bool hardlink = (i 1.ptr) != 0;
-                bool drain = (i 2.ptr) != 0;
-                bool link_last = (i 4.ptr) != 0;
+                hardlink:Boolean = (i 1.ptr) != 0;
+                drain:Boolean = (i 2.ptr) != 0;
+                link_last:Boolean = (i 4.ptr) != 0;
 
                 ret = test_underprep_fail(hardlink, drain, link_last,
                                           link_size, fail_idx);

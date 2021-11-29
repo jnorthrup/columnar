@@ -9,7 +9,7 @@ sed  --in-place --regexp-extended\
  -e 's,^\s*void\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Unit{,'\
  -e 's,^\s*(\w+_t)\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \2\3:\1{,'\
  -e 's,^\s*void\s*[*](\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2: CPointer<ByteVar> {,'\
- -e 's,^\s*int\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Int{,'\
+ -e 's,^\s*bool\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Boolean{,'\
  -e 's,^\s*(long\s+(int)?)+\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \2\3:Long{,'\
  -e 's,^\s*const\s+char\s*[*]\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:String{,' \
  -e 's,(\s+|\W)void\s*\*\s*(\w+)(\W),\1\2:CPointer<ByteVar> \3,'\
@@ -19,6 +19,7 @@ sed  --in-place --regexp-extended\
  -e 's,(\s+|\W)unsigned\s+(long\s+(int)?)+(\w+)(\W),\2\3:ULong\4,'\
  -e 's,(\s+|\W)unsigned\s+char\s+(\w+)(\W),\1\2:UByte\3,'\
  -e 's,(\s+|\W)int\s+(\w+)(\W),\1\2:Int\3,'\
+ -e 's,(\s+|\W)bool\s+(\w+)(\W),\1\2:Boolean\3,'\
  -e 's,(\s+|\W)(long\s+(int)?)+(\w+)(\W),\1\3:Long\4,'\
  -e 's,(\s+|\W)(\w+)_t\s+(\w+)(\W),\1\3:\2_t\4,'\
  -e 's,(\s+|\W)char\s*\*\s*(\w+)(\W),\1\2:CPointer<ByteVar>\3,'\

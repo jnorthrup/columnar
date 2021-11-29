@@ -107,7 +107,7 @@ static event_timedwait:Int(event_t *ev, timeout:uint64_t) {
     }
 }
 
-static bool write_file(file:String, const what:CPointer<ByteVar>, ...) {
+static write_file:Boolean(file:String, const what:CPointer<ByteVar>, ...) {
     char buf[1024];
     va_list args;
     va_start(args, what);

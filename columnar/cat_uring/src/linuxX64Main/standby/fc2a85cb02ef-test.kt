@@ -18,7 +18,7 @@
 #include "liburing.h"
 #include "../src/syscall.h"
 
-static bool write_file(file:String, const what:CPointer<ByteVar>, ...) {
+static write_file:Boolean(file:String, const what:CPointer<ByteVar>, ...) {
     char buf[1024];
     va_list args;
     va_start(args, what);
@@ -55,7 +55,7 @@ static setup_fault:Int() {
     static struct {
         file:String;
         val:String;
-        bool fatal;
+        fatal:Boolean;
     } files[] = {
             {"/sys/kernel/debug/failslab/ignore-gfp-wait",           "N", true},
             {"/sys/kernel/debug/failslab/verbose",                   "0", false},

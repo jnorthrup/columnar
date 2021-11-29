@@ -956,7 +956,7 @@ static test_timeout_flags3:Int(ring:CPointer<io_uring>) {
 }
 
 static test_update_timeout:Int(ring:CPointer<io_uring>,long :ULongms
-                               bool abs, bool async, bool linked) {
+                               abs:Boolean, async:Boolean, linked:Boolean) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ts:__kernel_timespec, ts_upd;
@@ -1308,7 +1308,7 @@ static test_not_failing_links:Int(void) {
 
 fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     ring:io_uring, sqpoll_ring;
-    bool has_timeout_update, sqpoll;
+    has_timeout_update:Boolean, sqpoll;
     p:io_uring_params = {};
     ret:Int;
 

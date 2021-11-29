@@ -133,7 +133,7 @@ __u8 generate_flags(sqe_op:Int) {
 fun generate_opcode(i:Int, pre_flags:Int):Int{
     sqe_op:Int;
     high_watermark:Int = max_entry - max_entry / 5;
-    bool retry0 = false, retry1 = false, retry2 = false;
+    retry0:Boolean = false, retry1 = false, retry2 = false;
 
     if ((i >= high_watermark) && cnt) {
         sqe_op = cancel;

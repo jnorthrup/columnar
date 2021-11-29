@@ -126,7 +126,7 @@ static test_thread_link_cancel:Int(ring:CPointer<io_uring>) {
         goto err;
 
     for (i  in 0 until  nr) {
-        bool fail = false;
+        fail:Boolean = false;
 
         if (i == 0)
             fail = (ctx.cqes[i].res != -EINVAL);
