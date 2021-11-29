@@ -3,7 +3,7 @@
  * Description: test that sigfd reading/polling works. A regression test for
  * the upstream commit:
  *
- * fd7d6de22414 ("io_uring: don't recurse on tsk.pointed.sighand ->siglock with signalfd")
+ * fd7d6de22414 ("io_uring: don't recurse on tsk.pointed. sighand.pointed.siglock  with signalfd")
  */
 #include <unistd.h>
 #include <sys/signalfd.h>
@@ -26,7 +26,7 @@ static setup_signal:Int(void) {
     return sfd;
 }
 
-static test_uring:Int(int sfd) {
+static test_uring:Int(sfd:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ring:io_uring;

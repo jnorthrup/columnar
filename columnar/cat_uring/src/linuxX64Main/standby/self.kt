@@ -14,7 +14,7 @@
 
 #include "liburing.h"
 
-static io_openat2:Int(ring:CPointer<io_uring>, path:String, int dfd) {
+static io_openat2:Int(ring:CPointer<io_uring>, path:String, dfd:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     how:open_how;

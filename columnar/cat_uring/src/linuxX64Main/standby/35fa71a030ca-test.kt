@@ -48,7 +48,7 @@ static void thread_start(void *(*fn)(void *), arg:CPointer<ByteVar> ) {
     pthread_attr_init(attr.ptr);
     pthread_attr_setstacksize(attr.ptr, 128 << 10);
     i:Int;
-    for (i = 0; i < 100; i++) {
+    for (i  in 0 until  100) {
         if (pthread_create(th.ptr, attr.ptr, fn, arg) == 0) {
             pthread_attr_destroy(attr.ptr);
             return;
@@ -132,7 +132,7 @@ static void kill_and_wait(pid:Int, int *status) {
     kill(-pid, SIGKILL);
     kill(pid, SIGKILL);
     i:Int;
-    for (i = 0; i < 100; i++) {
+    for (i  in 0 until  100) {
         if (waitpid(-1, status,  WNOHANG or __WALL ) == pid)
             return;
         usleep(1000);
@@ -182,7 +182,7 @@ static void execute_call(call:Int);
 
 static running:Int;
 
-static thr:CPointer<ByteVar> (void *arg) {
+static thr:CPointer<ByteVar> (arg:CPointer<ByteVar> ) {
     th:CPointer<thread_t> = (t:thread_ *) arg;
     for (;;) {
         event_wait(th. ptr.pointed.ready );
@@ -196,7 +196,7 @@ static thr:CPointer<ByteVar> (void *arg) {
 
 static void execute_one(void) {
     i:Int, call, thread;
-    for (call = 0; call < 3; call++) {
+    for (call  in 0 until  3) {
         for (thread = 0; thread < (int) (sizeof(threads) / sizeof(threads[0]));
              thread++) {
             th:CPointer<thread_t> = threads.ptr[thread];
@@ -217,7 +217,7 @@ static void execute_one(void) {
             break;
         }
     }
-    for (i = 0; i < 100 && __atomic_load_n(running.ptr, __ATOMIC_RELAXED); i++)
+    for (i  in 0 until  100 && __atomic_load_n(running.ptr, __ATOMIC_RELAXED))
         sleep_ms(1);
 }
 

@@ -26,7 +26,7 @@
 static vecs:CPointer<iovec>;
 static rings:io_uring[NR_RINGS];
 
-static wait_io:Int(ring:CPointer<io_uring>, int nr_ios) {
+static wait_io:Int(ring:CPointer<io_uring>, nr_ios:Int) {
     cqe:CPointer<io_uring_cqe>;
 
     while (nr_ios) {
@@ -42,7 +42,7 @@ static wait_io:Int(ring:CPointer<io_uring>, int nr_ios) {
     return 0;
 }
 
-static queue_io:Int(ring:CPointer<io_uring>, int fd, int nr_ios) {
+static queue_io:Int(ring:CPointer<io_uring>, fd:Int, nr_ios:Int) {
 long :ULongoff
     i:Int;
 
@@ -64,18 +64,18 @@ long :ULongoff
     return i;
 }
 
-static do_io:Int(int fd, int ring_start, int ring_end) {
+static do_io:Int(fd:Int, ring_start:Int, ring_end:Int) {
     i:Int, rets[NR_RINGS];
     unsigned ios = 0;
 
     while (ios < 32) {
-        for (i = ring_start; i < ring_end; i++) {
+        for (i  in ring_start until  ring_end) {
             ret:Int = queue_io(rings.ptr[i], fd, BUFFERS);
             if (ret < 0)
                 goto err;
             rets[i] = ret;
         }
-        for (i = ring_start; i < ring_end; i++) {
+        for (i  in ring_start until  ring_end) {
             if (wait_io(rings.ptr[i], rets[i]))
                 goto err;
         }
@@ -87,10 +87,10 @@ static do_io:Int(int fd, int ring_start, int ring_end) {
     return 1;
 }
 
-static test:Int(int fd, int do_dup_and_close, int close_ring) {
+static test:Int(fd:Int, do_dup_and_close:Int, close_ring:Int) {
     i:Int, ret, ring_fd;
 
-    for (i = 0; i < NR_RINGS; i++) {
+    for (i  in 0 until  NR_RINGS) {
         p:io_uring_params = {};
 
         p.flags = IORING_SETUP_SQPOLL;
@@ -140,7 +140,7 @@ static test:Int(int fd, int do_dup_and_close, int close_ring) {
 
 
     done:
-    for (i = 0; i < NR_RINGS; i++)
+    for (i  in 0 until  NR_RINGS)
         io_uring_queue_exit(rings.ptr[i]);
 
     return 0;

@@ -127,12 +127,12 @@ fun test_max_fds(uring_fd: Int): Int = nativeHeap.run {
 
     /* fill the fd table */
     nr_fds = 128 * 1024 * 1024 / sizeof(int)
-    for (i = 0; i < nr_fds; i++)
+    for (i  in 0 until  nr_fds)
     fds[i] = io_fd
 
     /* map the file through the rest of the address space */
     nr_maps = (UINT_MAX * sizeof(int)) / (128 * 1024 * 1024)
-    for (i = 0; i < nr_maps; i++) {
+    for (i  in 0 until  nr_maps) {
     fds = fds.ptr[nr_fds] /* advance fds by 128MiB */
     fds = posixMmap(
         fds, 128 * 1024 * 1024, PROT_READ or PROT_WRITE,
@@ -264,7 +264,7 @@ fun test_iovec_nr(fd: Int): Int = nativeHeap.run {
     }
     buf = t_malloc(pagesize)
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
     iovs[i].iov_base = buf
     iovs[i].iov_len = pagesize
 }
@@ -327,7 +327,7 @@ fun test_iovec_size(fd: Int): Int = nativeHeap.run {
     /* huge page */
     buf = posixMmap(
         NULL, 2 * 1024 * 1024, PROT_READ or PROT_WRITE,
-        MAP_PRIVATE or MAP_HUGETLB  | MAP_HUGE_2MB or MAP_ANONYMOUS ,
+        MAP_PRIVATE or  MAP_HUGETLB or MAP_HUGE_2MB  or MAP_ANONYMOUS ,
     -1, 0)
     if (buf == MAP_FAILED) {
         printf(
@@ -397,7 +397,7 @@ fun dump_sqe(sqe: CPointer<io_uring_sqe>): CPointer<ByteVar>=nativeHeap.run{
         printf("\tpoll_events: 0x%.8x\n", sqe.pointed.poll_events)
 }
 
-fun ioring_poll(ring: CPointer<io_uring>, fd: Int, int fixed): Int = nativeHeap.run {
+fun ioring_poll(ring: CPointer<io_uring>, fd: Int, fixed:Int): Int = nativeHeap.run {
     ret:Int
     sqe:CPointer<io_uring_sqe>
     cqe:CPointer<io_uring_cqe>
@@ -498,7 +498,7 @@ static test_shmem:Int(void) {
         fprintf(stderr, "mmap failed\n")
         return 1
     }
-    for (i = 0; i < len; i++)
+    for (i  in 0 until  len)
     mem[i] = pattern
 
     iov.iov_base = mem
@@ -552,7 +552,7 @@ static test_shmem:Int(void) {
     }
     io_uring_cqe_seen(ring.ptr, cqe)
 
-    for (i = 0; i < 512; i++) {
+    for (i  in 0 until  512) {
         if (mem[i] != pattern) {
             fprintf(stderr, "data integrity fail\n")
             return 1
@@ -652,8 +652,8 @@ fun expect_fail(fd: Int, opcode: UInt, arg: CPointer<ByteVar>, nr_args: UInt, er
 
         printf("expected %s, but call succeeded\n", strerror(error))
         when (opcode) {
-            IORING_REGISTER_BUFFERS -> ret2 = __sys_io_uring_register(fd, IORING_UNREGISTER_BUFFERS, NULL, 0)
-            IORING_REGISTER_FILES -> ret2 = __sys_io_uring_register(fd, IORING_UNREGISTER_FILES, NULL, 0)
+ IORING_REGISTER_BUFFERS.pointed.ret2  = __sys_io_uring_register(fd, IORING_UNREGISTER_BUFFERS, NULL, 0)
+ IORING_REGISTER_FILES.pointed.ret2  = __sys_io_uring_register(fd, IORING_UNREGISTER_FILES, NULL, 0)
         }
 
         HasPosixErr.posixFailOn(ret2.nz) {

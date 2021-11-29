@@ -34,7 +34,7 @@ static submit_wait:Int(ring:CPointer<io_uring>) {
     return ret;
 }
 
-static inline try_close:Int(ring:CPointer<io_uring>, int fd, int slot) {
+static inline try_close:Int(ring:CPointer<io_uring>, fd:Int, slot:Int) {
     sqe:CPointer<io_uring_sqe>;
 
     sqe = io_uring_get_sqe(ring);
@@ -119,7 +119,7 @@ static test_close_fixed:Int(void) {
     return 0;
 }
 
-static test_close:Int(ring:CPointer<io_uring>, int fd, int is_ring_fd) {
+static test_close:Int(ring:CPointer<io_uring>, fd:Int, is_ring_fd:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     ret:Int;
@@ -152,7 +152,7 @@ static test_close:Int(ring:CPointer<io_uring>, int fd, int is_ring_fd) {
     return -1;
 }
 
-static test_openat:Int(ring:CPointer<io_uring>, path:String, int dfd) {
+static test_openat:Int(ring:CPointer<io_uring>, path:String, dfd:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     ret:Int;

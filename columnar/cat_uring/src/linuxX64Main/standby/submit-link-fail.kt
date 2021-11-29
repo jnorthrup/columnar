@@ -15,7 +15,7 @@
 #define DRAIN_USER_DATA 42
 
 static test_underprep_fail:Int(bool hardlink, bool drain, bool link_last,
-                               link_size:Int, int fail_idx) {
+                               link_size:Int, fail_idx:Int) {
     const invalid_fd:Int = 42;
     link_flags:Int = IOSQE_IO_LINK;
     total_submit:Int = link_size;
@@ -53,7 +53,7 @@ static test_underprep_fail:Int(bool hardlink, bool drain, bool link_last,
         total_submit++;
     }
 
-    for (i = 0; i < link_size; i++) {
+    for (i  in 0 until  link_size) {
         sqe = io_uring_get_sqe(ring.ptr);
         if (i == fail_idx)
             io_uring_prep_read(sqe, invalid_fd, buffer, 1, 0);
@@ -83,7 +83,7 @@ static test_underprep_fail:Int(bool hardlink, bool drain, bool link_last,
         }
     }
 
-    for (i = 0; i < total_submit; i++) {
+    for (i  in 0 until  total_submit) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -127,9 +127,9 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
      * link, size=3, fail_idx=0, drain=true -- kernel fault
      * link, size=3, fail_idx=1, drain=true -- invalid cqe.pointed.res 
      */
-    for (link_size = 0; link_size < 3; link_size++) {
-        for (fail_idx = 0; fail_idx < link_size; fail_idx++) {
-            for (i = 0; i < 8; i++) {
+    for (link_size  in 0 until  3) {
+        for (fail_idx  in 0 until  link_size) {
+            for (i  in 0 until  8) {
                 bool hardlink = (i 1.ptr) != 0;
                 bool drain = (i 2.ptr) != 0;
                 bool link_last = (i 4.ptr) != 0;

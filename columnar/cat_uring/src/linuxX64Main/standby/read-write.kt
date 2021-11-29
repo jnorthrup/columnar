@@ -29,7 +29,7 @@ static create_nonaligned_buffers:Int(void) {
     i:Int;
 
     vecs = t_malloc(BUFFERS * sizeof(c:iove));
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         p:CPointer<ByteVar> = t_malloc(3 * BS);
 
         if (!p)
@@ -41,9 +41,9 @@ static create_nonaligned_buffers:Int(void) {
     return 0;
 }
 
-static __test_io:Int(file:String, ring:CPointer<io_uring>, int write,
-                     buffered:Int, int sqthread, int fixed, int nonvec,
-                     buf_select:Int, int seq, int exp_len) {
+static __test_io:Int(file:String, ring:CPointer<io_uring>, write:Int,
+                     buffered:Int, sqthread:Int, fixed:Int, nonvec:Int,
+                     buf_select:Int, seq:Int, exp_len:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     open_flags:Int;
@@ -87,7 +87,7 @@ static __test_io:Int(file:String, ring:CPointer<io_uring>, int write,
     }
 
     offset = 0;
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         sqe = io_uring_get_sqe(ring);
         if (!sqe) {
             fprintf(stderr, "sqe get failed\n");
@@ -154,7 +154,7 @@ static __test_io:Int(file:String, ring:CPointer<io_uring>, int write,
         goto err;
     }
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -184,7 +184,7 @@ static __test_io:Int(file:String, ring:CPointer<io_uring>, int write,
             unsigned ptr:CPointer<ByteVar> = vecs[bid].iov_base;
             j:Int;
 
-            for (j = 0; j < BS; j++) {
+            for (j  in 0 until  BS) {
                 if (ptr[j] == cqe.pointed.user_data )
                     continue;
 
@@ -226,8 +226,8 @@ static __test_io:Int(file:String, ring:CPointer<io_uring>, int write,
     return 1;
 }
 
-static test_io:Int(file:String, int write, int buffered, int sqthread,
-                   fixed:Int, int nonvec, int exp_len) {
+static test_io:Int(file:String, write:Int, buffered:Int, sqthread:Int,
+                   fixed:Int, nonvec:Int, exp_len:Int) {
     ring:io_uring;
     ret:Int, ring_flags = 0;
 
@@ -292,7 +292,7 @@ static read_poll_link:Int(file:String) {
         return 1;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -377,7 +377,7 @@ static test_eventfd_read:Int(void) {
     return 0;
 }
 
-static test_buf_select_short:Int(filename:String, int nonvec) {
+static test_buf_select_short:Int(filename:String, nonvec:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ring:io_uring;
@@ -393,7 +393,7 @@ static test_buf_select_short:Int(filename:String, int nonvec) {
     }
 
     exp_len = 0;
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         sqe = io_uring_get_sqe(ring.ptr);
         io_uring_prep_provide_buffers(sqe, vecs[i].iov_base,
                                       vecs[i].iov_len / 2, 1, 1, i);
@@ -407,7 +407,7 @@ static test_buf_select_short:Int(filename:String, int nonvec) {
         return -1;
     }
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if ( cqe.pointed.res  < 0) {
             fprintf(stderr, " cqe.pointed.res =%d\n", cqe.pointed.res );
@@ -422,12 +422,12 @@ static test_buf_select_short:Int(filename:String, int nonvec) {
     return ret;
 }
 
-static provide_buffers_iovec:Int(ring:CPointer<io_uring>, int bgid) {
+static provide_buffers_iovec:Int(ring:CPointer<io_uring>, bgid:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     i:Int, ret;
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         sqe = io_uring_get_sqe(ring);
         io_uring_prep_provide_buffers(sqe, vecs[i].iov_base,
                                       vecs[i].iov_len, 1, bgid, i);
@@ -439,7 +439,7 @@ static provide_buffers_iovec:Int(ring:CPointer<io_uring>, int bgid) {
         return -1;
     }
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -455,7 +455,7 @@ static provide_buffers_iovec:Int(ring:CPointer<io_uring>, int bgid) {
     return 0;
 }
 
-static test_buf_select:Int(filename:String, int nonvec) {
+static test_buf_select:Int(filename:String, nonvec:Int) {
     p:CPointer<io_uring_probe>;
     ring:io_uring;
     ret:Int, i;
@@ -477,7 +477,7 @@ static test_buf_select:Int(filename:String, int nonvec) {
     /*
      * Write out data with known pattern
      */
-    for (i = 0; i < BUFFERS; i++)
+    for (i  in 0 until  BUFFERS)
         memset(vecs[i].iov_base, i, vecs[i].iov_len);
 
     ret = __test_io(filename, ring.ptr, 1, 0, 0, 0, 0, 0, 1, BS);
@@ -486,7 +486,7 @@ static test_buf_select:Int(filename:String, int nonvec) {
         return 1;
     }
 
-    for (i = 0; i < BUFFERS; i++)
+    for (i  in 0 until  BUFFERS)
         memset(vecs[i].iov_base, 0x55, vecs[i].iov_len);
 
     ret = provide_buffers_iovec(ring.ptr, 1);
@@ -498,7 +498,7 @@ static test_buf_select:Int(filename:String, int nonvec) {
     return ret;
 }
 
-static test_rem_buf:Int(int batch, int sqe_flags) {
+static test_rem_buf:Int(batch:Int, sqe_flags:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ring:io_uring;
@@ -574,8 +574,8 @@ static test_io_link:Int(file:String) {
         goto err;
     }
 
-    for (i = 0; i < nr_links; ++i) {
-        for (j = 0; j < link_len; ++j) {
+    for (i  in 0 until  nr_links) {
+        for (j  in 0 until  link_len) {
             sqe = io_uring_get_sqe(ring.ptr);
             if (!sqe) {
                 fprintf(stderr, "sqe get failed\n");
@@ -599,7 +599,7 @@ static test_io_link:Int(file:String) {
         goto err;
     }
 
-    for (i = 0; i < nr_sqes; i++) {
+    for (i  in 0 until  nr_sqes) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -668,7 +668,7 @@ static test_write_efbig:Int(void) {
     }
 
     off = 0;
-    for (i = 0; i < 32; i++) {
+    for (i  in 0 until  32) {
         sqe = io_uring_get_sqe(ring.ptr);
         if (!sqe) {
             fprintf(stderr, "sqe get failed\n");
@@ -684,7 +684,7 @@ static test_write_efbig:Int(void) {
         goto err;
     }
 
-    for (i = 0; i < 32; i++) {
+    for (i  in 0 until  32) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -739,7 +739,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     /* if we don't have nonvec read, skip testing that */
     nr = has_nonvec_read() ? 32 : 16;
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         write:Int = (i 1.ptr) != 0;
         buffered:Int = (i 2.ptr) != 0;
         sqthread:Int = (i 4.ptr) != 0;
@@ -834,7 +834,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     }
 
     /* test fixed bufs with non-aligned len/offset */
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         write:Int = (i 1.ptr) != 0;
         buffered:Int = (i 2.ptr) != 0;
         sqthread:Int = (i 4.ptr) != 0;

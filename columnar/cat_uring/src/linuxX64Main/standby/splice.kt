@@ -32,7 +32,7 @@ static sqe_flags:UInt = 0;
 static has_splice:Int = 0;
 static has_tee:Int = 0;
 
-static read_buf:Int(int fd, buf:CPointer<ByteVar> , int len) {
+static read_buf:Int(fd:Int, buf:CPointer<ByteVar> , len:Int) {
     ret:Int;
 
     while (len) {
@@ -45,7 +45,7 @@ static read_buf:Int(int fd, buf:CPointer<ByteVar> , int len) {
     return 0;
 }
 
-static write_buf:Int(int fd, const buf:CPointer<ByteVar> , int len) {
+static write_buf:Int(fd:Int, const buf:CPointer<ByteVar> , len:Int) {
     ret:Int;
 
     while (len) {
@@ -58,7 +58,7 @@ static write_buf:Int(int fd, const buf:CPointer<ByteVar> , int len) {
     return 0;
 }
 
-static check_content:Int(int fd, buf:CPointer<ByteVar> , int len, const void *src) {
+static check_content:Int(fd:Int, buf:CPointer<ByteVar> , len:Int, const src:CPointer<ByteVar> ) {
     ret:Int;
 
     ret = read_buf(fd, buf, len);
@@ -183,7 +183,7 @@ static do_splice:Int(ring:CPointer<io_uring>,
                         IORING_OP_SPLICE);
 }
 
-static do_tee:Int(ring:CPointer<io_uring>, int fd_in, int fd_out,
+static do_tee:Int(ring:CPointer<io_uring>, fd_in:Int, fd_out:Int,
                   len:UInt) {
     return do_splice_op(ring, fd_in, 0, fd_out, 0, len, IORING_OP_TEE);
 }

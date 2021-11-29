@@ -180,7 +180,7 @@ static test_fallocate_fsync:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);

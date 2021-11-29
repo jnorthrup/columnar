@@ -12,11 +12,11 @@
 
 #include "liburing.h"
 
-static queue_n_nops:Int(ring:CPointer<io_uring>, int n, int offset) {
+static queue_n_nops:Int(ring:CPointer<io_uring>, n:Int, offset:Int) {
     sqe:CPointer<io_uring_sqe>;
     i:Int, ret;
 
-    for (i = 0; i < n; i++) {
+    for (i  in 0 until  n) {
         sqe = io_uring_get_sqe(ring);
         if (!sqe) {
             printf("get sqe failed\n");
@@ -70,7 +70,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         goto err;
 
     CHECK_BATCH(ring.ptr, got, cqes, 4, 4);
-    for (i = 0; i < 4; i++) {
+    for (i  in 0 until  4) {
         if (i != cqes[i]->user_data) {
             printf("Got user_data %" PRIu64 ", expected %d\n",
                    (uint64_t) cqes[i]->user_data, i);
@@ -83,7 +83,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
 
     io_uring_cq_advance(ring.ptr, 4);
     CHECK_BATCH(ring.ptr, got, cqes, 4, 4);
-    for (i = 0; i < 4; i++) {
+    for (i  in 0 until  4) {
         if (i + 4 != cqes[i]->user_data) {
             printf("Got user_data %" PRIu64 ", expected %d\n",
                    (uint64_t) cqes[i]->user_data, i + 4);

@@ -48,7 +48,7 @@ static test_barrier_nop:Int(ring:CPointer<io_uring>) {
     sqe:CPointer<io_uring_sqe>;
     ret:Int, i;
 
-    for (i = 0; i < 8; i++) {
+    for (i  in 0 until  8) {
         sqe = io_uring_get_sqe(ring);
         if (!sqe) {
             fprintf(stderr, "get sqe failed\n");
@@ -69,7 +69,7 @@ static test_barrier_nop:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 8; i++) {
+    for (i  in 0 until  8) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);

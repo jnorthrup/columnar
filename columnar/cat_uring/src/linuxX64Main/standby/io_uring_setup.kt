@@ -94,7 +94,7 @@ dump_resv(p:CPointer<io_uring_params>) {
 /* bogus: setup returns a valid fd on success... expect can't predict the
    fd we'll get, so this really only takes 1 parameter: error */
 int
-try_io_uring_setup(unsigned entries, p:CPointer<io_uring_params>, expect:Int, int error) {
+try_io_uring_setup(unsigned entries, p:CPointer<io_uring_params>, expect:Int, error:Int) {
     ret:Int, err;
 
     printf("io_uring_setup(%u, %p), flags: %s, feat: %s, resv: %s, sq_thread_cpu: %u\n",

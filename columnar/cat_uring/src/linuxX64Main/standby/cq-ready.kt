@@ -12,11 +12,11 @@
 
 #include "liburing.h"
 
-static queue_n_nops:Int(ring:CPointer<io_uring>, int n) {
+static queue_n_nops:Int(ring:CPointer<io_uring>, n:Int) {
     sqe:CPointer<io_uring_sqe>;
     i:Int, ret;
 
-    for (i = 0; i < n; i++) {
+    for (i  in 0 until  n) {
         sqe = io_uring_get_sqe(ring);
         if (!sqe) {
             printf("get sqe failed\n");

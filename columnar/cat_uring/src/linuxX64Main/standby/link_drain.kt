@@ -31,7 +31,7 @@ static test_link_drain_one:Int(ring:CPointer<io_uring>) {
     iovecs.iov_base = t_malloc(4096);
     iovecs.iov_len = 4096;
 
-    for (i = 0; i < 5; i++) {
+    for (i  in 0 until  5) {
         sqe[i] = io_uring_get_sqe(ring);
         if (!sqe[i]) {
             printf("get sqe failed\n");
@@ -70,7 +70,7 @@ static test_link_drain_one:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 5; i++) {
+    for (i  in 0 until  5) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             printf("child: wait completion %d\n", ret);
@@ -114,7 +114,7 @@ fun test_link_drain_multi(ring:CPointer<io_uring>):Int{
     iovecs.iov_base = t_malloc(4096);
     iovecs.iov_len = 4096;
 
-    for (i = 0; i < 9; i++) {
+    for (i  in 0 until  9) {
         sqe[i] = io_uring_get_sqe(ring);
         if (!sqe[i]) {
             printf("get sqe failed\n");
@@ -172,7 +172,7 @@ fun test_link_drain_multi(ring:CPointer<io_uring>):Int{
         goto err;
     }
 
-    for (i = 0; i < 9; i++) {
+    for (i  in 0 until  9) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             printf("child: wait completion %d\n", ret);
@@ -209,7 +209,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < 1000; i++) {
+    for (i  in 0 until  1000) {
         ret = test_link_drain_one(ring.ptr);
         if (ret) {
             fprintf(stderr, "test_link_drain_one failed\n");

@@ -26,7 +26,7 @@ a:thread_dat {
     out:Int[2];
 };
 
-static epoll_wait_fn:CPointer<ByteVar> (void *data) {
+static epoll_wait_fn:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     td:CPointer<thread_data> = data;
     ev:epoll_event;
 
@@ -40,7 +40,7 @@ static epoll_wait_fn:CPointer<ByteVar> (void *data) {
     return (void *) 1;
 }
 
-static iou_poll:CPointer<ByteVar> (void *data) {
+static iou_poll:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     td:CPointer<thread_data> = data;
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
@@ -68,7 +68,7 @@ static iou_poll:CPointer<ByteVar> (void *data) {
     return (void *) 1;
 }
 
-static poll_pipe:CPointer<ByteVar> (void *data) {
+static poll_pipe:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     td:CPointer<thread_data> = data;
     pfd:pollfd;
     ret:Int;
@@ -161,7 +161,7 @@ static do_pipe_pollout_test:Int(ring:CPointer<io_uring>) {
     return 0;
 }
 
-static do_fd_test:Int(ring:CPointer<io_uring>, fname:String, int events) {
+static do_fd_test:Int(ring:CPointer<io_uring>, fname:String, events:Int) {
     td:thread_data;
     threads:pthread_t[2];
     fd:Int;
@@ -192,7 +192,7 @@ static do_fd_test:Int(ring:CPointer<io_uring>, fname:String, int events) {
     return 0;
 }
 
-static iou_epoll_ctl:Int(ring:CPointer<io_uring>, int epfd, int fd,
+static iou_epoll_ctl:Int(ring:CPointer<io_uring>, epfd:Int, fd:Int,
                          ev:CPointer<epoll_event>) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
@@ -223,7 +223,7 @@ static iou_epoll_ctl:Int(ring:CPointer<io_uring>, int epfd, int fd,
     return ret;
 }
 
-static do_test_epoll:Int(ring:CPointer<io_uring>, int iou_epoll_add) {
+static do_test_epoll:Int(ring:CPointer<io_uring>, iou_epoll_add:Int) {
     ev:epoll_event;
     td:thread_data;
     threads:pthread_t[2];

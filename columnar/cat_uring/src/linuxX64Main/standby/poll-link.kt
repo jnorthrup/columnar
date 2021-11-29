@@ -44,7 +44,7 @@ long :ULongtimeout
     stop:Int;
 };
 
-static send_thread:CPointer<ByteVar> (void *arg) {
+static send_thread:CPointer<ByteVar> (arg:CPointer<ByteVar> ) {
     data:CPointer<data> = arg;
 
     wait_for_var(recv_thread_ready.ptr);
@@ -113,7 +113,7 @@ fun recv_thread(arg:CPointer<ByteVar> ): CPointer<ByteVar> {
     sqe = io_uring_get_sqe(ring.ptr);
     assert(sqe != NULL);
 
-    io_uring_prep_poll_add(sqe, s0,  POLLIN or POLLHUP  | POLLERR);
+    io_uring_prep_poll_add(sqe, s0,  POLLIN or  POLLHUP or POLLERR );
  sqe.pointed.flags  |= IOSQE_IO_LINK;
  sqe.pointed.user_data  = 1;
 
@@ -129,7 +129,7 @@ fun recv_thread(arg:CPointer<ByteVar> ): CPointer<ByteVar> {
     ret = io_uring_submit(ring.ptr);
     assert(ret == 2);
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         cqe:CPointer<io_uring_cqe>;
         idx:Int;
 
@@ -164,7 +164,7 @@ fun recv_thread(arg:CPointer<ByteVar> ): CPointer<ByteVar> {
     return (void *) 1;
 }
 
-static test_poll_timeout:Int(int do_connect,long :ULongtimeout {
+static test_poll_timeout:Int(do_connect:Int,long :ULongtimeout {
     t1:pthread_t, t2;
     d:data;
     tret:CPointer<ByteVar> ;

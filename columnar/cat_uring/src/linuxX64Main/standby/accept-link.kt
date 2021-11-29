@@ -46,7 +46,7 @@ long :ULongtimeout
     stop:Int;
 };
 
-static send_thread:CPointer<ByteVar> (void *arg) {
+static send_thread:CPointer<ByteVar> (arg:CPointer<ByteVar> ) {
     data:CPointer<data> = arg;
     ret:Int;
 
@@ -138,7 +138,7 @@ fun recv_thread(arg:CPointer<ByteVar> ): CPointer<ByteVar> {
     ret = io_uring_submit(ring.ptr);
     assert(ret == 2);
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         cqe:CPointer<io_uring_cqe>;
         idx:Int;
 
@@ -177,7 +177,7 @@ fun recv_thread(arg:CPointer<ByteVar> ): CPointer<ByteVar> {
     return (void *) 1;
 }
 
-static test_accept_timeout:Int(int do_connect,long :ULongtimeout {
+static test_accept_timeout:Int(do_connect:Int,long :ULongtimeout {
     ring:io_uring;
     p:io_uring_params = {};
     t1:pthread_t, t2;

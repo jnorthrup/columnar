@@ -55,7 +55,7 @@ static submit_and_wait:Int(ring:CPointer<io_uring>, int *res) {
     return 0;
 }
 
-static wait_for:Int(ring:CPointer<io_uring>, int fd, int mask) {
+static wait_for:Int(ring:CPointer<io_uring>, fd:Int, mask:Int) {
     sqe:CPointer<io_uring_sqe>;
     ret:Int, res;
 
@@ -80,7 +80,7 @@ static wait_for:Int(ring:CPointer<io_uring>, int fd, int mask) {
     return res;
 }
 
-static listen_on_socket:Int(int fd) {
+static listen_on_socket:Int(fd:Int) {
     addr:sockaddr_in;
     ret:Int;
 
@@ -104,7 +104,7 @@ static listen_on_socket:Int(int fd) {
     return 0;
 }
 
-static configure_connect:Int(int fd, addr:CPointer<sockaddr_in>) {
+static configure_connect:Int(fd:Int, addr:CPointer<sockaddr_in>) {
     ret:Int, val = 1;
 
     ret = setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, val.ptr, sizeof(val));
@@ -126,7 +126,7 @@ static configure_connect:Int(int fd, addr:CPointer<sockaddr_in>) {
     return ret;
 }
 
-static connect_socket:Int(ring:CPointer<io_uring>, int fd, int *code) {
+static connect_socket:Int(ring:CPointer<io_uring>, fd:Int, int *code) {
     addr:sockaddr_in;
     ret:Int, res;
     code_len:socklen_t = sizeof(*code);
@@ -149,7 +149,7 @@ static connect_socket:Int(ring:CPointer<io_uring>, int fd, int *code) {
         return -1;
 
     if (res == -EINPROGRESS) {
-        ret = wait_for(ring, fd,  POLLOUT or POLLHUP  | POLLERR);
+        ret = wait_for(ring, fd,  POLLOUT or  POLLHUP or POLLERR );
         if (ret == -1)
             return -1;
 

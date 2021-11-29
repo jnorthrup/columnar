@@ -20,7 +20,7 @@ static void error_exit(message:CPointer<ByteVar>) {
     exit(1);
 }
 
-static listener_thread:CPointer<ByteVar> (void *data) {
+static listener_thread:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     td:CPointer<thread_data> = data;
     cqe:CPointer<io_uring_cqe>;
     ret:Int;
@@ -41,7 +41,7 @@ static listener_thread:CPointer<ByteVar> (void *data) {
     return (void *) 1;
 }
 
-static wakeup_io_uring:CPointer<ByteVar> (void *data) {
+static wakeup_io_uring:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     td:CPointer<thread_data> = data;
     res:Int;
 

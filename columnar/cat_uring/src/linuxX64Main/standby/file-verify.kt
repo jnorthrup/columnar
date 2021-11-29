@@ -43,7 +43,7 @@ static verify_buf:Int(buf:CPointer<ByteVar> , size:size_t, off:off_t) {
 
     off /= sizeof(unsigned int);
     ptr = buf;
-    for (i = 0; i < u_in_buf; i++) {
+    for (i  in 0 until  u_in_buf) {
         if (off != *ptr) {
             fprintf(stderr, "Found %u, wanted %lu\n", *ptr, off);
             return 1;
@@ -55,8 +55,8 @@ static verify_buf:Int(buf:CPointer<ByteVar> , size:size_t, off:off_t) {
     return 0;
 }
 
-static test_truncate:Int(ring:CPointer<io_uring>, fname:String, int buffered,
-                         vectored:Int, int provide_buf) {
+static test_truncate:Int(ring:CPointer<io_uring>, fname:String, buffered:Int,
+                         vectored:Int, provide_buf:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     vec:iovec;
@@ -106,7 +106,7 @@ long :ULongbytes
 
     u_in_buf = CHUNK_SIZE / sizeof(unsigned int);
     ptr = buf;
-    for (i = 0; i < u_in_buf; i++) {
+    for (i  in 0 until  u_in_buf) {
         *ptr = i;
         ptr++;
     }
@@ -230,7 +230,7 @@ enum {
  * written or after other reads. This forces (at least) the buffered reads
  * to be handled incrementally, exercising that path.
  */
-static do_punch:Int(int fd) {
+static do_punch:Int(fd:Int) {
     offset:off_t = 0;
     punch_type:Int;
 
@@ -272,7 +272,7 @@ static provide_buffers:Int(ring:CPointer<io_uring>, void **buf) {
     i:Int, ret;
 
     /* real use case would have one buffer chopped up, but... */
-    for (i = 0; i < READ_BATCH; i++) {
+    for (i  in 0 until  READ_BATCH) {
         sqe = io_uring_get_sqe(ring);
         io_uring_prep_provide_buffers(sqe, buf[i], CHUNK_SIZE, 1, 0, i);
     }
@@ -283,7 +283,7 @@ static provide_buffers:Int(ring:CPointer<io_uring>, void **buf) {
         return 1;
     }
 
-    for (i = 0; i < READ_BATCH; i++) {
+    for (i  in 0 until  READ_BATCH) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait cqe %d\n", ret);
@@ -299,8 +299,8 @@ static provide_buffers:Int(ring:CPointer<io_uring>, void **buf) {
     return 0;
 }
 
-static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
-                vectored:Int, int small_vecs, int registered, int provide) {
+static test:Int(ring:CPointer<io_uring>, fname:String, buffered:Int,
+                vectored:Int, small_vecs:Int, registered:Int, provide:Int) {
     vecs:iovec[READ_BATCH][MAX_VECS];
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
@@ -337,8 +337,8 @@ static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
         else
             nr_vecs = MAX_VECS;
 
-        for (j = 0; j < READ_BATCH; j++) {
-            for (i = 0; i < nr_vecs; i++) {
+        for (j  in 0 until  READ_BATCH) {
+            for (i  in 0 until  nr_vecs) {
                 ptr:CPointer<ByteVar> ;
 
                 t_posix_memalign(ptr.ptr, 4096, CHUNK_SIZE / nr_vecs);
@@ -347,7 +347,7 @@ static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
             }
         }
     } else {
-        for (j = 0; j < READ_BATCH; j++)
+        for (j  in 0 until  READ_BATCH)
             t_posix_memalign(buf.ptr[j], 4096, CHUNK_SIZE);
         nr_vecs = 0;
     }
@@ -355,7 +355,7 @@ static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
     if (registered) {
         v:iovec[READ_BATCH];
 
-        for (i = 0; i < READ_BATCH; i++) {
+        for (i  in 0 until  READ_BATCH) {
             v[i].iov_base = buf[i];
             v[i].iov_len = CHUNK_SIZE;
         }
@@ -375,7 +375,7 @@ static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
         if (provide && provide_buffers(ring, buf))
             goto err;
 
-        for (i = 0; i < READ_BATCH; i++) {
+        for (i  in 0 until  READ_BATCH) {
             this:size_t = left;
 
             if (this > CHUNK_SIZE)
@@ -413,7 +413,7 @@ static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
             goto err;
         }
 
-        for (i = 0; i < pending; i++) {
+        for (i  in 0 until  pending) {
             index:Int;
 
             ret = io_uring_wait_cqe(ring, cqe.ptr);
@@ -432,7 +432,7 @@ static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
             voff = cqe.pointed.user_data  >> 32;
             io_uring_cqe_seen(ring, cqe);
             if (vectored) {
-                for (j = 0; j < nr_vecs; j++) {
+                for (j  in 0 until  nr_vecs) {
                     buf:CPointer<ByteVar>  = vecs[index][j].iov_base;
                     len:size_t = vecs[index][j].iov_len;
 
@@ -452,11 +452,11 @@ static test:Int(ring:CPointer<io_uring>, fname:String, int buffered,
     if (registered)
         io_uring_unregister_buffers(ring);
     if (vectored) {
-        for (j = 0; j < READ_BATCH; j++)
-            for (i = 0; i < nr_vecs; i++)
+        for (j  in 0 until  READ_BATCH)
+            for (i  in 0 until  nr_vecs)
                 free(vecs[j][i].iov_base);
     } else {
-        for (j = 0; j < READ_BATCH; j++)
+        for (j  in 0 until  READ_BATCH)
             free(buf[j]);
     }
     close(fd);
@@ -487,7 +487,7 @@ static fill_pattern:Int(fname:String) {
         if (this > 4096)
             this = 4096;
         ptr = buf;
-        for (i = 0; i < u_in_buf; i++) {
+        for (i  in 0 until  u_in_buf) {
             *ptr = val;
             val++;
             ptr++;

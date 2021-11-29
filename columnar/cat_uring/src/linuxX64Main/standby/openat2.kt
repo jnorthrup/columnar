@@ -14,7 +14,7 @@
 #include "helpers.h"
 #include "liburing.h"
 
-static test_openat2:Int(ring:CPointer<io_uring>, path:String, int dfd,
+static test_openat2:Int(ring:CPointer<io_uring>, path:String, dfd:Int,
                         bool direct, fixed_index:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
@@ -55,7 +55,7 @@ static test_openat2:Int(ring:CPointer<io_uring>, path:String, int dfd,
     return ret;
 }
 
-static test_open_fixed:Int(path:String, int dfd) {
+static test_open_fixed:Int(path:String, dfd:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     ring:io_uring;
@@ -99,7 +99,7 @@ static test_open_fixed:Int(path:String, int dfd) {
         return -1;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);
@@ -120,7 +120,7 @@ static test_open_fixed:Int(path:String, int dfd) {
     return 0;
 }
 
-static test_open_fixed_fail:Int(path:String, int dfd) {
+static test_open_fixed_fail:Int(path:String, dfd:Int) {
     ring:io_uring;
     ret:Int, fd = -1;
 
@@ -164,7 +164,7 @@ static test_open_fixed_fail:Int(path:String, int dfd) {
     return 0;
 }
 
-static test_direct_reinstall:Int(path:String, int dfd) {
+static test_direct_reinstall:Int(path:String, dfd:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     char buf[1] = {0xfa};

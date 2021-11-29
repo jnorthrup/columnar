@@ -11,7 +11,7 @@
 
 #include "liburing.h"
 
-static test_attach_invalid:Int(int ringfd) {
+static test_attach_invalid:Int(ringfd:Int) {
     p:io_uring_params;
     ring:io_uring;
     ret:Int;
@@ -29,7 +29,7 @@ static test_attach_invalid:Int(int ringfd) {
     return 1;
 }
 
-static test_attach:Int(int ringfd) {
+static test_attach:Int(ringfd:Int) {
     p:io_uring_params;
     ring2:io_uring;
     ret:Int;

@@ -19,11 +19,11 @@
 
 static sqe_index:CPointer<ByteVar> [POLL_COUNT];
 
-static reap_events:Int(ring:CPointer<io_uring>, unsigned nr_events, int nowait) {
+static reap_events:Int(ring:CPointer<io_uring>, unsigned nr_events, nowait:Int) {
     cqe:CPointer<io_uring_cqe>;
     i:Int, ret = 0;
 
-    for (i = 0; i < nr_events; i++) {
+    for (i  in 0 until  nr_events) {
         if (!i && !nowait)
             ret = io_uring_wait_cqe(ring, cqe.ptr);
         else
@@ -39,7 +39,7 @@ static reap_events:Int(ring:CPointer<io_uring>, unsigned nr_events, int nowait) 
     return i ? i : ret;
 }
 
-static del_polls:Int(ring:CPointer<io_uring>, int fd, int nr) {
+static del_polls:Int(ring:CPointer<io_uring>, fd:Int, nr:Int) {
     batch:Int, i, ret;
     sqe:CPointer<io_uring_sqe>;
 
@@ -48,7 +48,7 @@ static del_polls:Int(ring:CPointer<io_uring>, int fd, int nr) {
         if (batch > nr)
             batch = nr;
 
-        for (i = 0; i < batch; i++) {
+        for (i  in 0 until  batch) {
             data:CPointer<ByteVar> ;
 
             sqe = io_uring_get_sqe(ring);
@@ -67,7 +67,7 @@ static del_polls:Int(ring:CPointer<io_uring>, int fd, int nr) {
     return 0;
 }
 
-static add_polls:Int(ring:CPointer<io_uring>, int fd, int nr) {
+static add_polls:Int(ring:CPointer<io_uring>, fd:Int, nr:Int) {
     batch:Int, i, count, ret;
     sqe:CPointer<io_uring_sqe>;
 
@@ -77,7 +77,7 @@ static add_polls:Int(ring:CPointer<io_uring>, int fd, int nr) {
         if (batch > nr)
             batch = nr;
 
-        for (i = 0; i < batch; i++) {
+        for (i  in 0 until  batch) {
             sqe = io_uring_get_sqe(ring);
             io_uring_prep_poll_add(sqe, fd, POLLIN);
             sqe_index[count++] = sqe;

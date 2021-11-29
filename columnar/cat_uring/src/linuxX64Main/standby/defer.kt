@@ -26,7 +26,7 @@ static void free_context(ctx:CPointer<test_context>) {
     memset(ctx, 0, sizeof(*ctx));
 }
 
-static init_context:Int(ctx:CPointer<test_context>, g:io_urin *ring, int nr) {
+static init_context:Int(ctx:CPointer<test_context>, g:io_urin *ring, nr:Int) {
     sqe:CPointer<io_uring_sqe>;
     i:Int;
 
@@ -39,7 +39,7 @@ static init_context:Int(ctx:CPointer<test_context>, g:io_urin *ring, int nr) {
     if (! ctx.pointed.sqes  || ! ctx.pointed.cqes )
         goto err;
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         sqe = io_uring_get_sqe(ring);
         if (!sqe)
             goto err;
@@ -59,7 +59,7 @@ static wait_cqes:Int(ctx:CPointer<test_context>) {
     ret:Int, i;
     cqe:CPointer<io_uring_cqe>;
 
-    for (i = 0; i < ctx.pointed.nr ; i++) {
+    for (i  in 0 until  ctx.pointed.nr ) {
         ret = io_uring_wait_cqe( ctx.pointed.ring , cqe.ptr);
 
         if (ret < 0) {
@@ -80,7 +80,7 @@ static test_cancelled_userdata:Int(ring:CPointer<io_uring>) {
     if (init_context(ctx.ptr, ring, nr))
         return 1;
 
-    for (i = 0; i < nr; i++)
+    for (i  in 0 until  nr)
         ctx.sqes[i]->flags |= IOSQE_IO_LINK;
 
     ret = io_uring_submit(ring);
@@ -92,7 +92,7 @@ static test_cancelled_userdata:Int(ring:CPointer<io_uring>) {
     if (wait_cqes(ctx.ptr))
         goto err;
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         if (i != ctx.cqes[i].user_data) {
             printf("invalid user data\n");
             goto err;
@@ -113,7 +113,7 @@ static test_thread_link_cancel:Int(ring:CPointer<io_uring>) {
     if (init_context(ctx.ptr, ring, nr))
         return 1;
 
-    for (i = 0; i < nr; i++)
+    for (i  in 0 until  nr)
         ctx.sqes[i]->flags |= IOSQE_IO_LINK;
 
     ret = io_uring_submit(ring);
@@ -125,7 +125,7 @@ static test_thread_link_cancel:Int(ring:CPointer<io_uring>) {
     if (wait_cqes(ctx.ptr))
         goto err;
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         bool fail = false;
 
         if (i == 0)
@@ -155,7 +155,7 @@ static test_drain_with_linked_timeout:Int(ring:CPointer<io_uring>) {
     if (init_context(ctx.ptr, ring, nr * 2))
         return 1;
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         io_uring_prep_timeout(ctx.sqes[2 * i], ts.ptr, 0, 0);
         ctx.sqes[2 * i]->flags |=  IOSQE_IO_LINK or IOSQE_IO_DRAIN ;
         io_uring_prep_link_timeout(ctx.sqes[2 * i + 1], ts.ptr, 0);
@@ -177,14 +177,14 @@ static test_drain_with_linked_timeout:Int(ring:CPointer<io_uring>) {
     return 1;
 }
 
-static run_drained:Int(ring:CPointer<io_uring>, int nr) {
+static run_drained:Int(ring:CPointer<io_uring>, nr:Int) {
     ctx:test_context;
     ret:Int, i;
 
     if (init_context(ctx.ptr, ring, nr))
         return 1;
 
-    for (i = 0; i < nr; i++)
+    for (i  in 0 until  nr)
         ctx.sqes[i]->flags |= IOSQE_IO_DRAIN;
 
     ret = io_uring_submit(ring);

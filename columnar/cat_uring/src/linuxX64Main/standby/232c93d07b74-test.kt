@@ -55,7 +55,7 @@ static void wait_for_rcv_ready(void) {
     pthread_mutex_unlock(mutex.ptr);
 }
 
-static rcv:CPointer<ByteVar> (void *arg) {
+static rcv:CPointer<ByteVar> (arg:CPointer<ByteVar> ) {
     p:CPointer<params> = arg;
     s0:Int;
     res:Int;
@@ -142,7 +142,7 @@ static rcv:CPointer<ByteVar> (void *arg) {
                 else {
                     i:Int;
 
-                    for (i = 0; i < cqe.pointed.res ; i++) {
+                    for (i  in 0 until  cqe.pointed.res ) {
                         if (buff[i] != expected_byte) {
                             fprintf(stderr,
                                     "Received %d, wanted %d\n",
@@ -170,7 +170,7 @@ static rcv:CPointer<ByteVar> (void *arg) {
     return ret;
 }
 
-static snd:CPointer<ByteVar> (void *arg) {
+static snd:CPointer<ByteVar> (arg:CPointer<ByteVar> ) {
     p:CPointer<params> = arg;
     s0:Int;
     ret:Int;
@@ -225,7 +225,7 @@ static snd:CPointer<ByteVar> (void *arg) {
         char buff[SEND_BUFF_SIZE];
         i:Int;
 
-        for (i = 0; i < SEND_BUFF_SIZE; i++)
+        for (i  in 0 until  SEND_BUFF_SIZE)
             buff[i] = i + bytes_written;
 
         iov:iovec;
@@ -281,7 +281,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     if (argc > 1)
         return 0;
 
-    for (i = 0; i < 4; i++) {
+    for (i  in 0 until  4) {
         p.tcp = i 1.ptr;
         p.non_blocking = (i 2.ptr) >> 1;
 

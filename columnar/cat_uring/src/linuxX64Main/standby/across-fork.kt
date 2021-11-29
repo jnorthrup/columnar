@@ -29,7 +29,7 @@ static open_tempfile:Int(dir:String, const fname:CPointer<ByteVar>) {
 
     snprintf(buf, sizeof(buf), "%s/%s",
              dir, fname);
-    fd = open(buf,  O_RDWR or O_CREAT  | O_APPEND,  S_IRUSR or S_IWUSR );
+    fd = open(buf,  O_RDWR or  O_CREAT or O_APPEND ,  S_IRUSR or S_IWUSR );
     if (fd < 0) {
         perror("open");
         exit(1);
@@ -38,7 +38,7 @@ static open_tempfile:Int(dir:String, const fname:CPointer<ByteVar>) {
     return fd;
 }
 
-static submit_write:Int(ring:CPointer<io_uring>, int fd, str:String,
+static submit_write:Int(ring:CPointer<io_uring>, fd:Int, str:String,
                         wait:Int) {
     sqe:CPointer<io_uring_sqe>;
     iovec:iovec;
@@ -80,7 +80,7 @@ static wait_cqe:Int(ring:CPointer<io_uring>, stage:String) {
     return 0;
 }
 
-static verify_file:Int(tmpdir:String, const fname:CPointer<ByteVar>, const char *expect) {
+static verify_file:Int(tmpdir:String, const fname:CPointer<ByteVar>, expect:String) {
     fd:Int;
     char buf[512];
     err:Int = 0;

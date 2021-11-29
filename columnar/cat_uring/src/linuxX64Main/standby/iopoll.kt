@@ -29,7 +29,7 @@ static provide_buffers:Int(ring:CPointer<io_uring>) {
     cqe:CPointer<io_uring_cqe>;
     ret:Int, i;
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         sqe = io_uring_get_sqe(ring);
         io_uring_prep_provide_buffers(sqe, vecs[i].iov_base,
                                       vecs[i].iov_len, 1, 1, i);
@@ -41,7 +41,7 @@ static provide_buffers:Int(ring:CPointer<io_uring>) {
         return 1;
     }
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if ( cqe.pointed.res  < 0) {
             fprintf(stderr, " cqe.pointed.res =%d\n", cqe.pointed.res );
@@ -53,8 +53,8 @@ static provide_buffers:Int(ring:CPointer<io_uring>) {
     return 0;
 }
 
-static __test_io:Int(file:String, ring:CPointer<io_uring>, int write, int sqthread,
-                     fixed:Int, int buf_select) {
+static __test_io:Int(file:String, ring:CPointer<io_uring>, write:Int, sqthread:Int,
+                     fixed:Int, buf_select:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     open_flags:Int;
@@ -97,7 +97,7 @@ static __test_io:Int(file:String, ring:CPointer<io_uring>, int write, int sqthre
     }
 
     offset = 0;
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         sqe = io_uring_get_sqe(ring);
         if (!sqe) {
             fprintf(stderr, "sqe get failed\n");
@@ -153,7 +153,7 @@ static __test_io:Int(file:String, ring:CPointer<io_uring>, int write, int sqthre
         goto err;
     }
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -222,7 +222,7 @@ static test_io_uring_submit_enters:Int(file:String) {
         goto err;
     }
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         sqe:CPointer<io_uring_sqe>;
         offset:off_t = BS * (rand() % BUFFERS);
 
@@ -237,7 +237,7 @@ static test_io_uring_submit_enters:Int(file:String) {
     if (ret < 0)
         goto err;
 
-    for (i = 0; i < 500; i++) {
+    for (i  in 0 until  500) {
         ret = io_uring_submit(ring.ptr);
         if (ret != 0) {
             fprintf(stderr, "still had %d sqes to submit, this is unexpected", ret);
@@ -264,7 +264,7 @@ static test_io_uring_submit_enters:Int(file:String) {
     return ret;
 }
 
-static test_io:Int(file:String, int write, int sqthread, int fixed,
+static test_io:Int(file:String, write:Int, sqthread:Int, fixed:Int,
                    buf_select:Int) {
     ring:io_uring;
     ret:Int, ring_flags = IORING_SETUP_IOPOLL;
@@ -328,7 +328,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     nr = 16;
     if (no_buf_select)
         nr = 8;
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         write:Int = (i 1.ptr) != 0;
         sqthread:Int = (i 2.ptr) != 0;
         fixed:Int = (i 4.ptr) != 0;

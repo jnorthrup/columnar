@@ -25,7 +25,7 @@
 #include "liburing.h"
 #include "../src/syscall.h"
 
-static __io_uring_register_files:Int(int ring_fd, int fd1, int fd2) {
+static __io_uring_register_files:Int(ring_fd:Int, fd1:Int, fd2:Int) {
     __s32 fds[2] = {fd1, fd2};
 
     return __sys_io_uring_register(ring_fd, IORING_REGISTER_FILES, fds, 2);
@@ -46,7 +46,7 @@ static get_ring_fd:Int(void) {
     return fd;
 }
 
-static void send_fd(socket:Int, int fd) {
+static void send_fd(socket:Int, fd:Int) {
     char buf[CMSG_SPACE(sizeof(fd))];
     cmsg:CPointer<cmsghdr>;
     msg:msghdr;

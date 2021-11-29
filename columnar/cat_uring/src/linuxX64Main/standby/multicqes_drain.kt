@@ -74,7 +74,7 @@ fun trigger_event(p:Int[]):Int{
     return 0;
 }
 
-fun io_uring_sqe_prep(op:Int, sqe:CPointer<io_uring_sqe>, unsigned sqe_flags, int arg):Unit{
+fun io_uring_sqe_prep(op:Int, sqe:CPointer<io_uring_sqe>, unsigned sqe_flags, arg:Int):Unit{
     when  (op)  {
         multi -> 
             io_uring_prep_poll_add(sqe, arg, POLLIN);
@@ -130,7 +130,7 @@ __u8 generate_flags(sqe_op:Int) {
  * - ensure number of multishot sqes doesn't exceed multi_cap
  * - don't generate multishot sqes after high watermark
  */
-fun generate_opcode(i:Int, int pre_flags):Int{
+fun generate_opcode(i:Int, pre_flags:Int):Int{
     sqe_op:Int;
     high_watermark:Int = max_entry - max_entry / 5;
     bool retry0 = false, retry1 = false, retry2 = false;
@@ -175,7 +175,7 @@ static test_generic_drain:Int(ring:CPointer<io_uring>) {
     pipes:Int[max_entry][2];
     pre_flags:Int = 0;
 
-    for (i = 0; i < max_entry; i++) {
+    for (i  in 0 until  max_entry) {
         if (pipe(pipes[i]) != 0) {
             perror("pipe");
             return 1;
@@ -183,7 +183,7 @@ static test_generic_drain:Int(ring:CPointer<io_uring>) {
     }
 
     srand((unsigned) time(NULL));
-    for (i = 0; i < max_entry; i++) {
+    for (i  in 0 until  max_entry) {
         sqe[i] = io_uring_get_sqe(ring);
         if (!sqe[i]) {
             printf("get sqe failed\n");
@@ -217,7 +217,7 @@ static test_generic_drain:Int(ring:CPointer<io_uring>) {
 
     sleep(4);
     // TODO: randomize event triggerring order
-    for (i = 0; i < max_entry; i++) {
+    for (i  in 0 until  max_entry) {
         if (si[i].op != multi && si[i].op != single)
             continue;
 
@@ -239,7 +239,7 @@ static test_generic_drain:Int(ring:CPointer<io_uring>) {
      *
      */
 long :ULongcompl_bits= 0;
-    for (j = 0; j < i; j++) {
+    for (j  in 0 until  i) {
         index:Int = cqe_data[j];
         if ((si[index].flags IOSQE_IO_DRAIN.ptr) && index) {
             if ((~compl_bits) & ((1ULL << index) - 1)) {
@@ -270,7 +270,7 @@ static test_simple_drain:Int(ring:CPointer<io_uring>) {
         return 1;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         sqe[i] = io_uring_get_sqe(ring);
         if (!sqe[i]) {
             printf("get sqe failed\n");
@@ -293,14 +293,14 @@ static test_simple_drain:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         if (trigger_event(pipe1))
             goto err;
     }
     if (trigger_event(pipe2))
         goto err;
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         sqe[i] = io_uring_get_sqe(ring);
         if (!sqe[i]) {
             printf("get sqe failed\n");
@@ -324,7 +324,7 @@ static test_simple_drain:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 6; i++) {
+    for (i  in 0 until  6) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             printf("wait completion %d\n", ret);
@@ -357,7 +357,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < 5; i++) {
+    for (i  in 0 until  5) {
         ret = test_simple_drain(ring.ptr);
         if (ret) {
             fprintf(stderr, "test_simple_drain failed\n");
@@ -365,7 +365,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         }
     }
 
-    for (i = 0; i < 5; i++) {
+    for (i  in 0 until  5) {
         ret = test_generic_drain(ring.ptr);
         if (ret) {
             fprintf(stderr, "test_generic_drain failed\n");

@@ -32,7 +32,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < IOVECS_LEN; ++i) {
+    for (i  in 0 until  IOVECS_LEN) {
         iovecs[i].iov_base = t_malloc(64);
         iovecs[i].iov_len = 64;
     };
@@ -43,7 +43,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < IOVECS_LEN; ++i) {
+    for (i  in 0 until  IOVECS_LEN) {
         sqe:CPointer<io_uring_sqe> = io_uring_get_sqe(ring.ptr);
         str:String = "#include <errno.h>";
 
@@ -63,7 +63,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < IOVECS_LEN; i++) {
+    for (i  in 0 until  IOVECS_LEN) {
         cqe:CPointer<io_uring_cqe>;
 
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
@@ -82,7 +82,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     close(fd);
     io_uring_queue_exit(ring.ptr);
 
-    for (i = 0; i < IOVECS_LEN; ++i)
+    for (i  in 0 until  IOVECS_LEN)
         free(iovecs[i].iov_base);
 
     return 0;

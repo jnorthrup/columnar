@@ -57,7 +57,7 @@ static void queue_recv(ring:CPointer<io_uring>, fd:Int, bool fixed) {
  sqe.pointed.flags  |= IOSQE_FIXED_FILE;
 }
 
-static accept_conn:Int(ring:CPointer<io_uring>, int fd, bool fixed) {
+static accept_conn:Int(ring:CPointer<io_uring>, fd:Int, bool fixed) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ret:Int, fixed_idx = 0;
@@ -87,7 +87,7 @@ static accept_conn:Int(ring:CPointer<io_uring>, int fd, bool fixed) {
     return ret;
 }
 
-static start_accept_listen:Int(addr:CPointer<sockaddr_in>, int port_off) {
+static start_accept_listen:Int(addr:CPointer<sockaddr_in>, port_off:Int) {
     fd:Int, ret;
 
     fd = socket(AF_INET,  SOCK_STREAM or SOCK_CLOEXEC , IPPROTO_TCP);
@@ -115,7 +115,7 @@ static start_accept_listen:Int(addr:CPointer<sockaddr_in>, int port_off) {
     return fd;
 }
 
-static test:Int(ring:CPointer<io_uring>, int accept_should_error, bool fixed) {
+static test:Int(ring:CPointer<io_uring>, accept_should_error:Int, bool fixed) {
     cqe:CPointer<io_uring_cqe>;
     addr:sockaddr_in;
     head:uint32_t, count = 0;
@@ -261,10 +261,10 @@ long :ULongcur_lim
 
     fds = t_calloc(nr, sizeof(int));
 
-    for (i = 0; i < nr; i++)
+    for (i  in 0 until  nr)
         fds[i] = start_accept_listen(NULL, i);
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         sqe = io_uring_get_sqe(m_io_uring.ptr);
         io_uring_prep_accept(sqe, fds[i], NULL, NULL, 0);
  sqe.pointed.user_data  = 1 + i;
@@ -275,7 +275,7 @@ long :ULongcur_lim
     if (usecs)
         usleep(usecs);
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         if (io_uring_peek_cqe(m_io_uring.ptr, cqe.ptr))
             break;
         if ( cqe.pointed.res  != -ECANCELED) {
@@ -325,7 +325,7 @@ static test_accept_cancel:Int(unsigned usecs) {
     ret = io_uring_submit(m_io_uring.ptr);
     assert(ret == 1);
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(m_io_uring.ptr, cqe.ptr);
         assert(!ret);
         /*

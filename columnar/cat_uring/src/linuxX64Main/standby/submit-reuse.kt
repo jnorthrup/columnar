@@ -23,7 +23,7 @@ a:thread_dat {
     volatile do_exit:Int;
 };
 
-static flusher:CPointer<ByteVar> (void *__data) {
+static flusher:CPointer<ByteVar> (__data:CPointer<ByteVar> ) {
     data:CPointer<thread_data> = __data;
     i:Int = 0;
 
@@ -44,7 +44,7 @@ static ring:io_uring;
 
 static no_stable:Int;
 
-static prep:Int(int fd, str:CPointer<ByteVar>, int split, int async) {
+static prep:Int(fd:Int, str:CPointer<ByteVar>, split:Int, async:Int) {
     sqe:CPointer<io_uring_sqe>;
     iovs:iovec[16];
     ret:Int, i;
@@ -53,7 +53,7 @@ static prep:Int(int fd, str:CPointer<ByteVar>, int split, int async) {
         vsize:Int = STR_SIZE / 16;
         ptr:CPointer<ByteVar>  = str;
 
-        for (i = 0; i < 16; i++) {
+        for (i  in 0 until  16) {
             iovs[i].iov_base = ptr;
             iovs[i].iov_len = vsize;
             ptr += vsize;
@@ -74,7 +74,7 @@ static prep:Int(int fd, str:CPointer<ByteVar>, int split, int async) {
         return 1;
     }
     if (split) {
-        for (i = 0; i < 16; i++)
+        for (i  in 0 until  16)
             iovs[i].iov_base = NULL;
     } else {
         iovs[0].iov_base = NULL;
@@ -82,10 +82,10 @@ static prep:Int(int fd, str:CPointer<ByteVar>, int split, int async) {
     return 0;
 }
 
-static wait_nr:Int(int nr) {
+static wait_nr:Int(nr:Int) {
     i:Int, ret;
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         cqe:CPointer<io_uring_cqe>;
 
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
@@ -124,7 +124,7 @@ staticlong :ULongmtime_since_nowtv:CPointer<timeval>) {
     return mtime_since(tv, end.ptr);
 }
 
-static test_reuse:Int(int argc, argv:CPointer<ByteVar>[], int split, int async) {
+static test_reuse:Int(argc:Int, argv:CPointer<ByteVar>[], split:Int, async:Int) {
     data:thread_data;
     p:io_uring_params = {};
     fd1:Int, fd2, ret, i;
@@ -177,7 +177,7 @@ static test_reuse:Int(int argc, argv:CPointer<ByteVar>[], int split, int async) 
     usleep(10000);
 
     gettimeofday(tv.ptr, NULL);
-    for (i = 0; i < 1000; i++) {
+    for (i  in 0 until  1000) {
         ret = prep(fd1, str1, split, async);
         if (ret) {
             fprintf(stderr, "prep1 failed: %d\n", ret);
@@ -213,7 +213,7 @@ static test_reuse:Int(int argc, argv:CPointer<ByteVar>[], int split, int async) 
 fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     ret:Int, i;
 
-    for (i = 0; i < 4; i++) {
+    for (i  in 0 until  4) {
         split:Int, async;
 
         split = (i 1.ptr) != 0;

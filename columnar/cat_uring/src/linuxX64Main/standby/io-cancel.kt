@@ -44,11 +44,11 @@ staticlong :ULongutime_since_nowtv:CPointer<timeval>) {
     return utime_since(tv, end.ptr);
 }
 
-static start_io:Int(ring:CPointer<io_uring>, int fd, int do_write) {
+static start_io:Int(ring:CPointer<io_uring>, fd:Int, do_write:Int) {
     sqe:CPointer<io_uring_sqe>;
     i:Int, ret;
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         offset:off_t;
 
         sqe = io_uring_get_sqe(ring);
@@ -76,11 +76,11 @@ static start_io:Int(ring:CPointer<io_uring>, int fd, int do_write) {
     return 1;
 }
 
-static wait_io:Int(ring:CPointer<io_uring>, unsigned nr_io, int do_partial) {
+static wait_io:Int(ring:CPointer<io_uring>, unsigned nr_io, do_partial:Int) {
     cqe:CPointer<io_uring_cqe>;
     i:Int, ret;
 
-    for (i = 0; i < nr_io; i++) {
+    for (i  in 0 until  nr_io) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -102,7 +102,7 @@ static wait_io:Int(ring:CPointer<io_uring>, unsigned nr_io, int do_partial) {
 
 }
 
-static do_io:Int(ring:CPointer<io_uring>, int fd, int do_write) {
+static do_io:Int(ring:CPointer<io_uring>, fd:Int, do_write:Int) {
     if (start_io(ring, fd, do_write))
         return 1;
     if (wait_io(ring, BUFFERS, 0))
@@ -110,11 +110,11 @@ static do_io:Int(ring:CPointer<io_uring>, int fd, int do_write) {
     return 0;
 }
 
-static start_cancel:Int(ring:CPointer<io_uring>, int do_partial, int async_cancel) {
+static start_cancel:Int(ring:CPointer<io_uring>, do_partial:Int, async_cancel:Int) {
     sqe:CPointer<io_uring_sqe>;
     i:Int, ret, submitted = 0;
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         if (do_partial && (i 1.ptr))
             continue;
         sqe = io_uring_get_sqe(ring);
@@ -144,7 +144,7 @@ static start_cancel:Int(ring:CPointer<io_uring>, int do_partial, int async_cance
  * the submitted IO. This is done to verify that cancelling one piece of IO doesn't
  * impact others.
  */
-static test_io_cancel:Int(file:String, int do_write, int do_partial,
+static test_io_cancel:Int(file:String, do_write:Int, do_partial:Int,
                           async_cancel:Int) {
     ring:io_uring;
     start_tv:timeval;
@@ -326,7 +326,7 @@ static test_cancel_req_across_fork:Int(void) {
             return 1;
         }
 
-        for (i = 0; i < 2; ++i) {
+        for (i  in 0 until  2) {
             ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
             if (ret) {
                 fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -425,7 +425,7 @@ static test_cancel_inflight_exit:Int(void) {
         }
     }
 
-    for (i = 0; i < 3; ++i) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);
@@ -517,7 +517,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
 
     vecs = t_create_buffers(BUFFERS, BS);
 
-    for (i = 0; i < 8; i++) {
+    for (i  in 0 until  8) {
         write:Int = (i 1.ptr) != 0;
         partial:Int = (i 2.ptr) != 0;
         async:Int = (i 4.ptr) != 0;

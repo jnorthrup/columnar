@@ -18,13 +18,13 @@
 
 #ifdef __NR_statx
 
-static do_statx:Int(int dfd, path:String, int flags, unsigned mask,
+static do_statx:Int(dfd:Int, path:String, flags:Int, unsigned mask,
                     statxbuf:CPointer<statx>) {
     return syscall(__NR_statx, dfd, path, flags, mask, statxbuf);
 }
 
 #else
-static do_statx:Int(int dfd, path:String, int flags, unsigned mask,
+static do_statx:Int(dfd:Int, path:String, flags:Int, unsigned mask,
             statxbuf:CPointer<statx>)
 {
     errno = ENOSYS;

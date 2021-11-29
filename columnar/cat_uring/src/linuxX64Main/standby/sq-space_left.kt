@@ -63,7 +63,7 @@ static test_sync:Int(void) {
     }
 
     /* prep 8 NOPS */
-    for (i = 0; i < 8; i++) {
+    for (i  in 0 until  8) {
         sqe = io_uring_get_sqe(ring.ptr);
         if (!sqe) {
             fprintf(stderr, "get sqe failed\n");
@@ -82,7 +82,7 @@ static test_sync:Int(void) {
  sqe.pointed.opcode  = 0xfe;
 
     /* prep 8 NOPS */
-    for (i = 0; i < 8; i++) {
+    for (i  in 0 until  8) {
         sqe = io_uring_get_sqe(ring.ptr);
         if (!sqe) {
             fprintf(stderr, "get sqe failed\n");

@@ -29,7 +29,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     }
 
     ptr = buf;
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         unsigned bsize = BUFSIZE / BUFFERS;
 
         iov[i].iov_base = ptr;
@@ -67,7 +67,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < BUFFERS; i++) {
+    for (i  in 0 until  BUFFERS) {
         iov[i].iov_base = NULL;
         iov[i].iov_len = 1000000;
     }

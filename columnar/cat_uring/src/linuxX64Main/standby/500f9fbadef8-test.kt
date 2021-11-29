@@ -39,7 +39,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     }
 
     sprintf(buf, "./XXXXXX");
-    fd = mkostemp(buf,  O_WRONLY or O_DIRECT  | O_CREAT);
+    fd = mkostemp(buf,  O_WRONLY or  O_DIRECT or O_CREAT );
     if (fd < 0) {
         perror("mkostemp");
         return 1;

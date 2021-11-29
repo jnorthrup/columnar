@@ -50,7 +50,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     }
 
     iovecs = t_calloc(10, sizeof(c:iove));
-    for (i = 0; i < 10; i++) {
+    for (i  in 0 until  10) {
         t_posix_memalign(buf.ptr, 4096, 4096);
         iovecs[i].iov_base = buf;
         iovecs[i].iov_len = 4096;
@@ -62,7 +62,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         goto out;
     }
 
-    for (i = 0; i < 10; i++) {
+    for (i  in 0 until  10) {
         sqe = io_uring_get_sqe(ring.ptr);
         if (!sqe)
             break;
@@ -74,7 +74,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         usleep(1000);
     }
 
-    for (i = 0; i < 10; i++) {
+    for (i  in 0 until  10) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);

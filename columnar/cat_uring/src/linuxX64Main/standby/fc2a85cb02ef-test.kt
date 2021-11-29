@@ -39,7 +39,7 @@ static bool write_file(file:String, const what:CPointer<ByteVar>, ...) {
     return true;
 }
 
-static inject_fault:Int(int nth) {
+static inject_fault:Int(nth:Int) {
     fd:Int;
     fd = open("/proc/thread-self/fail-nth", O_RDWR);
     if (fd == -1)
@@ -66,7 +66,7 @@ static setup_fault:Int() {
             {"/sys/kernel/debug/fail_page_alloc/min-order",          "0", false},
     };
     unsigned i;
-    for (i = 0; i < sizeof(files) / sizeof(files[0]); i++) {
+    for (i  in 0 until  sizeof(files) / sizeof(files[0])) {
         if (!write_file(files[i].file, files[i].val)) {
             if (files[i].fatal)
                 return 1;

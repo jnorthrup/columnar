@@ -123,7 +123,7 @@ a:recv_dat {
     registerfiles:Int;
 };
 
-static recv_fn:CPointer<ByteVar> (void *data) {
+static recv_fn:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     rd:CPointer<recv_data> = data;
     char buf[MAX_MSG + 1];
     iov:iovec = {
@@ -230,7 +230,7 @@ static do_send:Int(void) {
     return 1;
 }
 
-static test:Int(int use_sqthread, int regfiles) {
+static test:Int(use_sqthread:Int, regfiles:Int) {
     attr:pthread_mutexattr_t;
     recv_thread:pthread_t;
     rd:recv_data;

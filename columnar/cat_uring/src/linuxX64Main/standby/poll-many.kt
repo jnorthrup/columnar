@@ -28,7 +28,7 @@ struct p {
 
 static p:p[NFILES];
 
-static arm_poll:Int(ring:CPointer<io_uring>, int off) {
+static arm_poll:Int(ring:CPointer<io_uring>, off:Int) {
     sqe:CPointer<io_uring_sqe>;
 
     sqe = io_uring_get_sqe(ring);
@@ -47,7 +47,7 @@ static reap_polls:Int(ring:CPointer<io_uring>) {
     i:Int, ret, off;
     char c;
 
-    for (i = 0; i < BATCH; i++) {
+    for (i  in 0 until  BATCH) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait cqe %d\n", ret);
@@ -83,7 +83,7 @@ static trigger_polls:Int(void) {
     char c = 89;
     i:Int, ret;
 
-    for (i = 0; i < BATCH; i++) {
+    for (i  in 0 until  BATCH) {
         off:Int;
 
         do {
@@ -114,7 +114,7 @@ static arm_polls:Int(ring:CPointer<io_uring>) {
         if (this_arm > RING_SIZE)
             this_arm = RING_SIZE;
 
-        for (i = 0; i < this_arm; i++) {
+        for (i  in 0 until  this_arm) {
             if (arm_poll(ring, off)) {
                 fprintf(stderr, "arm failed at %d\n", off);
                 return 1;
@@ -158,7 +158,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         }
     }
 
-    for (i = 0; i < NFILES; i++) {
+    for (i  in 0 until  NFILES) {
         if (pipe(p[i].fd) < 0) {
             perror("pipe");
             goto err_noring;
@@ -182,7 +182,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     if (arm_polls(ring.ptr))
         goto err;
 
-    for (i = 0; i < NLOOPS; i++) {
+    for (i  in 0 until  NLOOPS) {
         trigger_polls();
         ret = reap_polls(ring.ptr);
         if (ret)

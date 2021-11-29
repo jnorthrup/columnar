@@ -79,7 +79,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return ret;
     }
 
-    ret = open(target,  O_CREAT or O_RDWR  | O_EXCL, 0600);
+    ret = open(target,  O_CREAT or  O_RDWR or O_EXCL , 0600);
     if (ret < 0) {
         perror("open");
         goto err;

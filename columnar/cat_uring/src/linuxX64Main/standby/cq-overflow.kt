@@ -21,7 +21,7 @@ static vecs:CPointer<iovec>;
 
 #define ENTRIES    8
 
-static test_io:Int(file:String,long :ULongusecs unsigned *drops, int fault) {
+static test_io:Int(file:String,long :ULongusecs unsigned *drops, fault:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     p:io_uring_params;
@@ -46,7 +46,7 @@ static test_io:Int(file:String,long :ULongusecs unsigned *drops, int fault) {
         nodrop = 1;
 
     total = 0;
-    for (i = 0; i < BUFFERS / 2; i++) {
+    for (i  in 0 until  BUFFERS / 2) {
         offset:off_t;
 
         sqe = io_uring_get_sqe(ring.ptr);
@@ -77,7 +77,7 @@ static test_io:Int(file:String,long :ULongusecs unsigned *drops, int fault) {
 
     usleep(usecs);
 
-    for (i = total; i < BUFFERS; i++) {
+    for (i  in total until  BUFFERS) {
         offset:off_t;
 
         sqe = io_uring_get_sqe(ring.ptr);
@@ -148,11 +148,11 @@ static test_io:Int(file:String,long :ULongusecs unsigned *drops, int fault) {
     return 1;
 }
 
-static reap_events:Int(ring:CPointer<io_uring>, unsigned nr_events, int do_wait) {
+static reap_events:Int(ring:CPointer<io_uring>, unsigned nr_events, do_wait:Int) {
     cqe:CPointer<io_uring_cqe>;
     i:Int, ret = 0, seq = 0;
 
-    for (i = 0; i < nr_events; i++) {
+    for (i  in 0 until  nr_events) {
         if (do_wait)
             ret = io_uring_wait_cqe(ring, cqe.ptr);
         else
@@ -194,8 +194,8 @@ static test_overflow:Int(void) {
 
     /* submit 4x4 SQEs, should overflow the ring by 8 */
     pending = 0;
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 4; j++) {
+    for (i  in 0 until  4) {
+        for (j  in 0 until  4) {
             sqe = io_uring_get_sqe(ring.ptr);
             if (!sqe) {
                 fprintf(stderr, "get sqe failed\n");

@@ -48,7 +48,7 @@ static test_single_hardlink:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);
@@ -83,7 +83,7 @@ static test_single_hardlink:Int(ring:CPointer<io_uring>) {
 }
 
 /*
- * Timer.pointed.timer  -> nop
+ * Timer.pointed. timer.pointed.nop 
  */
 static test_double_hardlink:Int(ring:CPointer<io_uring>) {
     ts1:__kernel_timespec, ts2;
@@ -130,7 +130,7 @@ static test_double_hardlink:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);
@@ -192,7 +192,7 @@ static test_single_link_fail:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_peek_cqe(ring, cqe.ptr);
         if (ret < 0) {
             printf("wait completion %d\n", ret);
@@ -266,7 +266,7 @@ static test_double_chain:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 4; i++) {
+    for (i  in 0 until  4) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             printf("wait completion %d\n", ret);
@@ -320,7 +320,7 @@ static test_double_link:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             printf("wait completion %d\n", ret);
@@ -365,7 +365,7 @@ static test_single_link:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             printf("wait completion %d\n", ret);

@@ -35,7 +35,7 @@ static bool check_cq_empty(ring:CPointer<io_uring>) {
  * There are io_uring_register_buffers_tags() and other wrappers,
  * but they may change, so hand-code to specifically test this ABI.
  */
-static register_rsrc:Int(ring:CPointer<io_uring>, int type, int nr,
+static register_rsrc:Int(ring:CPointer<io_uring>, type:Int, nr:Int,
                          const arg:CPointer<ByteVar> , const __u64 *tags) {
     reg:io_uring_rsrc_register;
     ret:Int, reg_type;
@@ -58,7 +58,7 @@ static register_rsrc:Int(ring:CPointer<io_uring>, int type, int nr,
  * There are io_uring_register_buffers_update_tag() and other wrappers,
  * but they may change, so hand-code to specifically test this ABI.
  */
-static update_rsrc:Int(ring:CPointer<io_uring>, int type, int nr, int off,
+static update_rsrc:Int(ring:CPointer<io_uring>, type:Int, nr:Int, off:Int,
                        const arg:CPointer<ByteVar> , const __u64 *tags) {
     up:io_uring_rsrc_update2;
     ret:Int, up_type;
@@ -92,7 +92,7 @@ static bool has_rsrc_update(void) {
     return ret;
 }
 
-static test_tags_generic:Int(int nr, int type, rsrc:CPointer<ByteVar> , int ring_flags) {
+static test_tags_generic:Int(nr:Int, type:Int, rsrc:CPointer<ByteVar> , ring_flags:Int) {
     cqe:CPointer<io_uring_cqe> = NULL;
     ring:io_uring;
     i:Int, ret;
@@ -101,7 +101,7 @@ static test_tags_generic:Int(int nr, int type, rsrc:CPointer<ByteVar> , int ring
     tags = malloc(nr * sizeof(*tags));
     if (!tags)
         return 1;
-    for (i = 0; i < nr; i++)
+    for (i  in 0 until  nr)
         tags[i] = i + 1;
     ret = io_uring_queue_init(1, ring.ptr, 0);
     if (ret) {
@@ -154,7 +154,7 @@ static test_buffers_update:Int(void) {
     vecs:iovec[nr];
     __u64 tags[nr];
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         vecs[i].iov_base = tmp_buf;
         vecs[i].iov_len = 1024;
         tags[i] = i + 1;
@@ -224,7 +224,7 @@ static test_buffers_empty_buffers:Int(void) {
     char tmp_buf[1024];
     vecs:iovec[nr];
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         vecs[i].iov_base = 0;
         vecs[i].iov_len = 0;
     }
@@ -309,7 +309,7 @@ static test_buffers_empty_buffers:Int(void) {
 }
 
 
-static test_files:Int(int ring_flags) {
+static test_files:Int(ring_flags:Int) {
     cqe:CPointer<io_uring_cqe> = NULL;
     ring:io_uring;
     const nr:Int = 50;
@@ -317,7 +317,7 @@ static test_files:Int(int ring_flags) {
     __s32 files[nr];
     __u64 tags[nr], tag;
 
-    for (i = 0; i < nr; ++i) {
+    for (i  in 0 until  nr) {
         files[i] = pipes[0];
         tags[i] = i + 1;
     }
@@ -372,7 +372,7 @@ static test_notag:Int(void) {
         printf("ring setup failed\n");
         return 1;
     }
-    for (i = 0; i < nr; ++i)
+    for (i  in 0 until  nr)
         files[i] = pipes[0];
 
     ret = io_uring_register_files(ring.ptr, files, nr);
@@ -415,7 +415,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return ret;
     }
 
-    for (i = 0; i < sizeof(ring_flags) / sizeof(ring_flags[0]); i++) {
+    for (i  in 0 until  sizeof(ring_flags) / sizeof(ring_flags[0])) {
         ret = test_files(ring_flags[i]);
         if (ret) {
             printf("test_tag failed, type %i\n", i);

@@ -40,7 +40,7 @@ staticlong :ULongutime_since_nowtv:CPointer<timeval>) {
     return utime_since(tv, end.ptr);
 }
 
-static do_fadvise:Int(ring:CPointer<io_uring>, int fd, offset:off_t, len:off_t,
+static do_fadvise:Int(ring:CPointer<io_uring>, fd:Int, offset:off_t, len:off_t,
                       advice:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
@@ -166,7 +166,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     }
 
     good = bad = 0;
-    for (i = 0; i < LOOPS; i++) {
+    for (i  in 0 until  LOOPS) {
         ret = test_fadvise(ring.ptr, fname);
         if (ret == 1) {
             fprintf(stderr, "read_fadvise failed\n");

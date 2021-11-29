@@ -32,9 +32,9 @@
 #define CQ_FLAGS_OFFSET 280
 #define CQ_CQES_OFFSET 320
 
-static :Longsyz_io_uring_setupvolatile long a0, volatile long a1,
-                               volatile :Longa2 volatile long a3,
-                               volatile :Longa4 volatile long a5) {
+static :Longsyz_io_uring_setupvolatile :Longa0 volatile :Longa1
+                               volatile :Longa2 volatile :Longa3
+                               volatile :Longa4 volatile :Longa5 {
     entries:uint32_t = (uint32_t) a0;
     setup_params:CPointer<io_uring_params> = (s:io_uring_param *) a1;
     vma1:CPointer<ByteVar>  = (void *) a2;
@@ -48,17 +48,17 @@ static :Longsyz_io_uring_setupvolatile long a0, volatile long a1,
  setup_params.pointed.cq_entries  * SIZEOF_IO_URING_CQE;
     ring_sz:uint32_t = sq_ring_sz > cq_ring_sz ? sq_ring_sz : cq_ring_sz;
     *ring_ptr_out = mmap(vma1, ring_sz,  PROT_READ or PROT_WRITE ,
-                          MAP_SHARED or MAP_POPULATE  | MAP_FIXED, fd_io_uring,
+                          MAP_SHARED or  MAP_POPULATE or MAP_FIXED , fd_io_uring,
                          IORING_OFF_SQ_RING);
     sqes_sz:uint32_t = setup_params.pointed.sq_entries  * SIZEOF_IO_URING_SQE;
     *sqes_ptr_out =
             mmap(vma2, sqes_sz,  PROT_READ or PROT_WRITE ,
-                  MAP_SHARED or MAP_POPULATE  | MAP_FIXED, fd_io_uring, IORING_OFF_SQES);
+                  MAP_SHARED or  MAP_POPULATE or MAP_FIXED , fd_io_uring, IORING_OFF_SQES);
     return fd_io_uring;
 }
 
-static :Longsyz_io_uring_submitvolatile long a0, volatile long a1,
-                                volatile :Longa2 volatile long a3) {
+static :Longsyz_io_uring_submitvolatile :Longa0 volatile :Longa1
+                                volatile :Longa2 volatile :Longa3 {
     ring_ptr:CPointer<ByteVar> = (char *) a0;
     sqes_ptr:CPointer<ByteVar> = (char *) a1;
     sqe:CPointer<ByteVar> = (char *) a2;
@@ -81,7 +81,7 @@ static :Longsyz_io_uring_submitvolatile long a0, volatile long a1,
     return 0;
 }
 
-static :Longsyz_open_devvolatile long a0, volatile long a1, volatile long a2) {
+static :Longsyz_open_devvolatile :Longa0 volatile :Longa1 volatile :Longa2 {
     if (a0 == 0xc || a0 == 0xb) {
         char buf[128];
         sprintf(buf, "/dev/%s/%d:%d", a0 == 0xc ? "char" : "block", (uint8_t) a1,

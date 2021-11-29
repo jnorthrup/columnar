@@ -51,7 +51,7 @@ expect_failed_submit(ring:CPointer<io_uring>, error:Int) {
 }
 
 int
-expect_fail(fd:Int, to_submit:UInt, unsigned int min_complete,
+expect_fail(fd:Int, to_submit:UInt, min_complete:UInt,
             flags:UInt, sigset_t *sig, error:Int) {
     ret:Int;
 
@@ -70,8 +70,8 @@ expect_fail(fd:Int, to_submit:UInt, unsigned int min_complete,
 }
 
 int
-try_io_uring_enter(fd:Int, to_submit:UInt, unsigned int min_complete,
-                   flags:UInt, sigset_t *sig, expect:Int, int error) {
+try_io_uring_enter(fd:Int, to_submit:UInt, min_complete:UInt,
+                   flags:UInt, sigset_t *sig, expect:Int, error:Int) {
     ret:Int;
 
     printf("io_uring_enter(%d, %u, %u, %u, %p)\n", fd, to_submit,
@@ -179,7 +179,7 @@ submit_io(ring:CPointer<io_uring>, unsigned nr) {
     printf("Allocating %u sqes\n", nr);
     file_len = nr * 4096;
     fd = setup_file(template, file_len);
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         /* allocate an sqe */
         sqe = io_uring_get_sqe(ring);
         /* fill it in */

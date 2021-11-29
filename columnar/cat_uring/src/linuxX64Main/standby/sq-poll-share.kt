@@ -24,7 +24,7 @@
 
 static vecs:CPointer<iovec>;
 
-static wait_io:Int(ring:CPointer<io_uring>, int nr_ios) {
+static wait_io:Int(ring:CPointer<io_uring>, nr_ios:Int) {
     cqe:CPointer<io_uring_cqe>;
 
     while (nr_ios) {
@@ -47,7 +47,7 @@ static wait_io:Int(ring:CPointer<io_uring>, int nr_ios) {
     return 0;
 }
 
-static queue_io:Int(ring:CPointer<io_uring>, int fd, int nr_ios) {
+static queue_io:Int(ring:CPointer<io_uring>, fd:Int, nr_ios:Int) {
 long :ULongoff
     i:Int;
 
@@ -93,7 +93,7 @@ long :ULongios
         return -1;
     }
 
-    for (i = 0; i < NR_RINGS; i++) {
+    for (i  in 0 until  NR_RINGS) {
         p:io_uring_params = {};
 
         p.flags = IORING_SETUP_SQPOLL;
@@ -115,13 +115,13 @@ long :ULongios
 
     ios = 0;
     while (ios < (FILE_SIZE / BS)) {
-        for (i = 0; i < NR_RINGS; i++) {
+        for (i  in 0 until  NR_RINGS) {
             ret = queue_io(rings.ptr[i], fd, BUFFERS);
             if (ret < 0)
                 goto err;
             rets[i] = ret;
         }
-        for (i = 0; i < NR_RINGS; i++) {
+        for (i  in 0 until  NR_RINGS) {
             if (wait_io(rings.ptr[i], rets[i]))
                 goto err;
         }

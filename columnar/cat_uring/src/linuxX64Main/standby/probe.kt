@@ -14,7 +14,7 @@
 
 static no_probe:Int;
 
-static verify_probe:Int(p:CPointer<io_uring_probe>, int full) {
+static verify_probe:Int(p:CPointer<io_uring_probe>, full:Int) {
     if (!full && p.pointed.ops_len ) {
         fprintf(stderr, "Got ops_len=%u\n", p.pointed.ops_len );
         return 1;

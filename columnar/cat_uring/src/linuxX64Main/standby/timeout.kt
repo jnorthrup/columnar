@@ -111,7 +111,7 @@ long :ULongexp
 /*
  * Test numbered trigger of timeout
  */
-static test_single_timeout_nr:Int(ring:CPointer<io_uring>, int nr) {
+static test_single_timeout_nr:Int(ring:CPointer<io_uring>, nr:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     ts:__kernel_timespec;
@@ -328,7 +328,7 @@ static test_single_timeout_remove_notfound:Int(ring:CPointer<io_uring>) {
      * complete with -ENOENT. The other is the timeout that will trigger after
      * TIMEOUT_MSEC.
      */
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "%s: wait completion %d\n", __FUNCTION__, ret);
@@ -394,7 +394,7 @@ static test_single_timeout_remove:Int(ring:CPointer<io_uring>) {
      * request, user_data == 1, that should have a ret of -ECANCELED. The other
      * is for our modify request, user_data == 2, that should have a ret of 0.
      */
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "%s: wait completion %d\n", __FUNCTION__, ret);
@@ -550,7 +550,7 @@ long :ULongexp
     }
 
     gettimeofday(tv.ptr, NULL);
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         time:UInt = 0;
         __u64 user_data = 0;
 
@@ -647,7 +647,7 @@ static test_multi_timeout_nr:Int(ring:CPointer<io_uring>) {
      * req_2 (count=1) should return without error and req_1 (count=2)
      * should timeout.
      */
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "%s: wait completion %d\n", __FUNCTION__, ret);
@@ -740,7 +740,7 @@ static test_timeout_flags1:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "%s: wait completion %d\n", __FUNCTION__, ret);
@@ -830,7 +830,7 @@ static test_timeout_flags2:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "%s: wait completion %d\n", __FUNCTION__, ret);
@@ -914,7 +914,7 @@ static test_timeout_flags3:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "%s: wait completion %d\n", __FUNCTION__, ret);
@@ -1007,7 +1007,7 @@ long :ULongexp_ms base_ms = 10000;
         goto err;
     }
 
-    for (i = 0; i < nr; i++) {
+    for (i  in 0 until  nr) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "%s: wait completion %d\n", __FUNCTION__, ret);
@@ -1155,7 +1155,7 @@ static test_update_invalid_flags:Int(ring:CPointer<io_uring>) {
     return 1;
 }
 
-static fill_exec_target:Int(dst:CPointer<ByteVar>, char *path) {
+static fill_exec_target:Int(dst:CPointer<ByteVar>, path:CPointer<ByteVar>) {
     sb:stat;
 
     /*
@@ -1228,7 +1228,7 @@ fun arget(prog_path, "test/exec-target")):fill_exec_t{
         return 1;
     }
 
-    for (i = 0; i < 2; ++i) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait_cqe=%d\n", ret);

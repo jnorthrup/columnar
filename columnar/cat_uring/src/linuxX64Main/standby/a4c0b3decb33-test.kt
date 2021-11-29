@@ -59,7 +59,7 @@ static void kill_and_wait(pid:Int, int *status) {
     kill(-pid, SIGKILL);
     kill(pid, SIGKILL);
     i:Int;
-    for (i = 0; i < 100; i++) {
+    for (i  in 0 until  100) {
         if (waitpid(-1, status,  WNOHANG or __WALL ) == pid)
             return;
         usleep(1000);
@@ -102,7 +102,7 @@ static void execute_one(void);
 
 static void loop(void) {
     iter:Int;
-    for (iter = 0; iter < 5000; iter++) {
+    for (iter  in 0 until  5000) {
         pid:Int = fork();
         if (pid < 0)
             exit(1);

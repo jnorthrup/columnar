@@ -86,7 +86,7 @@ static void add_socket_pollin(ring:CPointer<io_uring>, fd:Int) {
     memcpy(sqe. ptr.pointed.user_data , conn_i.ptr, sizeof(conn_i));
 }
 
-static server_thread:CPointer<ByteVar> (void *arg) {
+static server_thread:CPointer<ByteVar> (arg:CPointer<ByteVar> ) {
     serv_addr:sockaddr_in;
     port:Int = 0;
     sock_listen_fd:Int, evfd;
@@ -149,7 +149,7 @@ static server_thread:CPointer<ByteVar> (void *arg) {
     }
 }
 
-static client_thread:CPointer<ByteVar> (void *arg) {
+static client_thread:CPointer<ByteVar> (arg:CPointer<ByteVar> ) {
     ring:io_uring;
     ret:Int;
 

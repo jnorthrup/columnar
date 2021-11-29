@@ -13,11 +13,11 @@
 #include "helpers.h"
 #include "liburing.h"
 
-static void close_files(int *files, nr_files:Int, int add) {
+static void close_files(int *files, nr_files:Int, add:Int) {
     char fname[32];
     i:Int;
 
-    for (i = 0; i < nr_files; i++) {
+    for (i  in 0 until  nr_files) {
         if (files)
             close(files[i]);
         if (!add)
@@ -30,14 +30,14 @@ static void close_files(int *files, nr_files:Int, int add) {
         free(files);
 }
 
-static int *open_files(nr_files:Int, int extra, int add) {
+static int *open_files(nr_files:Int, extra:Int, add:Int) {
     char fname[32];
     int *files;
     i:Int;
 
     files = t_calloc(nr_files + extra, sizeof(int));
 
-    for (i = 0; i < nr_files; i++) {
+    for (i  in 0 until  nr_files) {
         if (!add)
             sprintf(fname, ".reg.%d", i);
         else
@@ -51,7 +51,7 @@ static int *open_files(nr_files:Int, int extra, int add) {
         }
     }
     if (extra) {
-        for (i = nr_files; i < nr_files + extra; i++)
+        for (i  in nr_files until  nr_files + extra)
             files[i] = -1;
     }
 
@@ -105,7 +105,7 @@ static test_sqe_update:Int(ring:CPointer<io_uring>) {
     int *fds, i, ret;
 
     fds = t_malloc(sizeof(int) * 10);
-    for (i = 0; i < 10; i++)
+    for (i  in 0 until  10)
         fds[i] = -1;
 
     sqe = io_uring_get_sqe(ring);

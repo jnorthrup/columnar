@@ -33,11 +33,11 @@ static g_buf:CPointer<ByteVar>[NR_IOS] = {NULL};
 
 static void free_g_buf(void) {
     i:Int;
-    for (i = 0; i < NR_IOS; i++)
+    for (i  in 0 until  NR_IOS)
         free(g_buf[i]);
 }
 
-static do_io:CPointer<ByteVar> (void *data) {
+static do_io:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     d:CPointer<d> = data;
     sqe:CPointer<io_uring_sqe>;
     buffer:CPointer<ByteVar>;
@@ -108,7 +108,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     d.off = 0;
     d.pipe_fd = fds[0];
     d.err = 0;
-    for (i = 0; i < NR_IOS; i++) {
+    for (i  in 0 until  NR_IOS) {
         d.i = i;
         memset(thread.ptr, 0, sizeof(thread));
         pthread_create(thread.ptr, NULL, do_io, d.ptr);
@@ -116,7 +116,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         d.off += WSIZE;
     }
 
-    for (i = 0; i < NR_IOS; i++) {
+    for (i  in 0 until  NR_IOS) {
         cqe:CPointer<io_uring_cqe>;
 
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);

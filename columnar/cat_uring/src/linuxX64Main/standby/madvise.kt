@@ -42,7 +42,7 @@ staticlong :ULongutime_since_nowtv:CPointer<timeval>) {
     return utime_since(tv, end.ptr);
 }
 
-static do_madvise:Int(ring:CPointer<io_uring>, addr:CPointer<ByteVar> , len:off_t, int advice) {
+static do_madvise:Int(ring:CPointer<io_uring>, addr:CPointer<ByteVar> , len:off_t, advice:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ret:Int;
@@ -162,7 +162,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     }
 
     good = bad = 0;
-    for (i = 0; i < LOOPS; i++) {
+    for (i  in 0 until  LOOPS) {
         ret = test_madvise(ring.ptr, fname);
         if (ret == 1) {
             fprintf(stderr, "test_madvise failed\n");

@@ -27,7 +27,7 @@ static char str[] = "This is a test of sendmsg and recvmsg over io_uring!";
 
 #define MAX_IOV_COUNT    10
 
-static recv_prep:Int(ring:CPointer<io_uring>, iov:iovec[], int iov_count,
+static recv_prep:Int(ring:CPointer<io_uring>, iov:iovec[], iov_count:Int,
                      bgid:Int) {
     saddr:sockaddr_in;
     msg:msghdr;
@@ -142,7 +142,7 @@ static void init_iov(iov:iovec[MAX_IOV_COUNT], iov_to_use:Int,
     i:Int, last_idx = iov_to_use - 1;
 
     assert(0 < iov_to_use && iov_to_use <= MAX_IOV_COUNT);
-    for (i = 0; i < last_idx; ++i) {
+    for (i  in 0 until  last_idx) {
         iov[i].iov_base = buf + i;
         iov[i].iov_len = 1;
     }
@@ -151,7 +151,7 @@ static void init_iov(iov:iovec[MAX_IOV_COUNT], iov_to_use:Int,
     iov[last_idx].iov_len = MAX_MSG - last_idx;
 }
 
-static recv_fn:CPointer<ByteVar> (void *data) {
+static recv_fn:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     rd:CPointer<recv_data> = data;
     pthread_mutex_t *mutex = rd.pointed.mutex ;
     char buf[MAX_MSG + 1];
@@ -272,7 +272,7 @@ static do_sendmsg:Int(void) {
     return 1;
 }
 
-static test:Int(int buf_select, int no_buf_add, int iov_count) {
+static test:Int(buf_select:Int, no_buf_add:Int, iov_count:Int) {
     rd:recv_data;
     attr:pthread_mutexattr_t;
     recv_thread:pthread_t;

@@ -5,6 +5,7 @@ set -x
 
 sed  --in-place --regexp-extended\
  -e 's,for\s*\((\w+\s+)(\w+)\s*=\s*(\w+)\;\s*\2.*<([^;]+)\;.*(\2?(\+\+)\2?).*\),for (\2/*as \1*/ in \3 until \4),'\
+ -e 's,for\s*\((\w+)\s*=\s*(\w+)\;\s*\1.*<([^;]+)\;.*(\1?(\+\+)\1?).*\),for (\1 in \2 until \3),'\
  -e 's,^\s*void\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Unit{,'\
  -e 's,^\s*(\w+_t)\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \2\3:\1{,'\
  -e 's,^\s*void\s*[*](\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2: CPointer<ByteVar> {,'\
@@ -29,4 +30,3 @@ sed  --in-place --regexp-extended\
  -e 's,case (.*):,\1 -> ,'\
  -e 's,(\w+)\s*[|]\s*(\w+), \1 or \2 ,g'\
   $@
-

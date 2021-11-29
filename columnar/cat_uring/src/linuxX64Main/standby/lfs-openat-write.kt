@@ -21,7 +21,7 @@ static const OPEN_MODE:mode_t =  S_IRUSR or S_IWUSR ;
         abort();\
     } while(0);
 
-static do_write:Int(ring:CPointer<io_uring>, int fd, offset:off_t) {
+static do_write:Int(ring:CPointer<io_uring>, fd:Int, offset:off_t) {
     char buf[] = "some test write buf";
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
@@ -56,7 +56,7 @@ static do_write:Int(ring:CPointer<io_uring>, int fd, offset:off_t) {
     return 0;
 }
 
-static test_open_write:Int(ring:CPointer<io_uring>, int dfd, fn:String) {
+static test_open_write:Int(ring:CPointer<io_uring>, dfd:Int, fn:String) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ret:Int, fd = -1;

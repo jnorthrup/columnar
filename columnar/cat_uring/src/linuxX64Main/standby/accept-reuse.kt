@@ -129,7 +129,7 @@ fun main(argc:Int, char **argv):Int{
         return 1;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         cqe:CPointer<io_uring_cqe> = NULL;
 
         ret = io_uring_wait_cqe(io_uring.ptr, cqe.ptr);

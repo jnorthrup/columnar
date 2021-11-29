@@ -52,7 +52,7 @@ static test_nops:Int(ring:CPointer<io_uring>) {
     }
     total += ret;
 
-    for (i = 0; i < total; i++) {
+    for (i  in 0 until  total) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);

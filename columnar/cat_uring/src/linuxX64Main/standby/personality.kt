@@ -17,7 +17,7 @@
 
 static no_personality:Int;
 
-static open_file:Int(ring:CPointer<io_uring>, int cred_id, int with_link) {
+static open_file:Int(ring:CPointer<io_uring>, cred_id:Int, with_link:Int) {
     cqe:CPointer<io_uring_cqe>;
     sqe:CPointer<io_uring_sqe>;
     ret:Int, i, to_submit = 1;
@@ -43,7 +43,7 @@ static open_file:Int(ring:CPointer<io_uring>, int cred_id, int with_link) {
         goto err;
     }
 
-    for (i = 0; i < to_submit; i++) {
+    for (i  in 0 until  to_submit) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);

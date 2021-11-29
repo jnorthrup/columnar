@@ -77,7 +77,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i  in 0 until  3) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait: %d\n", ret);

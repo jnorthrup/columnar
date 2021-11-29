@@ -22,7 +22,7 @@ static const RSIZE:Int = 2;
 static const OPEN_FLAGS:Int =  O_RDWR or O_CREAT ;
 static const OPEN_MODE:mode_t =  S_IRUSR or S_IWUSR ;
 
-static open_io_uring:Int(ring:CPointer<io_uring>, int dfd, fn:String) {
+static open_io_uring:Int(ring:CPointer<io_uring>, dfd:Int, fn:String) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ret:Int, fd;
@@ -55,7 +55,7 @@ static open_io_uring:Int(ring:CPointer<io_uring>, int dfd, fn:String) {
     return 0;
 }
 
-static prepare_file:Int(int dfd, fn:String) {
+static prepare_file:Int(dfd:Int, fn:String) {
     const char buf[] = "foo";
     fd:Int, res;
 
@@ -73,7 +73,7 @@ static prepare_file:Int(int dfd, fn:String) {
     return res < 0 ? res : 0;
 }
 
-static test_linked_files:Int(int dfd, fn:String, bool async) {
+static test_linked_files:Int(dfd:Int, fn:String, bool async) {
     ring:io_uring;
     sqe:CPointer<io_uring_sqe>;
     char buffer[128];
@@ -126,7 +126,7 @@ static test_linked_files:Int(int dfd, fn:String, bool async) {
     return 0;
 }
 
-static test_drained_files:Int(int dfd, fn:String, bool linked, bool prepend) {
+static test_drained_files:Int(dfd:Int, fn:String, bool linked, bool prepend) {
     ring:io_uring;
     sqe:CPointer<io_uring_sqe>;
     char buffer[128];

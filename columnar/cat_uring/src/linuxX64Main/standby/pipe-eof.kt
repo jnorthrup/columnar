@@ -17,7 +17,7 @@ a:dat {
     fds:Int[2];
 };
 
-static t:CPointer<ByteVar> (void *data) {
+static t:CPointer<ByteVar> (data:CPointer<ByteVar> ) {
     d:CPointer<data> = data;
     ret:Int;
 

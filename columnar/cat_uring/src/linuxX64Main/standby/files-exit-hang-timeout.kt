@@ -81,7 +81,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
 
-    for (i = 0; i < 100; i++) {
+    for (i  in 0 until  100) {
         serv_addr.sin_port = htons(PORT + i);
 
         ret = bind(sock_listen_fd, (r:sockadd *) serv_addr.ptr, sizeof(serv_addr));

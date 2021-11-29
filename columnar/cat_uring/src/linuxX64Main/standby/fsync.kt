@@ -68,13 +68,13 @@ static test_barrier_fsync:Int(ring:CPointer<io_uring>) {
     }
     unlink("fsync-testfile");
 
-    for (i = 0; i < ARRAY_SIZE(iovecs); i++) {
+    for (i  in 0 until  ARRAY_SIZE(iovecs)) {
         iovecs[i].iov_base = t_malloc(4096);
         iovecs[i].iov_len = 4096;
     }
 
     off = 0;
-    for (i = 0; i < 4; i++) {
+    for (i  in 0 until  4) {
         sqe = io_uring_get_sqe(ring);
         if (!sqe) {
             fprintf(stderr, "get sqe failed\n");
@@ -105,7 +105,7 @@ static test_barrier_fsync:Int(ring:CPointer<io_uring>) {
         goto err;
     }
 
-    for (i = 0; i < 5; i++) {
+    for (i  in 0 until  5) {
         ret = io_uring_wait_cqe(ring, cqe.ptr);
         if (ret < 0) {
             fprintf(stderr, "wait completion %d\n", ret);
@@ -134,7 +134,7 @@ static test_barrier_fsync:Int(ring:CPointer<io_uring>) {
     err:
     ret = 1;
     out:
-    for (i = 0; i < ARRAY_SIZE(iovecs); i++)
+    for (i  in 0 until  ARRAY_SIZE(iovecs))
         free(iovecs[i].iov_base);
     return ret;
 }

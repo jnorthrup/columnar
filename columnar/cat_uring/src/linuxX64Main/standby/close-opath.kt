@@ -26,7 +26,7 @@ typedef struct {
     const oflags:Int;
 } oflgs_t;
 
-static test_io_uring_close:Int(ring:CPointer<io_uring>, int fd) {
+static test_io_uring_close:Int(ring:CPointer<io_uring>, fd:Int) {
     sqe:CPointer<io_uring_sqe>;
     cqe:CPointer<io_uring_cqe>;
     ret:Int;
@@ -98,7 +98,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
 #define OFLGS_SIZE (sizeof(oflgs) / sizeof(oflgs[0]))
 
     ret = 0;
-    for (i = 0; i < OFLGS_SIZE; i++) {
+    for (i  in 0 until  OFLGS_SIZE) {
         fd:Int;
 
         fd = open_file(fname, oflgs.ptr[i]);

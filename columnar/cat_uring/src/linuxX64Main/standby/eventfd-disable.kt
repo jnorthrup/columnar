@@ -68,7 +68,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < 63; i++) {
+    for (i  in 0 until  63) {
         sqe = io_uring_get_sqe(ring.ptr);
         io_uring_prep_nop(sqe);
  sqe.pointed.user_data  = 2;
@@ -80,7 +80,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < 63; i++) {
+    for (i  in 0 until  63) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait: %d\n", ret);
@@ -117,7 +117,7 @@ fun main(argc:Int, argv:CPointer<ByteVar>[]):Int{
         return 1;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         ret = io_uring_wait_cqe(ring.ptr, cqe.ptr);
         if (ret) {
             fprintf(stderr, "wait: %d\n", ret);

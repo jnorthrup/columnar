@@ -77,7 +77,7 @@ static check_timeout_support:Int(void) {
  * requests will not lead the change of cq_cached_tail, so as sq_dropped.
  *
  * And before this patch. The order of this four requests will be req1.pointed.req2 ->
- * req4.pointed.req3 . Actually, it should be req1.pointed.req2 -> req3.pointed.req4 .
+ * req4.pointed.req3 . Actually, it should be req1.pointed. req2.pointed.req3 .pointed.req4 .
  *
  * Then, if there is 2 nop req. All timeout requests expect req4 will completed
  * successful after the patch. And req1/req2 will completed successful with
@@ -97,7 +97,7 @@ static test_timeout_overflow:Int(void) {
     }
 
     msec_to_ts(ts.ptr, TIMEOUT_MSEC);
-    for (i = 0; i < 4; i++) {
+    for (i  in 0 until  4) {
         unsigned num = 0;
         sqe = io_uring_get_sqe(ring.ptr);
         when  (i)  {
@@ -115,7 +115,7 @@ static test_timeout_overflow:Int(void) {
         io_uring_prep_timeout(sqe, ts.ptr, num, 0);
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i  in 0 until  2) {
         sqe = io_uring_get_sqe(ring.ptr);
         io_uring_prep_nop(sqe);
         io_uring_sqe_set_data(sqe, (void *) 1);
