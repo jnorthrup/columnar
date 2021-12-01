@@ -4,10 +4,13 @@ set -x
 #built and tested against clion default formatted c ymmv
 sed  --in-place --regexp-extended\
  -e 's,^static\s+(.*\{)$,\1,g'                                                                             \
+ -e 's,(\w+)([ *]+)(\w+)\[\s*\],\1\2*\3,g'                                                                             \
  -e 's,for\s*\((\w+\s+)(\w+)\s*=\s*(\w+)\;\s*\2.*<([^;]+)\;.*(\2?(\+\+)\2?).*\),for (\2/*as \1*/ in \3 until \4),' \
  -e 's,for\s*\((\w+)\s*=\s*(\w+)\;\s*\1.*<([^;]+)\;.*(\1?(\+\+)\1?).*\),for (\1 in \2 until \3),'         \
  -e 's,^\s*void\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Unit{,'                                              \
  -e 's,^\s*(\w+_t)\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \2\3:\1{,'                                             \
+ -e 's,^\s*(\w+)\s*[*]\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \2\3:CPointer<\1>{,'                                             \
+ -e 's,^\s*(\w+)(\s*[*]\s*){2}(\w+)\s*(\(.*\))\s*\{\s*$,fun \3\4:CPointerVarOf<CPointer<\1>>{,'                                             \
  -e 's,^\s*int\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Int{,'                                                \
  -e 's,^\s*long\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Long{,'                                              \
  -e 's,^\s*short\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Short{,'                                            \
@@ -26,7 +29,7 @@ sed  --in-place --regexp-extended\
  -e 's,(\s+|\W)(long\s+)+(int)?+(\w+)(\W),\1\4:Long\5,g'                                                  \
  -e 's,(\s+|\W)(\w+)_t\s+(\w+)(\W),\1\3:\2_t\4,g'                                                         \
  -e 's,(\s+|\W)(void|char)\s*[*]\s*(\w+)(\W),\1\2:CPointer<ByteVar>\3,'                                   \
- -e 's,(\s+|\W)(void|char)\s*[*][*]\s*(\w+)(\W),\1\2:CPointerVarOf<CPointer<ByteVar>>\3,'                 \
+ -e 's,(\s+|\W)(void|char)\s*[*]\s*[*]\s*(\w+)(\W),\1\3:CPointerVarOf<CPointer<ByteVar>>\4,'                 \
  -e 's,struct\s+(\w+)\s+(\w+)(\s*\W),\2:\1\3,'                                                            \
  -e 's,(\W)(struct\s+)?(\w+)\s*[*]\s*([A-Za-z]\w*)(\W),\1\4:CPointer<\3>\5,'                              \
  -e 's,(\W)(struct\s+)?(\w+)\s*[*][*]\s*([A-Za-z]\w*)(\W),\1\4:CPointerVarOf<CPointer<\3>>\5,'            \
