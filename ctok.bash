@@ -3,6 +3,7 @@ set -x
 
 #built and tested against clion default formatted c ymmv
 sed  --in-place --regexp-extended\
+ -e 's,^static\s+(.*\{)$,\1,g'                                                                             \
  -e 's,for\s*\((\w+\s+)(\w+)\s*=\s*(\w+)\;\s*\2.*<([^;]+)\;.*(\2?(\+\+)\2?).*\),for (\2/*as \1*/ in \3 until \4),' \
  -e 's,for\s*\((\w+)\s*=\s*(\w+)\;\s*\1.*<([^;]+)\;.*(\1?(\+\+)\1?).*\),for (\1 in \2 until \3),'         \
  -e 's,^\s*void\s*(\w+)\s*(\(.*\))\s*\{\s*$,fun \1\2:Unit{,'                                              \
@@ -36,7 +37,8 @@ sed  --in-place --regexp-extended\
  -e 's,(\w+)\s*[|]\s*(\w+), \1 or \2 ,g'                                                                  \
  -e 's,(\w+)\s*[&]\s*(\w+), \1 and \2 ,g'                                                                 \
  -e 's,([^&]+)\&((\w+|\.)+),\1\2.ptr,g'                                                                   \
- -e 's,fun\s+(\w+)([^{]+),\1\2.ptr,'                                                                   \
- -e 's,fun\s+goto\s+(\w+),\w,'                                                                   \
-  $@
+ -e 's,(\s+)goto\s+(\w+),\1break@\2,'                                                                      \
+ -e 's,CPointer<int>,CPointer<Int>,g'                                                                     \
+ -e 's,fun\s+(\w+)([^{]+)\{,fun \1\2{\n\tval __FUNCTION__="\1"\n,'                                        \
+   $@
  # -e 's,struct\s+(\w+)\s*\*(\w+)(\s*\W)?,\2:CPointer<\1>\3,'\\
