@@ -37,8 +37,9 @@ sed  --in-place --regexp-extended\
  -e 's,(\w+)\s*[|]\s*(\w+), \1 or \2 ,g'                                                                  \
  -e 's,(\w+)\s*[&]\s*(\w+), \1 and \2 ,g'                                                                 \
  -e 's,([^&]+)\&((\w+|\.)+),\1\2.ptr,g'                                                                   \
- -e 's,(\s+)goto\s+(\w+),\1break@\2,'                                                                      \
+ -e 's,(\s+)goto\s+(\w+),\1break@\2,'                                                                     \
  -e 's,CPointer<int>,CPointer<Int>,g'                                                                     \
  -e 's,fun\s+(\w+)([^{]+)\{,fun \1\2{\n\tval __FUNCTION__="\1"\n,'                                        \
+ -e 's,^[#]include,//include,'                                                                            \
    $@
  # -e 's,struct\s+(\w+)\s*\*(\w+)(\s*\W)?,\2:CPointer<\1>\3,'\\
