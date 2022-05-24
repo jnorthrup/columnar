@@ -101,7 +101,7 @@ inline fun <T> T.debug(block: (T) -> Unit): T = apply {
 /**
  * ternary --- (B) % t ?: f
  */
-inline infix operator fun <reified T> Boolean.rem(block: () -> T) = block.takeIf { this }?.invoke()
+inline infix operator fun <reified T>  Boolean.rem(block: () -> T) = block.takeIf { this }?.invoke()
 
 fun main() {
     logDebug { "this ought not be visible" }
