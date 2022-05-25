@@ -3,7 +3,6 @@ package vec
 import vec.macros.size
 import vec.macros.t2
 import java.util.*
-import kotlin.math.min
 
 /**
 
@@ -20,7 +19,7 @@ class CirQlar<T>(
     ) : AbstractQueue<T>() {
     private val al = arrayOfNulls<Any?>(maxSize)
     var tail = 0
-    override val size get() = min(tail, maxSize)
+    override val size get() = kotlin.math.min(tail, maxSize)
     val full get() = tail >= maxSize
 
 

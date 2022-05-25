@@ -405,15 +405,15 @@ inline fun <reified T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { 
 
 inline fun <reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
 inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
-fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
-fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
-fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
-fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
-fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
-fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
-fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
-fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })
+inline fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
+inline fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
+inline fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
+inline fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
+inline fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
+inline fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
+inline fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
+inline fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
+inline fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })
 
 
 fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0

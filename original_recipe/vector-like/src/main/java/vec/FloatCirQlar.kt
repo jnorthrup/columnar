@@ -14,21 +14,21 @@ only mutability is offer(T)
 has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
-class DoubleCirQlar(
+class FloatCirQlar(
     val maxSize: Int,
-    val al: DoubleArray = DoubleArray(maxSize),
-) : AbstractQueue<Double>() {
+    val al: FloatArray = FloatArray(maxSize),
+) : AbstractQueue<Float>() {
     var tail = 0
     val full get() = maxSize <= tail
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
-    override fun iterator() = this.toVect0r().`➤`.iterator() as MutableIterator<Double>
+    override fun iterator() = this.toVect0r().`➤`.iterator() as MutableIterator<Float>
 
     fun toList() = toVect0r().mapIndexedToList { _, t -> t }
 
     @Suppress("OVERRIDE_BY_INLINE")
-    fun toVect0r() = (this@DoubleCirQlar.size t2 { x: Int ->
+    fun toVect0r() = (this@FloatCirQlar.size t2 { x: Int ->
         @Suppress("UNCHECKED_CAST")
         al[if (tail >= maxSize) {
             (tail + x) % maxSize
@@ -36,7 +36,7 @@ class DoubleCirQlar(
     })
 
     //todo: lockless dequeue here ?
-    override fun offer(e: Double): Boolean =
+    override fun offer(e: Float): Boolean =
         synchronized(this) {
             al[tail % maxSize] = e
             tail++
@@ -44,8 +44,8 @@ class DoubleCirQlar(
             true
         }
 
-    override fun poll(): Double = TODO("Not yet implemented")
-    override fun peek(): Double = TODO("Not yet implemented")
-    override fun add(k: Double) = offer(k)
+    override fun poll(): Float = TODO("Not yet implemented")
+    override fun peek(): Float = TODO("Not yet implemented")
+    override fun add(k: Float) = offer(k)
     override val size: Int get() = kotlin.math.min(tail, maxSize)
 }

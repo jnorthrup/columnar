@@ -118,7 +118,7 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>1.6.0-M1</version>
+                <version>1.6.21</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -156,7 +156,7 @@
             </activation>
             <properties>
 
-                <maven.compiler.source>11</maven.compiler.source>
+                <maven.compiler.source>17</maven.compiler.source>
                 <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
             </properties>
             <distributionManagement>

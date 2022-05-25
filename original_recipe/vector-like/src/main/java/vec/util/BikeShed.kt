@@ -154,13 +154,20 @@ inline fun <reified T> moireValues(
 }
 
 @JvmName("todub")
-inline fun todubneg(f: Any?) = vec.util.todub(f, -1e300)
+inline fun todubneg(f: Any?) = todub(f, -1e300)
 
 @JvmName("todub0")
-inline fun todub(f: Any?) = vec.util.todub(f, .0)
+inline fun todub(f: Any?) = todub(f, .0)
+
+@JvmName("tof0")
+inline fun tofneg(f: Any?) = tof(f, (-1e300).toFloat())
+@JvmName("tof1")
+inline fun tof(f: Any?) = tof(f, .0f)
 
 
 val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
+
+val cheapFCache = WeakHashMap<String, SoftReference<Pai2<String, Float?>>>(0)
 
 /** really really wants to produce a Double
  */
@@ -168,5 +175,11 @@ val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 inline fun todub(f: Any?, d: Double) = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
     cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
 }.get()?.second)?.takeIf { it.isFinite() } ?: d
+
+
+@JvmName("todubf")
+inline fun tof(f: Any?, d: Float) = ((f as? Float ?: f as? Number)?.toFloat () ?: "$f".let {
+    cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull() ) }
+}.get()?.second)?.takeIf { it.toDouble().isFinite() } ?: d
 
 
