@@ -2,6 +2,7 @@ package vec.util
 
 import org.junit.Test
 import vec.macros.*
+import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -75,11 +76,11 @@ class HorizonTest {
         }
         System.err.println(v2[0 until 20].toList())
         horizonRatioHunt(v2size, v.size)
-        horizonRatioHunt(100, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(200, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(300, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(500, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
-        horizonRatioHunt(3000, kotlin.time.Duration.days(14).inWholeMinutes.toInt())
+        horizonRatioHunt(100, 14.days.inWholeMinutes.toInt())
+        horizonRatioHunt(200, 14.days.inWholeMinutes.toInt())
+        horizonRatioHunt(300, 14.days.inWholeMinutes.toInt())
+        horizonRatioHunt(500, 14.days.inWholeMinutes.toInt())
+        horizonRatioHunt(3000, 14.days.inWholeMinutes.toInt())
     }
 }
 /*
