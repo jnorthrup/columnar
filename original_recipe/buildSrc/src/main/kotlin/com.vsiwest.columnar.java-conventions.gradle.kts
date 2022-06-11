@@ -16,9 +16,9 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.0")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.21")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.7.0")
 }
 
 group = "com.vsiwest.columnar"
