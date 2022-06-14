@@ -37,7 +37,7 @@ fun Cursor.showValues(range: IntProgression) {
 /**
  * head default 5 rows
  */
-fun Cursor.head(last: Int = 5) = show(0 until (max(0, min(last, size))))
+@JvmOverloads fun Cursor.head(last: Int = 5) = show(0 until (max(0, min(last, size))))
 
 /**
  * run head at random index
