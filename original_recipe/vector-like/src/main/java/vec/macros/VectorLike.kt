@@ -49,29 +49,29 @@ inline infix fun <reified A, reified B, reified C, G : (B) -> C, F : (A) -> B, R
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(m)
+inline infix fun <A,reified C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(m)
 
 
 inline infix fun <A, reified C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
     this.map { m(it) }.toVect0r()
 
-infix fun <A, C, B : (A) -> C> List<A>.α(m: B) =
+infix fun <A,  C, B : (A) -> C> List<A>.α(m: B) =
     this.size t2 { i: Int -> m(this[i]) }
 
 
-infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B) =
+inline infix fun <A,reified C, B : (A) -> C> Array<out A>.α(m: B) =
     this.size t2 { i: Int -> m(this[i]) }
 
 
-infix fun <C, B : (Int) -> C> IntArray.α(m: B) =
+inline infix fun <reified C, B : (Int) -> C> IntArray.α(m: B) =
     (this.size) t2 { i: Int -> m(this[i]) }
 
 
-infix fun <C, B : (Float) -> C> FloatArray.α(m: B) =
+inline infix fun <reified C, B : (Float) -> C> FloatArray.α(m: B) =
     (this.size) t2 { i: Int -> m(this[i]) }
 
 
-infix fun <C, B : (Double) -> C> DoubleArray.α(m: B) = this.size t2 { i: Int -> m(this[i]) }
+inline infix fun <reified C, B : (Double) -> C> DoubleArray.α(m: B) = this.size t2 { i: Int -> m(this[i]) }
 
 
 inline infix fun <reified C, B : (Long) -> C> LongArray.α(m: B) =
@@ -110,10 +110,10 @@ suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()*/
 inline operator fun <reified T> List<T>.get(vararg index: Int) = get(index)
 
 @JvmName("vlike_List_Iterable2")
-inline operator fun <T> List<T>.get(indexes: Iterable<Int>): Vect0r<T> = this.get(indexes.toList().toIntArray())
+inline operator fun <reified T> List<T>.get(indexes: Iterable<Int>): Vect0r<T> = this.get(indexes.toList().toIntArray())
 
 @JvmName("vlike_List_IntArray3")
-inline operator fun <T> List<T>.get(index: IntArray): Vect0r<T> = index α ::get
+inline operator fun <reified T> List<T>.get(index: IntArray): Vect0r<T> = index α ::get
 
 @JvmName("vlike_Array_1")
 inline operator fun <reified T> Array<T>.get(vararg index: Int): Vect0r<T> = index α ::get
@@ -426,8 +426,8 @@ suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
     slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 
-fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
-fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
+inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
+inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
 inline val <reified X> Vect0r<Vect0r<X>>.T
     get() = run {
