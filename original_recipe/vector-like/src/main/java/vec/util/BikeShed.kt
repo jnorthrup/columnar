@@ -2,11 +2,11 @@
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
 @file:Suppress("NOTHING_TO_",
-    "UNCHECKED_CAST",
-    "ClassName",
-    "HasPlatformType",
-    "NOTHING_TO_INLINE",
-    "UnclearPrecedenceOfBinaryExpression")
+        "UNCHECKED_CAST",
+        "ClassName",
+        "HasPlatformType",
+        "NOTHING_TO_INLINE",
+        "UnclearPrecedenceOfBinaryExpression")
 
 package vec.util
 
@@ -26,7 +26,7 @@ fun Int.toArray(): IntArray = _a[this]
 fun btoa(ba: ByteArray) = String(ba, UTF_8)
 fun trim(it: String) = it.trim()
 infix fun ByteBuffer.at(start: Int): ByteBuffer = apply { (if (limit() > start) clear() else this).position(start) }
-operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = apply { this.at(start). limit(end)  }
+operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = apply { this.at(start).limit(end) }
 fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
 
 //infix fun Any?.debug(message: String) = kotlin.io.println(message)
@@ -90,18 +90,18 @@ fun logDebug(debugTxt: () -> String) {
     if (`debug status matching -ea jvm switch`) System.err.println(debugTxt())
 }
 
+@Suppress("ObjectPropertyName")
 @[JvmSynthetic JvmField]
 val `debug status matching -ea jvm switch` = Pai2::class.java.desiredAssertionStatus()
 
-inline fun <T> T.debug(block: (T) -> Unit): T = apply {
-    if (`debug status matching -ea jvm switch`) block(this)
-
+inline fun <T> T.debug(block: (T) -> Unit): T = also { lmbda ->
+    if (`debug status matching -ea jvm switch`) block(lmbda)
 }
 
 /**
  * ternary --- (B) % t ?: f
  */
-inline infix operator fun <reified T>  Boolean.rem(block: () -> T) = block.takeIf { this }?.invoke()
+inline infix operator fun <reified T> Boolean.rem(block: () -> T) = block.takeIf { this }?.invoke()
 
 fun main() {
     logDebug { "this ought not be visible" }
@@ -142,10 +142,10 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int = when (n) {
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
 inline fun <reified T> moireValues(
-    inVec: Vect0r<T>,
-    limit: Int,
-    initialOneOrMore: Int = inVec.first,
-    noinline x: (Int) -> T = inVec.second,
+        inVec: Vect0r<T>,
+        limit: Int,
+        initialOneOrMore: Int = inVec.first,
+        noinline x: (Int) -> T = inVec.second,
 ) = min(initialOneOrMore, limit).let { min ->
     combine(min t2 x, (limit - min) t2 { i: Int ->
         x(i.rem(min))
@@ -161,6 +161,7 @@ inline fun todub(f: Any?) = todub(f, .0)
 
 @JvmName("tof0")
 inline fun tofneg(f: Any?) = tof(f, (-1e300).toFloat())
+
 @JvmName("tof1")
 inline fun tof(f: Any?) = tof(f, .0f)
 
@@ -178,8 +179,8 @@ inline fun todub(f: Any?, d: Double) = ((f as? Double ?: f as? Number)?.toDouble
 
 
 @JvmName("todubf")
-inline fun tof(f: Any?, d: Float) = ((f as? Float ?: f as? Number)?.toFloat () ?: "$f".let {
-    cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull() ) }
+inline fun tof(f: Any?, d: Float) = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
+    cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull()) }
 }.get()?.second)?.takeIf { it.toDouble().isFinite() } ?: d
 
 
