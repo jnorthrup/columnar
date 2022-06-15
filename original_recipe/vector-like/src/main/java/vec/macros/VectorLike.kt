@@ -467,6 +467,7 @@ inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
  * wrapper for for loops and iterable filters
  */
 inline val <reified T> Vect0r<T>.`➤`
+    @JvmName("iteratable")
     get() = object : Iterable<T> {
         override fun iterator(): Iterator<T> = object : Iterator<T> {
             var t = 0
@@ -478,13 +479,13 @@ inline val <reified T> Vect0r<T>.`➤`
 
 /**
  * index by enum
- */
+ */@JvmName("getIndexByEnum")
 inline operator fun <reified S, reified E : Enum<E>> Vect0r<S>.get(e: E) = get(e.ordinal)
 
 /**
  * optimize for where a smallish map has hotspots that are over-used and others that are excess overhead
  * in the more expensive things that old code does with maps
- */
+ */@JvmName("sparseVect0rMap")
 inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> = let { top ->
     ((this as? SortedMap)?.keys ?: keys.sorted()).toIntArray().let { k ->
         0 t2 if (top.size <= 16)
@@ -510,7 +511,7 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> 
 
 /**
  * pay once for the conversion from a mutable map to an array map and all that implies
- */
+ */@JvmName("sparseVect0r")
 inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = let { top ->
     ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toTypedArray().let { entries ->
         val k = keys.toIntArray()
