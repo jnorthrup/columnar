@@ -10,6 +10,7 @@ import cursors.context.Scalar
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
+import vec.util.debug
 import vec.util.logDebug
 import vec.util.span
 import java.nio.ByteBuffer
@@ -23,11 +24,10 @@ import java.util.*
 
 @Suppress("USELESS_CAST")
 class ISAMCursor(
-    binpath: Path,
-    val fc: FileChannel,
-    metapath: Path = Paths.get(binpath.toString() + ".meta"),
+        binpath: Path,
+        val fc: FileChannel,
+        metapath: Path = Paths.get("$binpath.meta".debug { logDebug { "using default Isam meta: $it" } }),
 ) : Cursor {
-
     override inline val first get() = size
     override val second: (Int) -> RowVec
     val width get() = drivers.size
