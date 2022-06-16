@@ -6,6 +6,7 @@
 package vec.macros
 
 import kotlinx.coroutines.flow.*
+import vec.macros.Vect02_.left
 import java.lang.Integer.min
 import java.nio.ByteBuffer
 import java.util.*
@@ -531,6 +532,11 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = l
             }
         }
     }
+}
+
+@JvmOverloads
+inline fun  < reified F,  reified S>left(v2:Vect02<F, S> ){
+    v2.left
 }
 
 object Vect02_ {
