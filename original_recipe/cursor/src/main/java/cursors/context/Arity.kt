@@ -14,7 +14,7 @@ sealed interface Arity : CoroutineContext.Element {
     }
 }
 
-open interface Scalar : Arity, Pai2<TypeMemento, String?> {
+interface Scalar : Arity, Pai2<TypeMemento, String?> {
     companion object {
         @JvmOverloads
 

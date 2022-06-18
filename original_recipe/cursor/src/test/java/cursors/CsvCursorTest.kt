@@ -10,6 +10,7 @@ import vec.macros.Vect02_.left
 import vec.macros.get
 import vec.util._v
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDate
 import kotlin.streams.asSequence
@@ -20,7 +21,7 @@ class CsvCursorTest {
             IoString, IoString, IoString, IoInt, IoInt, IoInt]
 
 
-    val path = Paths.get("src/test/resources/calendar.csv")
+    val path: Path = Paths.get("src/test/resources/calendar.csv")
 
     @Test
     fun HeapResidentCsvCursor() {

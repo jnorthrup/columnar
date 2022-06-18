@@ -117,7 +117,7 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>1.7.0-RC2</version>
+                <version>1.7.0</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -138,6 +138,7 @@
                     <args>
                         <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
                         <arg>-Xskip-prerelease-check</arg>
+                        <arg>-Xuse-k2</arg>
                     </args>
                     <jvmTarget>17</jvmTarget>
                 </configuration>

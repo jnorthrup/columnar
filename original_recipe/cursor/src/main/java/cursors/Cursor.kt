@@ -76,7 +76,7 @@ import kotlin.coroutines.CoroutineContext
 typealias Cursor = Vect0r<RowVec>
 
 // infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
-infix fun <T : Int> Cursor.at(t: T) = second.invoke(t)
+infix fun Cursor.at(t: Int) = second.invoke(t)
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)

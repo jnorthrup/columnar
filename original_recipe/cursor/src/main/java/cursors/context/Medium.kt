@@ -99,9 +99,8 @@ class NioMMap(
     ): Tripl3<() -> Any, (Any?) -> Unit, NioMeta> = let {
         val (start: Int, end: Int) = coords[x]
         val (outbuff: ByteBuffer) = row[y]
-        val (_: Int, triple: Function<NioMeta>) = col(outbuff)
-
-        val triple1 = triple(x)
+        val triples = col(outbuff)
+        val triple1: Tripl3<CellDriver<ByteBuffer, Any?>, TypeMemento, Int> = triples[x]
         val (driver: CellDriver<ByteBuffer, Any?>) = triple1
         { outbuff[start, end] `→` driver.read } as () -> Any t2
                 { v: Any? ->
