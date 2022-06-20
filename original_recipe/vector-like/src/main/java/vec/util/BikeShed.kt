@@ -15,27 +15,28 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.ref.SoftReference
 import java.nio.ByteBuffer
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import kotlin.math.min
 import kotlin.text.Charsets.UTF_8
 
-val Pair<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
-val Pai2<Int, Int>.span get() = let { (a: Int, b: Int) -> b - a }
+val Pair<Int, Int>.span: Int get() = let { (a: Int, b: Int) -> b - a }
+val Pai2<Int, Int>.span: Int get() = let { (a: Int, b: Int) -> b - a }
 fun Int.toArray(): IntArray = _a[this]
-fun btoa(ba: ByteArray) = String(ba, UTF_8)
-fun trim(it: String) = it.trim()
+fun btoa(ba: ByteArray): String = String(ba, UTF_8)
+fun trim(it: String): String = it.trim()
 infix fun ByteBuffer.at(start: Int): ByteBuffer = apply { (if (limit() > start) clear() else this).position(start) }
 operator fun ByteBuffer.get(start: Int, end: Int): ByteBuffer = apply { this.at(start).limit(end) }
-fun bb2ba(bb: ByteBuffer) = ByteArray(bb.remaining()).also { bb[it] }
+fun bb2ba(bb: ByteBuffer): ByteArray = ByteArray(bb.remaining()).also { bb[it] }
 
 //infix fun Any?.debug(message: String) = kotlin.io.println(message)
 
 
-val IntProgression.indices
+val IntProgression.indices: List<Int>
     get() = map { it }
 
-var logReuseCountdown = 0
+var logReuseCountdown: Int = 0
 
 /**
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
@@ -48,42 +49,42 @@ object _v {
  * missing stdlib list operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _l {
-    inline operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
+    inline operator fun <T> get(vararg t: T): List<T> = if (t.size == 1) Collections.singletonList(t[0]) else listOf(*t)
 }
 
 /**
  * missing stdlib array operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _a {
-    inline operator fun get(vararg t: Boolean) = t
-    inline operator fun get(vararg t: Byte) = t
-    inline operator fun get(vararg t: UByte) = t
-    inline operator fun get(vararg t: Char) = t
-    inline operator fun get(vararg t: Short) = t
-    inline operator fun get(vararg t: UShort) = t
-    inline operator fun get(vararg t: Int) = t
-    inline operator fun get(vararg t: UInt) = t
-    inline operator fun get(vararg t: Long) = t
-    inline operator fun get(vararg t: ULong) = t
-    inline operator fun get(vararg t: Float) = t
-    inline operator fun get(vararg t: Double) = t
-    inline operator fun <T> get(vararg t: T) = t as Array<T>
+    inline operator fun get(vararg t: Boolean): BooleanArray = t
+    inline operator fun get(vararg t: Byte): ByteArray = t
+    inline operator fun get(vararg t: UByte): UByteArray = t
+    inline operator fun get(vararg t: Char): CharArray = t
+    inline operator fun get(vararg t: Short): ShortArray = t
+    inline operator fun get(vararg t: UShort): UShortArray = t
+    inline operator fun get(vararg t: Int): IntArray = t
+    inline operator fun get(vararg t: UInt): UIntArray = t
+    inline operator fun get(vararg t: Long): LongArray = t
+    inline operator fun get(vararg t: ULong): ULongArray = t
+    inline operator fun get(vararg t: Float): FloatArray = t
+    inline operator fun get(vararg t: Double): DoubleArray = t
+    inline operator fun <T> get(vararg t: T): Array<T> = t as Array<T>
 }
 
 /**
  * missing stdlib set operator https://github.com/Kotlin/KEEP/pull/112
  */
 object _s {
-    inline operator fun <T> get(vararg t: T) = if (t.size == 1) Collections.singleton(t[0]) else setOf(*t)
+    inline operator fun <T> get(vararg t: T): Set<T> = if (t.size == 1) Collections.singleton(t[0]) else setOf(*t)
 }
 
 /**
  * missing stdlib map convenience operator
  */
 object _m {
-    inline operator fun <K, V, P : Pair<K, V>> get(p: List<P>) = (p).toMap()
-    inline operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>) = p.`➤`.associate(Pai2<K, V>::pair)
-    inline operator fun <K, V, P : Pair<K, V>> get(vararg p: P) = mapOf(*p)
+    inline operator fun <K, V, P : Pair<K, V>> get(p: List<P>): Map<K, V> = (p).toMap()
+    inline operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>): Map<K, V> = p.`➤`.associate(Pai2<K, V>::pair)
+    inline operator fun <K, V, P : Pair<K, V>> get(vararg p: P): Map<K, V> = mapOf(*p)
 }
 
 fun logDebug(debugTxt: () -> String) {
@@ -91,8 +92,14 @@ fun logDebug(debugTxt: () -> String) {
 }
 
 @Suppress("ObjectPropertyName")
-@[JvmSynthetic JvmField]
-val `debug status matching -ea jvm switch` = Pai2::class.java.desiredAssertionStatus()
+val `debug status matching -ea jvm switch`: Boolean = try {
+    assert(false)
+    false
+} catch (e: AssertionError) {
+    true
+}
+//@[JvmSynthetic JvmField]
+//val `debug status matching -ea jvm switch` = Pai2::class.java.desiredAssertionStatus()
 
 inline fun <T> T.debug(block: (T) -> Unit): T = also { lmbda ->
     if (`debug status matching -ea jvm switch`) block(lmbda)
@@ -101,13 +108,13 @@ inline fun <T> T.debug(block: (T) -> Unit): T = also { lmbda ->
 /**
  * ternary --- (B) % t ?: f
  */
-inline infix operator fun <reified T> Boolean.rem(block: () -> T) = block.takeIf { this }?.invoke()
+inline infix operator fun <reified T> Boolean.rem(block: () -> T): T? = block.takeIf { this }?.invoke()
 
 fun main() {
     logDebug { "this ought not be visible" }
 }
 
-val eol = System.getProperty("line.separator")
+val eol: String = System.getProperty("line.separator")
 
 fun fileSha256Sum(pathname: String): String {
     val command = ProcessBuilder().command("sha256sum", pathname)
@@ -123,7 +130,7 @@ fun fileSha256Sum(pathname: String): String {
     return result
 }
 
-val String.path get() = Paths.get(this)
+val String.path: Path get() = Paths.get(this)
 
 infix fun Any?.println(x: Any?) {
     kotlin.io.println("$x")
@@ -146,7 +153,7 @@ inline fun <reified T> moireValues(
         limit: Int,
         initialOneOrMore: Int = inVec.first,
         noinline x: (Int) -> T = inVec.second,
-) = min(initialOneOrMore, limit).let { min ->
+): Pai2<Int, (Int) -> T> = min(initialOneOrMore, limit).let { min ->
     combine(min t2 x, (limit - min) t2 { i: Int ->
         x(i.rem(min))
     } //dummy loop rows
@@ -154,32 +161,32 @@ inline fun <reified T> moireValues(
 }
 
 @JvmName("todub")
-inline fun todubneg(f: Any?) = todub(f, -1e300)
+inline fun todubneg(f: Any?): Double = todub(f, -1e300)
 
 @JvmName("todub0")
-inline fun todub(f: Any?) = todub(f, .0)
+inline fun todub(f: Any?): Double = todub(f, .0)
 
 @JvmName("tof0")
-inline fun tofneg(f: Any?) = tof(f, (-1e300).toFloat())
+inline fun tofneg(f: Any?): Float = tof(f, (-1e300).toFloat())
 
 @JvmName("tof1")
-inline fun tof(f: Any?) = tof(f, .0f)
+inline fun tof(f: Any?): Float = tof(f, .0f)
 
 
-val cheapDubCache = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
+val cheapDubCache: WeakHashMap<String, SoftReference<Pai2<String, Double?>>> = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 
-val cheapFCache = WeakHashMap<String, SoftReference<Pai2<String, Float?>>>(0)
+val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> = WeakHashMap<String, SoftReference<Pai2<String, Float?>>>(0)
 
 /** really really wants to produce a Double
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, d: Double) = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
+inline fun todub(f: Any?, d: Double): Double = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
     cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
 }.get()?.second)?.takeIf { it.isFinite() } ?: d
 
 
 @JvmName("todubf")
-inline fun tof(f: Any?, d: Float) = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
+inline fun tof(f: Any?, d: Float): Float = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
     cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull()) }
 }.get()?.second)?.takeIf { it.toDouble().isFinite() } ?: d
 
