@@ -76,7 +76,7 @@ import kotlin.coroutines.CoroutineContext
 typealias Cursor = Vect0r<RowVec>
 
 // infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
-infix fun Cursor.at(t: Int) = second.invoke(t)
+infix fun Cursor.at(t: Int) = second(t)
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int) = get(index)
@@ -263,23 +263,22 @@ fun Cursor.mirror(): Cursor = Cursor(first) { y: Int ->
 }
 
 /**
- * "left/right" is blocked by precedence magic in Vect02_ so we have to treat cursors with a perturbed set of keywords like f1rst and whatnot.
- *
- *  - Pai2 uses unaryMinus to make an array.
- *  Cursor should not be reifying anything but unaryMinus as vect0r is plenty good and cheap
+ * UnaryMinus Operator - this operator strips the meta from a Cursor and returns the cell values Any?
  */
-operator fun Cursor.unaryMinus(): Vect0r<Vect0r<Any?>> = size t2 { x: Int -> second(x).left }
+operator fun Cursor.unaryMinus(): Vect0r<Vect0r<*>> = size t2 { x: Int -> second(x).left }
 
-/** positionally preserves the objects of type t as v<v<T?>>
+/** Div operator - uses unaryMinus to strip the Cursor meta and typecast the inner Vector Contents as nullable T.
  */
 inline infix operator fun <reified T> Cursor.div(t: Class<T>): Vect0r<Vect0r<T?>> =
-    -this α { outer -> outer α { inner -> inner as? T } }
+    this.unaryMinus() α { outer -> outer α { inner -> inner as? T } }
 
-/**  flattens cursor to Vect0r of T? preserving order/position */
-inline infix operator fun <reified T> Cursor.rem(t: Class<T>) = combine(this / t)
+/**  flattens cursor (x, y) to Vect0r (x*y) of T? preserving order/position */
+inline infix operator fun <reified T> Cursor.rem(t: Class<T>): Vect0r<T?> = combine(this / t)
 
 /**
  * "left/right" is blocked by precedence magic in Vect02_ so we have to treat cursors with a perturbed set of keywords like f1rst and whatnot.
  *
  */
-inline val Cursor.meta get() = size t2 { x: Int -> second(x).right }
+inline val Cursor.meta get() = size t2 {
+    x: Int -> at (x).right
+}

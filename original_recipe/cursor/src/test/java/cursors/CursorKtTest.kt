@@ -10,8 +10,8 @@ import cursors.context.RowMajor.Companion.fixedWidthOf
 import cursors.io.*
 import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString
-import cursors.macros.`∑`
 import cursors.macros.join
+import cursors.macros.`∑`
 import org.junit.Assert
 import org.junit.Test
 import vec.macros.*
@@ -275,5 +275,9 @@ class CursorKtTest {
                 }"
             }.toList())
         }
+    }
+
+    @Test fun castness(){
+
     }
 }

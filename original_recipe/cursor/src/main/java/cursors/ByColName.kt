@@ -22,8 +22,8 @@ inline operator fun <reified X, reified T> Vect02<X, T?>.get(vararg s: T) = righ
 /**
  * colIdx lands here
  */
-inline operator fun <reified X> Vect02<X, String?>.get(vararg s: NegateColumn) =
-    ((0 until size).toList() - get(*s.map { it.negated }.toTypedArray()).toList()).toIntArray()
+inline operator fun <reified X> Vect02<X, String?>.get(vararg s: NegateColumn): IntArray =
+    ((0 until size).toSet() - get(*s.map { it.negated }.toTypedArray()).toSet()).toIntArray()
 
 
 /**

@@ -328,18 +328,19 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
         }
     }
 
+
 /**
  * returns
  * Vect0r<T> / x= Vecto<Vector<T>> in x parts
  */
-inline infix operator fun <reified T> Vector<T>.div(denominator: Int) =
+inline infix operator fun <reified T> Vector<T>.div(denominator: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> T>> =
     (0 until this.size).div(denominator).α { rnge ->
         (this as Vect0r<T>).slice(rnge.first, rnge.endInclusive)
     }
 
 
 /**
- * this is an unfortunate discriminator between Pai2.first..second and Vect0r.first..last
+ * this is an unfortunate discriminator between the Int Pai2.first..second  and the Any Vect0r[0]
  */
 inline val <reified T> Vect0r<T>.f1rst: T
     get() = get(0)
