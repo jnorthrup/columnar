@@ -10,6 +10,7 @@ import vec.macros.Vect02_.left
 import java.lang.Integer.min
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.math.max
 
 /**
  * semigroup
@@ -363,10 +364,10 @@ val <T> Vect0r<T>.reverse: Vect0r<T>
  */
 @JvmOverloads
 inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.slicex(
-    sta: Int = 0, endExclusive: Int = this.size,
+        start: Int = 0, endExclusive: Int = max( this.size,start),
 ): TTT = (this.first t2 { y: Int ->
     this.second(y).let { (_, b) ->
-        (1 + endExclusive - sta) t2 { x: Int -> b(x + sta) }
+        (1 + endExclusive - start) t2 { x: Int -> b(x + start) }
     }
 }) as TTT
 
