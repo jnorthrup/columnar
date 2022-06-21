@@ -10,6 +10,7 @@ import cursors.context.Scalar
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
+import vec.util.FibonacciReporter
 import vec.util.debug
 import vec.util.logDebug
 import vec.util.span
@@ -82,15 +83,18 @@ class ISAMCursor(
  *
  */
 fun Cursor.writeISAM(
-    pathname: String,
-    defaultVarcharSize: Int = 128,
-    varcharSizes: Map<
-            /**
-            column*/
-            Int,
-            /**length*/
-            Int>? = null,
+        pathname: String,
+        defaultVarcharSize: Int = 128,
+        varcharSizes: Map<
+                /**
+                column*/
+                Int,
+                /**length*/
+                Int>? = null,
 ) {
+    var logger: FibonacciReporter? = null;
+
+
     val mementos = scalars.map(Scalar::first).toArray()
     val vec = Columnar.of(scalars) t2 mementos
     /** create context columns */
@@ -119,23 +123,27 @@ fun Cursor.writeISAM(
     val drivers: List<CellDriver<ByteBuffer, *>> = colIdx.left.map(Fixed.mapped::get).toList().filterNotNull()
     try {
         FileChannel.open(
-            Paths.get(pathname), /*ExtendedOpenOption.DIRECT, */
-            StandardOpenOption.TRUNCATE_EXISTING,
-            StandardOpenOption.CREATE,
-            StandardOpenOption.WRITE
+                Paths.get(pathname),
+                // ExtendedOpenOption.DIRECT,  Current location of the bytebuffer (0) is not a multiple of the block size (4096)
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE
         )
     } catch (x: Exception) {
         logDebug { "falling back to non-direct file open. " + x.localizedMessage }
         FileChannel.open(
-            Paths.get(pathname),
-            StandardOpenOption.TRUNCATE_EXISTING,
-            StandardOpenOption.CREATE,
-            StandardOpenOption.WRITE
+                Paths.get(pathname),
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE
         )
     }.use { fchannel ->
 
         val xsize = width
         val ysize = size
+        debug {
+            logger = FibonacciReporter(ysize)
+        }
         for (y in 0 until ysize) {
             val row = this at y
             rowBuf.clear()
@@ -145,25 +153,26 @@ fun Cursor.writeISAM(
                 rowBuf.put(bounceyBuff.flip())
             }
             fchannel.write(rowBuf.flip())
+            logger?.let {it.report(y)?.let { System.err.println(it) }}
         }
     }
 }
 
 fun Cursor.writeISAMMeta(
-    pathname: String,
-    //wrecordlen: Int,
-    wcoords: Vect02<Int, Int>,
+        pathname: String,
+        //wrecordlen: Int,
+        wcoords: Vect02<Int, Int>,
 ) {
     Files.newOutputStream(
-        Paths.get("$pathname.meta")
+            Paths.get("$pathname.meta")
     ).bufferedWriter().use {
 
-            fileWriter ->
+        fileWriter ->
 
         val s = this.scalars as Vect02<TypeMemento, String?>
 
         val coords = wcoords.toList()
-            .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
+                .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right.map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left.toArray().mapIndexed<TypeMemento, Any> { ix, it ->
             if (it is IOMemento)
@@ -173,13 +182,13 @@ fun Cursor.writeISAMMeta(
             }
         }.toList()
 
-            .joinToString(" ")
+                .joinToString(" ")
         listOf(
-            "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
-            "# last coord is the recordlen",
-            coords,
-            nama,
-            mentos
+                "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
+                "# last coord is the recordlen",
+                coords,
+                nama,
+                mentos
         ).forEach { line ->
             fileWriter.write(line)
             fileWriter.newLine()
