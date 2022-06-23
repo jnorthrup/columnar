@@ -7,6 +7,8 @@ import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
 import cursors.context.Scalar
+import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.datetime.Clock
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
@@ -20,6 +22,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import java.sql.Time
+import java.time.Instant
 import java.util.*
 
 
@@ -120,7 +124,10 @@ fun Cursor.writeISAM(
     writeISAMMeta(pathname, wcoords)
     val rowBuf = ByteBuffer.allocateDirect(reclen + 1)
     val bounceyBuff = ByteBuffer.allocate(reclen + 1)
-    val drivers: List<CellDriver<ByteBuffer, *>> = colIdx.left.map(Fixed.mapped::get).toList().filterNotNull()
+    val colIdx = colIdx
+    val drivers = (colIdx.left α Fixed.mapped::get).`➤`.filterNotNull().toTypedArray()
+
+    lateinit var closeTimer: kotlinx.datetime.Instant
     try {
         FileChannel.open(
                 Paths.get(pathname),
@@ -149,14 +156,24 @@ fun Cursor.writeISAM(
             rowBuf.clear()
             for (x in 0 until xsize) {
                 val cellData = row.left[x]
-                (drivers[x].write as (ByteBuffer, Any?) -> Unit)(bounceyBuff.clear().limit(wcoords[x].span), cellData)
+                val writeFn = drivers[x].write
+                (writeFn as (ByteBuffer, Any?) -> Unit)(bounceyBuff.clear().limit(wcoords[x].span), cellData)
                 rowBuf.put(bounceyBuff.flip())
             }
             fchannel.write(rowBuf.flip())
-            logger?.let {it.report(y)?.let { System.err.println(it) }}
+            logger?.let { it.report(y)?.let { System.err.println(it) } }
+        }
+        debug {
+            closeTimer = Clock.System.now()
+            logDebug { "file channel $fchannel going out of scope, closing, writing" }
         }
     }
+    debug {
+        val instant = Clock.System.now() - closeTimer
+        logDebug { "close took $instant" }
+    }
 }
+
 
 fun Cursor.writeISAMMeta(
         pathname: String,
