@@ -136,8 +136,6 @@
                 </executions>
                 <configuration>
                     <args>
-                        <arg>-Xopt-in=kotlin.RequiresOptIn</arg>
-                        <arg>-Xskip-prerelease-check</arg>
                         <arg>-Xuse-k2</arg>
                     </args>
                     <jvmTarget>17</jvmTarget>

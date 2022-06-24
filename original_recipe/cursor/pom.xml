@@ -19,12 +19,7 @@
             <groupId>com.vsiwest.columnar</groupId>
             <artifactId>trie</artifactId>
             <version>1.0.2-SNAPSHOT</version>
-        </dependency><!--
-        <dependency>
-            <groupId>com.squareup.okio</groupId>
-            <artifactId>okio</artifactId>
-            <version>3.1.0</version>
-        </dependency>-->
+        </dependency>
     </dependencies>
 
 </project>
