@@ -164,7 +164,7 @@ inline fun <reified T> moireValues(
 inline fun todubneg(f: Any?): Double = todub(f, -1e300)
 
 @JvmName("todub0")
-inline fun todub(f: Any?): Double = todub(f, .0)
+fun todub(f: Any?): Double = todub(f, .0)
 
 @JvmName("tof0")
 inline fun tofneg(f: Any?): Float = tof(f, (-1e300).toFloat())
