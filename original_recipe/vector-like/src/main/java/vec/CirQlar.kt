@@ -13,7 +13,7 @@ only mutability is offer(T)
 has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
-class CirQlar<T>(
+public open class CirQlar<T>(
     val maxSize: Int,
 
     ) : AbstractQueue<T>() {
@@ -49,7 +49,7 @@ class CirQlar<T>(
     }
 
     @Suppress("OVERRIDE_BY_INLINE")
-    fun toVect0r() = (this@CirQlar.size t2 { x: Int ->
+    fun toVect0r() = ( size t2 { x: Int ->
         @Suppress("UNCHECKED_CAST") al[if (tail >= maxSize) {
             (tail + x) % maxSize
         } else x] as T
