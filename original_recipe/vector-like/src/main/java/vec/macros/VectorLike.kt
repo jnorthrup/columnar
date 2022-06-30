@@ -561,10 +561,10 @@ object V3ct0r_ {
     inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.mid get() = this α Tripl3<F, S, T>::second
     inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.right get() = this α Tripl3<F, S, T>::third
     inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.reify get() = this α Tripl3<F, S, T>::triple
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.x get() = this α (XYZ<F, S, T>::first)
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.y get() = this α (XYZ<F, S, T>::second)
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.z get() = this α (XYZ<F, S, T>::third)
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify get() = this α (XYZ<F, S, T>::triple)
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.x get() = this α (Tripl3<F, S, T>::first)
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.y get() = this α (Tripl3<F, S, T>::second)
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.z get() = this α (Tripl3<F, S, T>::third)
+    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify get() = this α (Tripl3<F, S, T>::triple)
 }
 
 operator fun <T> Vect0r<T>.div(d: Int): Vect0r<Vect0r<T>> = (0 until size) / d α { this[it] }
