@@ -182,7 +182,7 @@ val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> = Weak
 @JvmName("todubd")
 inline fun todub(f: Any?, d: Double): Double = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
     cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
-}.get()?.second)?.takeIf { it.isFinite() } ?: d
+}.get()?.second)?.let { t -> if (t.isFinite()) t else null } ?: d
 
 
 @JvmName("todubf")
@@ -191,8 +191,11 @@ inline fun tof(f: Any?, d: Float): Float = ((f as? Float ?: f as? Number)?.toFlo
 }.get()?.second)?.let { t -> if (t.toDouble().isFinite()) t else null } ?: d
 
 
-//@JvmName("todubd")
-//inline fun todub(f: Any?, d: Double): Double = (f as? Double ?: f as? Number)?.toDouble() ?: ("$f".toDoubleOrNull()?.takeIf { it.isFinite() } ?: d)
-//    @JvmName("todubf")
-//inline fun tof(f: Any?, d: Float): Float = (f as? Float ?: f as? Number)?.toFloat() ?: ("$f".toFloatOrNull()?.takeIf { it.isFinite() } ?: d)
-//
+//uncached
+@JvmName("utodubd")
+inline fun utodub(f: Any?, d: Double): Double = (f as? Double ?: f as? Number)?.toDouble()
+        ?: ("$f".toDoubleOrNull()?.let { toDoubleOrNull -> if (toDoubleOrNull.isFinite()) toDoubleOrNull else null } ?: d)
+//uncached
+@JvmName("utodubf")
+inline fun utof(f: Any?, d: Float): Float = (f as? Float ?: f as? Number)?.toFloat()
+        ?: ("$f".toFloatOrNull()?.let { toFloatOrNull -> if (toFloatOrNull.isFinite()) toFloatOrNull else null } ?: d)
