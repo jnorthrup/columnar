@@ -188,6 +188,11 @@ inline fun todub(f: Any?, d: Double): Double = ((f as? Double ?: f as? Number)?.
 @JvmName("todubf")
 inline fun tof(f: Any?, d: Float): Float = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
     cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull()) }
-}.get()?.second)?.takeIf { it.toDouble().isFinite() } ?: d
+}.get()?.second)?.let { t -> if (t.toDouble().isFinite()) t else null } ?: d
 
 
+//@JvmName("todubd")
+//inline fun todub(f: Any?, d: Double): Double = (f as? Double ?: f as? Number)?.toDouble() ?: ("$f".toDoubleOrNull()?.takeIf { it.isFinite() } ?: d)
+//    @JvmName("todubf")
+//inline fun tof(f: Any?, d: Float): Float = (f as? Float ?: f as? Number)?.toFloat() ?: ("$f".toFloatOrNull()?.takeIf { it.isFinite() } ?: d)
+//
