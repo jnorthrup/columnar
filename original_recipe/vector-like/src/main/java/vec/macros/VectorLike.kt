@@ -460,9 +460,7 @@ inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
     return object : Iterator<S> {
         var x = 0
         override inline fun hasNext(): Boolean = x < size
-
         override inline fun next(): S = get(x++)
-
     }
 }
 
@@ -471,11 +469,11 @@ inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
  */
 inline val <reified T> Vect0r<T>.`➤`: Iterable<T>
     @JvmName("iteratable")
-    inline get() = object : Iterable<T> {
-    override inline fun iterator(): Iterator<T> = object : Iterator<T> {
+    get() = object : Iterable<T> {
+        override fun iterator(): Iterator<T> = object : Iterator<T> {
             var t = 0
-            override inline fun hasNext(): Boolean = t < first
-            override inline fun next(): T = second(t++)
+            override fun hasNext(): Boolean = t < first
+            override fun next(): T = second(t++)
         }
     }
 
