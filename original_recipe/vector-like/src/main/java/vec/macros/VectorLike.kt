@@ -469,7 +469,7 @@ inline fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
 /**
  * wrapper for for loops and iterable filters
  */
-inline val <reified T> Vect0r<T>.`➤`
+inline val <reified T> Vect0r<T>.`➤`: Iterable<T>
     @JvmName("iteratable")
     inline get() = object : Iterable<T> {
     override inline fun iterator(): Iterator<T> = object : Iterator<T> {
