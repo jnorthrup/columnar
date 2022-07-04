@@ -14,8 +14,8 @@ has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
 public open class CirQlar<T>(
-    val maxSize: Int,
-
+        val maxSize: Int,
+        val evict: ((T) -> Unit)? =null
     ) : AbstractQueue<T>() {
     private val al = arrayOfNulls<Any?>(maxSize)
     var tail = 0
@@ -26,10 +26,13 @@ public open class CirQlar<T>(
     //todo: lockless dequeue here ?
     override fun offer(e: T) = synchronized(this) {
         val i = tail % maxSize
+        val tmp =evict?.run { al.takeIf { it.size < i }?.get(i) }
         al[i] = e
         tail++
         if (tail == 2 * maxSize) tail = maxSize
+        tmp?.let {t-> evict?.invoke(t as T)    }
         true
+
     }
 
     fun toList(): List<T> {
