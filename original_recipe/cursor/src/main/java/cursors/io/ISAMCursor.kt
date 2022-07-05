@@ -7,7 +7,6 @@ import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
 import cursors.context.Scalar
-import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.datetime.Clock
 import vec.macros.*
 import vec.macros.Vect02_.left
@@ -22,8 +21,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.sql.Time
-import java.time.Instant
 import java.util.*
 
 

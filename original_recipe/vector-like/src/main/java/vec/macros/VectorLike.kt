@@ -429,6 +429,8 @@ suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
         slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 
+
+fun IntRange.toVect0r():Vect0r<Int> = if( this.step !=1 ) this.toList() α {it} else last-first t2 {x->first+x}
 inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
