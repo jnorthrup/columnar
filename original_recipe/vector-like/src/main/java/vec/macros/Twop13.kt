@@ -139,25 +139,25 @@ operator fun <S> Tw1n<S>.unaryMinus() = _a[first, second]
 inline operator fun Tw1n<Int>.unaryPlus() = (-this).let { (a, b) -> a..b }
 
 @JvmName("aSInt")
-inline infix fun <reified R> Tw1n<Int>.α(noinline f: (Int) -> R) = (-this).α(f)
+inline infix fun <reified R> Tw1n<Int>.α(noinline f: (Int) -> R):Vect0r<R> = (-this).α(f)
 
 @JvmName("aSDouble")
-inline infix fun <reified R> Tw1n<Double>.α(noinline f: (Double) -> R) = (-this).α(f)
+inline infix fun <reified R> Tw1n<Double>.α(noinline f: (Double) -> R):Vect0r<R> = (-this).α(f)
 
 @JvmName("aSLong")
-inline infix fun <reified R> Tw1n<Long>.α(noinline f: (Long) -> R) = (-this).α(f)
+inline infix fun <reified R> Tw1n<Long>.α(noinline f: (Long) -> R):Vect0r<R> = (-this).α(f)
 
 @JvmName("aSFloat")
-inline infix fun <reified R> Tw1n<Float>.α(noinline f: (Float) -> R) = (-this).α(f)
+inline infix fun <reified R> Tw1n<Float>.α(noinline f: (Float) -> R):Vect0r<R> = (-this).α(f)
 
 @JvmName("aSByte")
-inline infix fun <reified R> Tw1n<Byte>.α(noinline f: (Byte) -> R) = (-this).α(f)
+inline infix fun <reified R> Tw1n<Byte>.α(noinline f: (Byte) -> R):Vect0r<R> = (-this).α(f)
 
 @JvmName("aSChar")
-inline infix fun <reified R> Tw1n<Char>.α(noinline f: (Char) -> R) = (-this).α(f)
+inline infix fun <reified R> Tw1n<Char>.α(noinline f: (Char) -> R):Vect0r<R> = (-this).α(f)
 
 @JvmName("aSShort")
-inline infix fun <reified R> Tw1n<Short>.α(noinline f: (Short) -> R) = (-this).α(f)
+inline infix fun <reified R> Tw1n<Short>.α(noinline f: (Short) -> R):Vect0r<R> = (-this).α(f)
 
 
 /**
@@ -174,7 +174,7 @@ inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>) = this.ordi
 
 @JvmName("αS")
 inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R) = (-this).α(f)
-inline infix fun <reified F, reified S> F.t2(s: S) = Pai2.invoke(this, s)
+inline infix fun <reified F, reified S> F.t2(s: S) = Pai2(this, s)
 inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
 
 infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T) = let { (a, b) -> Tripl3(a, b, t) }
