@@ -112,8 +112,8 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
 /**
  * int-type specific twin with primitive array backing store.
  */
-@JvmInline
-value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
+
+inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
     override inline val first get() = ia[0]
     override inline val second get() = ia[1]
 }
@@ -121,8 +121,7 @@ value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
 /**
  * long-type specific twin with primitive array backing store.
  */
-@JvmInline
-value class Twln(val ia: LongArray) : Tw1n<Long> {
+inline class Twln(val ia: LongArray) : Tw1n<Long> {
     override inline val first get() = ia[0]
     override inline val second get() = ia[1]
 }

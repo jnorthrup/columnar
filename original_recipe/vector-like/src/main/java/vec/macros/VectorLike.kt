@@ -19,7 +19,7 @@ typealias Vect0r<reified T> = Pai2<Int, ((Int) -> T)>
 typealias   Vect02<F, S> = Vect0r<Pai2<F, S>>
 typealias  V3ct0r<F, S, T> = Vect0r<Tripl3<F, S, T>>
 
-val <T>Vect0r<T>.size: Int get() = first
+inline val<T>  Vect0r<T>.size: Int get() = first
 @Suppress("NonAsciiCharacters")
 typealias Matrix<T> = Pai2<
         /**shape*/
@@ -51,7 +51,7 @@ inline infix fun <reified A, reified B, reified C, G : (B) -> C, F : (A) -> B, R
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-inline infix fun <A, reified C, B : (A) -> C, V : Vect0r<A>> V.α(m: B) = map(m)
+inline infix fun <reified A, reified C, B : (A) -> C, reified V : Vect0r<A>> V.α(m: B) = map(m)
 
 
 inline infix fun <A, reified C, B : (A) -> C, T : Iterable<A>> T.α(m: B) =
@@ -175,7 +175,7 @@ fun <T> Vect0r<T>.toFlow() = this.let { (size, vf) ->
     }
 }
 
-fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
+inline fun <reified T, reified R, reified V : Vect0r<T>> V.map(crossinline fn: (T) -> R) =
         Vect0r(this.size) { it: Int -> fn(second(it)) }
 
 /* unhealthy
@@ -185,9 +185,9 @@ fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R) =
 
 fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R) = List(first) { fn(it, second(it)) }
 
-fun <T> Vect0r<T>.forEach(fn: (T) -> Unit) = repeat(size) { fn(second(it)) }
+inline fun <reified T> Vect0r<T>.forEach(fn: (T) -> Unit) = repeat(size) { fn(second(it)) }
 
-fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit) = repeat(size) { f(it, second(it)) }
+inline fun <reified T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit) = repeat(size) { f(it, second(it)) }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
 
@@ -336,7 +336,7 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
  */
 inline infix operator fun <reified T> Vector<T>.div(denominator: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> T>> =
         (0 until this.size).div(denominator).α { rnge ->
-            (this as Vect0r<T>).slice(rnge.first, rnge.endInclusive)
+            (this as Vect0r<T>).slice(rnge.first, rnge.last)
         }
 
 
@@ -356,8 +356,8 @@ inline val <reified T> Vect0r<T>.last: T
  * this will create a point in time Vect0r of the current window of (0 until size)
  * however the source Vect0r needs to have a repeatable 0 (nonmutable)
  */
-val <T> Vect0r<T>.reverse: Vect0r<T>
-    get() = size t2 { x -> second(size - 1 - x) }
+inline val <reified T> Vect0r<T>.reverse: Vect0r<T>
+    get() = this.size t2 { x -> second(size - 1 - x) }
 
 /**
  * direct increment x offset for a cheaper slice than binary search
@@ -430,7 +430,7 @@ fun ByteBuffer.toVect0r(): Vect0r<Byte> =
         slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 
 
-fun IntRange.toVect0r():Vect0r<Int> = if( this.step !=1 ) this.toList() α {it} else last-first t2 {x->first+x}
+fun IntRange.toVect0r(): Vect0r<Int> = if (this.step != 1) this.toList() α { it } else (last.inc() - first) t2 { x -> first + x }
 inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
@@ -570,4 +570,4 @@ object V3ct0r_ {
     inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify get() = this α (Tripl3<F, S, T>::triple)
 }
 
-operator fun <T> Vect0r<T>.div(d: Int): Vect0r<Vect0r<T>> = (0 until size) / d α { this[it] }
+inline operator fun <reified T> Vect0r<T>.div(d: Int): Vect0r<Vect0r<T>> = (0 until size) / d α { this[it] }

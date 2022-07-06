@@ -2,7 +2,7 @@ package cursors
 
 import cursors.context.Scalar
 import cursors.io.IOMemento
-import cursors.io.RowVec
+import cursors.io.*
 import cursors.io.colIdx
 import cursors.io.scalars
 import cursors.macros.join
@@ -30,11 +30,11 @@ import kotlin.coroutines.CoroutineContext
  * allocates IntArray per column, row length
  *
  */
-fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
+fun Cursor.categories(dummySpec: Any? = null) = let { (psize, _) ->
     val colIdx = this.colIdx
     val (csize) = colIdx
-    val typeMementos: Vect0r<TypeMemento> = colIdx.left.map { it -> it as TypeMemento }
-    val cnames = colIdx.right
+    val typeMementos: Vect0r<TypeMemento> = colIdx.left.map { it }
+    colIdx.right
     val alwaysZero = _a[0]
 
 
@@ -52,6 +52,7 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
 
                 RowVec(v.size) { vx: Int ->
                     (useIndex == vx) as Any? t2 {
+                        @Suppress("USELESS_CAST")
                         Scalar(
                             IOMemento.IoBoolean,
                             "${narrowed.scalars[0].second}=${v[vx]}"
@@ -59,7 +60,7 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, prows) ->
                     }
                 }
             }
-        }.let { curs ->
+        }.let { curs:Cursor  ->
             val s = curs.colIdx.size
             when {
                 s == 1 || dummySpec == DummySpec.KeepAll -> curs
