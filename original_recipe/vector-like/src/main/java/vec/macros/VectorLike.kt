@@ -405,33 +405,42 @@ inline fun <reified T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -
 
 /**cloning and reifying Vect0r to DoubleArray*/
 inline fun <reified T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
-
-inline fun <reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-inline fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
-inline fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
-inline fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
-inline fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
-inline fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
-inline fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
+@JvmName("AToVec")inline fun <reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+@JvmName("LToVec")inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+@JvmName("IAToVec")inline fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
+@JvmName("LAToVec")inline fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
+@JvmName("DAToVec")inline fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
+@JvmName("FAToVec")inline fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
+@JvmName("BAToVec")inline fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
+@JvmName("CAToVec")inline fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
+@JvmName("CSToVec")
 inline fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
+@JvmName("StrToVec")
 inline fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
 inline fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })
 
 
 fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
 fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0L
-
 fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0.0
 fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0f
 
+@JvmName("FlowToVec")
 suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
+@JvmName("BBToVec")
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
         slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
 
 
-fun IntRange.toVect0r(): Vect0r<Int> = if (this.step != 1) this.toList() α { it } else (last.inc() - first) t2 { x -> first + x }
+@JvmName("IntRangeToVec")
+fun IntRange.toVect0r(): Vect0r<Int> {
+    fun SimpleIntRangeToVec(): Vect0r<Int> = last.inc() - first t2 { x -> first + x }
+    return if (this.step != 1||this.first>=this.last) this.toList() α { it } else SimpleIntRangeToVec()
+}
+
+@JvmName("IterableToVec")
 inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
+@JvmName("SeqToVec")
 inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
 inline val <reified X> Vect0r<Vect0r<X>>.T
