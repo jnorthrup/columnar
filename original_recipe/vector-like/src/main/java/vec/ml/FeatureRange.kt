@@ -2,7 +2,6 @@
 
 package vec.ml
 
-import vec.macros.Pai2
 import vec.macros.Tw1n
 import vec.macros.t2
 import kotlin.math.roundToInt
@@ -12,26 +11,26 @@ import kotlin.math.roundToLong
  * returns min,max of Iterable given
  */
 @JvmName("FRComparable")
-inline fun <reified T : Comparable<T>> featureRange(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Tw1n<T>  =
-    featureRange_(seq, maxMinTwin)
+inline fun <reified T : Comparable<T>> featureRange(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Tw1n<T> =
+        featureRange_(seq, maxMinTwin)
 
 /**
  * returns min,max of Iterable given
  */
 @JvmName("FRComparable_")
 inline fun <reified T : Comparable<T>> featureRange_(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Tw1n<T> =
-    seq.fold(maxMinTwin) { incumbent, candidate: T ->
-        val (incumbentMin, incumbentMax) = incumbent
-        val cmin = minOf(incumbentMin, candidate)
-        val cmax = maxOf(candidate, incumbentMax)
-        when {
-            incumbentMax !== candidate && candidate === cmax || incumbentMin !== candidate && candidate === cmin -> Tw1n(
-                cmin,
-                cmax
-            )
-            else -> incumbent
+        seq.fold(maxMinTwin) { incumbent, candidate: T ->
+            val (incumbentMin, incumbentMax) = incumbent
+            val cmin = minOf(incumbentMin, candidate)
+            val cmax = maxOf(candidate, incumbentMax)
+            when {
+                incumbentMax !== candidate && candidate === cmax || incumbentMin !== candidate && candidate === cmin -> Tw1n(
+                        cmin,
+                        cmax
+                )
+                else -> incumbent
+            }
         }
-    }
 
 /**
  * this is a min-max in that order
@@ -47,26 +46,26 @@ inline fun Tw1n<Long>.deNormalize(d: Double): Long = let { (min, max) -> (d * (m
 
 @JvmName("FrInt")
 fun featureRange(
-    seq: Iterable<Int>,
-    maxMinTwin: Tw1n<Int> = Int.MAX_VALUE t2 Int.MIN_VALUE,
+        seq: Iterable<Int>,
+        maxMinTwin: Tw1n<Int> = Int.MAX_VALUE t2 Int.MIN_VALUE,
 ) = featureRange_(seq, maxMinTwin)
 
 
 @JvmName("FrLong")
 fun featureRange(
-    seq: Iterable<Long>,
-    maxMinTwin: Tw1n<Long> = Long.MAX_VALUE t2 Long.MIN_VALUE,
+        seq: Iterable<Long>,
+        maxMinTwin: Tw1n<Long> = Long.MAX_VALUE t2 Long.MIN_VALUE,
 ) = featureRange_(seq, maxMinTwin)
 
 @JvmName("FrDouble")
 fun featureRange(
-    seq: Iterable<Double>,
-    maxMinTwin: Tw1n<Double> = Double.MAX_VALUE t2 Double.MIN_VALUE,
+        seq: Iterable<Double>,
+        maxMinTwin: Tw1n<Double> = Double.MAX_VALUE t2 Double.MIN_VALUE,
 ) = featureRange_(seq, maxMinTwin)
 
 @JvmName("FrFloat")
 fun featureRange(
-    seq: Iterable<Float>,
-    maxMinTwin: Tw1n<Float> = Float.MAX_VALUE t2 Float.MIN_VALUE,
+        seq: Iterable<Float>,
+        maxMinTwin: Tw1n<Float> = Float.MAX_VALUE t2 Float.MIN_VALUE,
 ) = featureRange_(seq, maxMinTwin)
 
