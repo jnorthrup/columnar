@@ -37,7 +37,7 @@ inline fun <reified T : Comparable<T>> featureRange_(seq: Iterable<T>, maxMinTwi
  */
 inline fun Tw1n<Double>.normalize(d: Double): Double = let { (min, max) -> ((d - min) / (max - min)).toDouble() }
 inline fun Tw1n<Float>.normalize(d: Float): Double = let { (min, max) -> ((d - min) / (max - min)).toDouble() }
-inline fun Tw1n<Int>.normalize(d: Int): Double = let { (min, max) -> ((d - min) / (max - min)).toDouble() }
+inline fun Tw1n<Int>.normalize(d: Int): Double = let { (min, max) -> ((d - min) /  (max - min)).toDouble() }
 inline fun Tw1n<Long>.normalize(d: Long): Double = let { (min, max) -> ((d - min) / (max - min)) .toDouble() }
 inline fun Tw1n<Double>.deNormalize(d: Double): Double = let { (min, max) -> (d * (max - min) + min) }
 inline fun Tw1n<Float>.deNormalize(d: Double): Float = let { (min, max) -> (d * (max - min) + min) }.toFloat()

@@ -129,6 +129,9 @@
                 </executions>
                 <configuration>
                     <jvmTarget>${maven.compiler.target}</jvmTarget>
+                    <args>
+<!--                        <arg>-Xuse-k2</arg>-->
+                    </args>
                 </configuration>
             </plugin>
             <plugin>

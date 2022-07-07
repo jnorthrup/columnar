@@ -341,7 +341,7 @@ inline infix operator fun <reified T> Vector<T>.div(denominator: Int): Pai2<Int,
 
 
 /**
- * this is an unfortunate discriminator between the Int Pai2.first..second  and the Any Vect0r[0]
+ * this is an unfortunate discriminator between the Int Pai2.first..second  and the Vect0r[0]
  */
 inline val <reified T> Vect0r<T>.f1rst: T
     get() = get(0)
@@ -481,7 +481,7 @@ inline operator fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
 inline val <reified T> Vect0r<T>.`➤`: Iterable<T>
     @JvmName("iteratable")
     get() = object : Iterable<T> {
-        override fun iterator(): Iterator<T> = object : Iterator<T> {
+    override inline operator fun iterator(): Iterator<T> = object : Iterator<T> {
             var t = 0
             override fun hasNext(): Boolean = t < first
             override fun next(): T = second(t++)
