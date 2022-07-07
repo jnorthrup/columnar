@@ -15,14 +15,14 @@
         <module>cursor</module>
         <module>trie</module>
         <module>vector-like</module>
-<!--        <module>bbcursive</module>-->
+        <!--        <module>bbcursive</module>-->
     </modules>
-
     <properties>
+        <kotlin.version>1.7.0</kotlin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-     </properties>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
 
     <licenses>
         <license>
@@ -75,14 +75,8 @@
         <url>https://www.vsiwest.com/</url>
     </organization>
 
-<!--
+
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
@@ -101,22 +95,64 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <version>1.7.0</version>
+            <version>${kotlin.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit</artifactId>
-            <version>1.7.0</version>
+            <artifactId>kotlin-test-junit5</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
--->
-
 
     <build>
-        <!--        <sourceDirectory>src/main/kotlin</sourceDirectory>-->
-        <!--        <testSourceDirectory>src/test/kotlin</testSourceDirectory>-->
-     </build>
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>${maven.compiler.target}</jvmTarget>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>testCompile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
     <profiles>
         <profile>
             <id>release-sign-artifacts</id>
@@ -127,7 +163,7 @@
                 </property>
             </activation>
             <properties>
-                <maven.compiler.source>17</maven.compiler.source>
+                <maven.compiler.source>1.8</maven.compiler.source>
                 <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
             </properties>
             <distributionManagement>

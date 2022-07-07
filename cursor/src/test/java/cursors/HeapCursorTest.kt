@@ -8,7 +8,7 @@ import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString
 import cursors.macros.`∑`
 import cursors.macros.join
-import org.junit.Test
+import kotlin.test.*
 import vec.macros.*
 import vec.util._a
 import vec.util._v

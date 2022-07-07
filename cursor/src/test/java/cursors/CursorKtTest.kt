@@ -12,8 +12,7 @@ import cursors.io.IOMemento.IoFloat
 import cursors.io.IOMemento.IoString
 import cursors.macros.join
 import cursors.macros.`∑`
-import org.junit.Assert
-import org.junit.Test
+import kotlin.test.*
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
@@ -23,7 +22,7 @@ import vec.util._v
 
 
 infix fun Any?.shouldBe(that: Any?) {
-    org.junit.Assert.assertEquals(that, this)
+     assertEquals(that, this)
 }
 
 class CursorKtTest {
@@ -139,7 +138,7 @@ class CursorKtTest {
         val lhs_size = 2
         fun whichKey(ix: Int) = (ix - lhs_size) / fanOut_size
         whichKey(702) shouldBe 350
-        Assert.assertEquals(349, whichKey(700))
+        assertEquals(349, whichKey(700))
     }
 
     @Test

@@ -1,6 +1,6 @@
 package vec.util
 
-import org.junit.Test
+import kotlin.test.*
 import vec.macros.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime

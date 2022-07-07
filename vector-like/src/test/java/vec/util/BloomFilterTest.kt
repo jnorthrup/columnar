@@ -1,6 +1,6 @@
 package vec.util
 
-import org.junit.Test
+import kotlin.test.*
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadMXBean
 import java.util.*

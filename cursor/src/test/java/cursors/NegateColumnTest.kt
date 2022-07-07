@@ -2,7 +2,7 @@ package cursors
 
 import cursors.context.TokenizedRow
 import cursors.effects.head
-import org.junit.Test
+import kotlin.test.*
 import vec.macros.size
 import vec.util._l
 

@@ -1,13 +1,14 @@
 package cursors
 
-import junit.framework.TestCase
-import org.junit.Test
 import vec.CirQlar
 import vec.macros.f1rst
 import vec.macros.last
 import vec.macros.toList
 
-class CirQlarTest : TestCase() {
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class CirQlarTest {
 
     @Test
     fun testCirQtoList() {
@@ -36,6 +37,4 @@ class CirQlarTest : TestCase() {
         assertEquals(6, vec.last)
         assertEquals(4, vec.f1rst)
     }
-
-
 }

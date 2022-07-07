@@ -7,7 +7,7 @@ import cursors.io.*
 import cursors.macros.`∑`
 import cursors.macros.join
 import cursors.macros.α
-import org.junit.Test
+import kotlin.test.*
 import org.w3c.dom.Document
 import org.w3c.dom.NodeList
 import vec.macros.*

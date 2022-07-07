@@ -5,7 +5,7 @@ import bbcursive.lib.repeat_.repeat
 import bbcursive.std
 import bbcursive.std.bb
 import org.junit.Assert
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Created by jim on 1/23/16.

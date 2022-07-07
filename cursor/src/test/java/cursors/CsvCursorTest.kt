@@ -4,8 +4,7 @@ import cursors.context.TokenizedRow
 import cursors.context.TokenizedRow.Companion.CsvArraysCursor
 import cursors.io.IOMemento.*
 import cursors.io.RowVec
-import junit.framework.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.*
 import vec.macros.Vect02_.left
 import vec.macros.get
 import vec.util._v

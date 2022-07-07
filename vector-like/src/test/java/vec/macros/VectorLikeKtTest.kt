@@ -1,8 +1,8 @@
 package vec.macros
 
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Test
+
+import org.junit.jupiter.api.Assertions
+import kotlin.test.*
 import vec.util._l
 import vec.util._v
 import vec.util.logDebug
@@ -11,7 +11,7 @@ class VectorLikeKtTest {
 
     @Test
     fun reverse() {
-        assertArrayEquals(
+        assertEquals(
             _v[0, 1, 2, 3, 4, 5, 6].reverse.also { System.err.println(it.toList()) }.toList()
                 .toIntArray(), _l[0, 1, 2, 3, 4, 5, 6].reversed().toIntArray()
         )

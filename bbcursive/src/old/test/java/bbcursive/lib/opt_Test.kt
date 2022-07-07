@@ -6,7 +6,7 @@ import bbcursive.lib.opt_.opt
 import bbcursive.std.bb
 import junit.framework.Assert
 import junit.framework.TestCase
-import org.junit.Test
+import kotlin.test.*
 
 /**
  * Created by jim on 1/24/16.

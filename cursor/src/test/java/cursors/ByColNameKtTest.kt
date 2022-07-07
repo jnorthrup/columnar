@@ -3,7 +3,7 @@ package cursors
 import cursors.context.TokenizedRow
 import cursors.effects.head
 import cursors.io.colIdx
-import org.junit.Test
+import kotlin.test.*
 import vec.util._l
 
 internal class ByColNameKtTest {

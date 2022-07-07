@@ -1,8 +1,6 @@
 package trie;
 
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.*
 
 
 /**

@@ -3,8 +3,7 @@ package cursors.io
 import cursors.Cursor
 import cursors.at
 import cursors.context.Scalar.Companion.Scalar
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.*
 import vec.macros.`⟲`
 import vec.macros.get
 import vec.macros.size

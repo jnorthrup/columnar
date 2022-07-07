@@ -8,7 +8,7 @@ import cursors.io.*
 import cursors.io.IOMemento.*
 import cursors.macros.join
 import cursors.macros.α
-import org.junit.Test
+import kotlin.test.*
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
