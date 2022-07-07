@@ -75,6 +75,7 @@
         <url>https://www.vsiwest.com/</url>
     </organization>
 
+<!--
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -109,41 +110,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+-->
 
 
     <build>
         <!--        <sourceDirectory>src/main/kotlin</sourceDirectory>-->
         <!--        <testSourceDirectory>src/test/kotlin</testSourceDirectory>-->
-        <plugins>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <version>1.7.0</version>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <args>
-                        <arg>-Xuse-k2</arg>
-                    </args>
-                    <jvmTarget>17</jvmTarget>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+     </build>
     <profiles>
         <profile>
             <id>release-sign-artifacts</id>
