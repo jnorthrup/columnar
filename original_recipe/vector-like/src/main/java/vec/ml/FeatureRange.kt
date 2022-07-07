@@ -5,19 +5,21 @@ package vec.ml
 import vec.macros.Pai2
 import vec.macros.Tw1n
 import vec.macros.t2
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 /**
  * returns min,max of Iterable given
  */
 @JvmName("FRComparable")
-inline fun <reified T : Comparable<T>> featureRange(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Pai2<T, T> =
+inline fun <reified T : Comparable<T>> featureRange(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Tw1n<T>  =
     featureRange_(seq, maxMinTwin)
 
 /**
  * returns min,max of Iterable given
  */
 @JvmName("FRComparable_")
-inline fun <reified T : Comparable<T>> featureRange_(seq: Iterable<T>, maxMinTwin: Tw1n<T>) =
+inline fun <reified T : Comparable<T>> featureRange_(seq: Iterable<T>, maxMinTwin: Tw1n<T>): Tw1n<T> =
     seq.fold(maxMinTwin) { incumbent, candidate: T ->
         val (incumbentMin, incumbentMax) = incumbent
         val cmin = minOf(incumbentMin, candidate)
@@ -34,14 +36,14 @@ inline fun <reified T : Comparable<T>> featureRange_(seq: Iterable<T>, maxMinTwi
 /**
  * this is a min-max in that order
  */
-inline fun Tw1n<Double>.normalize(d: Double): Double = let { (min, max) -> ((d - min) / (max - min)) }
-inline fun Tw1n<Float>.normalize(d: Float): Float = let { (min, max) -> ((d - min) / (max - min)) }
-inline fun Tw1n<Int>.normalize(d: Int): Int = let { (min, max) -> ((d - min) / (max - min)) }
-inline fun Tw1n<Long>.normalize(d: Long): Long = let { (min, max) -> ((d - min) / (max - min)) }
+inline fun Tw1n<Double>.normalize(d: Double): Double = let { (min, max) -> ((d - min) / (max - min)).toDouble() }
+inline fun Tw1n<Float>.normalize(d: Float): Double = let { (min, max) -> ((d - min) / (max - min)).toDouble() }
+inline fun Tw1n<Int>.normalize(d: Int): Double = let { (min, max) -> ((d - min) / (max - min)).toDouble() }
+inline fun Tw1n<Long>.normalize(d: Long): Double = let { (min, max) -> ((d - min) / (max - min)) .toDouble() }
 inline fun Tw1n<Double>.deNormalize(d: Double): Double = let { (min, max) -> (d * (max - min) + min) }
-inline fun Tw1n<Float>.deNormalize(d: Float): Float = let { (min, max) -> (d * (max - min) + min) }
-inline fun Tw1n<Int>.deNormalize(d: Int): Int = let { (min, max) -> (d * (max - min) + min) }
-inline fun Tw1n<Long>.deNormalize(d: Long): Long = let { (min, max) -> (d * (max - min) + min) }
+inline fun Tw1n<Float>.deNormalize(d: Double): Float = let { (min, max) -> (d * (max - min) + min) }.toFloat()
+inline fun Tw1n<Int>.deNormalize(d: Double): Int = let { (min, max) -> (d * (max - min) + min) }.roundToInt()
+inline fun Tw1n<Long>.deNormalize(d: Double): Long = let { (min, max) -> (d * (max - min) + min) }.roundToLong()
 
 @JvmName("FrInt")
 fun featureRange(
