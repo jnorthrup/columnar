@@ -19,7 +19,7 @@ typealias Vect0r<reified T> = Pai2<Int, ((Int) -> T)>
 typealias   Vect02<F, S> = Vect0r<Pai2<F, S>>
 typealias  V3ct0r<F, S, T> = Vect0r<Tripl3<F, S, T>>
 
-inline val<T>  Vect0r<T>.size: Int get() = first
+inline val <T>  Vect0r<T>.size: Int get() = first
 @Suppress("NonAsciiCharacters")
 typealias Matrix<T> = Pai2<
         /**shape*/
@@ -405,16 +405,26 @@ inline fun <reified T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -
 
 /**cloning and reifying Vect0r to DoubleArray*/
 inline fun <reified T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
-@JvmName("AToVec")inline fun <reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-@JvmName("LToVec")inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
-@JvmName("IAToVec")inline fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
-@JvmName("LAToVec")inline fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
-@JvmName("DAToVec")inline fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
-@JvmName("FAToVec")inline fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
-@JvmName("BAToVec")inline fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
-@JvmName("CAToVec")inline fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
+@JvmName("AToVec")
+inline fun <reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+@JvmName("LToVec")
+inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+@JvmName("IAToVec")
+inline fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
+@JvmName("LAToVec")
+inline fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
+@JvmName("DAToVec")
+inline fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
+@JvmName("FAToVec")
+inline fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
+@JvmName("BAToVec")
+inline fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
+@JvmName("CAToVec")
+inline fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
+
 @JvmName("CSToVec")
 inline fun CharSequence.toVect0r() = (length t2 ::get) as Vect0r<Char>
+
 @JvmName("StrToVec")
 inline fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
 inline fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })
@@ -427,6 +437,7 @@ fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?:
 
 @JvmName("FlowToVec")
 suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
+
 @JvmName("BBToVec")
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
         slice().let { slice -> Vect0r(slice.remaining()) { ix: Int -> slice.get(ix) } }
@@ -435,11 +446,12 @@ fun ByteBuffer.toVect0r(): Vect0r<Byte> =
 @JvmName("IntRangeToVec")
 fun IntRange.toVect0r(): Vect0r<Int> {
     fun SimpleIntRangeToVec(): Vect0r<Int> = last.inc() - first t2 { x -> first + x }
-    return if (this.step != 1||this.first>=this.last) this.toList() α { it } else SimpleIntRangeToVec()
+    return if (this.step != 1 || this.first >= this.last) this.toList() α { it } else SimpleIntRangeToVec()
 }
 
 @JvmName("IterableToVec")
 inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
+
 @JvmName("SeqToVec")
 inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
@@ -460,31 +472,21 @@ inline val <reified X> Vect0r<Vect0r<X>>.T
 
 /**
  * Vect0r->Set */
-inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: LinkedHashSet<S>(size)).also { hs ->
-    repeat(size) {
-        hs.add(get(it))
-    }
-}
+inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: LinkedHashSet<S>(size)).also { hs -> hs.addAll(this.`➤`) }
 
-
-inline operator fun <reified S> Vect0r<S>.iterator(): Iterator<S> {
-    return object : Iterator<S> {
-        var x = 0
-        override inline fun hasNext(): Boolean = x < size
-        override inline fun next(): S = get(x++)
-    }
-}
+ @JvmName("iterator")
+inline operator fun <reified S> Vect0r<S>.iterator(): Iterator<S> = `➤`.iterator()
 
 /**
- * wrapper for for loops and iterable filters
+ * wrapper for for-loops and iterable filters
  */
 inline val <reified T> Vect0r<T>.`➤`: Iterable<T>
     @JvmName("iteratable")
     get() = object : Iterable<T> {
-    override inline operator fun iterator(): Iterator<T> = object : Iterator<T> {
+        override inline operator fun iterator(): Iterator<T> = object : Iterator<T> {
             var t = 0
-            override fun hasNext(): Boolean = t < first
-            override fun next(): T = second(t++)
+            override inline fun hasNext(): Boolean = t < size
+            override inline fun next(): T = second(t++)
         }
     }
 
