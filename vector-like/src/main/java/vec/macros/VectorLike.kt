@@ -405,20 +405,28 @@ inline fun <reified T : Float> Vect0r<T>.toFloatArray() = FloatArray(size) { i -
 
 /**cloning and reifying Vect0r to DoubleArray*/
 inline fun <reified T : Double> Vect0r<T>.toDoubleArray() = DoubleArray(size) { i -> get(i) }
+
 @JvmName("AToVec")
 inline fun <reified T> Array<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+
 @JvmName("LToVec")
 inline fun <reified T> List<T>.toVect0r() = (size t2 ::get) as Vect0r<T>
+
 @JvmName("IAToVec")
 inline fun IntArray.toVect0r() = (size t2 ::get) as Vect0r<Int>
+
 @JvmName("LAToVec")
 inline fun LongArray.toVect0r() = (size t2 ::get) as Vect0r<Long>
+
 @JvmName("DAToVec")
 inline fun DoubleArray.toVect0r() = (size t2 ::get) as Vect0r<Double>
+
 @JvmName("FAToVec")
 inline fun FloatArray.toVect0r() = (size t2 ::get) as Vect0r<Float>
+
 @JvmName("BAToVec")
 inline fun ByteArray.toVect0r() = (size t2 ::get) as Vect0r<Byte>
+
 @JvmName("CAToVec")
 inline fun CharArray.toVect0r() = (size t2 ::get) as Vect0r<Char>
 
@@ -430,10 +438,10 @@ inline fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
 inline fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })
 
 
-fun Vect0r<Int>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Int::plus) ?: 0
-fun Vect0r<Long>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Long::plus) ?: 0L
-fun Vect0r<Double>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Double::plus) ?: 0.0
-fun Vect0r<Float>.sum() = `➤`.takeIf { this.size > 0 }?.reduce(Float::plus) ?: 0f
+fun Vect0r<Int>.sum() = takeIf{ this.size > 0 }?.`➤`?.reduce(Int::plus) ?: 0
+fun Vect0r<Long>.sum() = takeIf{ this.size > 0 }?.`➤`?.reduce(Long::plus) ?: 0L
+fun Vect0r<Double>.sum() = takeIf{ this.size > 0 }?.`➤`?.reduce(Double::plus) ?: 0.0
+fun Vect0r<Float>.sum(): Float = takeIf{ this.size > 0 }?.`➤`?.reduce(Float::plus)  ?: 0f
 
 @JvmName("FlowToVec")
 suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
@@ -472,9 +480,10 @@ inline val <reified X> Vect0r<Vect0r<X>>.T
 
 /**
  * Vect0r->Set */
-inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt ?: LinkedHashSet<S>(size)).also { hs -> hs.addAll(this.`➤`) }
+inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null) = (opt
+        ?: LinkedHashSet<S>(size)).also { hs -> hs.addAll(this.`➤`) }
 
- @JvmName("iterator")
+@JvmName("iterator")
 inline operator fun <reified S> Vect0r<S>.iterator(): Iterator<S> = `➤`.iterator()
 
 /**
