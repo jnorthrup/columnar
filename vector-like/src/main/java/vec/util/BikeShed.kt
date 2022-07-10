@@ -160,10 +160,10 @@ inline fun <reified T> moireValues(
     )
 }
 
-@JvmName("todub")
+@JvmName("todubNeg")
 inline fun todubneg(f: Any?): Double = todub(f, -1e300)
 
-@JvmName("todub0")
+ @JvmName("todub")
 fun todub(f: Any?): Double = todub(f, .0)
 
 @JvmName("tof0")
