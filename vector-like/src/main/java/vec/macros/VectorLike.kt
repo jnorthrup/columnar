@@ -397,6 +397,9 @@ inline fun <reified T : Char> Vect0r<T>.toCharArray() = CharArray(size) { i -> g
 /**cloning and reifying Vect0r to IntArray*/
 inline fun <reified T : Int> Vect0r<T>.toIntArray() = IntArray(size) { i -> get(i) }
 
+/**cloning and reifying Vect0r to IntArray*/
+inline fun <reified T : Boolean> Vect0r<T>.toBooleanArray() = BooleanArray(size) { i -> get(i) }
+
 /**cloning and reifying Vect0r to LongArray*/
 inline fun <reified T : Long> Vect0r<T>.toLongArray() = LongArray(size) { i -> get(i) }
 
