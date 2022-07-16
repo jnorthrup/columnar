@@ -7,7 +7,7 @@ package vec.macros
 
 import kotlinx.coroutines.flow.*
 import vec.macros.Vect02_.left
-import java.lang.Integer.min
+import java.lang.Integer.*
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.max
@@ -29,12 +29,9 @@ typealias Matrix<T> = Pai2<
 
 operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 
-
 inline infix fun <reified O, reified R, F : (O) -> R> O.`→`(f: F): R = f(this)
 
-
 operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> b(this(a)) }
-
 
 infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
         b: G,
@@ -64,17 +61,13 @@ infix fun <A, C, B : (A) -> C> List<A>.α(m: B) =
 inline infix fun <A, reified C, B : (A) -> C> Array<out A>.α(m: B) =
         this.size t2 { i: Int -> m(this[i]) }
 
-
 inline infix fun <reified C, B : (Int) -> C> IntArray.α(m: B) =
         (this.size) t2 { i: Int -> m(this[i]) }
-
 
 inline infix fun <reified C, B : (Float) -> C> FloatArray.α(m: B) =
         (this.size) t2 { i: Int -> m(this[i]) }
 
-
 inline infix fun <reified C, B : (Double) -> C> DoubleArray.α(m: B) = this.size t2 { i: Int -> m(this[i]) }
-
 
 inline infix fun <reified C, B : (Long) -> C> LongArray.α(m: B) =
         Vect0r(this.size) { i: Int -> this[i] `→` m }
@@ -441,10 +434,10 @@ inline fun String.toVect0r() = (length t2 ::get) as Vect0r<String>
 inline fun <T : Boolean> BitSet.toVect0r() = (length() t2 { it: Int -> get(it) })
 
 
-fun Vect0r<Int>.sum() = takeIf{ this.size > 0 }?.`➤`?.reduce(Int::plus) ?: 0
-fun Vect0r<Long>.sum() = takeIf{ this.size > 0 }?.`➤`?.reduce(Long::plus) ?: 0L
-fun Vect0r<Double>.sum() = takeIf{ this.size > 0 }?.`➤`?.reduce(Double::plus) ?: 0.0
-fun Vect0r<Float>.sum(): Float = takeIf{ this.size > 0 }?.`➤`?.reduce(Float::plus)  ?: 0f
+fun Vect0r<Int>.sum() = takeIf { this.size > 0 }?.`➤`?.reduce(Int::plus) ?: 0
+fun Vect0r<Long>.sum() = takeIf { this.size > 0 }?.`➤`?.reduce(Long::plus) ?: 0L
+fun Vect0r<Double>.sum() = takeIf { this.size > 0 }?.`➤`?.reduce(Double::plus) ?: 0.0
+fun Vect0r<Float>.sum(): Float = takeIf { this.size > 0 }?.`➤`?.reduce(Float::plus) ?: 0f
 
 @JvmName("FlowToVec")
 suspend inline fun <reified T> Flow<T>.toVect0r() = this.toList().toVect0r()
@@ -502,6 +495,17 @@ inline val <reified T> Vect0r<T>.`➤`: Iterable<T>
         }
     }
 
+/**
+ * provides unbounded access to first and last rows beyond the existing bounds of 0 until size
+ */
+inline val <reified T> Vect0r<T>.infinite: Vect0r<T>
+    get() = Int.MAX_VALUE t2 { x: Int ->
+        this.second(when {
+            x < 0 -> 0
+            size <= x -> size.dec()
+            else -> x
+        })
+    }
 
 /**
  * index by enum
