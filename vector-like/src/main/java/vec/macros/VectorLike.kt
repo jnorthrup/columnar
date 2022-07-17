@@ -368,6 +368,7 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
  * direct increment offset for a cheaper slice than binary search
  */
 @JvmOverloads
+@JvmName("vect0rSlice")
 inline fun <reified T> Vect0r<T>.slice(
         start: Int = 0,
         endExclusive: Int = this.size,

@@ -84,8 +84,8 @@ operator fun Cursor.get(vararg index: Int) = get(index)
 @JvmName("vlike_RSequence_Iterable21")
 operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
 
-@JvmName("vlike_RSequence_IntArray31")
-operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
+@JvmName("cursorViewByIndices")
+public operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
 
