@@ -2,7 +2,7 @@ package cursors
 
 import cursors.context.Scalar
 import cursors.io.IOMemento
-import cursors.io.*
+import cursors.io.RowVec
 import cursors.io.colIdx
 import cursors.io.scalars
 import cursors.macros.join
@@ -54,13 +54,13 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, _) ->
                     (useIndex == vx) as Any? t2 {
                         @Suppress("USELESS_CAST")
                         Scalar(
-                            IOMemento.IoBoolean,
-                            "${narrowed.scalars[0].second}=${v[vx]}"
+                                IOMemento.IoBoolean,
+                                "${narrowed.scalars[0].second}=${v[vx]}"
                         ) as CoroutineContext
                     }
                 }
             }
-        }.let { curs:Cursor  ->
+        }.let { curs: Cursor ->
             val s = curs.colIdx.size
             when {
                 s == 1 || dummySpec == DummySpec.KeepAll -> curs
@@ -76,21 +76,18 @@ fun Cursor.categories(dummySpec: Any? = null) = let { (psize, _) ->
     }.let { join(it.size t2 it::get) }
 }
 
-fun Cursor.asBitSet(): Cursor = run {
+fun Cursor.asBitSet(): Cursor {
     val xsize = colIdx.size
     val r = BitSet(size * xsize)
     repeat(size) { iy ->
-        (this at iy).let { (_, function) ->
-            repeat(xsize) { ix ->
-                if (true == (function(ix).first as? Boolean)) {
-                    r[iy * xsize + ix] = true
-                }
-            }
+        val rowVec = this at iy
+        repeat(xsize) { ix ->
+            if (true == (rowVec.second(ix).first as? Boolean))
+                r.set(iy * xsize + ix)
         }
     }
-    val (_, b) = scalars
-    val prep: Array<() -> CoroutineContext> = Array(xsize) { (b(it)).`⟲` }
-    size t2 { iy: Int ->
+    val prep = this.scalars α { (Scalar(IOMemento.IoBoolean, it.name) as CoroutineContext).`⟲` }
+    return this.size t2 { iy: Int ->
         xsize t2 { ix: Int ->
             r[iy * xsize + ix] t2 prep[ix]
         }

@@ -77,9 +77,9 @@ But as soon as a groupoid has both a left and a right identity, they are necessa
 a left identity and f is a right identity, then f=ef=e.
 */
 
+inline val <reified T> T.rightIdentity get() = { this }
 /**right identity*/
-inline val <reified T> T.`⟲`
-    get() = { this }
+inline val <reified T> T.`⟲` get()=rightIdentity
 
 /*
 @JvmName("vlike_Sequence_1")
