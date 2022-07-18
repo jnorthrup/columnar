@@ -161,13 +161,13 @@ inline fun <reified T> moireValues(
 }
 
 @JvmName("todubNeg")
-inline fun todubneg(f: Any?): Double = todub(f, -1e300)
+inline fun todubneg(d: Any?): Double = todub(d, -1e300)
 
- @JvmName("todub")
-fun todub(f: Any?): Double = todub(f, .0)
+@JvmName("todub")
+fun todub(d: Any?): Double = todub(d, .0)
 
 @JvmName("tof0")
-inline fun tofneg(f: Any?): Float = tof(f, (-1e300).toFloat())
+inline fun tofneg(f: Any?): Float = tof(f, (-1e53).toFloat())
 
 @JvmName("tof1")
 inline fun tof(f: Any?): Float = tof(f, .0f)
@@ -180,18 +180,21 @@ val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> = Weak
 /** really really wants to produce a Double
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, d: Double): Double = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
+inline fun todub(f: Any?, default: Double): Double = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
     cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
-}.get()?.second)?.takeIf { it.isFinite() } ?: d
+}.get()?.second)?.takeIf { it.isFinite() } ?: default
 
 
 @JvmName("todubf")
-inline fun tof(f: Any?, d: Float): Float = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
+inline fun tof(f: Any?, default: Float): Float = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
     cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull()) }
-}.get()?.second)?.let { t -> if (t.toDouble().isFinite()) t else null } ?: d
+}.get()?.second)?.let { t -> if (t.toDouble().isFinite()) t else null } ?: default
 
 
 @JvmName("utodubd")
-inline fun utodub(f: Any?, d: Double): Double = (f as? Double ?: f as? Number)?.toDouble() ?: ("$f".toDoubleOrNull()?.takeIf { it.isFinite() } ?: d)
-    @JvmName("utodubf")
-inline fun utof(f: Any?, d: Float): Float = (f as? Float ?: f as? Number)?.toFloat() ?: ("$f".toFloatOrNull()?.takeIf { it.isFinite() } ?: d)
+inline fun utodub(f: Any?, default: Double): Double = (f as? Double ?: f as? Number)?.toDouble()
+        ?: ("$f".toDoubleOrNull()?.takeIf { it.isFinite() } ?: default)
+
+@JvmName("utodubf")
+inline fun utof(f: Any?, default: Float): Float = (f as? Float ?: f as? Number)?.toFloat()
+        ?: ("$f".toFloatOrNull()?.takeIf { it.isFinite() } ?: default)
