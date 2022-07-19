@@ -49,6 +49,7 @@ interface Pai2<F, S> {
             override val first: F by p::key
             override val second: S by p::value
         }
+
     }
 }
 
@@ -113,7 +114,8 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
  * int-type specific twin with primitive array backing store.
  */
 
-inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
+@JvmInline
+value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
     override inline val first get() = ia[0]
     override inline val second get() = ia[1]
 }
@@ -121,7 +123,8 @@ inline class Tw1nt(val ia: IntArray) : Tw1n<Int> {
 /**
  * long-type specific twin with primitive array backing store.
  */
-inline class Twln(val ia: LongArray) : Tw1n<Long> {
+@JvmInline
+value class Twln(val ia: LongArray) : Tw1n<Long> {
     override inline val first get() = ia[0]
     override inline val second get() = ia[1]
 }
@@ -139,25 +142,25 @@ operator fun <S> Tw1n<S>.unaryMinus() = _a[first, second]
 inline operator fun Tw1n<Int>.unaryPlus() = (-this).let { (a, b) -> a..b }
 
 @JvmName("aSInt")
-inline infix fun <reified R> Tw1n<Int>.α(noinline f: (Int) -> R):Vect0r<R> = (-this).α(f)
+inline infix fun <reified R> Tw1n<Int>.α(noinline f: (Int) -> R): Vect0r<R> = (-this).α(f)
 
 @JvmName("aSDouble")
-inline infix fun <reified R> Tw1n<Double>.α(noinline f: (Double) -> R):Vect0r<R> = (-this).α(f)
+inline infix fun <reified R> Tw1n<Double>.α(noinline f: (Double) -> R): Vect0r<R> = (-this).α(f)
 
 @JvmName("aSLong")
-inline infix fun <reified R> Tw1n<Long>.α(noinline f: (Long) -> R):Vect0r<R> = (-this).α(f)
+inline infix fun <reified R> Tw1n<Long>.α(noinline f: (Long) -> R): Vect0r<R> = (-this).α(f)
 
 @JvmName("aSFloat")
-inline infix fun <reified R> Tw1n<Float>.α(noinline f: (Float) -> R):Vect0r<R> = (-this).α(f)
+inline infix fun <reified R> Tw1n<Float>.α(noinline f: (Float) -> R): Vect0r<R> = (-this).α(f)
 
 @JvmName("aSByte")
-inline infix fun <reified R> Tw1n<Byte>.α(noinline f: (Byte) -> R):Vect0r<R> = (-this).α(f)
+inline infix fun <reified R> Tw1n<Byte>.α(noinline f: (Byte) -> R): Vect0r<R> = (-this).α(f)
 
 @JvmName("aSChar")
-inline infix fun <reified R> Tw1n<Char>.α(noinline f: (Char) -> R):Vect0r<R> = (-this).α(f)
+inline infix fun <reified R> Tw1n<Char>.α(noinline f: (Char) -> R): Vect0r<R> = (-this).α(f)
 
 @JvmName("aSShort")
-inline infix fun <reified R> Tw1n<Short>.α(noinline f: (Short) -> R):Vect0r<R> = (-this).α(f)
+inline infix fun <reified R> Tw1n<Short>.α(noinline f: (Short) -> R): Vect0r<R> = (-this).α(f)
 
 
 /**
