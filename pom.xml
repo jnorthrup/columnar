@@ -203,7 +203,7 @@
                                 <id>sign-artifacts</id>
                                 <phase>verify</phase>
                                 <goals>
-                                    <goal>sign</goal>
+                                    <goal>help</goal>
                                 </goals>
                                 <configuration>
                                     <!--                                    <keyname>A13271F9D1D2951E</keyname>-->
