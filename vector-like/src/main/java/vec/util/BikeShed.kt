@@ -198,3 +198,9 @@ inline fun utodub(f: Any?, default: Double): Double = (f as? Double ?: f as? Num
 @JvmName("utodubf")
 inline fun utof(f: Any?, default: Float): Float = (f as? Float ?: f as? Number)?.toFloat()
         ?: ("$f".toFloatOrNull()?.takeIf { it.isFinite() } ?: default)
+
+
+fun <E> MutableCollection<E>.flip(flipV: E) {
+    if (flipV in this) remove(flipV)
+    else add(flipV)
+}
