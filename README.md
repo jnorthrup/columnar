@@ -124,10 +124,3 @@ the end-product of a blackboard driver construction layer is hopefully a format 
 variety of common and slightly tweaked combinations of IO and encodings. progress in here should have no impact or
 influence on the Columnar cursor user API, datasources should be abstract even if there are potentially multiple driver
 implementations to enable better IO for specific cases.
-
-## jvm switches
-
-using  `-server -Xmx24g -XX:MaxDirectMemorySize=1G` outperforms everything I've tried to hand-tune before
-adding `-server`
- 
-
