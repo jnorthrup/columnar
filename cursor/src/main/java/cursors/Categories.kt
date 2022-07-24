@@ -30,7 +30,7 @@ import kotlin.coroutines.CoroutineContext
  * allocates IntArray per column, row length
  *
  */
-fun Cursor.categories(dummySpec: Any? = null) = let { (psize, _) ->
+fun Cursor.categories(dummySpec: Any? = null): Cursor = let { (psize, _) ->
     val colIdx = this.colIdx
     val (csize) = colIdx
     val typeMementos: Vect0r<TypeMemento> = colIdx.left.map { it }

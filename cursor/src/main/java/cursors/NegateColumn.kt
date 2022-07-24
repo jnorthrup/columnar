@@ -15,5 +15,5 @@ operator fun Cursor.get(vararg skip: NegateColumn): Cursor {
     return this[indexes]
 }
 
-operator fun String.unaryMinus() = NegateColumn(this)
+operator fun String.unaryMinus(): NegateColumn = NegateColumn(this)
 

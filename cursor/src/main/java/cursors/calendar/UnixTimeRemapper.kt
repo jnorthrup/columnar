@@ -32,7 +32,7 @@ class UnixTimeRemapper {
             val c2: Cursor = c0[newKeys] α { rv: RowVec ->
                 rv.size t2 rv.second α { (unixtime, desc) ->
                     Instant.ofEpochMilli((unixtime as? Long) ?: unixtime.toString().toLongOrNull() ?: 0L) t2 {
-                        val (_, f) = desc().get(Arity.arityKey) as Scalar
+                        val (_, f) = desc()[Arity.arityKey] as Scalar
                         Scalar(IoInstant, f)
                     }
                 }

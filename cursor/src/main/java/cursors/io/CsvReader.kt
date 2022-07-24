@@ -6,7 +6,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 object CsvReader {
-    fun csvReader() = this
+    fun csvReader(): CsvReader = this
     fun open(pathToLabels: String): Cursor = TokenizedRow.CsvArraysCursor(Files.readAllLines(Paths.get(pathToLabels)))
 }
 

@@ -4,9 +4,7 @@ import cursors.Cursor
 import cursors.TypeMemento
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.IOMemento
-import cursors.io.RowVec
 import vec.macros.*
-import vec.util._a
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.max
@@ -26,71 +24,74 @@ import kotlin.math.max
  */
 sealed class RecordBoundary : CoroutineContext.Element {
     companion object {
-        val boundaryKey = object : CoroutineContext.Key<RecordBoundary> {}
+        val boundaryKey: CoroutineContext.Key<RecordBoundary> = object : CoroutineContext.Key<RecordBoundary> {}
     }
 
-    override val key get() = boundaryKey
+    override val key: CoroutineContext.Key<RecordBoundary> get() = boundaryKey
 }
 
 
 class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
     companion object {
-
         /**
          * same as CsvLinesCursor but does the splits at creationtime.
-         * this does no quote escapes, handles no padding, and assumes row 0 is the header names
+         * this does no quote escapes, handles no padding, and assumes row 0 is the header names.
+         *
+         * This Cursor scalar meta contains a compound CoroutineContext holding the max-length of Strings found in each
+         * column. FixedWidth sealed class
          */
+        @JvmStatic
+        @JvmOverloads
         fun CsvArraysCursor(
-            csvLines1: Iterable<String>,
-            dt1: Vect0r<TypeMemento> = Vect0r(Int.MAX_VALUE) { ix: Int -> IOMemento.IoString },
-            overrides: Map<String, TypeMemento>? = null,
+                csvLines1: Iterable<String>,
+                dt1: Vect0r<IOMemento> = Vect0r(Int.MAX_VALUE) { IOMemento.IoString },
+                overrides: Map<String, TypeMemento>? = null,
+                delimRegexFragment: Regex = ("\\s*,\\s*").toRegex(),
         ): Cursor {
             lateinit var longest: IntArray
-            var colnames = _a[""]
+            var colnames: Array<String>
             lateinit var dt: Array<TypeMemento>
-            val regex = "\\s*,\\s*".toRegex()
-            val csvArrays = csvLines1.mapIndexed { index, s ->
-                if (index == 0) {
-                    val res = s.split(regex).map { java.lang.String(it) as kotlin.String }.toTypedArray()
-                    longest = IntArray(res.size) { 0 }
-                    colnames = res
-                    dt = (Array(colnames.size) { i ->
-                        overrides?.let { overrides[colnames[i]] } ?: dt1[i]
-                    })
-                    res
-                } else
-                    s.split(regex, dt.size).map { java.lang.String(it) as kotlin.String }.toTypedArray().let { res ->
-                        res.mapIndexed { i, s ->
-                            val ioMemento = dt[i]
-                            if (ioMemento == IOMemento.IoString) {
+
+            val iter = csvLines1.iterator()
+
+            run {
+                val s = iter.next()
+                val res = s.split(delimRegexFragment).map { "$it" }.toTypedArray()
+                longest = IntArray(res.size)
+                colnames = res
+                dt = Array(colnames.size) { i ->
+                    overrides?.let { it[colnames[i]] } ?: dt1[i]
+                }
+            }
+
+            val csvArrays = mutableListOf<Vect0r<*>>()
+            if (iter.hasNext())
+                do {
+                    val s = iter.next()
+                    csvArrays += s.split(delimRegexFragment, dt.size).map { it }.toTypedArray().mapIndexed { i, s ->
+                        when (val ioMemento = dt[i]) {
+                            IOMemento.IoString -> {
                                 longest[i] = max(longest[i], s.length)
                                 s
-                            } else {
-                                Tokenized.mapped[ioMemento]!!.read(ByteBuffer.wrap(s.toByteArray()).rewind())
                             }
-                        }.toTypedArray()
-                    }
-            }
-            val xSize = colnames.size
+                            else -> Tokenized.mapped[ioMemento]!!.read(ByteBuffer.wrap(s.toByteArray()).rewind())
+                        }
+                    }.toVect0r()
+                } while (iter.hasNext())
 
             val sdt = dt.mapIndexed { ix, dt ->
                 (if (IOMemento.IoString == dt) {
                     Scalar(type = dt, name = colnames[ix]) + FixedWidth(
-                        recordLen = longest[ix],
-                        coords = dummy,
-                        endl = { null },
-                        pad = { null }
+                            recordLen = longest[ix],
+                            coords = dummy,
+                            endl = { null },
+                            pad = { null }
                     ) //TODO: review whether using FixedWidth here is is a bad thing and we need a new Context Class for this feature.
 
                 } else Scalar(dt, colnames[ix])).`⟲`
-            }
-            return Cursor(csvArrays.size - 1) { iy: Int ->
-                val row = csvArrays[iy + 1]
-                RowVec(xSize) { ix: Int ->
-                    val function = sdt[ix]
-                    row[ix] t2 function
-                }
-            }
+            }.toVect0r()
+
+            return csvArrays α { it zip sdt }
         }
     }
 }
@@ -98,8 +99,8 @@ class TokenizedRow(val tokenizer: (String) -> List<String>) : RecordBoundary() {
 private val dummy = vect0rOf<Pai2<Int, Int>>()
 
 class FixedWidth(
-    val recordLen: Int,
-    val coords: Vect02<Int, Int>,
-    val endl: () -> Byte? = { '\n'.toByte() },
-    val pad: () -> Byte? = { ' '.toByte() },
+        val recordLen: Int,
+        val coords: Vect02<Int, Int>,
+        val endl: () -> Byte? = { '\n'.code.toByte() },
+        val pad: () -> Byte? = { ' '.code.toByte() },
 ) : RecordBoundary()

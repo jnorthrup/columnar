@@ -4,16 +4,19 @@ import cursors.context.Scalar
 import cursors.hash.md4
 import cursors.io.*
 import trie.ArrayMap
+import trie.Trie
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
 import vec.util.BloomFilter
+import vec.util._m
 import java.util.*
+import kotlin.math.acos
 import kotlin.math.max
 import kotlin.math.sqrt
 
 
-fun bloomAccess(groupClusters: Iterable<IntArray>) = groupClusters α {
+fun bloomAccess(groupClusters: Iterable<IntArray>): Pai2<Int, (Int) -> Pai2<BloomFilter, IntArray>> = groupClusters α {
     val n = it.size
     val bloomFilter = BloomFilter(n/*, n * 11*/).apply {
         for (i in it) {
@@ -68,14 +71,15 @@ inline fun Cursor.group(
     val clusters = groupClusters(axis)
     val masterScalars = scalars
     val xSize = masterScalars.first
+    val ac  =if(axis.size>16)axis.toSet()else axis.toList()
     Cursor(clusters.size) { cy ->
         val acc1 = arrayOfNulls<Any?>(xSize)
         val cluster = clusters[cy]
         val keyIndex = cluster.first()
-        val valueIndices = acc1.indices - axis.toTypedArray()
+        val valueIndices = acc1.indices - ac
 
         for (i in cluster) {
-            val value = (this at (i)).left
+            val value = (this at i).left
             for (valueIndex in valueIndices)
                 acc1[valueIndex] = reducer(acc1[valueIndex], value[valueIndex])
         }
@@ -94,7 +98,7 @@ inline fun Cursor.group(
 fun Cursor.groupClusters(
     axis: IntArray,
     clusters: MutableMap<List<Any?>, MutableList<Int>> = linkedMapOf(),
-) = run {
+): Pai2<Int, (Int) -> IntArray> = run {
     System.err.println("--- groupClusters")
     keyClusters(axis, clusters)
     clusters.values α MutableList<Int>::toIntArray
@@ -108,11 +112,7 @@ fun Cursor.keyClusters(
     clusters: MutableMap<List<Any?>, MutableList<Int>>,
 ): MutableMap<List<Any?>, MutableList<Int>> = clusters.apply {
     val cap = max(8, sqrt(size.toDouble()).toInt())
-    forEachIndexed { iy: Int, row: RowVec ->
-        row[axis].left.toList().let {
-            getOrPut(it) { ArrayList(cap) } += iy
-        }
-    }
+    forEachIndexed { iy: Int, row: RowVec -> row[axis].left.toList().let { getOrPut(it) { ArrayList(cap) } += iy } }
 //    logDebug { "cap: $cap keys:${clusters.size to clusters.keys}" } been stable for a while
 }
 
@@ -120,9 +120,7 @@ fun Cursor.keyClusters(
  * ordered keys of ordered cluster indexes trimmed.
  */
 fun Cursor.mapClusters(axis: IntArray) =
-    keyClusters(axis, linkedMapOf()).entries.map { (k: List<Any?>, v: MutableList<Int>) ->
-        k to v.toIntArray()
-    }.toMap(linkedMapOf())
+    _m[keyClusters(axis, linkedMapOf()).entries α { (a,b)-> a t2 b.toIntArray()}]
 
 
 /**
@@ -143,7 +141,7 @@ fun Cursor.mapOnColumnsMd4(vararg colNames: String): Map<String, Int> = run {
  * /primary/ key mapping.  collision behaviors are map-defined
  *
  */
-fun Cursor.mapOnColumns(vararg colNames: String) = let {
+fun Cursor.mapOnColumns(vararg colNames: String): Map<List<Any?>, Int> = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
     val scalars: Vect0r<Scalar> = index.scalars
@@ -159,7 +157,7 @@ fun Cursor.mapOnColumns(vararg colNames: String) = let {
  * /primary/ key mapping.  collision behaviors are map-defined
  *
  */
-fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
+fun Cursor.arrayMapOnColumns(vararg colNames: String): ArrayMap<List<*>, Int> = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
     val scalars: Vect0r<Scalar> = index.scalars
@@ -173,9 +171,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
         }
         res
     }
-    val comparator = Comparator<Pair<List<*>, Int>> { o1, o2 ->
-        val (l1) = o1
-        val (l2) = o2
+    val comparator = Comparator<Pair<List<*>, Int>> { (l1, _), (l2, _1) ->
         cmp.compare(l1, l2)
     }
 
@@ -199,7 +195,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String) = let {
  * /primary/ key mapping.  collision behaviors are map-defined
  *
  */
-fun Cursor.trieOnColumns(vararg colNames: String) = let {
+fun Cursor.trieOnColumns(vararg colNames: String): Trie = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
     trie.Trie().apply {

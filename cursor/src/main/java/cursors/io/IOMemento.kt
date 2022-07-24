@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package cursors.io
 
 import cursors.TypeMemento
@@ -12,16 +10,16 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.time.ExperimentalTime
 
-const val SPACE: Byte = ' '.toByte()
+const val SPACE: Byte = ' '.code.toByte()
 const val ZERO: Float = 0.toFloat()
 
-val xInsertString = { a: ByteBuffer, b: String? ->
+val xInsertString: (ByteBuffer, String?) -> Unit = { a: ByteBuffer, b: String? ->
     a.put(b?.toByteArray(Charsets.UTF_8))
     while (a.hasRemaining()) {
         a.put(SPACE)
     }
 }
-val dateMapper = { s: String ->
+val dateMapper: (String) -> LocalDate = { s: String ->
     s.let {
         val res = try {
             LocalDate.parse(it)
@@ -34,7 +32,7 @@ val dateMapper = { s: String ->
         res as? LocalDate
     } ?: LocalDate.EPOCH
 }
-val instantMapper = { s: String ->
+val instantMapper: (String) -> Instant = { s: String ->
     s.let {
         val res = try {
             Instant.parse(it)
@@ -73,13 +71,13 @@ enum class IOMemento(override val networkSize: Int? = null) : TypeMemento {
             IoDouble to { o1, o2 -> (o1 as Double).compareTo(o2 as Double) }
         )
 
-        fun cmp(t: TypeMemento) = cmpMap[t] ?: { o1: Any?, o2: Any? ->
+        fun cmp(t: TypeMemento): (Any?, Any?) -> Int = cmpMap[t] ?: { o1: Any?, o2: Any? ->
             o1.toString().compareTo(o2.toString())
         }
 
-        fun listComparator(progression: Vect0r<out TypeMemento>) = Comparator<List<*>> { o1, o2 ->
-            val comp = progression.map<TypeMemento, (Any?, Any?) -> Int, Vect0r<out TypeMemento>>(::cmp)
-            var res = 0;
+        fun listComparator(progression: Vect0r<out TypeMemento>): java.util.Comparator<List<*>> = Comparator<List<*>> { o1, o2 ->
+            val comp = progression.map(::cmp)
+            var res = 0
             var idx = 0
             while (res == 0 && idx < o1.size) {
                 val compare = comp[idx]

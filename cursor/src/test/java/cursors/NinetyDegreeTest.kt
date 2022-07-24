@@ -140,7 +140,7 @@ class NinetyDegreeTest {
     @Test
     fun readBinary() {
         val s1 = "ninetyDegreesTest19334425141920886859.bin"
-        val s2 = s1 + ".meta"
+        val s2 = "$s1.meta"
         val binpath = Paths.get(
             "src",
             "test",

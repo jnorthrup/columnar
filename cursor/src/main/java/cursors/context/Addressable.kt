@@ -5,7 +5,7 @@ import kotlin.coroutines.CoroutineContext
 sealed class Addressable : CoroutineContext.Element {
 
 
-    override val key get() = addressableKey
+    override val key: addressableKey get() = addressableKey
 
     object addressableKey : CoroutineContext.Key<Addressable>
 

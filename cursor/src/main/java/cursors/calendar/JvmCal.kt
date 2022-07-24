@@ -36,7 +36,7 @@ enum class JvmCal(val jvmProxy: Chronology) {
         val eras: MutableList<Era>,   // jvmProxy.eras()
     )
 
-    fun info() = dinfo(
+    fun info(): dinfo = dinfo(
         jvmProxy.id,
         this.jvmProxy.calendarType,
         jvmProxy.dateEpochDay(0),
@@ -44,7 +44,7 @@ enum class JvmCal(val jvmProxy: Chronology) {
         jvmProxy.eras()
     )
 
-    fun date(localDate: LocalDate) = jvmProxy.date(
+    fun date(localDate: LocalDate): ChronoLocalDate = jvmProxy.date(
         ZonedDateTime.ofInstant(
             localDate.atStartOfDay().toInstant(
                 ZoneOffset.UTC
@@ -58,7 +58,7 @@ enum class JvmCal(val jvmProxy: Chronology) {
      * to reduce exception overheads
      */
     open
-    val dateCat
+    val dateCat:     EnumSet<ChronoField>
         get() = EnumSet.of(
             ChronoField.YEAR,
             ChronoField.MONTH_OF_YEAR,
@@ -70,16 +70,16 @@ enum class JvmCal(val jvmProxy: Chronology) {
     open
     fun dateWiseCategories(
         localDate: LocalDate,
-    ) =
+    ): Pai2<Int, (Int) -> Pai2<String, Int>> =
         date(localDate).let { it: ChronoLocalDate? ->
 
-            dateCat.map { chronoField: ChronoField ->
+            dateCat.mapNotNull { chronoField: ChronoField ->
                 try {
                     chronoField.name t2 (it!![chronoField])
                 } catch (t: UnsupportedTemporalTypeException) {
                     null
                 }
-            }.filterNotNull().toVect0r() as Vect02<String, Int>
+            }.toVect0r()
         }
 
     /**

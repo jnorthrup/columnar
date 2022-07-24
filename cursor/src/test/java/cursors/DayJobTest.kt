@@ -41,12 +41,11 @@ class DayJobTest {
     var names: Pai2<Int, (Int) -> String>
     var drivers: Pai2<Int, (Int) -> TypeMemento>
     var coords: Pai2<Int, (Int) -> Pai2<Int, Int>>
-    var rowFwfFname: Path
+    var rowFwfFname: Path = Paths.get("..", "superannuate", "superannuated1909.fwf")
 
-    val testRecordCount = 100_000
+    val testRecordCount: Int = 100_000
 
     init {
-        this.rowFwfFname = Paths.get("..", "superannuate", "superannuated1909.fwf")
         this.coords = intArrayOf(
             0, 11,
             11, 15,
@@ -91,15 +90,14 @@ class DayJobTest {
             val parentDir = Paths.get("..").toFile()
             Runtime.getRuntime().exec(_a["git", "clone", "--depth=1", s], null, parentDir).also {
 
-                val retcode = it.waitFor()
-                when (retcode) {
+                when (it.waitFor()) {
                     0, 128 -> {
                         val strings = _a["zstd", "-d", "--memory=268MB", "--rm", "superannuated1909.fwf.zst"]
                         System.err.println("decompression:  $strings")
                         Runtime.getRuntime().exec(strings, null, Paths.get("..", "superannuate").toFile()).waitFor()
                     }
                     else -> throw Error(
-                        "git fetch issue" + it + "\nstderr" + String(
+                        "git fetch issue$it\nstderr" + String(
                             it.errorStream.readAllBytes()
                         )
                     )
@@ -122,8 +120,8 @@ class DayJobTest {
         ).also {
             System.err.println("curs1 record count=" + it.first)
         }
-        this.curs = Cursor(minOf(curs1.size, testRecordCount),
-            { y: Int -> curs1 at (y) }).also { System.err.println("curs record count=" + it.first) }
+        this.curs = Cursor(minOf(curs1.size, testRecordCount)
+        ) { y: Int -> curs1 at (y) }.also { System.err.println("curs record count=" + it.first) }
 
         var lastmessage: String? = null
     }
@@ -135,13 +133,13 @@ class DayJobTest {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
         val nanos = measureNanoTimeStr {
-            System.err.println("using filename: " + pathname.toString())
+            System.err.println("using filename: $pathname")
             val theCursor = curs[2, 1, 3, 5].ordered(intArrayOf(0, 1, 2))
             val theCoords = coords[2, 1, 3, 5]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeISAM(pathname.toString(), 24, varcharSizes)
         }
-        System.err.println("transcription took: " + nanos)
+        System.err.println("transcription took: $nanos")
 
         FileChannel.open(Paths.get(pathname.toString()), StandardOpenOption.READ).use { fc ->
             val binaryCursor = ISAMCursor(pathname, fc = fc)
@@ -173,18 +171,18 @@ class DayJobTest {
         lateinit var message: String
         val pathname = File.createTempFile("dayjob", ".bin").toPath()
         val nanos = measureNanoTimeStr {
-            System.err.println("using filename: " + pathname.toString())
+            System.err.println("using filename: $pathname")
             val reorder = intArrayOf(2, 1, 3, 5)
             val theCursor = curs[reorder]
             val theCoords = coords[reorder]
             val varcharSizes = varcharMappings(theCursor, theCoords)
             (theCursor α floatFillNa(0f)).writeISAM(pathname.toString(), 24, varcharSizes)
         }
-        System.err.println("transcription took: " + nanos)
+        System.err.println("transcription took: $nanos")
 
         val fileSha256Sum = fileSha256Sum(pathname.toString())
 
-        System.err.println("isam digest: " + fileSha256Sum)
+        System.err.println("isam digest: $fileSha256Sum")
 
         FileChannel.open(pathname, StandardOpenOption.READ).use { mf ->
             val binaryCursor = ISAMCursor(pathname, mf)
@@ -214,11 +212,11 @@ class DayJobTest {
     fun varcharMappings(
         theCursor: Cursor,
         theCoords: Vect0r<Pai2<Int, Int>>,
-    ) = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
+    ): Map<Int, Int> = (theCursor.scalars as Vect02<TypeMemento, String?>).left.toList().mapIndexed { index, typeMemento ->
         index t2 typeMemento
-    }.filter { (_, b) -> b == IOMemento.IoString }.map { (a, _) ->
+    }.filter { (_, b) -> b == IOMemento.IoString }.associate { (a, _) ->
         a to theCoords[a].span
-    }.toMap()
+    }
 
     @Test
     fun `pivot+group+reduce`() {

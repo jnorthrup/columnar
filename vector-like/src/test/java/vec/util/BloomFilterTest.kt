@@ -4,11 +4,13 @@ import kotlin.test.*
 import java.lang.management.ManagementFactory
 import java.lang.management.ThreadMXBean
 import java.util.*
+import kotlin.math.exp
+import kotlin.math.ln
 
 
 class TestBloomFilter {
-    var elements = 1000000
-    var bitsize = 10000000
+    var elements: Int = 1000000
+    var bitsize: Int = 10000000
     var filter: BloomFilter
     var prng: Random
     var bean: ThreadMXBean
@@ -48,8 +50,8 @@ class TestBloomFilter {
             }
         }
         println("\n")
-        val ln2 = Math.log(2.0)
-        val expectedRate = Math.exp(-ln2 * ln2 * bitsize / elements)
+        val ln2 = ln(2.0)
+        val expectedRate = exp(-ln2 * ln2 * bitsize / elements)
         assert(rate <= expectedRate * 1.10) { "error rate p = e^(-ln2^2*m/n)" }
     }
 

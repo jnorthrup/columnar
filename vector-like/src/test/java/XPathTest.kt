@@ -1,6 +1,5 @@
 package cursors
 
-import kotlin.test.*
 import org.w3c.dom.Document
 import org.w3c.dom.NodeList
 import vec.macros.Vect0r
@@ -10,6 +9,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPath
 import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathFactory
+import kotlin.test.Test
 
 
 /**

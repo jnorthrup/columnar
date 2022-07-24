@@ -1,11 +1,10 @@
 package vec.macros
 
 
-import org.junit.jupiter.api.Assertions
-import kotlin.test.*
 import vec.util._l
 import vec.util._v
 import vec.util.logDebug
+import kotlin.test.*
 
 class VectorLikeKtTest {
 

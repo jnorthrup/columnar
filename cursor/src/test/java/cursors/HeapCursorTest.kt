@@ -17,14 +17,14 @@ import java.time.LocalDate
 data class row(val date: LocalDate, val channel: String, val delivered: Float, val ret: Float)
 
 class HeapCursorTest {
-    val coords = _a[
+    val coords: Vect02<Int, Int> = _a[
             0, 10,
             10, 84,
             84, 124,
             124, 164
     ].zipWithNext()
 
-    val drivers = _v[
+    val drivers: Vect0r<IOMemento> = _v[
             IOMemento.IoLocalDate,
             IoString,
             IoFloat,
@@ -32,7 +32,7 @@ class HeapCursorTest {
     ]
 
 
-    val rows = _v[
+    val rows: Vect0r<row> = _v[
 
             row(LocalDate.of(2017, 10, 13), "0101761/0101010207/13-14/01", 88.0f, 0.0f),
             row(LocalDate.of(2017, 10, 22), "0102211/0101010212/13-14/01", 80.0f, 0.0f),
@@ -40,7 +40,7 @@ class HeapCursorTest {
             row(LocalDate.of(2017, 10, 22), "0500020/0101010106/13-14/05", 820.0f, 0.0f)
     ]
 
-    val names = _v["date", "channel", "delivered", "ret"]
+    val names: Vect0r<String> = _v["date", "channel", "delivered", "ret"]
 
 
     val heapCursor: Cursor = Cursor(rows.size) { iy: Int ->

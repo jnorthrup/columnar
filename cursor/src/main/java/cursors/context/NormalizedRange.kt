@@ -10,7 +10,7 @@ import kotlin.coroutines.CoroutineContext
  */
 class NormalizedRange<T>(val range: Tw1n<T>) : CoroutineContext.Element {
     companion object {
-        val normalizedRangeKey = object : CoroutineContext.Key<NormalizedRange<*>> {}
+        val normalizedRangeKey: CoroutineContext.Key<NormalizedRange<*>> = object : CoroutineContext.Key<NormalizedRange<*>> {}
     }
 
     override val key: CoroutineContext.Key<*>

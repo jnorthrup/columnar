@@ -33,7 +33,7 @@ class SimpleCursorTest {
         val listOf: MutableList<Vect0r<*>> = MutableList(0) { _v[null] }
         listOf.clear()
         val to = listOf.toVect0r()
-        val simpleCursor: SimpleCursor = SimpleCursor(vscalar, to as Vect0r<Vect0r<*>>)
+        val simpleCursor: SimpleCursor = SimpleCursor(vscalar, to)
         simpleCursor.scalars.also { logDebug { it.toList().toString() } }
 
     }

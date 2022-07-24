@@ -48,24 +48,24 @@ inline fun Tw1n<Long>.deNormalize(d: Double): Long = let { (min, max) -> (d * (m
 fun featureRange(
         seq: Iterable<Int>,
         maxMinTwin: Tw1n<Int> = Int.MAX_VALUE t2 Int.MIN_VALUE,
-) = featureRange_(seq, maxMinTwin)
+): Tw1n<Int> = featureRange_(seq, maxMinTwin)
 
 
 @JvmName("FrLong")
 fun featureRange(
         seq: Iterable<Long>,
         maxMinTwin: Tw1n<Long> = Long.MAX_VALUE t2 Long.MIN_VALUE,
-) = featureRange_(seq, maxMinTwin)
+): Tw1n<Long> = featureRange_(seq, maxMinTwin)
 
 @JvmName("FrDouble")
 fun featureRange(
         seq: Iterable<Double>,
         maxMinTwin: Tw1n<Double> = Double.MAX_VALUE t2 Double.MIN_VALUE,
-) = featureRange_(seq, maxMinTwin)
+): Tw1n<Double> = featureRange_(seq, maxMinTwin)
 
 @JvmName("FrFloat")
 fun featureRange(
         seq: Iterable<Float>,
         maxMinTwin: Tw1n<Float> = Float.MAX_VALUE t2 Float.MIN_VALUE,
-) = featureRange_(seq, maxMinTwin)
+): Tw1n<Float> = featureRange_(seq, maxMinTwin)
 

@@ -12,7 +12,7 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
             // add new node
             if (!children.contains(value)) {
                 val node = Node(value, isLeaf, v)
-                (children as MutableMap)[value] = node as Node
+                (children as MutableMap)[value] = node
                 children = node.children
             } else {
                 // exist, so traverse current path + set isLeaf if needed
@@ -27,7 +27,7 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
 
     fun contains(vararg values: String): Boolean = search(*values) != null
 
-    operator fun get(vararg key: String) = search(*key)?.payload
+    operator fun get(vararg key: String): Int? = search(*key)?.payload
 
     fun frez(n: Node) {
 //        if (n.leaf) return
@@ -37,7 +37,7 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
         }
     }
 
-    public fun freeze() {
+    fun freeze() {
         if (!freeze) {
             freeze = true
             root.values.forEach { frez(it) }
@@ -56,10 +56,10 @@ class Trie(var root: Map<String, Node> = linkedMapOf()) {
                 if (children.contains(value)) {
                     // exist, so traverse current path, ending if is last value, and is leaf node
                     val node = children[value]!!
-                    if (atLeaf) if (node.leaf) {
-                        return node
+                    if (atLeaf) return if (node.leaf) {
+                        node
                     } else {
-                        return null
+                        null
                     }
                     // not at end, continue traversing
                     children = node.children

@@ -13,7 +13,7 @@ import kotlin.math.min
 import kotlin.random.Random
 
 //import kotlin.random.Random breaks graalvm
-val random = java.util.Random()
+val random: java.util.Random = java.util.Random()
 
 /*simple printout macro*/
 fun Cursor.show(range: IntProgression = 0 until size) {
@@ -37,7 +37,7 @@ fun Cursor.showValues(range: IntProgression) {
 /**
  * head default 5 rows
  */
-@JvmOverloads fun Cursor.head(last: Int = 5) = show(0 until (max(0, min(last, size))))
+@JvmOverloads fun Cursor.head(last: Int = 5): Unit = show(0 until (max(0, min(last, size))))
 
 /**
  * run head at random index

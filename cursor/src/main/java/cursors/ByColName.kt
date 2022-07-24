@@ -32,4 +32,4 @@ fun Cursor.indexesForColumnNames(vararg s:String): IntArray =colIdx.get(*s)
 /**
  * cursor["f1","f2","f3"] to auto map the indexes
  */
-operator fun Cursor.get(vararg s: String): Cursor = this.get(indexesForColumnNames(*s))
+operator fun Cursor.get(vararg s: String): Cursor = this[indexesForColumnNames(*s)]

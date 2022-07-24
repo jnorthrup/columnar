@@ -1,5 +1,6 @@
 package vec
 
+import vec.macros.Pai2
 import vec.macros.size
 import vec.macros.t2
 import java.util.*
@@ -13,18 +14,18 @@ only mutability is offer(T)
 has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
-public open class CirQlar<T>(
+open class CirQlar<T>(
         val maxSize: Int,
         val evict: ((T) -> Unit)? =null
     ) : AbstractQueue<T>() {
     private val al = arrayOfNulls<Any?>(maxSize)
-    var tail = 0
-    override val size get() = kotlin.math.min(tail, maxSize)
-    val full get() = tail >= maxSize
+    var tail: Int = 0
+    override val size: Int get() = kotlin.math.min(tail, maxSize)
+    val full: Boolean get() = tail >= maxSize
 
 
     //todo: lockless dequeue here ?
-    override fun offer(e: T) = synchronized(this) {
+    override fun offer(e: T): Boolean = synchronized(this) {
         val i = tail % maxSize
         val tmp =evict?.run { al.takeIf { it.size < i }?.get(i) }
         al[i] = e
@@ -45,15 +46,14 @@ public open class CirQlar<T>(
 
     override fun poll(): T = TODO("Not yet implemented")
     override fun peek(): T = TODO("Not yet implemented")
-    override fun add(k: T) = offer(k)
-    operator fun CirQlar<T>.plus(k: T) = offer(k)
+    override fun add(k: T): Boolean = offer(k)
+    operator fun CirQlar<T>.plus(k: T): Boolean = offer(k)
     operator fun CirQlar<T>.plusAssign(k: T) {
         offer(k)
     }
 
-    @Suppress("OVERRIDE_BY_INLINE")
-    fun toVect0r() = ( size t2 { x: Int ->
-        @Suppress("UNCHECKED_CAST") al[if (tail >= maxSize) {
+    fun toVect0r(): Pai2<Int, (Int) -> T> = ( size t2 { x: Int ->
+        al[if (tail >= maxSize) {
             (tail + x) % maxSize
         } else x] as T
     })

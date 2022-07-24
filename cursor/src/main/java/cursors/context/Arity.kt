@@ -6,10 +6,10 @@ import vec.macros.*
 import kotlin.coroutines.CoroutineContext
 
 sealed interface Arity : CoroutineContext.Element {
-    override val key get() = arityKey
+    override val key: CoroutineContext.Key<Arity> get() = arityKey
 
     companion object {
-        val arityKey = object :
+        val arityKey: CoroutineContext.Key<Arity> = object :
             CoroutineContext.Key<Arity> {}
     }
 }
@@ -23,8 +23,8 @@ interface Scalar : Arity, Pai2<TypeMemento, String?> {
             return Scalar(a, b)
         }
 
-        operator fun invoke(type: TypeMemento, name: String? = null) = Scalar(type, name)
-        fun Scalar(type: TypeMemento, name: String? = null) = object : Scalar {
+        operator fun invoke(type: TypeMemento, name: String? = null): Scalar = Scalar(type, name)
+        fun Scalar(type: TypeMemento, name: String? = null): Scalar = object : Scalar {
             override val first: TypeMemento
                 get() = type
             override val second: String?

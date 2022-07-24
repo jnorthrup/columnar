@@ -31,28 +31,28 @@ import java.time.temporal.TemporalAdjusters
  */
 @Suppress("UNCHECKED_CAST")
 class CalendarTest {
-    val coords = intArrayOf(
+    val coords: Vect02<Int, Int> = intArrayOf(
         0, 10,
         10, 84,
         84, 124,
         124, 164
     ).zipWithNext() //α { (a:Int,b:Int) :Pai2<Int,Int> -> Tw1n (a,b)   }
 
-    val drivers = vect0rOf(
+    val drivers: Vect0r<TypeMemento> = vect0rOf(
         IOMemento.IoLocalDate as TypeMemento,
         IOMemento.IoString,
         IOMemento.IoFloat,
         IOMemento.IoFloat
     )
 
-    val names = vect0rOf("date", "channel", "delivered", "ret")
-    val mf = MappedFile("src/test/resources/caven4.fwf")
-    val nio = NioMMap(mf)
+    val names: Vect0r<String> = vect0rOf("date", "channel", "delivered", "ret")
+    val mf: MappedFile = MappedFile("src/test/resources/caven4.fwf")
+    val nio: NioMMap = NioMMap(mf)
     val fixedWidth: FixedWidth
         get() = RowMajor.fixedWidthOf(nio = nio, coords = coords)
 
     @Suppress("UNCHECKED_CAST")
-    val caven4Root = RowMajor().fromFwf(
+    val caven4Root: TableRoot = RowMajor().fromFwf(
         fixedWidth,
         RowMajor.indexableOf(nio, fixedWidth),
         nio,
@@ -75,7 +75,7 @@ class CalendarTest {
 
         JvmCal.values().forEach { jvmCal: JvmCal ->
 
-            println("--- " + jvmCal)
+            println("--- $jvmCal")
 
             val csrc = caven4Cursor[0]
             val xSize = csrc.scalars.size
@@ -83,8 +83,7 @@ class CalendarTest {
                 RowVec(xSize) { ix: Int ->
                     val row = csrc at (iy)
                     (row.left[ix] as? LocalDate)?.let { localDate: LocalDate ->
-                        val localDate1 = localDate
-                        val categories = jvmCal.dateWiseCategories(localDate1)
+                        val categories = jvmCal.dateWiseCategories(localDate)
                         categories.toString() t2 {
                             val second = row[ix].second()
                             second + Scalar(IOMemento.IoString, "${jvmCal.name}_map")

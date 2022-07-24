@@ -24,20 +24,19 @@ import java.nio.file.StandardOpenOption
 import java.util.*
 
 
-@Suppress("USELESS_CAST")
 class ISAMCursor(
         binpath: Path,
         val fc: FileChannel,
         metapath: Path = Paths.get("$binpath.meta".debug { logDebug { "using default Isam meta: $it" } }),
 ) : Cursor {
-    override inline val first get() = size
+    override inline val first: Int get() = size
     override val second: (Int) -> RowVec
-    val width get() = drivers.size
-    val drivers by lazy { NioMMap.binary(scalars.map(Scalar::first) as Vect0r<IOMemento>) }
+    val width: Int get() = drivers.size
+    val drivers: Array<CellDriver<ByteBuffer, Any?>> by lazy { NioMMap.binary(scalars.map(Scalar::first) as Vect0r<IOMemento>) }
     val recordlen: Int by lazy { rcoords.last.second }
     val rcoords: Vect02<Int, Int>
     val scalars: Vect0r<Scalar>
-    val size get() = (fc.size() / recordlen).toInt()
+    val size: Int get() = (fc.size() / recordlen).toInt()
 
     init {
         val lines = Files.readAllLines(metapath).apply { removeIf { it.startsWith("# ") || it.isNullOrBlank() } }
@@ -64,7 +63,7 @@ class ISAMCursor(
                 val read = fc.read(row.clear(), iy.toLong() * recordlen.toLong())
 
                 RowVec(drivers.size) { ix: Int ->
-                    rcoords.get(ix).let { (b, e) ->
+                    rcoords[ix].let { (b, e) ->
                         val slice = row.limit(e).position(b).slice()
                         val read1 = drivers[ix].read(slice)
                         read1 t2 { this@ISAMCursor.scalars[ix] }
@@ -93,7 +92,7 @@ fun Cursor.writeISAM(
                 /**length*/
                 Int>? = null,
 ) {
-    var logger: FibonacciReporter? = null;
+    var logger: FibonacciReporter? = null
 
 
     val mementos = scalars.map(Scalar::first).toArray()

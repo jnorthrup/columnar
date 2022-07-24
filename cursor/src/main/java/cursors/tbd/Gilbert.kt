@@ -11,7 +11,7 @@ import kotlin.math.abs
  * translated from: https://github.com/jakubcerveny/gilbert/blob/master/gilbert2d.py
  */
 
-fun gilbertCurve(width: Int, height: Int, next: (Int, Int) -> Unit) =
+fun gilbertCurve(width: Int, height: Int, next: (Int, Int) -> Unit): Unit =
     if (width >= height) gilbertCurve2D(0, 0, width, 0, 0, height, next) else gilbertCurve2D(
         0,
         0,

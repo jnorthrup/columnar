@@ -39,13 +39,13 @@ interface Pai2<F, S> {
          * Pair copy ctor conversion
          */
 
-        inline operator fun <reified F, reified S, reified P : Pair<F, S>, reified R : Pai2<F, S>> invoke(p: P) =
+        inline operator fun <reified F, reified S, reified P : Pair<F, S>, reified R : Pai2<F, S>> invoke(p: P): Pai2<F, S> =
                 object : Pai2<F, S> {
                     override val first: F by p::first
                     override val second: S by p::second
                 }
 
-        inline operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P) = object : Pai2<F, S> {
+        inline operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P): Pai2<F, S> = object : Pai2<F, S> {
             override val first: F by p::key
             override val second: S by p::value
         }
@@ -66,10 +66,10 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
     /**
      * for println and serializable usecases, offload that stuff using this method.
      */
-    val triple get() = Triple(first, second, third)
-    operator fun component1() = first
-    operator fun component2() = second
-    operator fun component3() = third
+    val triple: Triple<F, S, T> get() = Triple(first, second, third)
+    operator fun component1(): F = first
+    operator fun component2(): S = second
+    operator fun component3(): T = third
 
     companion object {
 
@@ -81,7 +81,7 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
                 }
 
 
-        inline operator fun <F, S, T> invoke(p: Triple<F, S, T>) = p.let { (f, s, t) -> Tripl3(f, s, t) }
+        inline operator fun <F, S, T> invoke(p: Triple<F, S, T>): Tripl3<F, S, T> = p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
 
 
@@ -116,8 +116,8 @@ inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, secon
 
 @JvmInline
 value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
-    override inline val first get() = ia[0]
-    override inline val second get() = ia[1]
+    override inline val first: Int get() = ia[0]
+    override inline val second: Int get() = ia[1]
 }
 
 /**
@@ -125,21 +125,21 @@ value class Tw1nt(val ia: IntArray) : Tw1n<Int> {
  */
 @JvmInline
 value class Twln(val ia: LongArray) : Tw1n<Long> {
-    override inline val first get() = ia[0]
-    override inline val second get() = ia[1]
+    override inline val first: Long get() = ia[0]
+    override inline val second: Long get() = ia[1]
 }
 
 @JvmName("twinint")
 fun <T : Int> Tw1n(first: T, second: T): Tw1nt = Tw1nt(_a[first, second])
 
 @JvmName("twinlong")
-fun <T : Long> Tw1n(first: T, second: T) = Twln(_a[first, second])
+fun <T : Long> Tw1n(first: T, second: T): Twln = Twln(_a[first, second])
 
 @JvmName("unaryMinusTw1n")
-operator fun <S> Tw1n<S>.unaryMinus() = _a[first, second]
+operator fun <S> Tw1n<S>.unaryMinus(): Array<S> = _a[first, second]
 
 @JvmName("unaryPlusI")
-inline operator fun Tw1n<Int>.unaryPlus() = (-this).let { (a, b) -> a..b }
+inline operator fun Tw1n<Int>.unaryPlus(): IntRange = (-this).let { (a, b) -> a..b }
 
 @JvmName("aSInt")
 inline infix fun <reified R> Tw1n<Int>.α(noinline f: (Int) -> R): Vect0r<R> = (-this).α(f)
@@ -167,24 +167,24 @@ inline infix fun <reified R> Tw1n<Short>.α(noinline f: (Short) -> R): Vect0r<R>
  * create range of enums ordinals, inclusive +(enum1 t2 enum2)
  */
 @JvmName("unaryPlusS")
-inline operator fun <T, S : Enum<S>> Tw1n<S>.unaryPlus() = (-this).let { (a, b) -> a..b }
+inline operator fun <T, S : Enum<S>> Tw1n<S>.unaryPlus(): IntRange = (-this).let { (a, b) -> a..b }
 
 /**
  * create range of enums ordinals, inclusive  (enum1..enum2)
  */
-inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>) = this.ordinal..ub.ordinal
+inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>): IntRange = this.ordinal..ub.ordinal
 
 
 @JvmName("αS")
-inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R) = (-this).α(f)
-inline infix fun <reified F, reified S> F.t2(s: S) = Pai2(this, s)
-inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T) = let { (f: F, s) -> Tripl3(f, s, t) }
+inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R): Pai2<Int, (Int) -> R> = (-this).α(f)
+inline infix fun <reified F, reified S> F.t2(s: S): Pai2<F, S> = Pai2(this, s)
+inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T): Tripl3<F, S, T> = let { (f: F, s) -> Tripl3(f, s, t) }
 
-infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T) = let { (a, b) -> Tripl3(a, b, t) }
+infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T): Tripl3<F, S, T> = let { (a, b) -> Tripl3(a, b, t) }
 
 //overlaps Vect0r reverse and isn't compatible
 inline fun <reified F, reified S> Pair<F, S>.reversed(): Pai2<S, F> = second t2 first
-inline infix fun <reified A, reified B, reified C, reified D> Tripl3<A, B, C>.t4(d: D) =
+inline infix fun <reified A, reified B, reified C, reified D> Tripl3<A, B, C>.t4(d: D): Qu4d<A, B, C, D> =
         let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
 
 /**inheritable version of quad that also provides its first three as a triple. */
@@ -201,10 +201,10 @@ interface Qu4d<F, S, T, Z> {
      */
     val quad: Quad<F, S, T, Z> get() = Quad(first, second, third, fourth)
 
-    operator fun component1() = first
-    operator fun component2() = second
-    operator fun component3() = third
-    operator fun component4() = fourth
+    operator fun component1(): F = first
+    operator fun component2(): S = second
+    operator fun component3(): T = third
+    operator fun component4(): Z = fourth
 
     companion object {
 
@@ -221,17 +221,17 @@ interface Qu4d<F, S, T, Z> {
         }
 
 
-        operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>) = p.let { (f, s, t, z) ->
+        operator fun <F, S, T, Z> invoke(p: Quad<F, S, T, Z>): Qu4d<F, S, T, Z> = p.let { (f, s, t, z) ->
             Qu4d(f, s, t, z)
         }
 
 
-        operator fun <F, S, T, Z> invoke(p: Array<*>) = p.let { (f, s, t, z) ->
+        operator fun <F, S, T, Z> invoke(p: Array<*>): Qu4d<F, S, T, Z> = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST") (Qu4d(f as F, s as S, t as T, z as Z))
         }
 
 
-        operator fun <F, S, T, Z> invoke(p: List<*>) = p.let { (f, s, t, z) ->
+        operator fun <F, S, T, Z> invoke(p: List<*>): Qu4d<F, S, T, Z> = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST") (Qu4d(f as F, s as S, t as T, z as Z))
         }
     }

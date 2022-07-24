@@ -8,7 +8,7 @@ import vec.macros.Vect0r
 class MutableListView<T>(
     val list: List<T>,
 ) : Vect0r<T> {
-    override val first by list::size
+    override val first: Int by list::size
     override val second: (Int) -> T
         get() = list::get
 }

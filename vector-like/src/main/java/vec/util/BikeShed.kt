@@ -126,8 +126,7 @@ fun fileSha256Sum(pathname: String): String {
         builder.append(line)
         builder.append(eol)
     }
-    val result = builder.toString()
-    return result
+    return builder.toString()
 }
 
 val String.path: Path get() = Paths.get(this)

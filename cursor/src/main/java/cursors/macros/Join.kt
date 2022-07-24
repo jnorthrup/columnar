@@ -19,7 +19,7 @@ fun join(vararg vargs: Cursor): Cursor = muxIndexes(vargs.map(Cursor::scalars)).
         isize t2 { ix: Int ->
             demuxIndex(tails, ix).let { (source, index) ->
                 val theCurs = vargs[source]
-                val theRow = (theCurs as Cursor at iy )
+                val theRow = (theCurs at iy )
                 theRow[index]
             }
         }

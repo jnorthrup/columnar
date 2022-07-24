@@ -21,7 +21,7 @@ sealed class Ordering : CoroutineContext.Element {
     override val key: CoroutineContext.Key<Ordering> get() = orderingKey
 
     companion object {
-        val orderingKey = object : CoroutineContext.Key<Ordering> {}
+        val orderingKey: CoroutineContext.Key<Ordering> = object : CoroutineContext.Key<Ordering> {}
     }
 }
 
@@ -32,10 +32,10 @@ sealed class Ordering : CoroutineContext.Element {
 class RowMajor : Ordering() {
     companion object {
         fun fixedWidthOf(
-            nio: NioMMap,
-            coords: Vect02<Int, Int>,
-            defaulteol: () -> Byte = '\n'::toByte,
-        ) = fixedWidth(nio, coords, defaulteol)
+                nio: NioMMap,
+                coords: Vect02<Int, Int>,
+                defaulteol: () -> Byte = '\n'.code::toByte,
+        ): FixedWidth = fixedWidth(nio, coords, defaulteol)
 
         fun fixedWidth(
             nio: NioMMap,
@@ -44,7 +44,7 @@ class RowMajor : Ordering() {
         ): FixedWidth {
             return FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
                 nio.mappedFile.mappedByteBuffer.duplicate().clear().run {
-                    while (get() != endl);
+                    while (get() != endl){};
                     position()
                 }
             }, coords = coords)
@@ -60,7 +60,7 @@ class RowMajor : Ordering() {
             }
 
         //todo: move to rowMajor
-        fun TableRoot.name(xy: IntArray) = this.let { (_, rootContext) ->
+        fun TableRoot.name(xy: IntArray): String? = this.let { (_, rootContext) ->
             (rootContext[Arity.arityKey]!! as Columnar).let { cnar ->
                 cnar.right[(rootContext[orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
             }

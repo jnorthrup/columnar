@@ -45,7 +45,7 @@ class VectorLikeKtTest {
 
 
     @Test
-    fun `WhatCanVect0rDo`() {
+    fun WhatCanVect0rDo() {
 
         // we can create an array from bikeshed util
         val ar = _a["0", "1", "2"]
@@ -108,13 +108,12 @@ class VectorLikeKtTest {
         //        we use a simple inheritable Pair interface called Pai2
         val theInts = 0 t2 1
         val theIntPai = theInts.pair
-        System.err.println("theIntPair:" + theIntPai)
+        System.err.println("theIntPair:$theIntPai")
 
         //### union type casting
         // we get a free retype operation by having typalias of pair work across multiple sets of
-        // extension functions... for free
-        val theTw1n = theInts
-        System.err.println(" theTw1n:" + theTw1n.pair)
+        // extension functions...
+        System.err.println(" theTw1n:" + theInts.pair)
 
         // we can still specialize based on type semantics in typealiases.  powerful language to say the least.
         val theTw1n2: Tw1nt = Tw1n<Int>(0, 1)

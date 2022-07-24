@@ -1,3 +1,5 @@
+@file:Suppress("RemoveRedundantCallsOfConversionMethods")
+
 package cursors
 
 import cursors.context.TokenizedRow
@@ -20,7 +22,7 @@ internal class CategoriesKtTest {
                 "john,32,below me",
                 "john,64,below me",
                 "john,128,below me",
-                "phillip,256,below me"].map { it.toString() },
+                "phillip,256,below me"] ,
         overrides = linkedMapOf("notsomething" to IOMemento.IoInt)
     )
 

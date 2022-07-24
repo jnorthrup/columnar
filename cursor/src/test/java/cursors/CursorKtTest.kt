@@ -26,28 +26,28 @@ infix fun Any?.shouldBe(that: Any?) {
 }
 
 class CursorKtTest {
-    val coords = _a[
+    val coords: Vect02<Int, Int> = _a[
             0, 10,
             10, 84,
             84, 124,
             124, 164
     ].zipWithNext()
 
-    val drivers = _v[
+    val drivers: Vect0r<IOMemento> = _v[
             IOMemento.IoLocalDate,
             IoString,
             IoFloat,
             IoFloat
     ]
 
-    val names = _v["date", "channel", "delivered", "ret"]
-    val mf = MappedFile("src/test/resources/caven4.fwf")
-    val nio = NioMMap(mf)
+    val names: Vect0r<String> = _v["date", "channel", "delivered", "ret"]
+    val mf: MappedFile = MappedFile("src/test/resources/caven4.fwf")
+    val nio: NioMMap = NioMMap(mf)
     val fixedWidth: FixedWidth
         get() = fixedWidthOf(nio = nio, coords = coords)
 
     @Suppress("UNCHECKED_CAST")
-    val root = RowMajor().fromFwf(
+    val root: TableRoot = RowMajor().fromFwf(
         fixedWidth,
         RowMajor.indexableOf(nio, fixedWidth),
         nio,
@@ -224,7 +224,7 @@ class CursorKtTest {
             intArrayOf(0),
             intArrayOf(1),
             intArrayOf(2, 3)
-        ).group((0)).`∑`(sumReducer[IOMemento.IoFloat]!!)
+        ).group((0)).`∑`(sumReducer[IoFloat]!!)
 
         piv.forEach { it ->
             println(it.map { vec ->

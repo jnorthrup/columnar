@@ -13,10 +13,11 @@ import java.time.LocalDate
  * @param indexcol the column with dates to resample
  */
 fun Cursor.resample(indexcol: Int): Cursor = let {
-    val indexValues = (combine(this[indexcol]).left α { it as LocalDate }).`➤`
+    val pai2 = combine(this[indexcol]).left α { it as LocalDate }
+    val indexValues = pai2.`➤`
     val (min, max) = featureRange(indexValues, LocalDate.MAX t2 LocalDate.MIN)
     val scalars = this.scalars
-    val sequence: Sequence<LocalDate> = daySeq(min, max) - indexValues
+    val sequence: Sequence<LocalDate> = daySeq(min, max) - if(pai2.size>8)indexValues.toSet()else indexValues
     val indexVec = sequence.toVect0r()
     val cursor: Cursor =
         indexVec.size t2 { iy: Int ->

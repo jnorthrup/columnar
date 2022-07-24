@@ -76,16 +76,16 @@ import kotlin.coroutines.CoroutineContext
 typealias Cursor = Vect0r<RowVec>
 
 // infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
-infix fun Cursor.at(t: Int) = second(t)
+infix fun Cursor.at(t: Int): Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>> = second(t)
 
 @JvmName("vlike_RSequence_11")
-operator fun Cursor.get(vararg index: Int) = get(index)
+operator fun Cursor.get(vararg index: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = get(index)
 
 @JvmName("vlike_RSequence_Iterable21")
-operator fun Cursor.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+operator fun Cursor.get(indexes: Iterable<Int>): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = this[indexes.toList().toIntArray()]
 
 @JvmName("cursorViewByIndices")
-public operator fun Cursor.get(index: IntArray) = let { (a, fetcher) ->
+operator fun Cursor.get(index: IntArray): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = let { (a, fetcher) ->
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
 
@@ -180,21 +180,21 @@ fun Cursor.ordered(
 }
 
 @JvmName("NormalizeF1")
-fun <T : Float> Cursor.normalizeFloatColumn(colName: String) = run {
+fun <T : Float> Cursor.normalizeFloatColumn(colName: String): Cursor = run {
     val ptype = IOMemento.IoFloat
     val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
     inner_normalize(colName, maxMinTwin, ptype)
 }
 
 @JvmName("NormalizeD1")
-fun <T : Double> Cursor.normalizeDoubleColumn(colName: String) = run {
+fun <T : Double> Cursor.normalizeDoubleColumn(colName: String): Cursor = run {
     val ptype = IOMemento.IoDouble
     val maxMinTwin: Tw1n<Double> = Double.POSITIVE_INFINITY t2 Double.NEGATIVE_INFINITY
-    inner_normalize<Double>(colName, maxMinTwin, ptype)
+    inner_normalize(colName, maxMinTwin, ptype)
 }
 
 @JvmName("NormalizeF2")
-fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento) = run {
+fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor = run {
     val colIdx = colIdx[colName][0]
     val colCurs = this[colIdx]
     val seq = this.let { curs ->
@@ -230,9 +230,7 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
     val seq = this.let { curs ->
         sequence {
             for (iy in 0 until curs.size) {
-                val any = (colCurs at iy).left[0]
-                any.also { }
-                yield(any as T)
+                yield((colCurs at iy).left[0] as T)
             }
         }
     }
@@ -279,6 +277,7 @@ inline infix operator fun <reified T> Cursor.rem(t: Class<T>): Vect0r<T?> = comb
  * "left/right" is blocked by precedence magic in Vect02_ so we have to treat cursors with a perturbed set of keywords like f1rst and whatnot.
  *
  */
-inline val Cursor.meta get() = size t2 {
+inline val Cursor.meta: Pai2<Int, (Int) -> Pai2<Int, (Int) -> () -> CoroutineContext>>
+    get() = size t2 {
     x: Int -> at (x).right
 }

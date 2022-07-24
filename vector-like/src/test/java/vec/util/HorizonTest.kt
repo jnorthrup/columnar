@@ -16,7 +16,7 @@ class HorizonTest {
         horizonRatioHunt(v2size, v.size)
     }
 
-    fun horizonRatioHunt(viewSize: Int, modelSize: Int) = run {
+    fun horizonRatioHunt(viewSize: Int, modelSize: Int): List<Double> = run {
         var acc = 0
         for (i in 0 until viewSize) {
             val horizon = horizon(i, viewSize, modelSize)//.also { logDebug { "$it,$acc" } }

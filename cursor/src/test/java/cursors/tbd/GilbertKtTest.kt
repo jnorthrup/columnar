@@ -1,5 +1,6 @@
 package cursors.tbd
 
+import kotlin.math.abs
 import kotlin.test.*
 
 typealias IntIntPair = Pair<Int, Int>
@@ -23,7 +24,7 @@ internal class GilbertCurveTest {
             for (i in 0 until pointsOrdered.size - 1) {
                 val a: IntIntPair = pointsOrdered[i]
                 val b: IntIntPair = pointsOrdered[i + 1]
-                assertTrue(Math.abs(a.first - b.first) + Math.abs(a.second - b.second) <= 2)
+                assertTrue(abs(a.first - b.first) + abs(a.second - b.second) <= 2)
             }
         }
     }

@@ -29,7 +29,7 @@ fun hzInvSqr(index: Int, datapoints: Int, dpDub: Double = datapoints.toDouble(),
 
 fun main(args: Array<String>) {
 
-    val evens = args.map(String::toInt).zipWithNext();
+    val evens = args.map(String::toInt).zipWithNext()
     val intRange = (0..evens.lastIndex step 2).map { x ->
         val (a, b) = evens[x]
         val arrayOfKFunctions: Array<(Int, Int, Int) -> Int> =
@@ -38,8 +38,8 @@ fun main(args: Array<String>) {
             println("--------$fn")
             println("showing $a of $b ${
                 (0 until a).map {
-                    val viewPoints = a.toInt()
-                    val datapoints = b.toInt()
+                    val viewPoints = a 
+                    val datapoints = b 
                     fn(it, viewPoints, datapoints)
                 }
             }")

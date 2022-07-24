@@ -14,17 +14,17 @@ val Any?.md4a: ByteArray
         return o
     }
 
-val Any?.md4 get() = this.md4a.hex
-fun xlate(v: Int) = if (v < 0xa) '0' + v
+val Any?.md4: String get() = this.md4a.hex
+fun hexLate(v: Int): Char = if (v < 0xa) '0' + v
 else 'a' + (v - 0xa)
 
 val ByteArray.hex: String
     get() {
         val res = CharArray(size shl 1)
-        for (ix in 0 until size) get(ix).toInt().also {
+        for (ix in indices) get(ix).toInt().also {
             var os = ix shl 1
-            res[os++] = xlate(it.toInt() shr 4 and 0xf)
-            res[os] = xlate(it.toInt() and 0xf)
+            res[os++] = hexLate(it  shr 4 and 0xf)
+            res[os] = hexLate(  it  and 0xf)
         }
         return String(res)
     }

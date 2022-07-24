@@ -47,6 +47,6 @@ class SparseVect0r<V>(
 ) : Vect0r<V?> by sparse, Iterable<Map.Entry<Int, V>> by (entries) {
     val left: Vect0r<Int> get() = entries α Map.Entry<Int, V>::key
     val right: Vect0r<V> get() = entries α Map.Entry<Int, V>::value
-    val keys by this::left
-    val values by this::right
+    val keys: Vect0r<Int> by this::left
+    val values: Vect0r<V> by this::right
 }

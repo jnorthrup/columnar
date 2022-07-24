@@ -13,11 +13,11 @@ import kotlin.time.TimeSource
 @OptIn(ExperimentalTime::class)
 
 class FibonacciReporter(val size: Int? = null, val noun: String = "rows") {
-    var trigger = 0
-    var countdown = 1
-    val begin = TimeSource.Monotonic.markNow()
+    var trigger: Int = 0
+    var countdown: Int = 1
+    val begin: TimeSource.Monotonic.ValueTimeMark = TimeSource.Monotonic.markNow()
 
-    fun report(iy: Int) =
+    fun report(iy: Int): String? =
             if (--countdown == 0) {
                 //without -ea this benchmark only costs a unused variable decrement.
                 countdown = fib(++trigger)

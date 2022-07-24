@@ -1,5 +1,6 @@
 package vec
 
+import vec.macros.Pai2
 import vec.macros.mapIndexedToList
 import vec.macros.t2
 import vec.macros.`➤`
@@ -18,18 +19,16 @@ class DoubleCirQlar(
     val maxSize: Int,
     val al: DoubleArray = DoubleArray(maxSize),
 ) : AbstractQueue<Double>() {
-    var tail = 0
-    val full get() = maxSize <= tail
+    var tail: Int = 0
+    val full: Boolean get() = maxSize <= tail
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
-    override fun iterator() = this.toVect0r().`➤`.iterator() as MutableIterator<Double>
+    override fun iterator(): MutableIterator<Double> = this.toVect0r().`➤`.iterator() as MutableIterator<Double>
 
-    fun toList() = toVect0r().mapIndexedToList { _, t -> t }
+    fun toList(): List<Double> = toVect0r().mapIndexedToList { _, t -> t }
 
-    @Suppress("OVERRIDE_BY_INLINE")
-    fun toVect0r() = (this@DoubleCirQlar.size t2 { x: Int ->
-        @Suppress("UNCHECKED_CAST")
+    fun toVect0r(): Pai2<Int, (Int) -> Double> = (this@DoubleCirQlar.size t2 { x: Int ->
         al[if (tail >= maxSize) {
             (tail + x) % maxSize
         } else x]
@@ -46,6 +45,6 @@ class DoubleCirQlar(
 
     override fun poll(): Double = TODO("Not yet implemented")
     override fun peek(): Double = TODO("Not yet implemented")
-    override fun add(k: Double) = offer(k)
+    override fun add(k: Double): Boolean = offer(k)
     override val size: Int get() = kotlin.math.min(tail, maxSize)
 }

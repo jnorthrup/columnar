@@ -1,4 +1,4 @@
-package trie;
+package trie
 
 import kotlin.test.*
 
@@ -7,7 +7,7 @@ import kotlin.test.*
  * Created by kenny on 6/6/16.
  */
 class TrieTest {
-    val d = Int.MIN_VALUE
+    val d: Int = Int.MIN_VALUE
 
     @Test
     fun stringTrie() {

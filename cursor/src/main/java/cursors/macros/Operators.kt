@@ -33,4 +33,4 @@ infix fun Cursor.α(unaryFunctor: (Any?) -> Any?): Cursor = run {
     }
 }
 
-inline val <reified R, V : Vect0r<R>> V.`…` get() = this.toList()
+inline val <reified R, V : Vect0r<R>> V.`…`: List<R> get() = this.toList()
