@@ -1,8 +1,8 @@
 package mu
 
-import java.util.logging.Logger
+import org.slf4j.Logger
 
 open class KLogging {
-    val logger: Logger get() = Logger.getAnonymousLogger()
+    val logger: Logger get() = KLogger()
 
 }

@@ -17,7 +17,7 @@ import kotlin.streams.asSequence
 
 
 class CsvCursorTest {
-    val dt: Vect0r<IOMemento> = _v[IoLocalDate, IoInt, IoString, IoString, IoString, IoString, IoString, IoString,
+    val dt: Vect0r<  IOMemento> = _v[IoLocalDate, IoInt, IoString, IoString, IoString, IoString, IoString, IoString,
             IoString, IoString, IoString, IoInt, IoInt, IoInt]
 
 
