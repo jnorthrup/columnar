@@ -78,8 +78,9 @@ a left identity and f is a right identity, then f=ef=e.
 */
 
 inline val <reified T> T.rightIdentity: () -> T get() = { this }
+
 /**right identity*/
-inline val <reified T> T.`⟲`: () -> T get()=rightIdentity
+inline val <reified T> T.`⟲`: () -> T get() = rightIdentity
 
 /*
 @JvmName("vlike_Sequence_1")
@@ -133,7 +134,7 @@ operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> th
 */
 
 @JvmName("vlike_Vect0r_getByInt")
-inline operator fun <reified T> Vect0r<T>.get(index: Int): T = second(index)
+operator fun <T> Vect0r<T>.get(index: Int): T = second(index)
 
 @JvmName("vlike_Vect0r_getVarargInt")
 operator fun <T> Vect0r<T>.get(vararg index: Int): Pai2<Int, (Int) -> T> = get(index)
@@ -146,8 +147,10 @@ operator fun <T> Vect0r<T>.get(index: IntArray): Pai2<Int, (Int) -> T> =
         Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
 @JvmName("vlike_Vect0r_toArray")
-inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array(first) { vf(it) } }
-inline fun <reified T> Vect0r<T>.toList(): List<T> = let { v ->
+inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array<T>(first) { vf(it) } }
+
+
+fun <T> Vect0r<T>.toList(): List<T> = let { v ->
     object : AbstractList<T>() {
         override inline val size get() = v.first
         override inline operator fun get(index: Int) = v.second(index)
@@ -168,7 +171,7 @@ fun <T> Vect0r<T>.toFlow(): Flow<T> = this.let { (size, vf) ->
     }
 }
 
-inline fun <reified T, reified R, reified V : Vect0r<T>> V.map(crossinline fn: (T) -> R): Pai2<Int, (Int) -> R> =
+  fun <  T,   R,   V : Vect0r<T>> V.map(  fn: (T) -> R): Pai2<Int, (Int) -> R> =
         Vect0r(this.size) { it: Int -> fn(second(it)) }
 
 /* unhealthy
@@ -195,14 +198,14 @@ inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2
 
 
 @JvmName("vvzip2f")
-inline fun <reified T, reified O, reified R> Vect0r<T>.zip(
+  fun <  T,   O,   R> Vect0r<T>.zip(
         o: Vect0r<O>,
-        crossinline f: (T, O) -> R,
+          f: (T, O) -> R,
 ): Vect0r<R> = size t2 { x: Int -> f(this[x], o[x]) }
 
 @JvmName("vvzip2")
 @Suppress("UNCHECKED_CAST")
-inline infix fun <reified T, reified O, R : Vect02<T, O>> Vect0r<T>.zip(o: Vect0r<O>): R =
+  infix fun <  T,   O, R : Vect02<T, O>> Vect0r<T>.zip(o: Vect0r<O>): R =
         (min(size, o.size) t2 { x: Int -> (this[x] t2 o[x]) }) as R
 
 
@@ -234,13 +237,11 @@ fun <T> combine(vararg a: List<T>): List<T> =
         }
 
 @JvmName("combine_Array")
-inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf(Array<T>::size).let { size: Int ->
+inline fun <  reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf(Array<T>::size).let { size: Int ->
     var x = 0
     var y = 0
     Array(size) { _: Int ->
-        if (y >= a[x].size) {
-            ++x; y = 0
-        }
+        if (y >= a[x].size) { ++x; y = 0 }
         a[x][y++]
     }
 }
@@ -256,7 +257,7 @@ fun IntArray.zipWithNext(): Vect02<Int, Int> = Vect0r(
  * pairwise zip result
  */
 @JvmName("zwnT")
-inline fun <reified T> Vect0r<T>.zipWithNext(): Vect02<T, T> =
+  fun <  T> Vect0r<T>.zipWithNext(): Vect02<T, T> =
         Vect0r(size / 2) { i: Int ->
             val c = i * 2
             Tw1n(this[c], this[c + 1])

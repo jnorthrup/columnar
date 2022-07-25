@@ -17,7 +17,7 @@ package vec.macros
 import vec.util._a
 
 /**inheritable version of pair  */
-interface Pai2<F, S> {
+public interface Pai2<F, S> {
     val first: F
     val second: S
     operator fun component1(): F = first
@@ -29,9 +29,9 @@ interface Pai2<F, S> {
     val pair: Pair<F, S> get() = let { first to second }
 
     companion object {
-        inline operator fun <reified F, reified S> invoke(first: F, second: S): Pai2<F, S> = object : Pai2<F, S> {
-            override inline val first get() = first
-            override inline val second get() = second
+          operator fun <  F,   S> invoke(first: F, second: S): Pai2<F, S> = object : Pai2<F, S> {
+            override   val first get() = first
+            override   val second get() = second
         }
 
 
@@ -39,13 +39,13 @@ interface Pai2<F, S> {
          * Pair copy ctor conversion
          */
 
-        inline operator fun <reified F, reified S, reified P : Pair<F, S>, reified R : Pai2<F, S>> invoke(p: P): Pai2<F, S> =
+          operator fun <  F,   S,   P : Pair<F, S>,   R : Pai2<F, S>> invoke(p: P): Pai2<F, S> =
                 object : Pai2<F, S> {
                     override val first: F by p::first
                     override val second: S by p::second
                 }
 
-        inline operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P): Pai2<F, S> = object : Pai2<F, S> {
+          operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P): Pai2<F, S> = object : Pai2<F, S> {
             override val first: F by p::key
             override val second: S by p::value
         }
@@ -103,12 +103,7 @@ typealias Tw1n<X> = Pai2<X, X>
 /**
  * a factory method
  */
-inline fun <reified T> Tw1n(first: T, second: T): Tw1n<T> = arrayOf(first, second).let { ar ->
-    object : Pai2<T, T> {
-        override inline val first get() = ar[0]
-        override inline val second get() = ar[1]
-    }
-}
+  fun <  T> Tw1n(first: T, second: T): Tw1n<T> =  first t2 second
 
 /**
  * int-type specific twin with primitive array backing store.
@@ -177,7 +172,7 @@ inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>): IntRange =
 
 @JvmName("αS")
 inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R): Pai2<Int, (Int) -> R> = (-this).α(f)
-inline infix fun <reified F, reified S> F.t2(s: S): Pai2<F, S> = Pai2(this, s)
+  infix fun <  F,   S> F.t2(s: S): Pai2<F, S> = Pai2(this, s)
 inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T): Tripl3<F, S, T> = let { (f: F, s) -> Tripl3(f, s, t) }
 
 infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T): Tripl3<F, S, T> = let { (a, b) -> Tripl3(a, b, t) }

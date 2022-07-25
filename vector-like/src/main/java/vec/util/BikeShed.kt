@@ -147,11 +147,11 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int = when (n) {
 
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
-inline fun <reified T> moireValues(
+fun <  T> moireValues(
         inVec: Vect0r<T>,
         limit: Int,
         initialOneOrMore: Int = inVec.first,
-        noinline x: (Int) -> T = inVec.second,
+          x: (Int) -> T = inVec.second,
 ): Pai2<Int, (Int) -> T> = min(initialOneOrMore, limit).let { min ->
     combine(min t2 x, (limit - min) t2 { i: Int ->
         x(i.rem(min))
@@ -160,16 +160,16 @@ inline fun <reified T> moireValues(
 }
 
 @JvmName("todubNeg")
-inline fun todubneg(d: Any?): Double = todub(d, -1e300)
+fun todubneg(d: Any?): Double = todub(d, -1e300)
 
 @JvmName("todub")
 fun todub(d: Any?): Double = todub(d, .0)
 
 @JvmName("tof0")
-inline fun tofneg(f: Any?): Float = tof(f, (-1e53).toFloat())
+fun tofneg(f: Any?): Float = tof(f, (-1e53).toFloat())
 
 @JvmName("tof1")
-inline fun tof(f: Any?): Float = tof(f, .0f)
+fun tof(f: Any?): Float = tof(f, .0f)
 
 
 val cheapDubCache: WeakHashMap<String, SoftReference<Pai2<String, Double?>>> = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
@@ -179,24 +179,24 @@ val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> = Weak
 /** really really wants to produce a Double
  */
 @JvmName("todubd")
-inline fun todub(f: Any?, default: Double): Double = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
+fun todub(f: Any?, default: Double): Double = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
     cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
-}.get()?.second)?.takeIf { it.isFinite() } ?: default
+}.get()?.second)?.takeUnless { !(it == it && !it.isInfinite()) } ?: default
 
 
 @JvmName("todubf")
-inline fun tof(f: Any?, default: Float): Float = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
+fun tof(f: Any?, default: Float): Float = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
     cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull()) }
-}.get()?.second)?.let { t -> if (t.toDouble().isFinite()) t else null } ?: default
+}.get()?.second)?.takeUnless { it != it || it.isInfinite() } ?: default
 
 
 @JvmName("utodubd")
-inline fun utodub(f: Any?, default: Double): Double = (f as? Double ?: f as? Number)?.toDouble()
-        ?: ("$f".toDoubleOrNull()?.takeIf { it.isFinite() } ?: default)
+fun utodub(f: Any?, default: Double): Double = (f as? Double ?: f as? Number)?.toDouble()
+        ?: "$f".toDoubleOrNull()?.takeUnless { it != it || it.isInfinite() } ?: default
 
 @JvmName("utodubf")
-inline fun utof(f: Any?, default: Float): Float = (f as? Float ?: f as? Number)?.toFloat()
-        ?: ("$f".toFloatOrNull()?.takeIf { it.isFinite() } ?: default)
+fun utof(f: Any?, default: Float): Float = (f as? Float ?: f as? Number)?.toFloat()
+        ?: ("$f".toFloatOrNull()?.takeUnless { it != it || it.isInfinite() } ?: default)
 
 
 fun <E> MutableCollection<E>.flip(flipV: E) {
