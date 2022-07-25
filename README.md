@@ -9,7 +9,7 @@
 Columnar is a work in progress toolkit which:
 
 * started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write
-* maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/kotlin/vec/macros/Twop13.kt#L20)
+* maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/java/vec/macros/Twop13.kt#L20)
 * maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
 
 ```!kt
@@ -31,7 +31,7 @@ typealias Cursor = Vect0r<RowVec>
 * follows some (most) usecases commonly solved in prep for deep learning usecases per pandas based on higher order
   function delegation and minimizes in-RAM requirements
 * provides almost 200 lines of utilities to
-  enable [terse kotlin collection ops](/vector-like/src/main/kotlin/vec/util/BikeShed.kt)
+  enable [terse kotlin collection ops](/vector-like/src/main/java/vec/util/BikeShed.kt)
 
 ## features and todo
 
