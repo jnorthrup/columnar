@@ -1,9 +1,6 @@
 package vec
 
-import vec.macros.Pai2
-import vec.macros.mapIndexedToList
-import vec.macros.t2
-import vec.macros.`➤`
+import vec.macros.*
 import java.util.*
 
 /**
@@ -22,17 +19,15 @@ class FloatCirQlar(
     var tail: Int = 0
     val full: Boolean get() = maxSize <= tail
 
-    @Suppress("DeprecatedCallableAddReplaceWith")
-    @Deprecated("gonna blow up on mutable ops")
-    override fun iterator(): MutableIterator<Float> = this.toVect0r().`➤`.iterator() as MutableIterator<Float>
+    override fun iterator(): MutableIterator<Float> = this.toVect0r().  iterator() as MutableIterator<Float>
 
     fun toList(): List<Float> = toVect0r().mapIndexedToList { _, t -> t }
 
-    fun toVect0r(): Pai2<Int, (Int) -> Float> = (this@FloatCirQlar.size t2 { x: Int ->
+    fun toVect0r(): Pai2<Int, (Int) -> Float> = this@FloatCirQlar.size t2 { x: Int ->
         al[if (tail >= maxSize) {
             (tail + x) % maxSize
         } else x]
-    })
+    }
 
     //todo: lockless dequeue here ?
     override fun offer(e: Float): Boolean =

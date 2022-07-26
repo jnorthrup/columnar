@@ -7,6 +7,7 @@ package vec.macros
 
 import kotlinx.coroutines.flow.*
 import vec.macros.Vect02_.left
+import vec.util.debug
 import java.lang.Integer.*
 import java.nio.ByteBuffer
 import java.util.*
@@ -29,7 +30,7 @@ typealias Matrix<T> = Pai2<
 
 operator fun <T> Matrix<T>.get(vararg c: Int): T = second(c)
 
-inline infix fun <reified O, reified R, F : (O) -> R> O.`→`(f: F): R = f(this)
+infix fun <O, R, F : (O) -> R> O.`→`(f: F): R = f(this)
 
 operator fun <A, B, R, O : (A) -> B, G : (B) -> R> O.times(b: G): (A) -> R = { a: A -> b(this(a)) }
 
@@ -40,7 +41,7 @@ infix fun <A, B, R, O : (A) -> B, G : (B) -> R, R1 : (A) -> R> O.`→`(
 /**
  * G follows F
  */
-inline infix fun <reified A, reified B, reified C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
+infix fun <A, B, C, G : (B) -> C, F : (A) -> B, R : (A) -> C> G.`⚬`(
         f: F,
 ): R = { a: A -> a `→` f `→` this } as R
 
@@ -48,28 +49,28 @@ inline infix fun <reified A, reified B, reified C, G : (B) -> C, F : (A) -> B, R
  * (λx.M[x]) → (λy.M[y])	α-conversion
  * https://en.wikipedia.org/wiki/Lambda_calculus
  * */
-inline infix fun <reified A, reified C, B : (A) -> C, reified V : Vect0r<A>> V.α(m: B): Pai2<Int, (Int) -> C> = map(m)
+infix fun <A, C, B : (A) -> C, V : Vect0r<A>> V.α(m: B): Pai2<Int, (Int) -> C> = map(m)
 
 
-inline infix fun <A, reified C, B : (A) -> C, T : Iterable<A>> T.α(m: B): Vect0r<C> =
+infix fun <A, C, B : (A) -> C, T : Iterable<A>> T.α(m: B): Vect0r<C> =
         this.map { m(it) }.toVect0r()
 
 infix fun <A, C, B : (A) -> C> List<A>.α(m: B): Pai2<Int, (Int) -> C> =
         this.size t2 { i: Int -> m(this[i]) }
 
 
-inline infix fun <A, reified C, B : (A) -> C> Array<out A>.α(m: B): Pai2<Int, (Int) -> C> =
+infix fun <A, C, B : (A) -> C> Array<out A>.α(m: B): Pai2<Int, (Int) -> C> =
         this.size t2 { i: Int -> m(this[i]) }
 
-inline infix fun <reified C, B : (Int) -> C> IntArray.α(m: B): Pai2<Int, (Int) -> C> =
+infix fun <C, B : (Int) -> C> IntArray.α(m: B): Pai2<Int, (Int) -> C> =
         (this.size) t2 { i: Int -> m(this[i]) }
 
-inline infix fun <reified C, B : (Float) -> C> FloatArray.α(m: B): Pai2<Int, (Int) -> C> =
+infix fun <C, B : (Float) -> C> FloatArray.α(m: B): Pai2<Int, (Int) -> C> =
         (this.size) t2 { i: Int -> m(this[i]) }
 
-inline infix fun <reified C, B : (Double) -> C> DoubleArray.α(m: B): Pai2<Int, (Int) -> C> = this.size t2 { i: Int -> m(this[i]) }
+infix fun <C, B : (Double) -> C> DoubleArray.α(m: B): Pai2<Int, (Int) -> C> = this.size t2 { i: Int -> m(this[i]) }
 
-inline infix fun <reified C, B : (Long) -> C> LongArray.α(m: B): Pai2<Int, (Int) -> C> =
+infix fun <C, B : (Long) -> C> LongArray.α(m: B): Pai2<Int, (Int) -> C> =
         Vect0r(this.size) { i: Int -> this[i] `→` m }
 
 /*
@@ -77,30 +78,30 @@ But as soon as a groupoid has both a left and a right identity, they are necessa
 a left identity and f is a right identity, then f=ef=e.
 */
 
-inline val <reified T> T.rightIdentity: () -> T get() = { this }
+val <T> T.rightIdentity: () -> T get() = { this }
 
 /**right identity*/
-inline val <reified T> T.`⟲`: () -> T get() = rightIdentity
+val <T> T.`⟲`: () -> T get() = rightIdentity
 
-/*
-@JvmName("vlike_Sequence_1")
-operator fun <T> Sequence<T>.get(vararg index: Int) = get(index)
+/**
+ * Vect0r->Set */
+fun <S> Vect0r<S>.toSet(opt: MutableSet<S>? = null): MutableSet<S> = (opt
+        ?: LinkedHashSet<S>(size)).also { hs -> hs.addAll(this.`➤`) }
 
-@JvmName("vlike_Sequence_Iterable2")
-operator fun <T> Sequence<T>.get(indexes: Iterable<Int>) = this[indexes.toList().toIntArray()]
+@JvmInline
+value class IterableVect0r<T>(val v: Vect0r<T>) : Iterable<T>, Vect0r<T> {
+    inline override fun iterator(): Iterator<T> = v.iterator()
+    inline override val first: Int
+        inline get() = v.first
+    inline override val second: (Int) -> T
+        inline get() = v.second
+}
 
-@JvmName("vlike_Sequence_IntArray3")
-operator fun <T> Sequence<T>.get(index: IntArray) = this.toList()[index].asSequence()
-
-@JvmName("vlike_Flow_1")
-suspend fun <T> Flow<T>.get(vararg index: Int) = get(index)
-
-@Suppress("USELESS_CAST")
-@JvmName("vlike_Flow_Iterable2")
-suspend fun <T> Flow<T>.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray() as IntArray)
-
-@JvmName("vlike_Flow_IntArray3")
-suspend fun <T> Flow<T>.get(index: IntArray) = this.toList()[index].asFlow()*/
+operator fun <T> Vect0r<T>.iterator(): Iterator<T> = object : Iterator<T> {
+    var t = 0
+    override fun hasNext(): Boolean = t < size
+    override fun next(): T = second(t++)
+}
 
 @JvmName("vlike_List_1")
 inline operator fun <reified T> List<T>.get(vararg index: Int): Vect0r<T> = get(index)
@@ -112,26 +113,13 @@ inline operator fun <reified T> List<T>.get(indexes: Iterable<Int>): Pai2<Int, (
 inline operator fun <reified T> List<T>.get(index: IntArray): Vect0r<T> = index α ::get
 
 @JvmName("vlike_Array_1")
-inline operator fun <reified T> Array<T>.get(vararg index: Int): Vect0r<T> = index α ::get
+operator fun <T> Array<T>.get(vararg index: Int): Vect0r<T> = index α ::get
 
 @JvmName("vlike_Array_Iterable2")
-
-
-inline operator fun <reified T> Array<T>.get(index: Iterable<Int>): Vect0r<T> = index α ::get
+operator fun <T> Array<T>.get(index: Iterable<Int>): Vect0r<T> = index α ::get
 
 @JvmName("vlike_Array_IntArray3")
-inline operator fun <reified T> Array<T>.get(index: IntArray): Pai2<Int, (Int) -> T> = index α ::get
-/*
-
-@JvmName("vlike_IntArray_1i")
-operator fun IntArray.get(vararg index: Int) = this.get(index)
-
-@JvmName("vlike_IntArray_Iterable2")
-operator fun IntArray.get(indexes: Iterable<Int>) = this.get(indexes.toList().toIntArray())
-
-@JvmName("vlike_IntArray_IntIntArray3")
-operator fun IntArray.get(index: IntArray) = IntArray(index.size) { i: Int -> this[index[i]] }
-*/
+operator fun <T> Array<T>.get(index: IntArray): Pai2<Int, (Int) -> T> = index α ::get
 
 @JvmName("vlike_Vect0r_getByInt")
 operator fun <T> Vect0r<T>.get(index: Int): T = second(index)
@@ -143,8 +131,7 @@ operator fun <T> Vect0r<T>.get(vararg index: Int): Pai2<Int, (Int) -> T> = get(i
 operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>): Pai2<Int, (Int) -> T> = this[indexes.toList().toIntArray()]
 
 @JvmName("vlike_Vect0r_getIntArray")
-operator fun <T> Vect0r<T>.get(index: IntArray): Pai2<Int, (Int) -> T> =
-        Vect0r(index.size) { ix: Int -> second(index[ix]) }
+operator fun <T> Vect0r<T>.get(index: IntArray): Pai2<Int, (Int) -> T> = Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
 @JvmName("vlike_Vect0r_toArray")
 inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array<T>(first) { vf(it) } }
@@ -171,7 +158,7 @@ fun <T> Vect0r<T>.toFlow(): Flow<T> = this.let { (size, vf) ->
     }
 }
 
-  fun <  T,   R,   V : Vect0r<T>> V.map(  fn: (T) -> R): Pai2<Int, (Int) -> R> =
+fun <T, R, V : Vect0r<T>> V.map(fn: (T) -> R): Pai2<Int, (Int) -> R> =
         Vect0r(this.size) { it: Int -> fn(second(it)) }
 
 /* unhealthy
@@ -181,9 +168,9 @@ fun <T> Vect0r<T>.toFlow(): Flow<T> = this.let { (size, vf) ->
 
 fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> = List(first) { fn(it, second(it)) }
 
-inline fun <reified T> Vect0r<T>.forEach(fn: (T) -> Unit): Unit = repeat(size) { fn(second(it)) }
+fun <T> Vect0r<T>.forEach(fn: (T) -> Unit): Unit = repeat(size) { fn(second(it)) }
 
-inline fun <reified T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit): Unit = repeat(size) { f(it, second(it)) }
+fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit): Unit = repeat(size) { f(it, second(it)) }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
 
@@ -193,19 +180,15 @@ fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
  *
  * @sample samples.collections.Iterables.Operations.zipIterable
  */
-inline infix fun <reified T, reified R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
-        zip(other.toList()) { a: T, b: R -> a t2 b }
-
+infix fun <T, R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
+        zip(other.`➤`) { a: T, b: R -> a t2 b }
 
 @JvmName("vvzip2f")
-  fun <  T,   O,   R> Vect0r<T>.zip(
-        o: Vect0r<O>,
-          f: (T, O) -> R,
-): Vect0r<R> = size t2 { x: Int -> f(this[x], o[x]) }
+fun <T, O, R> Vect0r<T>.zip(o: Vect0r<O>, f: (T, O) -> R) = size t2 { x: Int -> f(this[x], o[x]) }
 
 @JvmName("vvzip2")
 @Suppress("UNCHECKED_CAST")
-  infix fun <  T,   O, R : Vect02<T, O>> Vect0r<T>.zip(o: Vect0r<O>): R =
+infix fun <T, O, R : Vect02<T, O>> Vect0r<T>.zip(o: Vect0r<O>): R =
         (min(size, o.size) t2 { x: Int -> (this[x] t2 o[x]) }) as R
 
 
@@ -237,11 +220,13 @@ fun <T> combine(vararg a: List<T>): List<T> =
         }
 
 @JvmName("combine_Array")
-inline fun <  reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf(Array<T>::size).let { size: Int ->
+inline fun <reified T> combine(vararg a: Array<T>): Array<T> = a.sumOf(Array<T>::size).let { size: Int ->
     var x = 0
     var y = 0
     Array(size) { _: Int ->
-        if (y >= a[x].size) { ++x; y = 0 }
+        if (y >= a[x].size) {
+            ++x; y = 0
+        }
         a[x][y++]
     }
 }
@@ -257,7 +242,7 @@ fun IntArray.zipWithNext(): Vect02<Int, Int> = Vect0r(
  * pairwise zip result
  */
 @JvmName("zwnT")
-  fun <  T> Vect0r<T>.zipWithNext(): Vect02<T, T> =
+fun <T> Vect0r<T>.zipWithNext(): Vect02<T, T> =
         Vect0r(size / 2) { i: Int ->
             val c = i * 2
             Tw1n(this[c], this[c + 1])
@@ -289,20 +274,17 @@ fun Vect0r<Long>.zipWithNext(): Vect02<Long, Long> =
 /**
  * forwarding syntactic sugar
  */
-inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>): Array<V> =
-        this.get(*ks.toList().toTypedArray())
+inline operator fun <reified K, reified V> Map<K, V>.get(ks: Vect0r<K>): Array<V> = this.get(*ks.toList().toTypedArray())
 
 /**
  * forwarding syntactic sugar
  */
-inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>): Array<V> =
-        this.get(*ks.toList().toTypedArray())
+inline operator fun <reified K, reified V> Map<K, V>.get(ks: Iterable<K>): Array<V> = this.get(*ks.toList().toTypedArray())
 
 /**
  * pulls out an array of Map values for an vararg array of keys
  */
-inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K): Array<V> =
-        Array(ks.size) { ix: Int -> get(ks[ix])!! }
+inline operator fun <K, reified V> Map<K, V>.get(vararg ks: K): Array<V> = Array(ks.size) { ix: Int -> get(ks[ix])!! }
 
 
 /**splits a range into multiple parts for upstream reindexing utility
@@ -327,7 +309,7 @@ infix operator fun IntRange.div(denominator: Int): Vect0r<IntRange> =
  * returns
  * Vect0r<T> / x= Vecto<Vector<T>> in x parts
  */
-inline infix operator fun <reified T> Vector<T>.div(denominator: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> T>> =
+infix operator fun <T> Vector<T>.div(denominator: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> T>> =
         (0 until this.size).div(denominator).α { rnge ->
             (this as Vect0r<T>).slice(rnge.first, rnge.last)
         }
@@ -336,27 +318,27 @@ inline infix operator fun <reified T> Vector<T>.div(denominator: Int): Pai2<Int,
 /**
  * this is an unfortunate discriminator between the Int Pai2.first..second  and the Vect0r[0]
  */
-inline val <reified T> Vect0r<T>.f1rst: T
+val <T> Vect0r<T>.f1rst: T
     get() = get(0)
 
 /**
  * the last element of the Vect0r
  */
-inline val <reified T> Vect0r<T>.last: T
+val <T> Vect0r<T>.last: T
     get() = get(size - 1)
 
 /**
  * this will create a point in time Vect0r of the current window of (0 until size)
  * however the source Vect0r needs to have a repeatable 0 (nonmutable)
  */
-inline val <reified T> Vect0r<T>.reverse: Vect0r<T>
+val <T> Vect0r<T>.reverse: Vect0r<T>
     get() = this.size t2 { x -> second(size - 1 - x) }
 
 /**
  * direct increment x offset for a cheaper slice than binary search
  */
 @JvmOverloads
-inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.slicex(
+fun <T, TT : Vect0r<T>, TTT : Vect0r<TT>> TTT.slicex(
         start: Int = 0, endExclusive: Int = max(this.size, start),
 ): TTT = (this.first t2 { y: Int ->
     this.second(y).let { (_, b) ->
@@ -369,70 +351,70 @@ inline fun <reified T, reified TT : Vect0r<T>, reified TTT : Vect0r<TT>> TTT.sli
  */
 @JvmOverloads
 @JvmName("vect0rSlice")
-inline fun <reified T> Vect0r<T>.slice(
+fun <T> Vect0r<T>.slice(
         start: Int = 0,
         endExclusive: Int = this.size,
 ): Vect0r<T> = (endExclusive - start) t2 { x: Int -> this[x + start] }
 
 
 /** plus operator*/
-inline infix operator fun <reified T, P : Vect0r<T>> P.plus(p: P): P = combine(this, p) as P
+infix operator fun <T, P : Vect0r<T>> P.plus(p: P): P = combine(this, p) as P
 
 /** plus operator*/
-inline infix operator fun <reified T, P : Vect0r<T>> P.plus(t: T): P = combine(this, (1 t2 t.`⟲`) as P) as P
+infix operator fun <T, P : Vect0r<T>> P.plus(t: T): P = combine(this, (1 t2 t.`⟲`) as P) as P
 
 
 /**cloning and reifying Vect0r to ByteArray*/
-inline fun <reified T : Byte> Vect0r<T>.toByteArray(): ByteArray = ByteArray(size) { i -> get(i) }
+fun <T : Byte> Vect0r<T>.toByteArray(): ByteArray = ByteArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to CharArray*/
-inline fun <reified T : Char> Vect0r<T>.toCharArray(): CharArray = CharArray(size) { i -> get(i) }
+fun <T : Char> Vect0r<T>.toCharArray(): CharArray = CharArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to IntArray*/
-inline fun <reified T : Int> Vect0r<T>.toIntArray(): IntArray = IntArray(size) { i -> get(i) }
+fun <T : Int> Vect0r<T>.toIntArray(): IntArray = IntArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to IntArray*/
-inline fun <reified T : Boolean> Vect0r<T>.toBooleanArray(): BooleanArray = BooleanArray(size) { i -> get(i) }
+fun <T : Boolean> Vect0r<T>.toBooleanArray(): BooleanArray = BooleanArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to LongArray*/
-inline fun <reified T : Long> Vect0r<T>.toLongArray(): LongArray = LongArray(size) { i -> get(i) }
+fun <T : Long> Vect0r<T>.toLongArray(): LongArray = LongArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to FloatArray*/
-inline fun <reified T : Float> Vect0r<T>.toFloatArray(): FloatArray = FloatArray(size) { i -> get(i) }
+fun <T : Float> Vect0r<T>.toFloatArray(): FloatArray = FloatArray(size) { i -> get(i) }
 
 /**cloning and reifying Vect0r to DoubleArray*/
-inline fun <reified T : Double> Vect0r<T>.toDoubleArray(): DoubleArray = DoubleArray(size) { i -> get(i) }
+fun <T : Double> Vect0r<T>.toDoubleArray(): DoubleArray = DoubleArray(size) { i -> get(i) }
 
 @JvmName("AToVec")
-inline fun <reified T> Array<T>.toVect0r(): Vect0r<T> = (size t2 ::get) as Vect0r<T>
+fun <T> Array<T>.toVect0r(): Vect0r<T> = (size t2 ::get) as Vect0r<T>
 
 @JvmName("LToVec")
-inline fun <reified T> List<T>.toVect0r(): Vect0r<T> = (size t2 ::get) as Vect0r<T>
+fun <T> List<T>.toVect0r(): Vect0r<T> = (size t2 ::get) as Vect0r<T>
 
 @JvmName("IAToVec")
-inline fun IntArray.toVect0r(): Vect0r<Int> = (size t2 ::get) as Vect0r<Int>
+fun IntArray.toVect0r(): Vect0r<Int> = (size t2 ::get) as Vect0r<Int>
 
 @JvmName("LAToVec")
-inline fun LongArray.toVect0r(): Vect0r<Long> = (size t2 ::get) as Vect0r<Long>
+fun LongArray.toVect0r(): Vect0r<Long> = (size t2 ::get) as Vect0r<Long>
 
 @JvmName("DAToVec")
-inline fun DoubleArray.toVect0r(): Vect0r<Double> = (size t2 ::get) as Vect0r<Double>
+fun DoubleArray.toVect0r(): Vect0r<Double> = (size t2 ::get) as Vect0r<Double>
 
 @JvmName("FAToVec")
-inline fun FloatArray.toVect0r(): Vect0r<Float> = (size t2 ::get) as Vect0r<Float>
+fun FloatArray.toVect0r(): Vect0r<Float> = (size t2 ::get) as Vect0r<Float>
 
 @JvmName("BAToVec")
-inline fun ByteArray.toVect0r(): Vect0r<Byte> = (size t2 ::get) as Vect0r<Byte>
+fun ByteArray.toVect0r(): Vect0r<Byte> = (size t2 ::get) as Vect0r<Byte>
 
 @JvmName("CAToVec")
-inline fun CharArray.toVect0r(): Vect0r<Char> = (size t2 ::get) as Vect0r<Char>
+fun CharArray.toVect0r(): Vect0r<Char> = (size t2 ::get) as Vect0r<Char>
 
 @JvmName("CSToVec")
-inline fun CharSequence.toVect0r(): Vect0r<Char> = (length t2 ::get) as Vect0r<Char>
+fun CharSequence.toVect0r(): Vect0r<Char> = (length t2 ::get) as Vect0r<Char>
 
 @JvmName("StrToVec")
-inline fun String.toVect0r(): Vect0r<String> = (length t2 ::get) as Vect0r<String>
-inline fun <T : Boolean> BitSet.toVect0r(): Pai2<Int, (Int) -> Boolean> = (length() t2 { it: Int -> get(it) })
+fun String.toVect0r(): Vect0r<String> = (length t2 ::get) as Vect0r<String>
+fun <T : Boolean> BitSet.toVect0r(): Pai2<Int, (Int) -> Boolean> = (length() t2 { it: Int -> get(it) })
 
 
 fun Vect0r<Int>.sum(): Int = takeIf { this.size > 0 }?.`➤`?.reduce(Int::plus) ?: 0
@@ -441,7 +423,7 @@ fun Vect0r<Double>.sum(): Double = takeIf { this.size > 0 }?.`➤`?.reduce(Doubl
 fun Vect0r<Float>.sum(): Float = takeIf { this.size > 0 }?.`➤`?.reduce(Float::plus) ?: 0f
 
 @JvmName("FlowToVec")
-suspend inline fun <reified T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
+suspend fun <T> Flow<T>.toVect0r(): Vect0r<T> = this.toList().toVect0r()
 
 @JvmName("BBToVec")
 fun ByteBuffer.toVect0r(): Vect0r<Byte> =
@@ -455,12 +437,12 @@ fun IntRange.toVect0r(): Vect0r<Int> {
 }
 
 @JvmName("IterableToVec")
-inline fun <reified T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
+fun <T> Iterable<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
 @JvmName("SeqToVec")
-inline fun <reified T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
+fun <T> Sequence<T>.toVect0r(): Vect0r<T> = this.toList() α { it }
 
-inline val <reified X> Vect0r<Vect0r<X>>.T: Pai2<Int, (Int) -> Pai2<Int, (Int) -> X>>
+val <X> Vect0r<Vect0r<X>>.T: Pai2<Int, (Int) -> Pai2<Int, (Int) -> X>>
     get() = run {
         val shape = this[0].size t2 this.size
         val combine = combine(this)
@@ -475,31 +457,17 @@ inline val <reified X> Vect0r<Vect0r<X>>.T: Pai2<Int, (Int) -> Pai2<Int, (Int) -
         }
     }
 
-/**
- * Vect0r->Set */
-inline fun <reified S> Vect0r<S>.toSet(opt: MutableSet<S>? = null): MutableSet<S> = (opt
-        ?: LinkedHashSet<S>(size)).also { hs -> hs.addAll(this.`➤`) }
-
-@JvmName("iterator")
-inline operator fun <reified S> Vect0r<S>.iterator(): Iterator<S> = `➤`.iterator()
 
 /**
  * wrapper for for-loops and iterable filters
  */
-inline val <reified T> Vect0r<T>.`➤`: Iterable<T>
-    @JvmName("iteratable")
-    get() = object : Iterable<T> {
-        override inline operator fun iterator(): Iterator<T> = object : Iterator<T> {
-            var t = 0
-            override inline fun hasNext(): Boolean = t < size
-            override inline fun next(): T = second(t++)
-        }
-    }
+val <T> Vect0r<T>.`➤`: IterableVect0r<T>
+    get() = IterableVect0r(this)
 
 /**
  * provides unbounded access to first and last rows beyond the existing bounds of 0 until size
  */
-inline val <reified T> Vect0r<T>.infinite: Vect0r<T>
+val <T> Vect0r<T>.infinite: Vect0r<T>
     get() = Int.MAX_VALUE t2 { x: Int ->
         this.second(when {
             x < 0 -> 0
@@ -512,28 +480,27 @@ inline val <reified T> Vect0r<T>.infinite: Vect0r<T>
  * index by enum
  */
 @JvmName("getIndexByEnum")
-inline operator fun <reified S, reified E : Enum<E>> Vect0r<S>.get(e: E): S = get(e.ordinal)
+operator fun <S, E : Enum<E>> Vect0r<S>.get(e: E): S = get(e.ordinal)
 
 /**
  * optimize for where a smallish map has hotspots that are over-used and others that are excess overhead
  * in the more expensive things that old code does with maps
  */
 @JvmName("sparseVect0rMap")
-inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> = let { top ->
+fun <K : Int, V> Map<K, V>.sparseVect0rMap() = let { top ->
     ((this as? SortedMap)?.keys ?: keys.sorted()).toIntArray().let { k ->
-        0 t2 if (top.size <= 16)
-            { x: Int ->
-                var r: V? = null
-                var i = 0
-                do {
-                    if (k[i++] == x) r = top[x]
-                } while (i < size && r == null)
-                r.also {
-                    assert(it == top[x])
-                }
-            } else { x: Int ->
-            k.binarySearch(x).takeUnless { 0 < it }?.let { i ->
-                top[x].also {
+        0 t2 if (top.size <= 16) { x: Int ->
+            var r: V? = null
+            var i = 0
+            do {
+                if (k[i++] == x) r = top[x]
+            } while (i < size && r == null)
+            r.also {
+                assert(it == top[x])
+            }
+        } else { x: Int ->
+            k.binarySearch(x).takeUnless { 0 < it }?.let {
+                top[x].debug {
                     assert(it == top[x])
                 }
             }
@@ -546,7 +513,7 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0rMap(): Vect0r<V?> 
  * pay once for the conversion from a mutable map to an array map and all that implies
  */
 @JvmName("sparseVect0r")
-inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = let { top ->
+fun <K : Int, V> Map<K, V>.sparseVect0r(): Vect0r<V?> = let { top ->
     ((this as? SortedMap)?.entries ?: entries.sortedBy { it.key }).toTypedArray().let { entries ->
         val k = keys.toIntArray()
         0 t2 if (top.size <= 16)
@@ -568,35 +535,29 @@ inline fun <reified K : Int, reified V> Map<K, V>.sparseVect0r(): Vect0r<V?> = l
 }
 
 @JvmOverloads
-inline fun <reified F, reified S> left(v2: Vect02<F, S>) {
+fun <F, S> left(v2: Vect02<F, S>) {
     v2.left
 }
 
 object Vect02_ {
-    inline val <reified F, reified S> Vect02<F, S>.left: Pai2<Int, (Int) -> F> get() = this α Pai2<F, S>::first
-    inline val <reified F, reified S> Vect02<F, S>.right: Pai2<Int, (Int) -> S> get() = this α Pai2<F, S>::second
-    inline val <reified F, reified S> Vect02<F, S>.reify: Pai2<Int, (Int) -> Pair<F, S>> get() = this α Pai2<F, S>::pair
+    val <F, S> Vect02<F, S>.left: Pai2<Int, (Int) -> F> get() = this α Pai2<F, S>::first
+    val <F, S> Vect02<F, S>.right: Pai2<Int, (Int) -> S> get() = this α Pai2<F, S>::second
+    val <F, S> Vect02<F, S>.reify: Pai2<Int, (Int) -> Pair<F, S>> get() = this α Pai2<F, S>::pair
 
-    inline fun <reified F, reified S> Vect02<F, S>.toMap(theMap: MutableMap<F, S>? = null): MutableMap<in F, in S> =
+    fun <F, S> Vect02<F, S>.toMap(theMap: MutableMap<F, S>? = null): MutableMap<F, S> =
             toList().map(Pai2<F, S>::pair).let { paris ->
-                (theMap?.let { paris.toMap(theMap as MutableMap<in F, in S>) }
-                        ?: paris.toMap(
-                                HashMap(
-                                        paris.size
-                                )
-                        ))
+                theMap?.let { paris.toMap(theMap) } ?: paris.toMap(HashMap(paris.size))
             }
 }
 
 object V3ct0r_ {
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.left: Pai2<Int, (Int) -> F> get() = this α Tripl3<F, *, *>::first
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.mid: Pai2<Int, (Int) -> S> get() = this α Tripl3<F, S, T>::second
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.right: Pai2<Int, (Int) -> T> get() = this α Tripl3<F, S, T>::third
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.reify: Pai2<Int, (Int) -> Triple<F, S, T>> get() = this α Tripl3<F, S, T>::triple
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.x: Pai2<Int, (Int) -> F> get() = this α (Tripl3<F, S, T>::first)
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.y: Pai2<Int, (Int) -> S> get() = this α (Tripl3<F, S, T>::second)
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.z: Pai2<Int, (Int) -> T> get() = this α (Tripl3<F, S, T>::third)
-    inline val <reified F, reified S, reified T> V3ct0r<F, S, T>.r3ify: Pai2<Int, (Int) -> Triple<F, S, T>> get() = this α (Tripl3<F, S, T>::triple)
+    val <F, S, T> V3ct0r<F, S, T>.left: Pai2<Int, (Int) -> F> get() = this α Tripl3<F, *, *>::first
+    val <F, S, T> V3ct0r<F, S, T>.mid: Pai2<Int, (Int) -> S> get() = this α Tripl3<F, S, T>::second
+    val <F, S, T> V3ct0r<F, S, T>.right: Pai2<Int, (Int) -> T> get() = this α Tripl3<F, S, T>::third
+    val <F, S, T> V3ct0r<F, S, T>.x: Pai2<Int, (Int) -> F> get() = this α Tripl3<F, S, T>::first
+    val <F, S, T> V3ct0r<F, S, T>.y: Pai2<Int, (Int) -> S> get() = this α Tripl3<F, S, T>::second
+    val <F, S, T> V3ct0r<F, S, T>.z: Pai2<Int, (Int) -> T> get() = this α Tripl3<F, S, T>::third
+    fun <F, S, T> V3ct0r<F, S, T>.reify(): Pai2<Int, (Int) -> Triple<F, S, T>> = this α Tripl3<F, S, T>::triple
 }
 
-inline operator fun <reified T> Vect0r<T>.div(d: Int): Vect0r<Vect0r<T>> = (0 until size) / d α { this[it] }
+operator fun <T> Vect0r<T>.div(d: Int): Vect0r<Vect0r<T>> = (0 until size) / d α { this[it] }
