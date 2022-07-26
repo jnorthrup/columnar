@@ -181,25 +181,31 @@ val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> = Weak
 @JvmName("todubd")
 fun todub(f: Any?, default: Double): Double = ((f as? Double ?: (f as? Number)?.toDouble()) ?: "$f".let {
     cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
-}.get()?.second)?.takeUnless { it.isNaN() || it.isInfinite() } ?: default
-
+}.get()?.second)?.takeUnless { it.isNaN || it.isInfinite } ?: default
 
 @JvmName("todubf")
 fun tof(f: Any?, default: Float): Float = ((f as? Float ?: (f as? Number)?.toFloat()) ?: "$f".let {
     cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull()) }
-}.get()?.second)?.takeUnless { it.isNaN() || it.isInfinite() } ?: default
+}.get()?.second)?.takeUnless { it.isNaN  || it.isInfinite } ?: default
 
 
 @JvmName("utodubd")
-fun utodub(f: Any?, default: Double): Double = ((f as? Double ?: (f as? Number)?.toDouble()))
-        ?: "$f".toDoubleOrNull()?.takeUnless { it.isNaN() || it.isInfinite() } ?: default
+fun utodub(f: Any?, default: Double=0.0): Double = ((f as? Double ?: (f as? Number)?.toDouble()))
+        ?: "$f".toDoubleOrNull()?.takeUnless { it.isNaN  || it.isInfinite  } ?: default
 
 @JvmName("utodubf")
-fun utof(f: Any?, default: Float): Float = ((f as? Float ?: f as? Number)?.toFloat())
-        ?: ("$f".toFloatOrNull()?.takeUnless { it.isNaN() || it.isInfinite() } ?: default)
+fun utof(f: Any?, default: Float=0f): Float = ((f as? Float ?: f as? Number)?.toFloat())
+        ?: ("$f".toFloatOrNull()?.takeUnless { it.isNaN  || it.isInfinite  } ?: default)
 
 
 fun <E> MutableCollection<E>.flip(flipV: E) {
     if (flipV in this) remove(flipV)
     else add(flipV)
 }
+
+inline val Double.isNaN get()=this!=this
+inline val Float.isNaN get()= this!=this
+inline val Double.isInfinite get()   = (this == Double.POSITIVE_INFINITY) || (this == Double.NEGATIVE_INFINITY)
+inline val Float.isInfinite get()   =  (this == Float.POSITIVE_INFINITY) || (this == Float.NEGATIVE_INFINITY)
+inline val Double.sane get()=if(isNaN||isInfinite)0.0 else this
+inline val Float.sane get()=if(isNaN||isInfinite)0.0f else this
