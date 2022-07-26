@@ -147,11 +147,11 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int = when (n) {
 
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
-fun <  T> moireValues(
+fun <T> moireValues(
         inVec: Vect0r<T>,
         limit: Int,
         initialOneOrMore: Int = inVec.first,
-          x: (Int) -> T = inVec.second,
+        x: (Int) -> T = inVec.second,
 ): Pai2<Int, (Int) -> T> = min(initialOneOrMore, limit).let { min ->
     combine(min t2 x, (limit - min) t2 { i: Int ->
         x(i.rem(min))
@@ -179,24 +179,24 @@ val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> = Weak
 /** really really wants to produce a Double
  */
 @JvmName("todubd")
-fun todub(f: Any?, default: Double): Double = ((f as? Double ?: f as? Number)?.toDouble() ?: "$f".let {
+fun todub(f: Any?, default: Double): Double = ((f as? Double ?: (f as? Number)?.toDouble()) ?: "$f".let {
     cheapDubCache.getOrPut(it) { SoftReference(it t2 it.toDoubleOrNull()) }
-}.get()?.second)?.takeUnless { !(it == it && !it.isInfinite()) } ?: default
+}.get()?.second)?.takeUnless { it.isNaN() || it.isInfinite() } ?: default
 
 
 @JvmName("todubf")
-fun tof(f: Any?, default: Float): Float = ((f as? Float ?: f as? Number)?.toFloat() ?: "$f".let {
+fun tof(f: Any?, default: Float): Float = ((f as? Float ?: (f as? Number)?.toFloat()) ?: "$f".let {
     cheapFCache.getOrPut(it) { SoftReference(it t2 it.toFloatOrNull()) }
-}.get()?.second)?.takeUnless { it != it || it.isInfinite() } ?: default
+}.get()?.second)?.takeUnless { it.isNaN() || it.isInfinite() } ?: default
 
 
 @JvmName("utodubd")
-fun utodub(f: Any?, default: Double): Double = (f as? Double ?: f as? Number)?.toDouble()
-        ?: "$f".toDoubleOrNull()?.takeUnless { it != it || it.isInfinite() } ?: default
+fun utodub(f: Any?, default: Double): Double = ((f as? Double ?: (f as? Number)?.toDouble()))
+        ?: "$f".toDoubleOrNull()?.takeUnless { it.isNaN() || it.isInfinite() } ?: default
 
 @JvmName("utodubf")
-fun utof(f: Any?, default: Float): Float = (f as? Float ?: f as? Number)?.toFloat()
-        ?: ("$f".toFloatOrNull()?.takeUnless { it != it || it.isInfinite() } ?: default)
+fun utof(f: Any?, default: Float): Float = ((f as? Float ?: f as? Number)?.toFloat())
+        ?: ("$f".toFloatOrNull()?.takeUnless { it.isNaN() || it.isInfinite() } ?: default)
 
 
 fun <E> MutableCollection<E>.flip(flipV: E) {
