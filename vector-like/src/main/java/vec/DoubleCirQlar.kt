@@ -1,9 +1,6 @@
 package vec
 
-import vec.macros.Pai2
-import vec.macros.mapIndexedToList
-import vec.macros.t2
-import vec.macros.`➤`
+import vec.macros.*
 import java.util.*
 
 /**
@@ -16,15 +13,16 @@ has cheap direct toVect0r with live properties
 has more expensive toList/iterator by copy/concat
  */
 class DoubleCirQlar(
-    val maxSize: Int,
-    val al: DoubleArray = DoubleArray(maxSize),
+        val maxSize: Int,
+        val al: DoubleArray = DoubleArray(maxSize),
 ) : AbstractQueue<Double>() {
+
     var tail: Int = 0
     val full: Boolean get() = maxSize <= tail
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("gonna blow up on mutable ops")
-    override fun iterator(): MutableIterator<Double> = this.toVect0r().`➤`.iterator() as MutableIterator<Double>
+    override fun iterator(): MutableIterator<Double> = this.toVect0r().iterator() as MutableIterator<Double>
 
     fun toList(): List<Double> = toVect0r().mapIndexedToList { _, t -> t }
 
@@ -36,12 +34,12 @@ class DoubleCirQlar(
 
     //todo: lockless dequeue here ?
     override fun offer(e: Double): Boolean =
-        synchronized(this) {
-            al[tail % maxSize] = e
-            tail++
-            if (tail == 2 * maxSize) tail = maxSize
-            true
-        }
+            synchronized(this) {
+                al[tail % maxSize] = e
+                tail++
+                if (tail == 2 * maxSize) tail = maxSize
+                true
+            }
 
     override fun poll(): Double = TODO("Not yet implemented")
     override fun peek(): Double = TODO("Not yet implemented")
