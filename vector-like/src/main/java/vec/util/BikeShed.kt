@@ -209,3 +209,7 @@ inline val Double.isInfinite get()   = (this == Double.POSITIVE_INFINITY) || (th
 inline val Float.isInfinite get()   =  (this == Float.POSITIVE_INFINITY) || (this == Float.NEGATIVE_INFINITY)
 inline val Double.sane get()=if(isNaN||isInfinite)0.0 else this
 inline val Float.sane get()=if(isNaN||isInfinite)0.0f else this
+fun ubyteHex2(toUByte: UByte) = ("0" + toUByte.toString(16)).takeLast(2)
+
+fun SortedSet<Int>.subSet(indirectHiddenRange: ClosedRange<Int>): SortedSet<Int> = subSet(indirectHiddenRange.start, indirectHiddenRange.endInclusive.inc())
+  fun<  V>   SortedMap<Int,V>.subMap(range: ClosedRange<Int>): SortedMap<Int, V> = this.subMap(range.start, range.endInclusive.inc())
