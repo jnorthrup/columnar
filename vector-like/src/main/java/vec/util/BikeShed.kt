@@ -88,11 +88,11 @@ object _m {
 }
 
 fun logDebug(debugTxt: () -> String) {
-    if (`debug status matching -ea jvm switch`) System.err.println(debugTxt())
+    if (`assertionsEnableDebug`) System.err.println(debugTxt())
 }
 
 @Suppress("ObjectPropertyName")
-val `debug status matching -ea jvm switch`: Boolean = try {
+val assertionsEnableDebug = try {
     assert(false)
     false
 } catch (e: AssertionError) {
@@ -102,7 +102,7 @@ val `debug status matching -ea jvm switch`: Boolean = try {
 //val `debug status matching -ea jvm switch` = Pai2::class.java.desiredAssertionStatus()
 
 inline fun <T> T.debug(block: (T) -> Unit): T = also { lmbda ->
-    if (`debug status matching -ea jvm switch`) block(lmbda)
+    if (`assertionsEnableDebug`) block(lmbda)
 }
 
 /**
