@@ -1,12 +1,14 @@
 /**
  * what library doesn't have at least one util for all the evils of getting work done outside the elegant showroom code?
  */
-@file:Suppress("NOTHING_TO_",
-        "UNCHECKED_CAST",
-        "ClassName",
-        "HasPlatformType",
-        "NOTHING_TO_INLINE",
-        "UnclearPrecedenceOfBinaryExpression")
+@file:Suppress(
+    "NOTHING_TO_",
+    "UNCHECKED_CAST",
+    "ClassName",
+    "HasPlatformType",
+    "NOTHING_TO_INLINE",
+    "UnclearPrecedenceOfBinaryExpression"
+)
 
 package vec.util
 
@@ -82,9 +84,9 @@ object _s {
  * missing stdlib map convenience operator
  */
 object _m {
-    inline operator fun <K, V, P : Pair<K, V>> get(p: List<P>): Map<K, V> = (p).toMap()
-    inline operator fun <K, V, P : Pair<K, V>> get(p: Vect0r<Pai2<K, V>>): Map<K, V> = p.`➤`.associate(Pai2<K, V>::pair)
-    inline operator fun <K, V, P : Pair<K, V>> get(vararg p: P): Map<K, V> = mapOf(*p)
+    operator fun <K, V, P : Pair<K, V>> get(p: List<P>): Map<K, V> = (p).toMap()
+    operator fun <K, V, P : Pair<K, V>> get(vararg p: P): Map<K, V> = mapOf(*p)
+    operator fun <K, V> get(p: Vect02<K, V>): Map<K, V> = p.`➤`.associate(Pai2<K, V>::pair)
 }
 
 fun logDebug(debugTxt: () -> String) {
@@ -148,10 +150,10 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int = when (n) {
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
 fun <T> moireValues(
-        inVec: Vect0r<T>,
-        limit: Int,
-        initialOneOrMore: Int = inVec.first,
-        x: (Int) -> T = inVec.second,
+    inVec: Vect0r<T>,
+    limit: Int,
+    initialOneOrMore: Int = inVec.first,
+    x: (Int) -> T = inVec.second,
 ): Pai2<Int, (Int) -> T> = min(initialOneOrMore, limit).let { min ->
     combine(min t2 x, (limit - min) t2 { i: Int ->
         x(i.rem(min))
@@ -172,9 +174,11 @@ fun tofneg(f: Any?): Float = tof(f, (-1e53).toFloat())
 fun tof(f: Any?): Float = tof(f, .0f)
 
 
-val cheapDubCache: WeakHashMap<String, SoftReference<Pai2<String, Double?>>> = WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
+val cheapDubCache: WeakHashMap<String, SoftReference<Pai2<String, Double?>>> =
+    WeakHashMap<String, SoftReference<Pai2<String, Double?>>>(0)
 
-val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> = WeakHashMap<String, SoftReference<Pai2<String, Float?>>>(0)
+val cheapFCache: WeakHashMap<String, SoftReference<Pai2<String, Float?>>> =
+    WeakHashMap<String, SoftReference<Pai2<String, Float?>>>(0)
 
 /** really really wants to produce a Double
  */
@@ -191,11 +195,11 @@ fun tof(f: Any?, default: Float): Float = ((f as? Float ?: (f as? Number)?.toFlo
 
 @JvmName("utodubd")
 fun utodub(f: Any?, default: Double = 0.0): Double = ((f as? Double ?: (f as? Number)?.toDouble()))
-        ?: "$f".toDoubleOrNull()?.takeUnless { it.isNaN || it.isInfinite } ?: default
+    ?: "$f".toDoubleOrNull()?.takeUnless { it.isNaN || it.isInfinite } ?: default
 
 @JvmName("utodubf")
 fun utof(f: Any?, default: Float = 0f): Float = ((f as? Float ?: f as? Number)?.toFloat())
-        ?: ("$f".toFloatOrNull()?.takeUnless { it.isNaN || it.isInfinite } ?: default)
+    ?: ("$f".toFloatOrNull()?.takeUnless { it.isNaN || it.isInfinite } ?: default)
 
 
 fun <E> MutableCollection<E>.flip(flipV: E) {
@@ -204,13 +208,17 @@ fun <E> MutableCollection<E>.flip(flipV: E) {
 }
 
 inline val Double.isNaN get() = this != this
-inline val Float.isNaN get() = this != this
+inline val Float.isNaN get() =  this != this
 inline val Double.isInfinite get() = (this == Double.POSITIVE_INFINITY) || (this == Double.NEGATIVE_INFINITY)
 inline val Float.isInfinite get() = (this == Float.POSITIVE_INFINITY) || (this == Float.NEGATIVE_INFINITY)
 inline val Double.sane get() = if (isNaN || isInfinite) 0.0 else this
 inline val Float.sane get() = if (isNaN || isInfinite) 0.0f else this
 fun ubyteHex2(toUByte: UByte) = ("0" + toUByte.toString(16)).takeLast(2)
 
-fun SortedSet<Int>.subSet(indirectHiddenRange: ClosedRange<Int>): SortedSet<Int> = subSet(indirectHiddenRange.start, indirectHiddenRange.endInclusive.inc())
-fun <V> SortedMap<Int, V>.subMap(range: ClosedRange<Int>): SortedMap<Int, V> = this.subMap(range.start, range.endInclusive.inc())
+fun SortedSet<Int>.subSet(indirectHiddenRange: ClosedRange<Int>): SortedSet<Int> =
+    subSet(indirectHiddenRange.start, indirectHiddenRange.endInclusive.inc())
+
+fun <V> SortedMap<Int, V>.subMap(range: ClosedRange<Int>): SortedMap<Int, V> =
+    this.subMap(range.start, range.endInclusive.inc())
+
 fun Random.nextInt(range: IntRange): Int = nextInt(range.first, range.last)

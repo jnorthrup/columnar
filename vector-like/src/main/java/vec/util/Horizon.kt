@@ -5,7 +5,9 @@ import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sin
 
-/** gradually compressed index accessor to underlying Cursor x values. */
+/** gradually compressed index accessor to underlying Cursor x values.
+ */
+
 @JvmOverloads
 fun horizon(
     index: Int,
