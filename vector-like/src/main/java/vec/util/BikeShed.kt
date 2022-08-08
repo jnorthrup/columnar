@@ -9,6 +9,7 @@
     "NOTHING_TO_INLINE",
     "UnclearPrecedenceOfBinaryExpression"
 )
+@file:OptIn(ExperimentalUnsignedTypes::class)
 
 package vec.util
 
@@ -143,9 +144,6 @@ tailrec fun fib(n: Int, a: Int = 0, b: Int = 1): Int = when (n) {
     1 -> b
     else -> fib(n - 1, b, a + b)
 }
-
-@Deprecated("causes cursors to miss left,right,combine cues")
-//inline fun <reified T, P : Pai2<T, T>, R : Vect0r<T>> Vect0r(p: P) = _v[p.first, p.second] as R
 
 //the values repeat until the lower limit is reached providing cheap dummy row context.
 @JvmOverloads
