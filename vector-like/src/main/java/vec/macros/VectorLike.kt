@@ -90,10 +90,10 @@ fun <S> Vect0r<S>.toSet(opt: MutableSet<S>? = null): MutableSet<S> = (opt
 
 @JvmInline
 value class IterableVect0r<T>(val v: Vect0r<T>) : Iterable<T>, Vect0r<T> {
-    inline override fun iterator(): Iterator<T> = v.iterator()
-    inline override val first: Int
+    override inline fun iterator(): Iterator<T> = v.iterator()
+    override inline val first: Int
         inline get() = v.first
-    inline override val second: (Int) -> T
+    override inline val second: (Int) -> T
         inline get() = v.second
 }
 
@@ -170,7 +170,7 @@ fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> = List(first) 
 
 fun <T> Vect0r<T>.forEach(fn: (T) -> Unit): Unit = repeat(size) { fn(second(it)) }
 
-fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit): Unit = repeat(size) { f(it, second(it)) }
+fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit): Unit { for (x in 0 until size) f(x, second(x)) }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
 

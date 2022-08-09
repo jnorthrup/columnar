@@ -5,7 +5,7 @@ import vec.macros.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
+ /*@ExperimentalTime*/
 class HorizonTest {
     @Test
     fun horizonTest() {
