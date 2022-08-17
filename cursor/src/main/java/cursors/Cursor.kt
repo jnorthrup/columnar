@@ -1,5 +1,4 @@
 @file:Suppress("UNCHECKED_CAST", "NOTHING_TO_")
-
 package cursors
 
 import cursors.context.NormalizedRange
@@ -75,8 +74,11 @@ import kotlin.coroutines.CoroutineContext
  */
 typealias Cursor = Vect0r<RowVec>
 
-// infix fun < T : Int> Cursor.forEach(t: T) = second.invoke(t)
-infix fun Cursor.at(t: Int): Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>> = second(t)
+/** gets the RowVec at y or if y is negative then -y from last */
+infix fun Cursor.at(y: Int):RowVec =second(if (y<0) size-y else y)
+
+/** gets the RowVec at y or if y is negative then -y from last */
+infix fun Cursor.at(r: IntRange):Cursor=r.last -r.first t2 { y->second(y+r.first) }
 
 @JvmName("vlike_RSequence_11")
 operator fun Cursor.get(vararg index: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = get(index)
@@ -89,14 +91,9 @@ operator fun Cursor.get(index: IntArray): Pai2<Int, (Int) -> Pai2<Int, (Int) -> 
     a t2 { iy: Int -> fetcher(iy)[index] }
 }
 
-/**
-synthesize pivot columns by key(axis) columns present.
- */
+/** synthesize pivot columns by key(axis) columns present. */
 fun Cursor.pivot(
-    /**
-    lhs columns are unmodified from original index inclusive of
-    axis and fanout columns
-     */
+    /** lhs columns are unmodified from original index inclusive of axis and fanout columns */
     lhs: IntArray,
     /**
      * these will be used to synthesize columns from values, in order indexed. no dupe limitations apply.
