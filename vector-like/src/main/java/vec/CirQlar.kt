@@ -23,8 +23,6 @@ open class CirQlar<T>(
     override val size: Int get() = kotlin.math.min(tail, maxSize)
     val full: Boolean get() = tail >= maxSize
 
-
-    //todo: lockless dequeue here ?
     override fun offer(e: T): Boolean = synchronized(this) {
         val i = tail % maxSize
         val tmp =evict?.run { al.takeIf { it.size < i }?.get(i) }
@@ -62,9 +60,7 @@ open class CirQlar<T>(
         val v = toVect0r()
         var i = 0
         override fun hasNext(): Boolean = i < v.size
-
         override fun next(): T = v.second(i++)
-
         override fun remove(): Unit = TODO("Not yet implemented")
     }
 }
