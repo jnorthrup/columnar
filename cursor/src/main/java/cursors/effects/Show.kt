@@ -29,18 +29,18 @@ fun Cursor.showValues(range: IntProgression) {
             println(combine.toList())
         }
     } catch (e: NoSuchElementException) {
-//        e
         System.err.println("cannot fully access range $range")
     }
 }
 
 /**
  * head default 5 rows
+ * just like unix head - print default 5 lines from cursor contents to stdout
  */
 @JvmOverloads fun Cursor.head(last: Int = 5): Unit = show(0 until (max(0, min(last, size))))
 
 /**
- * run head at random index
+ * run head starting at random index
  */
 fun Cursor.showRandom(n: Int = 5) {
     head(0);repeat(n) {

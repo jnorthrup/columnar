@@ -38,9 +38,6 @@ interface Scalar : Arity, Pai2<TypeMemento, String?> {
 }
 
 
-///**Borg reference*/
-//class UniMatrix(type: TypeMemento, val shape: Vect0r<Int>, name: String? = null) : Scalar
-
 class Columnar(cols: Vect02<TypeMemento, String?>) :
     Vect02<TypeMemento, String?> by cols, Arity {
     companion object {

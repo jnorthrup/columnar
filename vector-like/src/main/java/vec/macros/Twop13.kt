@@ -17,7 +17,7 @@ package vec.macros
 import vec.util._a
 
 /**inheritable version of pair  */
-public interface Pai2<F, S> {
+interface Pai2<F, S> {
     val first: F
     val second: S
     operator fun component1(): F = first
@@ -29,9 +29,9 @@ public interface Pai2<F, S> {
     val pair: Pair<F, S> get() = let { first to second }
 
     companion object {
-          operator fun <  F,   S> invoke(first: F, second: S): Pai2<F, S> = object : Pai2<F, S> {
-            override   val first get() = first
-            override   val second get() = second
+        operator fun <F, S> invoke(first: F, second: S): Pai2<F, S> = object : Pai2<F, S> {
+            override val first get() = first
+            override val second get() = second
         }
 
 
@@ -39,13 +39,13 @@ public interface Pai2<F, S> {
          * Pair copy ctor conversion
          */
 
-          operator fun <  F,   S,   P : Pair<F, S>,   R : Pai2<F, S>> invoke(p: P): Pai2<F, S> =
-                object : Pai2<F, S> {
-                    override val first: F by p::first
-                    override val second: S by p::second
-                }
+        operator fun <F, S, P : Pair<F, S>, R : Pai2<F, S>> invoke(p: P): Pai2<F, S> =
+            object : Pai2<F, S> {
+                override val first: F by p::first
+                override val second: S by p::second
+            }
 
-          operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P): Pai2<F, S> = object : Pai2<F, S> {
+        operator fun <F, S, P : Map.Entry<F, S>, R : Pai2<F, S>> invoke(p: P): Pai2<F, S> = object : Pai2<F, S> {
             override val first: F by p::key
             override val second: S by p::value
         }
@@ -74,17 +74,15 @@ interface Tripl3<out F, out S, out T>/* : Pai2<F, S> */ {
     companion object {
 
         inline operator fun <F, S, T> invoke(first: F, second: S, third: T): Tripl3<F, S, T> =
-                object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
-                    override inline val first get() = first
-                    override inline val second get() = second
-                    override inline val third get() = third
-                }
+            object : Tripl3<F, S, T>/*, Pai2<F, S> by Pai2(f, s)*/ {
+                override inline val first get() = first
+                override inline val second get() = second
+                override inline val third get() = third
+            }
 
-
-        inline operator fun <F, S, T> invoke(p: Triple<F, S, T>): Tripl3<F, S, T> = p.let { (f, s, t) -> Tripl3(f, s, t) }
+        inline operator fun <F, S, T> invoke(p: Triple<F, S, T>): Tripl3<F, S, T> =
+            p.let { (f, s, t) -> Tripl3(f, s, t) }
     }
-
-
 }
 
 
@@ -103,7 +101,7 @@ typealias Tw1n<X> = Pai2<X, X>
 /**
  * a factory method
  */
-  fun <  T> Tw1n(first: T, second: T): Tw1n<T> =  first t2 second
+fun <T> Tw1n(first: T, second: T): Tw1n<T> = first t2 second
 
 /**
  * int-type specific twin with primitive array backing store.
@@ -172,15 +170,16 @@ inline infix operator fun <T : Enum<T>> Enum<T>.rangeTo(ub: Enum<T>): IntRange =
 
 @JvmName("αS")
 inline infix fun <reified S, reified R> Tw1n<S>.α(noinline f: (S) -> R): Pai2<Int, (Int) -> R> = (-this).α(f)
-  infix fun <  F,   S> F.t2(s: S): Pai2<F, S> = Pai2(this, s)
-inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T): Tripl3<F, S, T> = let { (f: F, s) -> Tripl3(f, s, t) }
+infix fun <F, S> F.t2(s: S): Pai2<F, S> = Pai2(this, s)
+inline infix fun <reified F, reified S, reified T> Pai2<F, S>.t3(t: T): Tripl3<F, S, T> =
+    let { (f: F, s) -> Tripl3(f, s, t) }
 
 infix fun <F, S, T, P : Pair<F, S>> P.t3(t: T): Tripl3<F, S, T> = let { (a, b) -> Tripl3(a, b, t) }
 
 //overlaps Vect0r reverse and isn't compatible
 inline fun <reified F, reified S> Pair<F, S>.reversed(): Pai2<S, F> = second t2 first
 inline infix fun <reified A, reified B, reified C, reified D> Tripl3<A, B, C>.t4(d: D): Qu4d<A, B, C, D> =
-        let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
+    let { (a: A, b: B, c: C) -> Qu4d(a, b, c, d) }
 
 /**inheritable version of quad that also provides its first three as a triple. */
 interface Qu4d<F, S, T, Z> {
@@ -204,10 +203,10 @@ interface Qu4d<F, S, T, Z> {
     companion object {
 
         operator fun <F, S, T, Z> invoke(
-                first: F,
-                second: S,
-                third: T,
-                fourth: Z,
+            first: F,
+            second: S,
+            third: T,
+            fourth: Z,
         ): Qu4d<F, S, T, Z> = object : Qu4d<F, S, T, Z> {
             override inline val first get() = first
             override inline val second get() = second
