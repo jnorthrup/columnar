@@ -23,11 +23,12 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
 
-
+/** A cursor that reads from a file in ISAM format.
+ */
 class ISAMCursor(
-        binpath: Path,
-        val fc: FileChannel,
-        metapath: Path = Paths.get("$binpath.meta".debug { logDebug { "using default Isam meta: $it" } }),
+    binpath: Path,
+    val fc: FileChannel,
+    metapath: Path = Paths.get("$binpath.meta".debug { logDebug { "using default Isam meta: $it" } }),
 ) : Cursor {
     override inline val first: Int get() = size
     override val second: (Int) -> RowVec
@@ -75,28 +76,23 @@ class ISAMCursor(
 }
 
 /**
- * this writes a cursor values to a single Network-endian ByteBuffer translation and writes an additional filename+".meta"
+ * this writes a cursor's values to a single Network-endian ByteBuffer translation and writes an additional filename+".meta"
  * file containing commented meta description strings
- *
- * this is a tempfile format until further notice, changes and fixes should be aggressively developed, there is no
- * RFC other than this comment to go by
- *
  */
 fun Cursor.writeISAM(
-        pathname: String,
-        defaultVarcharSize: Int = 128,
-        varcharSizes: Map<
-                /**
-                column*/
-                Int,
-                /**length*/
-                Int>? = null,
+    pathname: String,
+    defaultVarcharSize: Int = 128,
+    varcharSizes: Map<
+            /**
+            column*/
+            Int,
+            /**length*/
+            Int>? = null,
 ) {
     var logger: FibonacciReporter? = null
-
-
     val mementos = scalars.map(Scalar::first).toArray()
     val vec = Columnar.of(scalars) t2 mementos
+
     /** create context columns */
     val (_: Arity, ioMemos) = vec
     val sizes = varcharSizes ?: let { curs ->
@@ -126,19 +122,19 @@ fun Cursor.writeISAM(
     lateinit var closeTimer: kotlinx.datetime.Instant
     try {
         FileChannel.open(
-                Paths.get(pathname),
-                // ExtendedOpenOption.DIRECT,  Current location of the bytebuffer (0) is not a multiple of the block size (4096)
-                StandardOpenOption.TRUNCATE_EXISTING,
-                StandardOpenOption.CREATE,
-                StandardOpenOption.WRITE
+            Paths.get(pathname),
+            // ExtendedOpenOption.DIRECT,  Current location of the bytebuffer (0) is not a multiple of the block size (4096)
+            StandardOpenOption.TRUNCATE_EXISTING,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE
         )
     } catch (x: Exception) {
         logDebug { "falling back to non-direct file open. " + x.localizedMessage }
         FileChannel.open(
-                Paths.get(pathname),
-                StandardOpenOption.TRUNCATE_EXISTING,
-                StandardOpenOption.CREATE,
-                StandardOpenOption.WRITE
+            Paths.get(pathname),
+            StandardOpenOption.TRUNCATE_EXISTING,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.WRITE
         )
     }.use { fchannel ->
 
@@ -171,21 +167,23 @@ fun Cursor.writeISAM(
 }
 
 
+/** writes a meta file for the ISAM file */
+
 fun Cursor.writeISAMMeta(
-        pathname: String,
-        //wrecordlen: Int,
-        wcoords: Vect02<Int, Int>,
+    pathname: String,
+    //wrecordlen: Int,
+    wcoords: Vect02<Int, Int>,
 ) {
     Files.newOutputStream(
-            Paths.get("$pathname.meta")
+        Paths.get("$pathname.meta")
     ).bufferedWriter().use {
 
-        fileWriter ->
+            fileWriter ->
 
         val s = this.scalars as Vect02<TypeMemento, String?>
 
         val coords = wcoords.toList()
-                .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
+            .map { listOf(it.first, it.second) }.flatten().joinToString(" ")
         val nama = s.right.map { s1: String? -> s1!!.replace(' ', '_') }.toList().joinToString(" ")
         val mentos = s.left.toArray().mapIndexed<TypeMemento, Any> { ix, it ->
             if (it is IOMemento)
@@ -195,16 +193,30 @@ fun Cursor.writeISAMMeta(
             }
         }.toList()
 
-                .joinToString(" ")
+            .joinToString(" ")
         listOf(
-                "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
-                "# last coord is the recordlen",
-                coords,
-                nama,
-                mentos
+            "# format:  coords WS .. EOL names WS .. EOL TypeMememento WS ..",
+            "# last coord is the recordlen",
+            coords,
+            nama,
+            mentos
         ).forEach { line ->
             fileWriter.write(line)
             fileWriter.newLine()
         }
     }
+}
+
+/**
+ * this is a handle for a simple cursor that reads a file in the format written by [Cursor.writeISAM]
+ */
+typealias CursorHandle = Pai2<out Cursor, FileChannel>
+
+/**
+ * this opens a cursor isam file for Cursor access and returns the cursor and channel in a handle for manual closing
+ */
+fun openIsamCursor(resolve: Path): CursorHandle {
+    val channel1 = FileChannel.open(resolve)
+    val cursor = ISAMCursor(resolve, channel1)
+    return (cursor t2 channel1)
 }
