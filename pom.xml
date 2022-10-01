@@ -18,10 +18,10 @@
         <!--        <module>bbcursive</module>-->
     </modules>
     <properties>
-        <kotlin.version>1.7.0</kotlin.version>
+        <kotlin.version>1.7.10</kotlin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>18</maven.compiler.source>
+        <maven.compiler.target>18</maven.compiler.target>
     </properties>
 
     <licenses>
@@ -130,7 +130,7 @@
                 <configuration>
                     <jvmTarget>${maven.compiler.target}</jvmTarget>
                     <args>
-<!--                        <arg>-Xuse-k2</arg>-->
+                        <arg>-Xuse-k2</arg>
                     </args>
                 </configuration>
             </plugin>
