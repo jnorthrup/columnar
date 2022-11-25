@@ -1,14 +1,21 @@
 # big dataframes
 
+
+#### welcome friend!
+the project https://github.com/jnorthrup/trikeshed has assumed the focus of this project as a second draft from scratch keeping what works well, making a deliberate departure from the JVM libraries as kotlin-MPP.
+
+the README continues as follows:
+
+
 ## build requirements
 
 * columnar uses the zstd compression tool during unit tests. maven also.
 
 ## description
 
-Columnar is a work in progress toolkit which:
+Columnar is a complexity spike toolkit for jvm which:
 
-* started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write
+* started out as a dataframe for Flat, CSV, and ISAM read/write
 * maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/kotlin/vec/macros/Twop13.kt#L20)
 * maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
 
