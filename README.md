@@ -4,6 +4,78 @@
 #### welcome friend!
 the project https://github.com/jnorthrup/trikeshed has assumed the focus of this project as a second draft from scratch keeping what works well, making a deliberate departure from the JVM libraries as kotlin-MPP.
 
+
+# intent 
+
+Columnar was intened to and succeeds at being an analog for python pandas in most of the things that would be useful for applying some data wrangling programming language syntax at scales of (typically) row/column data that would exceed the knee-bend threshold of a python vm due to inherent overheads.
+
+What seems a more interesting pursuit is a byproduct of the kotlin language which allows for type aliasing, and composable functions and an amount of grammar flexibility using infix, unicode, and some symbol naming escapes with backticks which is a great foundation.
+
+we diverge from intent here to ...
+
+# exploration 
+
+the idea of an idempotent, immutable series of values not afforded by primitive arrays alone appeared cheapest by pairing, as in pair tuple, a boundary count with a lambda function that accepts an index, and returns type T, expressed in kotlin as (Int)->T, or altogether we "invent" a pure interface called presently "Join":  `interface Join <A,B>{val a:A; val b:B}` and we make a type-alias called "Series":  `typealias Series<T>=Join<Int,(Int)-T>`
+
+this satisfies a low kolmogorov complexity for idempotent presentation of data through pure functions in Kotlin, to the degree that we have a single interface at least, though for primitive arrays and performance we do need a few boilerplate inventions to honor the jvm datatypes to which Kotlin adheres.
+
+from this we can compose columnar and tensor data representation and craft a compact representation 
+ 
+a tangential notion of Carl Sagan's "Contact" comes to mind.. a minimum footprint can be composed orthogonally along multiple dimensions. 
+
+![image](https://user-images.githubusercontent.com/73514/215206439-b530d76c-7425-4b21-9cd7-0fe7ef1f3db8.png)
+
+```
+ |
+ V
+```
+![image](https://user-images.githubusercontent.com/73514/215208850-3557bde9-75fc-4156-b164-f3cfb642e787.png)
+
+# current progress
+
+In this repo, `columnar`, the working and robust form of columnar off-heap data has been realized with a decoration of kotlin language operators to perform a reasonable amount of capabilities for data wrangling.  The Java language libraries in this repo are more or less irreplacable but in a follow-up project, `trikeshed` above, native, jvm, planned webasm, and in-progress linuxX64 io_uring ISAM access models are being reissued for the off-heap access in kotlin-common interfaces comparable at a minimum to the capabilities of apache arrow in disk layout choices by composing low-cost 'combine' and 'join' of columnar 'cursor' types.
+
+the kotlin-common poses a few interesting challenges for an IO-centric library, like have no IO features built into the stdlib even to open files.  for JVM the simplest java NIO ISAM datatype is written and tested using a lock on seek(), while in Native posix the first implemenation uses a mmap mapping to the ISAM values and for linux io_uring is a seperate impl alongside of the stable and tested posix access.
+
+# the idioms that matter
+
+Concurrent IO is not a design criterion given attention and the design assumes single-system basics at this point in shaking out the features.
+
+## Join's
+The idioms of the composability exist as a monotype of `Join` pairs, connecting two object instances by `val myJoin=Join <A,B>=a j b` along with static factories to emulate constructors, as well as utilities to play nicely with kotlin's own Pair.  side effects like printing, instance hashing, and whatever else are generally excluded concepts from the repo code and offloaded to stdlib `Pair` for readable toString.  
+
+in general Joins are maintained to be an easy tuple of 2 interface to typealias and reuse in larger abstractions which can benefit from pieces being joines and rejoined with syntax hacks like `j` synonym for kotlin's own `to` infix operator.
+
+There are also Join3..Join23 tuple interfaces which are boilerplate with the consistent features of Join, hopefully never needed
+
+## Series'
+
+Series, being for all intents and purposes a virtual immutable Array<T>, provides by necessity most of the most common monad functions written from scratch up to a point but also has `mySeries.▶` which promotes to a formal Kotlin (forward) Iterable making the rest of kotlin stdlib collections ops.
+
+There's an alias `.size` which maps to `Join.a as Int` and returns the length of a series.
+
+`combine(seriesn...)` exists for Series, appending n Series in the order provided, mapping binary-search to index regions for access as a single Series.
+
+there is also Series2 `typealias Series<Join<A,B>>` providing access to left and right access to Join elements.
+
+the index operator is the prime language driver of Series manipulation, using mixins to perform type-based indexing of things such as lamdas as predicates, strings as keys(in Cursor), and grammar exploration allowed within operator overloading; experimentation ongoing.
+
+## Cursor's 
+ 
+Cursor is `typealias Cursor = Series<RowVec>` where RowVec is `typealias RowVec = Series2<*, () -> RecordMeta>` and RecordMeta is `typealias ColMeta = Join<String, TypeMemento>`
+
+where Cursor is central to ISAM experiements, Isam is not intended to be a required import for Cursor. 
+
+the main jist of using isam is direct mapped off-heap storage on files, using combine and join to align the access patterns as needed.
+
+Cursors index operator return new cursors.  the kotlin index operator is mildly stretched beyond simple linear or key-value indexing to perform sequences and column selection by strings, by column negations, and other notions being considered.
+
+the rewrite of Columnar to kotlin-common covers csv reading, isam reading/writing, and excercising the composition above and ports of the jvm Cursor and tests are being brought over or evolved.
+
+Trikeshed project also entertains a number of other experiements coexist with the Columnar rewrite mainly in the absence of perfect gradle-knowledge, a single kotlin-mpp project is being used to host kotlin-common and meaningful units of work are expected to be spliced out when there is ripe fruit.
+
+#columnar
+
 the README continues as follows:
 
 
