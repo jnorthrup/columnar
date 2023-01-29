@@ -72,12 +72,11 @@ Cursors index operator return new cursors.  the kotlin index operator is mildly 
 
 the rewrite of Columnar to kotlin-common covers csv reading, isam reading/writing, and excercising the composition above and ports of the jvm Cursor and tests are being brought over or evolved.
 
-Trikeshed project also entertains a number of other experiements coexist with the Columnar rewrite mainly in the absence of perfect gradle-knowledge, a single kotlin-mpp project is being used to host kotlin-common and meaningful units of work are expected to be spliced out when there is ripe fruit.
+Trikeshed project also entertains a number of other experiements coexisting with the Columnar rewrite mainly in the absence of perfect gradle-knowledge, a single kotlin-mpp project is being used to host kotlin-common and meaningful units of work are expected to be spliced out when there is ripe fruit.
 
 #columnar
 
-the README continues as follows:
-
+the original README continues as follows:
 
 ## build requirements
 
