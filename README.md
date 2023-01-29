@@ -9,9 +9,9 @@ the project https://github.com/jnorthrup/trikeshed has assumed the focus of this
 
 Columnar was intended to and succeeds at being an analog for python pandas in most of the things that would be useful for applying some data wrangling programming language syntax at scales of (typically) row/column data that would exceed the knee-bend threshold of a python vm due to inherent overheads.  Trikeshed above moves the impl into a more posix IO friendly implementation supporting effortless 64-bit off-heap maps without obligating to maintain paging hacks of 32 bit volumes to get utilize mmap access methods.
 
-What seems a more interesting pursuit is a byproduct of the kotlin language which allows for type aliasing, and composable functions and an amount of grammar flexibility using infix, unicode, and some symbol naming escapes with backticks which is a great foundation.
+What seems a more interesting pursuit is a byproduct of the kotlin language which allows for type aliasing, and composable functions and an amount of grammar flexibility using infix, unicode, mix-ins and some symbol naming escapes with backticks which is a great foundation.
 
-we diverge from intent here to ... a sort of pair-wise typealias origami of Joins and Series abstractions
+We diverge from intent here to ... a sort of pair-wise typealias origami of Joins and Series abstractions
 
 # exploration 
 
