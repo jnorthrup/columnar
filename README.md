@@ -11,7 +11,7 @@ Columnar was intened to and succeeds at being an analog for python pandas in mos
 
 What seems a more interesting pursuit is a byproduct of the kotlin language which allows for type aliasing, and composable functions and an amount of grammar flexibility using infix, unicode, and some symbol naming escapes with backticks which is a great foundation.
 
-we diverge from intent here to ...
+we diverge from intent here to ... a sort of pair-wise typealias origami of Joins and Series abstractions
 
 # exploration 
 
