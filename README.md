@@ -62,15 +62,15 @@ the index operator is the prime language driver of Series manipulation, using mi
 
 ## Cursor's 
  
-Cursor is `typealias Cursor = Series<RowVec>` where RowVec is `typealias RowVec = Series2<*, () -> RecordMeta>` and RecordMeta is `typealias ColMeta = Join<String, TypeMemento>`
+Cursor is `typealias Cursor = Series<RowVec>` where RowVec is `typealias RowVec = Series2<*, () -> RecordMeta>` and RecordMeta is `typealias RecordMeta = Join<String, TypeMemento>`
 
 where Cursor is central to ISAM experiements, Isam is not intended to be a required import for Cursor. 
 
-the main jist of using isam is direct mapped off-heap storage on files, using combine and join to align the access patterns as needed.
+The main jist of using isam is direct mapped off-heap storage on files, using combine and join to align the access patterns as needed.
 
 Cursors index operator return new cursors.  the kotlin index operator is mildly stretched beyond simple linear or key-value indexing to perform sequences and column selection by strings, by column negations, and other notions being considered.
 
-the rewrite of Columnar to kotlin-common covers csv reading, isam reading/writing, and excercising the composition above and ports of the jvm Cursor and tests are being brought over or evolved.
+The rewrite of Columnar to kotlin-common covers csv reading, isam reading/writing, and excercising the composition above and ports of the jvm Cursor and tests are being brought over or evolved.
 
 Trikeshed project also entertains a number of other experiements coexisting with the Columnar rewrite mainly in the absence of perfect gradle-knowledge, a single kotlin-mpp project is being used to host kotlin-common and meaningful units of work are expected to be spliced out when there is ripe fruit.
 
