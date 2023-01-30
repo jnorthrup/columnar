@@ -74,7 +74,7 @@ the rewrite of Columnar to kotlin-common covers csv reading, isam reading/writin
 
 Trikeshed project also entertains a number of other experiements coexisting with the Columnar rewrite mainly in the absence of perfect gradle-knowledge, a single kotlin-mpp project is being used to host kotlin-common and meaningful units of work are expected to be spliced out when there is ripe fruit.
 
-# columnar
+# Columnar
 
 the original README continues as follows:
 
