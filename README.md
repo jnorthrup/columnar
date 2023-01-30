@@ -2,7 +2,7 @@
 
 
 #### welcome friend!
-the project https://github.com/jnorthrup/trikeshed has assumed the focus of this project as a second draft from scratch keeping what works well, making a deliberate departure from the JVM libraries as kotlin-MPP.
+the project https://github.com/jnorthrup/trikeshed has assumed the focus of this project as a second draft from scratch keeping what works well, making a deliberate departure from the jdk as kotlin-MPP.
 
 
 # intent 
