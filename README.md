@@ -50,7 +50,7 @@ There are also Join3..Join23 tuple interfaces which are boilerplate with the con
 
 ## Series'
 
-Series, being for all intents and purposes a virtual immutable Array<T>, provides by necessity most of the most common monad functions written from scratch up to a point but also has `mySeries.▶` which promotes to a formal Kotlin (forward) Iterable making the rest of kotlin stdlib collections ops.
+Series, being for all intents and purposes a virtual immutable Array<T>, provides by necessity most of the most common monad functions written from scratch up to a point but also has `mySeries.▶` which promotes to a formal Kotlin (forward) Iterable making it candidate for the rest of kotlin stdlib collections/monad ops.
 
 There's an alias `.size` which maps to `Join.a as Int` and returns the length of a series.
 
@@ -74,7 +74,7 @@ the rewrite of Columnar to kotlin-common covers csv reading, isam reading/writin
 
 Trikeshed project also entertains a number of other experiements coexisting with the Columnar rewrite mainly in the absence of perfect gradle-knowledge, a single kotlin-mpp project is being used to host kotlin-common and meaningful units of work are expected to be spliced out when there is ripe fruit.
 
-#columnar
+# columnar
 
 the original README continues as follows:
 
