@@ -156,7 +156,7 @@ fun <T> moireValues(
     combine(min t2 x, (limit - min) t2 { i: Int ->
         x(i.rem(min))
     } //dummy loop rows
-    )
+    ) 
 }
 
 @JvmName("todubNeg")

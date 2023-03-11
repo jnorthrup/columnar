@@ -11,7 +11,6 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 
 @OptIn(ExperimentalTime::class)
-
 class FibonacciReporter(val size: Int? = null, val noun: String = "rows") {
     var trigger: Int = 0
     var countdown: Int = 1

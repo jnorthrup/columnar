@@ -6,7 +6,7 @@ import cursors.io.colIdx
 import kotlin.test.*
 import vec.util._l
 
-internal class ByColNameKtTest {
+  class ByColNameKtTest {
 
     @Test
     fun testTheNegation() {
