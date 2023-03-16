@@ -8,7 +8,7 @@
 
 Columnar is a work in progress toolkit which:
 
-* started out and improves continuously as a dataframe for Flat, CSV, and ISAM read/write
+* started out and improves continuously as a dataframe for Flat, CSV, and ~~ISAM~~ FlatFile read/write
 * maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/java/vec/macros/Twop13.kt#L20)
 * maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
 
@@ -59,8 +59,8 @@ typealias Cursor = Vect0r<RowVec>
 - [X] a token amount of jvm switch testing.
 - [X] textual field format IO/mapping
 - [X] binary field format IO/mapping (network endian binary int/long/ieee)
-- [X] basic ISAM \[de]hydradation - in review of network-endian binary fwf, we ought to just call it ISAM.
-- [X] idempotent ISAM - ISAM volumes can be cryptographically digested to give a placeholder of the contents in operator
+- [X] basic ~~ISAM~~ FlatFile \[de]hydradation - in review of network-endian binary fwf, we ought to just call it ISAM.
+- [X] idempotent ~~ISAM~~ FlatFile - ~~ISAM~~ FlatFile volumes can be cryptographically digested to give a placeholder of the contents in operator
   expressions of transforms
 - [X] sharded \[de]hydration - unit test to shard dayjob sample by column
 - [X] bloom filter indexes for clusters
@@ -116,7 +116,7 @@ approaches ![image](https://user-images.githubusercontent.com/73514/75646078-eff
 
 The tradeoff here is that a simplistic format-only serializer interface is going to induce users to write for loops to
 fix up near misses, instead of having composability first. This is my experience with Pandas as it applies to my early
-experiences. For whatever reason Pandas has a C++ optimized non-ISAM CSV reader but the FWF implementation lacks the
+experiences. For whatever reason Pandas has a C++ optimized non-~~ISAM~~ FlatFile CSV reader but the FWF implementation lacks the
 capabilities of the fixed-width guarantees, benchmarking much better in CSV than FWF when the hardware support is quite
 the opposite.
 
