@@ -10,7 +10,7 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.time.ExperimentalTime
 
-const val SPACE: Byte = ' '.code.toByte()
+const val SPACE: Byte = 32.toByte()
 const val ZERO: Float = 0.toFloat()
 
 val xInsertString: (ByteBuffer, String?) -> Unit = { a: ByteBuffer, b: String? ->
