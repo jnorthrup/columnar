@@ -228,6 +228,4 @@ interface Qu4d<F, S, T, Z> {
         operator fun <F, S, T, Z> invoke(p: List<*>): Qu4d<F, S, T, Z> = p.let { (f, s, t, z) ->
             @Suppress("UNCHECKED_CAST") (Qu4d(f as F, s as S, t as T, z as Z))
         }
-    }
-}
-
+    }}

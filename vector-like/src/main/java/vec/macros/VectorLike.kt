@@ -16,7 +16,7 @@ import kotlin.math.max
 /**
  * semigroup
  */
-typealias Vect0r<reified T> = Pai2<Int, ((Int) -> T)>
+typealias Vect0r<  T> = Pai2<Int, ((Int) -> T)>
 typealias   Vect02<F, S> = Vect0r<Pai2<F, S>>
 typealias  V3ct0r<F, S, T> = Vect0r<Tripl3<F, S, T>>
 

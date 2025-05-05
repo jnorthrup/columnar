@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package vec.util
 
 import kotlin.math.PI
@@ -34,8 +36,7 @@ fun main(args: Array<String>) {
     val evens = args.map(String::toInt).zipWithNext()
     val intRange = (0..evens.lastIndex step 2).map { x ->
         val (a, b) = evens[x]
-        val arrayOfKFunctions: Array<(Int, Int, Int) -> Int> =
-            _a[::horizon as (Int, Int, Int) -> Int, ::hzInvSqr as (Int, Int, Int) -> Int]
+        val arrayOfKFunctions: Array<(Int, Int, Int) -> Int> =            _a[::horizon as (Int, Int, Int) -> Int  , ::hzInvSqr as (Int, Int, Int) -> Int]
         arrayOfKFunctions.map { fn: (Int, Int, Int) -> Int ->
             println("--------$fn")
             println("showing $a of $b ${

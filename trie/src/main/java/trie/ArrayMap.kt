@@ -1,3 +1,5 @@
+@file:Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+
 package trie
 
 import java.util.*
