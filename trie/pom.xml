@@ -11,11 +11,12 @@
 
     <artifactId>trie</artifactId>
 
-    <properties>
-        <kotlin.version>2.1.20</kotlin.version>
+    <!-- properties
+        <kotlin.version>2.2.0-Beta2</kotlin.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-    </properties>
+    -->
+=======
 
     <build>
         <plugins>

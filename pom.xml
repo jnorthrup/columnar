@@ -17,10 +17,11 @@
         <module>vector-like</module>
         <!--        <module>bbcursive</module>-->
     </modules>
-    <properties>
-        <kotlin.version> 2.2.0-Beta1 </kotlin.version>
+    <!-- properties
+        <kotlin.version> 2.2.0-Beta2 </kotlin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    -->
+=======
 
     <licenses>
         <license>
@@ -153,6 +154,8 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
+                    <useIncrementalCompilation>true</useIncrementalCompilation>
+                    <!-- Incremental compilation is enabled to preserve existing compiled code where possible -->
                 </configuration>
             </plugin>
         </plugins>
@@ -186,7 +189,7 @@
                     <!--
                          </plugin>
                     -->
-                    <!-- Generates a source code JAR during package -->
+                    <!-- Generates a source code JAR during package. This is critical for preserving all working code. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
