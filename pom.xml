@@ -17,19 +17,15 @@
         <module>vector-like</module>
         <!--        <module>bbcursive</module>-->
     </modules>
-    <!-- properties
-        <kotlin.version> 2.2.0-Beta2 </kotlin.version>
+    <properties>
+        <kotlin.version>2.2.0-Beta2</kotlin.version> <!-- Or your desired Kotlin version -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    -->
-=======
-
+    </properties>
+    
     <licenses>
         <license>
             <name>GNU General Public License, version 2</name>
             <url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.md</url>
-            <comments>Everyone is permitted to copy and distribute verbatim copies of this license document, but
-                changing it is not allowed.
-            </comments>
         </license>
     </licenses>
 
@@ -74,7 +70,6 @@
         <url>https://www.vsiwest.com/</url>
     </organization>
 
-
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
@@ -103,6 +98,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <!-- Maven repositories must be declared before build plugins -->
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <id>kotlin-eap</id>
+            <url>https://maven.pkg.jetbrains.space/public/p/kotlin/eap</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
@@ -155,11 +162,11 @@
                     <source>21</source>
                     <target>21</target>
                     <useIncrementalCompilation>true</useIncrementalCompilation>
-                    <!-- Incremental compilation is enabled to preserve existing compiled code where possible -->
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
     <profiles>
         <profile>
             <id>release-sign-artifacts</id>
@@ -188,7 +195,7 @@
                 <plugins>
                     <!--
                          </plugin>
-                    -->
+                     -->
                     <!-- Generates a source code JAR during package. This is critical for preserving all working code. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -240,4 +247,4 @@
             </build>
         </profile>
     </profiles>
-</project>
+</project> 
