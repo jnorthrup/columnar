@@ -24,9 +24,7 @@ val dateMapper: (String) -> LocalDate = { s: String ->
         val res = try {
             LocalDate.parse(it)
         } catch (e: RuntimeException) {
-            Unit
         } catch (e: Throwable) {
-            Unit
         } finally {
         }
         res as? LocalDate
@@ -37,9 +35,7 @@ val instantMapper: (String) -> Instant = { s: String ->
         val res = try {
             Instant.parse(it)
         } catch (e: RuntimeException) {
-            Unit
         } catch (e: Throwable) {
-            Unit
         } finally {
         }
         res as? Instant

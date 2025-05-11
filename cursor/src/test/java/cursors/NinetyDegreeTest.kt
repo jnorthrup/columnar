@@ -92,8 +92,6 @@ class NinetyDegreeTest {
             )
         ).resample(0).pivot(0.toArray(), 1.toArray(), intArrayOf(2, 3)) α floatFillNa(0f)
 
-        val defaultVarcharSize = 64
-
         val fnList = piv.scalars.mapIndexedToList { i, scalar ->
 
 
@@ -140,7 +138,7 @@ class NinetyDegreeTest {
     @Test
     fun readBinary() {
         val s1 = "ninetyDegreesTest19334425141920886859.bin"
-        val s2 = "$s1.meta"
+        "$s1.meta"
         val binpath = Paths.get(
             "src",
             "test",

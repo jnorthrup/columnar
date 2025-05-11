@@ -55,7 +55,7 @@ class VectorLikeKtTest {
 
         val pai2 = (0 until 743 * 347 * 437) / 437 / 347 / 743
         logDebug {
-            val pai21 = pai2[2]
+            pai2[2]
             pai2.map { it.toList().toString() }.toList().toString()
         }
     }

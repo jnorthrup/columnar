@@ -170,7 +170,7 @@ fun <T, R> Vect0r<T>.mapIndexedToList(fn: (Int, T) -> R): List<R> = List(first) 
 
 fun <T> Vect0r<T>.forEach(fn: (T) -> Unit): Unit = repeat(size) { fn(second(it)) }
 
-fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit): Unit { for (x in 0 until size) f(x, second(x)) }
+fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit) { for (x in 0 until size) f(x, second(x)) }
 
 fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
 

@@ -69,8 +69,7 @@ class NioMMap(
     lateinit var fixedWidth: FixedWidth
 
     /*suspend*/ fun values(coroutineContext: CoroutineContext): NioCursor = this.run {
-        val ordering =
-                coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
+        coroutineContext[Ordering.orderingKey]!! //todo: revisit whether to nuke ordering or proceed with non-backwards x,y
         val arity = coroutineContext[Arity.arityKey]!!
         val addressable = coroutineContext[Addressable.addressableKey]!!
         fixedWidth = coroutineContext[RecordBoundary.boundaryKey]!! as FixedWidth

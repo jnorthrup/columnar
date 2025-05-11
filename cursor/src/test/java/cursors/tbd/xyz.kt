@@ -35,7 +35,7 @@ class testXYZ {
                     _v[5, 8, 9],
                     _v[6, 11, 12],
             ]]
-        val ccc = combine(combine(matrix))
+        combine(combine(matrix))
 
 
     }

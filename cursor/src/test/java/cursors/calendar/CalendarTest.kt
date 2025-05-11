@@ -68,7 +68,7 @@ class CalendarTest {
         println("---")
 
         val join1 = join(caven4Cursor[0], caven4Cursor[1, 2, 3])
-        val scalars1 = join1.scalars as Vect02<TypeMemento, String?>
+        join1.scalars as Vect02<TypeMemento, String?>
         join1.map { it.left.toList() }.toList().forEach(::println)
 
 

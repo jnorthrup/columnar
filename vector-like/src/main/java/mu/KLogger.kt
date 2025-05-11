@@ -4,7 +4,7 @@ import org.slf4j.Logger
 import vec.util.logDebug
 
   class KLogger: Logger {
-    fun debug(debugTxt: () -> String): Unit {
+    fun debug(debugTxt: () -> String) {
         logDebug(debugTxt)
     }
 

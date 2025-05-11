@@ -145,7 +145,7 @@ fun Cursor.mapOnColumns(vararg colNames: String): Map<List<Any?>, Int> = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
     val scalars: Vect0r<Scalar> = index.scalars
-    val map = (scalars as Vect02<TypeMemento, String?>).left.toArray().map { IOMemento::cmp }
+    (scalars as Vect02<TypeMemento, String?>).left.toArray().map { IOMemento::cmp }
     Array(size) { iy ->
         (index at iy).let { row: RowVec ->
             row.left.toList() to iy
@@ -171,7 +171,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String): ArrayMap<List<*>, Int> = 
         }
         res
     }
-    val comparator = Comparator<Pair<List<*>, Int>> { (l1, _), (l2, _1) ->
+    val comparator = Comparator<Pair<List<*>, Int>> { (l1, _), (l2, _) ->
         cmp.compare(l1, l2)
     }
 
@@ -198,7 +198,7 @@ fun Cursor.arrayMapOnColumns(vararg colNames: String): ArrayMap<List<*>, Int> = 
 fun Cursor.trieOnColumns(vararg colNames: String): Trie = let {
     val kix = colIdx.get(*colNames)
     val index = this[kix]
-    trie.Trie().apply {
+    Trie().apply {
         repeat(size) { iy ->
             add(iy, *(index at iy).left.α(Any?::toString).toArray())
         }

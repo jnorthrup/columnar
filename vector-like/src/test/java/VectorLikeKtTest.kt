@@ -55,10 +55,10 @@ class VectorLikeKtTest {
 
         // ## "convertables"
         // we have conversion code for sequences, flows, arrays, and List in both directions.
-        val convertedToSequence = strVec.toSequence()
-        val convertedToFlow = strVec.toFlow()
-        val convertedToArray = strVec.toArray()
-        val convertedToList = strVec.toList()
+        strVec.toSequence()
+        strVec.toFlow()
+        strVec.toArray()
+        strVec.toList()
 
         //we can make a lazy vector of ints from the array of strings.
         val intVec = strVec α String::toInt
@@ -79,7 +79,7 @@ class VectorLikeKtTest {
         System.err.println()
 
         //we can destructure them to reach under the hood
-        val (a: Int, b: (Int) -> Int) = doubleLength
+        val (a: Int, _: (Int) -> Int) = doubleLength
         (a === doubleLength.size) shouldBe (doubleLength.size === doubleLength.first)
 
         //we can reorder them as a new Vect0r,  lazily.  the bikeshed  util extends this to Any convertables above
@@ -124,21 +124,21 @@ class VectorLikeKtTest {
         //as suggested there is a Twin in gscollections now called Eclipse-Collecitons
         //we name this Tw1n
 
-        val theTwinAny: Tw1n<*> = Tw1n("0", 1)
+        Tw1n("0", 1)
 
         //specialized overloads exist for primitive types
 
-        val theTwinInt: Tw1nt = Tw1n<Int>(0, 1)
-        val theTwInt: Tw1nt = Tw1nt(_a[0, 1])
+        Tw1n<Int>(0, 1)
+        Tw1nt(_a[0, 1])
 
 
 //        #### isomorphisms:   Vect0r<Pai2<T,T>>,Vect0r<Tw1n<T>>, Vect02<T>
 
 //        these are all interchangable casts of the same Pai2:
 
-        val pai2: Pai2<Int, (Int) -> Pai2<Int, Int>> = reordered1.zip(reordered1)
-        val vect02: Vect02<Int, Int> = reordered1.zip(reordered1)
-        val vectTwin: Vect0r<Tw1n<Int>> = reordered1.zip(reordered1)
+        reordered1.zip(reordered1)
+        reordered1.zip(reordered1)
+        reordered1.zip(reordered1)
 //        val vectTwint: Vect0r<Tw1nt> = reordered1.zip(reordered1)
 
     }

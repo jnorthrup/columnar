@@ -44,7 +44,7 @@ class RowMajor : Ordering() {
         ): FixedWidth {
             return FixedWidth(recordLen = defaulteol() `→` { endl: Byte ->
                 nio.mappedFile.mappedByteBuffer.duplicate().clear().run {
-                    while (get() != endl){};
+                    while (get() != endl){}
                     position()
                 }
             }, coords = coords)

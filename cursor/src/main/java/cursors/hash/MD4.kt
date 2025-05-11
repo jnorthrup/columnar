@@ -9,7 +9,7 @@ val Any?.md4a: ByteArray
         val ba = s.toByteArray()
         val d: MD4Digest = MD4Digest() // this overhead doesn't look worth pooling or threadlocal
         d.update(ba, 0, ba.size)
-        val o = ByteArray(d.getDigestSize())
+        val o = ByteArray(d.digestSize)
         d.doFinal(o, 0)
         return o
     }
