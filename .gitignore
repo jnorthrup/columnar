@@ -26,3 +26,5 @@ target*.ipr
 gradle 
 .idea/
 /superannuate/
+.project
+.settings
