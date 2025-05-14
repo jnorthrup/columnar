@@ -104,7 +104,7 @@ val assertionsEnableDebug = try {
 //@[JvmSynthetic JvmField]
 //val `debug status matching -ea jvm switch` = Pai2::class.java.desiredAssertionStatus()
 
-inline fun <T> T.debug(block: (T) -> Unit): T = also { lmbda ->
+fun <T> T.debug(block: (T) -> Unit): T = also { lmbda ->
     if (`assertionsEnableDebug`) block(lmbda)
 }
 

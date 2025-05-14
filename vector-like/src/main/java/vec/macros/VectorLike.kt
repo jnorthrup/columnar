@@ -1,14 +1,17 @@
 @file:Suppress(
         "OVERRIDE_BY_INLINE", "NOTHING_TO_INLINE", "FunctionName", "FINAL_UPPER_BOUND",
-        "UNCHECKED_CAST", "NonAsciiCharacters", "KDocUnresolvedReference", "ObjectPropertyName", "ClassName"
+    "UNCHECKED_CAST", "NonAsciiCharacters", "KDocUnresolvedReference", "ObjectPropertyName", "ClassName",
+    "OVERLOADS_WITHOUT_DEFAULT_ARGUMENTS"
 )
 
 package vec.macros
 
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import vec.macros.Vect02_.left
 import vec.util.debug
-import java.lang.Integer.*
+import java.lang.Integer.min
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.max
@@ -534,7 +537,7 @@ fun <K : Int, V> Map<K, V>.sparseVect0r(): Vect0r<V?> = let { top ->
     }
 }
 
-@JvmOverloads
+
 fun <F, S> left(v2: Vect02<F, S>) {
     v2.left
 }
