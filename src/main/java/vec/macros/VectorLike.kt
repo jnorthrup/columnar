@@ -137,7 +137,7 @@ operator fun <T> Vect0r<T>.get(indexes: Iterable<Int>): Pai2<Int, (Int) -> T> = 
 operator fun <T> Vect0r<T>.get(index: IntArray): Pai2<Int, (Int) -> T> = Vect0r(index.size) { ix: Int -> second(index[ix]) }
 
 @JvmName("vlike_Vect0r_toArray")
-inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array<T>(first) { vf(it) } }
+inline fun <reified T> Vect0r<T>.toArray() = this.let { (_, vf) -> Array<T>(first) { it: Int -> vf(it) } }
 
 
 fun <T> Vect0r<T>.toList(): List<T> = let { v ->
@@ -175,7 +175,7 @@ fun <T> Vect0r<T>.forEach(fn: (T) -> Unit): Unit = repeat(size) { fn(second(it))
 
 fun <T> Vect0r<T>.forEachIndexed(f: (Int, T) -> Unit) { for (x in 0 until size) f(x, second(x)) }
 
-fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { a[it] }
+fun <T> vect0rOf(vararg a: T): Vect0r<T> = Vect0r(a.size) { it: Int -> a[it] }
 
 /**
  * Returns a list of pairs built from the elements of `this` array and the [other] array with the same index.
@@ -188,6 +188,34 @@ infix fun <T, R> List<T>.zip(other: Vect0r<R>): List<Pai2<T, R>> =
 
 @JvmName("vvzip2f")
 fun <T, O, R> Vect0r<T>.zip(o: Vect0r<O>, f: (T, O) -> R) = size t2 { x: Int -> f(this[x], o[x]) }
+
+/**
+ * Joins two vectors based on key selectors.
+ * @param other The vector to join with
+ * @param thisKeySelector Function to select key from this vector's elements
+ * @param otherKeySelector Function to select key from other vector's elements
+ * @param combiner Function to combine matching elements
+ * @return A new Vect0r containing combined elements
+ */
+fun <T, O, K, R> Vect0r<T>.join(
+    other: Vect0r<O>,
+    thisKeySelector: (T) -> K,
+    otherKeySelector: (O) -> K,
+    combiner: (T, O) -> R
+): Vect0r<R> {
+    val result = mutableListOf<R>()
+    for (i in 0 until this.size) {
+        val t = this[i]
+        val keyT = thisKeySelector(t)
+        for (j in 0 until other.size) {
+            val o = other[j]
+            if (keyT == otherKeySelector(o)) {
+                result.add(combiner(t, o))
+            }
+        }
+    }
+    return result.toVect0r()
+}
 
 @JvmName("vvzip2")
 @Suppress("UNCHECKED_CAST")
@@ -335,7 +363,7 @@ val <T> Vect0r<T>.last: T
  * however the source Vect0r needs to have a repeatable 0 (nonmutable)
  */
 val <T> Vect0r<T>.reverse: Vect0r<T>
-    get() = this.size t2 { x -> second(size - 1 - x) }
+    get() = this.size t2 { x: Int -> second(size - 1 - x) }
 
 /**
  * direct increment x offset for a cheaper slice than binary search
@@ -368,25 +396,25 @@ infix operator fun <T, P : Vect0r<T>> P.plus(t: T): P = combine(this, (1 t2 t.`â
 
 
 /**cloning and reifying Vect0r to ByteArray*/
-fun <T : Byte> Vect0r<T>.toByteArray(): ByteArray = ByteArray(size) { i -> get(i) }
+fun <T : Byte> Vect0r<T>.toByteArray(): ByteArray = ByteArray(size) { i: Int -> get(i) }
 
 /**cloning and reifying Vect0r to CharArray*/
-fun <T : Char> Vect0r<T>.toCharArray(): CharArray = CharArray(size) { i -> get(i) }
+fun <T : Char> Vect0r<T>.toCharArray(): CharArray = CharArray(size) { i: Int -> get(i) }
 
 /**cloning and reifying Vect0r to IntArray*/
-fun <T : Int> Vect0r<T>.toIntArray(): IntArray = IntArray(size) { i -> get(i) }
+fun <T : Int> Vect0r<T>.toIntArray(): IntArray = IntArray(size) { i: Int -> get(i) }
 
 /**cloning and reifying Vect0r to IntArray*/
-fun <T : Boolean> Vect0r<T>.toBooleanArray(): BooleanArray = BooleanArray(size) { i -> get(i) }
+fun <T : Boolean> Vect0r<T>.toBooleanArray(): BooleanArray = BooleanArray(size) { i: Int -> get(i) }
 
 /**cloning and reifying Vect0r to LongArray*/
-fun <T : Long> Vect0r<T>.toLongArray(): LongArray = LongArray(size) { i -> get(i) }
+fun <T : Long> Vect0r<T>.toLongArray(): LongArray = LongArray(size) { i: Int -> get(i) }
 
 /**cloning and reifying Vect0r to FloatArray*/
-fun <T : Float> Vect0r<T>.toFloatArray(): FloatArray = FloatArray(size) { i -> get(i) }
+fun <T : Float> Vect0r<T>.toFloatArray(): FloatArray = FloatArray(size) { i: Int -> get(i) }
 
 /**cloning and reifying Vect0r to DoubleArray*/
-fun <T : Double> Vect0r<T>.toDoubleArray(): DoubleArray = DoubleArray(size) { i -> get(i) }
+fun <T : Double> Vect0r<T>.toDoubleArray(): DoubleArray = DoubleArray(size) { i: Int -> get(i) }
 
 @JvmName("AToVec")
 fun <T> Array<T>.toVect0r(): Vect0r<T> = (size t2 ::get) as Vect0r<T>
@@ -435,7 +463,7 @@ fun ByteBuffer.toVect0r(): Vect0r<Byte> =
 
 @JvmName("IntRangeToVec")
 fun IntRange.toVect0r(): Vect0r<Int> {
-    fun SimpleIntRangeToVec(): Vect0r<Int> = last.inc() - first t2 { x -> first + x }
+    fun SimpleIntRangeToVec(): Vect0r<Int> = last.inc() - first t2 { x: Int -> first + x }
     return if (this.step != 1 || this.first >= this.last) this.toList() Î± { it } else SimpleIntRangeToVec()
 }
 

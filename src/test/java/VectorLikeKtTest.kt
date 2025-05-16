@@ -80,7 +80,7 @@ class VectorLikeKtTest {
 
         //we can destructure them to reach under the hood
         val (a: Int, _: (Int) -> Int) = doubleLength
-        (a === doubleLength.size) shouldBe (doubleLength.size === doubleLength.first)
+        (a == doubleLength.size) shouldBe (doubleLength.size == doubleLength.first)
 
         //we can reorder them as a new Vect0r,  lazily.  the bikeshed  util extends this to Any convertables above
         val reordered1 = doubleLength[2, 1, 3, 4, 4, 4, 4, 4]

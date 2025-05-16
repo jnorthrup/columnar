@@ -6,6 +6,7 @@ import cursors.context.Scalar
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
 import cursors.macros.join
+import kotlinx.coroutines.flow.combine
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
@@ -13,6 +14,7 @@ import vec.ml.featureRange
 import vec.ml.normalize
 import java.util.*
 import kotlin.coroutines.CoroutineContext
+import kotlin.reflect.KClass
 
 /**
  * cursor is approximately the pandas Dataframe with some shortcuts

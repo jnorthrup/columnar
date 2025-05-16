@@ -37,46 +37,42 @@ class DayJobTest {
     var fixedWidth: FixedWidth
     var nioMMap: NioMMap
     var columnar: Columnar
-    var zip: Pai2<Int, (Int) -> Pai2<TypeMemento, String>>
-    var names: Pai2<Int, (Int) -> String>
-    var drivers: Pai2<Int, (Int) -> TypeMemento>
-    var coords: Pai2<Int, (Int) -> Pai2<Int, Int>>
+    var zip: Pai2<Int, (Int) -> Pai2<TypeMemento, String?>>
+    var names: Pai2<Int, (Int) -> String> = _v[
+        "SalesNo",    //        0
+        "SalesAreaID",    //    1
+        "date",    //           2
+        "PluNo",    //          3
+        "ItemName",    //       4
+        "Quantity",    //       5
+        "Amount",    //         6
+        "TransMode"    //       7
+    ]
+    var drivers: Pai2<Int, (Int) -> TypeMemento> = _v[
+        IOMemento.IoString as TypeMemento,
+        IOMemento.IoString,
+        IOMemento.IoLocalDate,
+        IOMemento.IoString,
+        IOMemento.IoString,
+        IOMemento.IoFloat,
+        IOMemento.IoFloat,
+        IOMemento.IoString
+    ]
+    var coords: Pai2<Int, (Int) -> Pai2<Int, Int>> = _a[
+        0, 11,
+        11, 15,
+        15, 25,
+        25, 40,
+        40, 60,
+        60, 82,
+        82, 103,
+        103, 108
+    ].zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
     var rowFwfFname: Path = Paths.get("..", "superannuate", "superannuated1909.fwf")
 
     val testRecordCount: Int = 100_000
 
     init {
-        this.coords = intArrayOf(
-            0, 11,
-            11, 15,
-            15, 25,
-            25, 40,
-            40, 60,
-            60, 82,
-            82, 103,
-            103, 108
-        ).zipWithNext() ///.map<Pai2<Int, Int>, Tw1nt, Vect0r<Pai2<Int, Int>>> { (a,b): Pai2<Int, Int> -> Tw1n (a,b)  /*not fail*/ }/*.map { ints: IntArray -> Tw1nt(ints)  /*not fail*/ } */ /*.map(::Tw1nt) fail */ /* α ::Tw1nt fail*/
-
-        this.drivers = vect0rOf(
-            IOMemento.IoString as TypeMemento,
-            IOMemento.IoString,
-            IOMemento.IoLocalDate,
-            IOMemento.IoString,
-            IOMemento.IoString,
-            IOMemento.IoFloat,
-            IOMemento.IoFloat,
-            IOMemento.IoString
-        )
-        this.names = vect0rOf(
-            "SalesNo",    //        0
-            "SalesAreaID",    //    1
-            "date",    //           2
-            "PluNo",    //          3
-            "ItemName",    //       4
-            "Quantity",    //       5
-            "Amount",    //         6
-            "TransMode"    //       7
-        )
 
         val fetchDayjobData = _l[
                 "git clone --depth=1 https://github.com/jnorthrup/superannuate",
@@ -106,7 +102,7 @@ class DayJobTest {
         }
 
         this.zip = drivers.zip(names)
-        this.columnar = Columnar(zip as Vect02<TypeMemento, String?>)
+        this.columnar = Columnar(zip  )
         this.nioMMap = NioMMap(MappedFile(rowFwfFname.toString()), NioMMap.text(columnar.left))
         this.fixedWidth = RowMajor.fixedWidthOf(nioMMap, coords)
         this.indexable = RowMajor.indexableOf(nioMMap, fixedWidth)
@@ -342,10 +338,10 @@ class DayJobTest {
         val cities: Vect0r<String> = cities()
 
         // SalesArea column is 1.  cluster key is on _a[1]
-        val groupClusters = curs1.groupClusters(_a[1])
+        val groupClusters:Vect0r<IntArray> = curs1.groupClusters(_a[1])
 
         // replace lambda capture overhead from this cursor by using cluster-level bloom filters
-        val bloomIndex = bloomAccess(groupClusters.`➤`)
+        val bloomIndex: Vect02<BloomFilter, IntArray> = bloomAccess(groupClusters.`➤`)
         val scalarColHdr = Scalar(IOMemento.IoString, "City")
         val function: () -> Scalar = scalarColHdr.`⟲`
         var seeks = 0
