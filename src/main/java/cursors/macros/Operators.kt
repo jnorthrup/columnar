@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package cursors.macros
 
 import cursors.Cursor
@@ -15,8 +17,8 @@ infix fun Cursor.`∑`(reducer: (Any?, Any?) -> Any?): Cursor = Cursor(first) { 
     val al: Vect0r<*> = aggcell.left
     RowVec(aggcell.first) { ix: Int ->
         val ac = al[ix]
-        val toList = (ac as? Vect0r<*>)?.toList()
-        val iterable = toList ?: (ac as? Iterable<*>)
+        val toList: List<Any?>? = (ac as? Vect0r<*>)?.toList()
+        val iterable: Iterable<Any?>? = toList ?: (ac as? Iterable<*>)
         val any1 = iterable?.reduce(reducer)
         val any = any1 ?: ac
         any t2 aggcell[ix].second

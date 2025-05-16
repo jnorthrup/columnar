@@ -21,9 +21,6 @@ import vec.util._a
 import vec.util._v
 
 
-infix fun Any?.shouldBe(that: Any?) {
-     assertEquals(that, this)
-}
 
 class CursorKtTest {
     val coords: Vect02<Int, Int> = _a[

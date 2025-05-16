@@ -1,4 +1,4 @@
-@file:Suppress("OVERRIDE_BY_INLINE")
+@file:Suppress("OVERRIDE_BY_INLINE", "UNCHECKED_CAST")
 
 package cursors.io
 
@@ -6,8 +6,8 @@ import cursors.Cursor
 import cursors.TypeMemento
 import cursors.at
 import cursors.context.*
-import cursors.context.Scalar
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import vec.macros.*
 import vec.macros.Vect02_.left
 import vec.macros.Vect02_.right
@@ -119,7 +119,7 @@ fun Cursor.writeISAM(
     val colIdx = colIdx
     val drivers = (colIdx.left α Fixed.mapped::get).`➤`.filterNotNull().toTypedArray()
 
-    lateinit var closeTimer: kotlinx.datetime.Instant
+    lateinit var closeTimer: Instant
     try {
         FileChannel.open(
             Paths.get(pathname),
@@ -141,7 +141,9 @@ fun Cursor.writeISAM(
         val xsize = width
         val ysize = size
         debug {
-            logger = FibonacciReporter(ysize)
+            logger = FibonacciReporter(
+                ysize, "total is $ysize rows"
+            )
         }
         for (y in 0 until ysize) {
             val row = this at y
@@ -180,7 +182,7 @@ fun Cursor.writeISAMMeta(
 
             fileWriter ->
 
-        val s = this.scalars as Vect02<TypeMemento, String?>
+        val s = this.scalars as Vect02<IOMemento, String?>
 
         val coords = wcoords.toList()
             .map { listOf(it.first, it.second) }.flatten().joinToString(" ")

@@ -16,7 +16,6 @@ sealed interface Arity : CoroutineContext.Element {
 
 interface Scalar : Arity, Pai2<TypeMemento, String?> {
     companion object {
-        @JvmOverloads
 
         fun Scalar(p: Pai2<TypeMemento, String?>): Scalar {
             val (a, b) = p

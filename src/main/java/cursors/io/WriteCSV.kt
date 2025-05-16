@@ -17,7 +17,7 @@ import java.nio.file.Files
 @JvmOverloads
 fun Cursor.writeCSV(filename: String, sep: Char = ',', eol: Char = '\n') {
     Files.newOutputStream(filename.path).bufferedWriter().use { fileWriter ->
-        val reporter by lazy { FibonacciReporter(size, noun = "Csv Rows") }
+        val reporter by lazy { FibonacciReporter(size, "Csv Rows") }
         val xsize = colIdx.size
         fileWriter.appendLine(colIdx.right.toList().joinToString(","))
         for (iy in 0 until size) {
