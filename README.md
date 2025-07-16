@@ -1,250 +1,74 @@
-# big dataframes
+This is one of many restarts from a pristine testing columnar 2018 implementation.  It instantly specializes in a domain and the tests suffer   
 
-#### welcome friend!
+### High-Level Summary
 
-the project https://github.com/jnorthrup/trikeshed has assumed the focus of this project as a second draft from scratch
-keeping what works well, making a deliberate departure from the jdk as kotlin-MPP.
+This project is a **custom columnar data processing library for the JVM**, analogous to **Pandas (Python)**, **data.table (R)**, or **Apache Spark (Scala/Java)**.
 
-# intent
+Its key characteristics are:
+1.  **Lazy Evaluation:** The core data structure, `Cursor`, is not an in-memory collection but a lazy representation of a dataset, defined by its size and an accessor function. This is a powerful pattern for handling data larger than memory.
+2.  **Functional & Expressive DSL:** It uses symbolic operators (`α` for map, `∑` for reduce) and a functional style, reminiscent of languages like APL or Scala's more functional libraries.
+3.  **High-Performance I/O:** It has first-class support for memory-mapped files, both for text (fixed-width) and a custom binary `ISAM` format, designed for very fast access.
+4.  **Rich Metadata Context:** It uses Kotlin's `CoroutineContext` in a novel way as a "property bag" or "blackboard" to carry rich metadata about data types, storage layout, and schema, making this information available throughout the system.
 
-Columnar was intended to and succeeds at being an analog for python pandas in most of the things that would be useful
-for applying some data wrangling programming language syntax at scales of (typically) row/column data that would exceed
-the knee-bend threshold of a python vm due to inherent overheads. Trikeshed above moves the impl into a more posix IO
-friendly implementation supporting effortless 64-bit off-heap maps without obligating to maintain paging hacks of 32 bit
-volumes to utilize mmap access methods.
+---
 
-What seems a more interesting pursuit is a byproduct of the kotlin language which allows for type aliasing, and
-composable functions and an amount of grammar flexibility using infix, unicode, mix-ins and some symbol naming escapes
-with backticks which is a great foundation.
+### Feature-by-Feature Analysis and Overlaps
 
-We diverge from intent here to ... a sort of pair-wise typealias origami of Joins and Series abstractions
+#### 1. Core Abstraction: The `Cursor` as a Lazy DataFrame
 
-# exploration
+*   **In this library:** `Cursor` is a `typealias` for `Vect0r<RowVec>`, where `Vect0r` is essentially a `(size, accessorFunction)` pair. This means that data isn't loaded until an accessor function is called for a specific row index. This is a core design decision for performance and memory management.
+*   **Overlaps & Analogues:**
+    *   **Python:** The API surface (slicing, grouping, pivoting) is very similar to **Pandas**. However, Pandas is generally *eager*, loading data into memory. The lazy nature of `Cursor` is much more like **Dask DataFrame** or **Polars**. Polars, in particular, uses a lazy expression system that builds a query plan and executes it all at once, which is a very similar philosophy.
+    *   **Scala/Java:** This is the fundamental model of **Apache Spark**. A Spark DataFrame is a lazily evaluated, distributed collection of rows with a known schema. Operations on a DataFrame build up a logical plan, which is only executed when an "action" (like `collect()` or `save()`) is called.
+    *   **R:** The `data.table` and `tidyverse` (`dplyr`) packages provide a similar high-level API but are primarily in-memory. For lazy evaluation, R users typically connect to a database using a library like `dbplyr`, which translates R code into SQL queries.
 
-the idea of an idempotent, immutable series of values not afforded by primitive arrays alone appeared cheapest by
-pairing, as in pair tuple, a boundary count with a lambda function that accepts an index, and returns type T, expressed
-in kotlin as (Int)->T, or altogether we "invent" a pure interface called presently "
-Join":  `interface Join <A,B>{val a:A; val b:B}` and we make a type-alias called "
-Series":  `typealias Series<T>=Join<Int,(Int)-T>`
+#### 2. Functional & Expressive DSL
 
-this satisfies a low kolmogorov complexity for idempotent presentation of data through pure functions in Kotlin, to the
-degree that we have a single interface at least, though for primitive arrays and performance we do need a few
-boilerplate inventions to honor the jvm datatypes to which Kotlin adheres.
+*   **In this library:**
+    *   `cursor α { ... }`: An element-wise transformation (map/apply). The use of the Greek letter alpha is stylistic, evoking lambda calculus's alpha-conversion.
+    *   `cursor ∑ { ... }`: A reduction operation over aggregated data.
+    *   `c1[-"colA", -"colB"]`: Column selection by negation, a very convenient feature.
+    *   Fluent chaining of operations like `resample(...).pivot(...).group(...)`.
+*   **Overlaps & Analogues:**
+    *   **Python (Pandas/Polars):** The fluent chaining style is identical. `df.resample(...).pivot_table(...).groupby(...)`.
+    *   **R (tidyverse):** The "pipe" operator (`%>%`) achieves the same fluent, readable style: `data %>% group_by(col) %>% summarize(...)`.
+    *   **Scala:** The use of symbolic operators is very common in the Scala ecosystem (e.g., in libraries like **Cats** or **ZIO**) to create concise, powerful DSLs.
+    *   **APL/J/K:** These are array-oriented programming languages built almost entirely on terse, symbolic operators for data manipulation. This library's DSL borrows philosophical inspiration from them.
 
-from this we can compose columnar and tensor data representation and craft a compact representation
+#### 3. High-Performance I/O & Persistence (NioMMap, ISAMCursor)
 
-a tangential notion of Carl Sagan's "Contact" comes to mind.. a minimum footprint can be composed orthogonally along
-multiple dimensions.
+*   **In this library:** `NioMMap` and `ISAMCursor` provide direct access to data on disk via memory-mapping, bypassing much of the standard JVM I/O stack. The library defines its own binary `ISAM` (Indexed Sequential Access Method) format, complete with a `.meta` file for schema, which is a classic database technique. The `CellDriver` classes (`Tokenized`, `Fixed`) are codecs for reading/writing types to/from `ByteBuffer`.
+*   **Overlaps & Analogues:**
+    *   **Databases:** This is the core competency of columnar databases. The approach is very similar to how **DuckDB** (in-process) or **ClickHouse** manage data on disk. Creating a custom binary format is what high-performance systems do.
+    *   **Python:** **Apache Arrow** is the modern standard for language-agnostic, zero-copy, columnar in-memory data. Libraries like **Polars** and **DuckDB** are built on it. The memory-mapping concept is available in **NumPy** (`memmap`) and **Arrow**.
+    *   **Java:** **Chronicle Map** is a well-known Java library for creating off-heap, low-latency key-value stores that are memory-mapped. This library implements similar ideas from scratch using standard `java.nio`.
 
-![image](https://user-images.githubusercontent.com/73514/215206439-b530d76c-7425-4b21-9cd7-0fe7ef1f3db8.png)
+#### 4. Metadata via `CoroutineContext`
 
-```
- |
- V
-```
+*   **In this library:** The `context` package (`Arity`, `RecordBoundary`, `Ordering`, `Scalar`) uses `CoroutineContext.Element` to create a type-safe, extensible "property bag". This context is attached to each cell's value (`RowVec` is a `Vect02<Any?, CellMeta>`), allowing any function to retrieve metadata about a cell's type, name, storage format, etc., without passing it explicitly.
+*   **Overlaps & Analogues:** This is a very creative use of a Kotlin-specific feature. The general pattern is known as a **Context Object** or **Property Bag**.
+    *   **Functional Programming:** This pattern is analogous to using a **Reader Monad**. A Reader Monad allows you to "inject" a shared environment or configuration into a computation, which can then be accessed by any function within that computation without being an explicit parameter.
+    *   **Java:** A less elegant way to achieve this would be with `ThreadLocal` variables holding a context object.
+    *   **Web Frameworks:** In frameworks like Flask (Python) or Express (Node.js), a global-like `request` object is available during the lifecycle of a request, serving a similar purpose.
 
-![image](https://user-images.githubusercontent.com/73514/215208850-3557bde9-75fc-4156-b164-f3cfb642e787.png)
+#### 5. Data Structures (`Vect0r`, `Trie`, `ArrayMap`)
 
-# current progress
+*   **In this library:**
+    *   `Vect0r` is a functional, lazy list.
+    *   `Pai2`, `Tripl3`, etc., are custom tuple interfaces.
+    *   `Trie` and `ArrayMap` are specialized data structures for fast lookups. `ArrayMap` is an immutable, sorted map backed by an array, enabling O(log n) lookups via binary search.
+*   **Overlaps & Analogues:**
+    *   **Custom Collections:** Many high-performance libraries create their own collection types to escape the overhead or semantic limitations of standard library collections. **Eclipse Collections** (Java) and `boost::container` (C++) are prime examples.
+    *   **Immutable Data Structures:** Libraries like **Vavr** (Java) or **Immutable.js** (JavaScript) provide persistent, immutable data structures, which is a core tenet of functional programming and a feature of this library's design. The `Trie` is a classic example of such a structure.
 
-In this repo, `columnar`, the working and robust form of columnar off-heap data has been realized with a decoration of
-kotlin language operators to perform a reasonable amount of capabilities for data wrangling. The Java language libraries
-in this repo are more or less irreplacable but in a follow-up project, `trikeshed` above, native, jvm, planned webasm,
-and in-progress linuxX64 io_uring ISAM access models are being reissued for the off-heap access in kotlin-common
-interfaces comparable at a minimum to the capabilities of apache arrow in disk layout choices by composing low-cost '
-combine' and 'join' of columnar 'cursor' types laid out asindividual or related columns joined into one cursor from
-persisted serial ISAM, initially for simplicity and predictabilty of seekable IO.
+### Conclusion
 
-the kotlin-common poses a few interesting challenges for an IO-centric library, like have no IO features built into the
-stdlib even to open files. for JVM the simplest java NIO ISAM datatype is written and tested using a lock on seek(),
-while in Native posix the first implemenation uses a mmap mapping to the ISAM values and for linux io_uring is a
-seperate impl alongside of the stable and tested posix access.
+This library is a fascinating and powerful piece of engineering. It doesn't just copy one tool; it synthesizes ideas from several domains:
 
-# the idioms that matter
+*   It has the user-friendly, high-level **API of Pandas**.
+*   It has the lazy evaluation model of **Apache Spark** or **Dask**.
+*   It has the low-level, high-performance I/O and custom storage formats of a **columnar database**.
+*   It uses a terse, functional **DSL reminiscent of APL or Scala**.
+*   It leverages a unique Kotlin feature (`CoroutineContext`) to implement a **clean, extensible metadata system** akin to what one might build with a Reader Monad in Haskell.
 
-Concurrent IO is not a design criterion given attention and the design assumes single-system basics at this point in
-shaking out the features.
-
-## Join's
-
-The idioms of the composability exist as a monotype of `Join` pairs, connecting two object instances
-by `val myJoin=Join <A,B>=a j b` along with static factories to emulate constructors, as well as utilities to play
-nicely with kotlin's own Pair. side effects like printing, instance hashing, and whatever else are generally excluded
-concepts from the repo code and offloaded to stdlib `Pair` for readable toString.
-
-in general Joins are maintained to be an easy tuple of 2 interface to typealias and reuse in larger abstractions which
-can benefit from pieces being joines and rejoined with syntax hacks like `j` synonym for kotlin's own `to` infix
-operator.
-
-There are also Join3..Join23 tuple interfaces which are boilerplate with the consistent features of Join, hopefully
-never needed
-
-## Series'
-
-Series, being for all intents and purposes a virtual immutable Array<T>, provides by necessity most of the most common
-monad functions written from scratch up to a point but also has `mySeries.▶` which promotes to a formal Kotlin (forward)
-Iterable making it candidate for the rest of kotlin stdlib collections/monad ops.
-
-There's an alias `.size` which maps to `Join.a as Int` and returns the length of a series.
-
-`combine(seriesn...)` exists for Series, appending n Series in the order provided, mapping binary-search to index
-regions for access as a single Series.
-
-there is also Series2 `typealias Series<Join<A,B>>` providing access to left and right access to Join elements.
-
-the index operator is the prime language driver of Series manipulation, using mixins to perform type-based indexing of
-things such as lamdas as predicates, strings as keys(in Cursor), and grammar exploration allowed within operator
-overloading; experimentation ongoing.
-
-## Cursor's
-
-Cursor is `typealias Cursor = Series<RowVec>` where RowVec is `typealias RowVec = Series2<*, () -> RecordMeta>` and
-RecordMeta is `typealias RecordMeta = Join<String, TypeMemento>`
-
-where Cursor is central to ISAM experiements, Isam is not intended to be a required import for Cursor.
-
-The main jist of using isam is direct mapped off-heap storage on files, using combine and join to align the access
-patterns as needed.
-
-Cursors index operator return new cursors. the kotlin index operator is mildly stretched beyond simple linear or
-key-value indexing to perform sequences and column selection by strings, by column negations, and other notions being
-considered.
-
-The rewrite of Columnar to kotlin-common covers csv reading, isam reading/writing, and excercising the composition above
-and ports of the jvm Cursor and tests are being brought over or evolved.
-
-Trikeshed project also entertains a number of other experiements coexisting with the Columnar rewrite mainly in the
-absence of perfect gradle-knowledge, a single kotlin-mpp project is being used to host kotlin-common and meaningful
-units of work are expected to be spliced out when there is ripe fruit.
-
-# Columnar
-
-the original README continues as follows:
-
-## build requirements
-
-* columnar uses the zstd compression tool during unit tests. maven also.
-
-## description
-
-Columnar is a complexity spike toolkit for jvm which:
-
-* started out as a dataframe for FixedWidth, CSV, and ~~ISAM~~ FlatFile read/write
-* maintains immutable pair abstraction [interface Pai2](/vector-like/src/main/java/vec/macros/Twop13.kt#L20)
-* maintains typealias constructions which perform vector operations via (size,function) pai2ings (typealias Vect0r)
-
-```!kt
-typealias Vect0r<reified T> = Pai2<Int, ((Int) -> T)>
-typealias Vect02<F, S> = Vect0r<Pai2<F, S>>
-typealias V3ct0r<F, S, T> = Vect0r<Tripl3<F, S, T>>
-```
-
-* uses a Vect0r<Vect0r<Any?,{}>> as the complete codebase for dataframe called Cursor, which is typealias of Pai2 and
-  some specialized delegates, performing on-disk data cursor functions where applicable as well as immutable-first
-  abstractions of row and column abstractions in general.
-
-```!kt
-typealias CellMeta = () -> CoroutineContext
-typealias RowVec = Vect02<Any?, CellMeta>
-typealias Cursor = Vect0r<RowVec>
-```
-
-* follows some (most) usecases commonly solved in prep for deep learning usecases per pandas based on higher order
-  function delegation and minimizes in-RAM requirements
-* provides almost 200 lines of utilities to
-  enable [terse kotlin collection ops](/vector-like/src/main/java/vec/util/BikeShed.kt)
-
-## features and todo
-
-- [X] Blackboard defined Table, Cursor, Row metadata driving access behaviors (using `CoroutineContext.Element`s)
-- [X] read an FWF text and efficiently mmap the row access, it becomes a `Cursor`.  [1]
-- [X] enable index operations, reordering, expansions, preserving column metadata
-- [X] resample timeseries data (jvm LocalDate initially) to fill in series gaps
-- [X] concatenation of n cursors from disimilar FP projections
-- [X] pivot n rows by m columns (lazy) preserving l left-hand-side pass-thru columns
-- [X] groupby n columns
-- [X] cursor.group(n..){reducer}
-- [X] One-hot Encodings
-- [X] min/max scaling (applying the reverse conversion using code from resampling)
-- [ ] support Numerics, Linear Algebra libraries
-- [X] support for (resampling) Calendar, Time and Units conversion libraries
-- [X] orthogonal offheap and indirect IO component taxonomy
-- [X] nearly 0-copy direct access
-- [X] nearly 0-heap direct access
-- [X] large file access: JVM NIO mmap window addressability beyond MAXINT bytes
-- [X] Algebraic Vector aggregate operations with lazy runtime execution on contents
-- [ ] Mapper Buffer pools
-- [X] Access (named) Columns by name
-- [X] heap object Object[][] cursor mappings - if i did this first it would never have off-heap.
-- [X] Review as Java lib via maven. what is available, what's not.
-- [X] a token amount of jvm switch testing.
-- [X] textual field format IO/mapping
-- [X] binary field format IO/mapping (network endian binary int/long/ieee)
-- [X] basic ~~ISAM~~ FlatFile \[de]hydradation - in review of network-endian binary fwf, we ought to just call it ISAM.
-- [X] idempotent ~~ISAM~~ FlatFile - ~~ISAM~~ FlatFile volumes can be cryptographically digested to give a placeholder
-  of the contents in operator
-  expressions of transforms
-- [X] sharded \[de]hydration - unit test to shard dayjob sample by column
-- [X] bloom filter indexes for clusters
-- [X] csv Cursors
-
-### lower priorities (as-yet unimplemented orthogonals)
-
-- [ ] gossip mesh addressable cursor iterators (this branch) [2]
-- [ ] json field format IO/mapping
-- [ ] CBOR field format IO/mapping
-- [ ] columnstore access patterns +- apache arrow compatibility
-- [ ] matrix math integrations with adjacent ecosystem libraries
-- [ ] key-value associative cursor indexes
-- [ ] hilbert curve iterators for converting (optimal/bad) cache affinity patterns to (good/good) cache affinity
-- [ ] R-Tree n-dimensional associative
-- [ ] parallel and concurrent access helpers
-- [ ] explicit platter and direct partition mapping
-- [ ] jdbc adapters [1]
-- [ ] sql query language driver [1]
-- [ ] jq query language driver -- Trikeshed project mentioned above implements a json scanner, reifier, and path selector
-  in kotlin-common independent of serdes libraries, clocking in at 150MB/s on a recent benchmark 
-- [x] sharded datatables - IO Routines to persist idempotent rowsets across multiple rows and column divisions
-- [ ] mutability facade - append-only journal of volume mutations as idempotent transformation expressions
-- [ ] adaptive cavitation - consolidate and redivide TableRoots based on mutation patterns to absorb journalized
-  mutations into contiguous and conjoined volumes with join and combine operators against digests
-
-[1]: downstream of [jdbc2json](https://github.com/jnorthrup/jdbc2json)
-
-[2]: [borrowing from SWIM Implementation here](https://github.com/calvin-pietersen/gossip-mesh)
-
-Figure below: Orthogonal Context elements (Sealed Class Hierarchies).
-
-These describe different aspects of accessing data and projecting cursors and matrix transformations These are easy to
-think of as hierarchical threadlocals to achieve IOBound storage access to large datasets.
-
-![image](https://user-images.githubusercontent.com/73514/71553240-7a838500-2a3e-11ea-8e3e-b85c0602873f.png)
-
-inspired by the [STXXL](https://stxxl.org)  project
-
-### priorities and organization
-
-the code is only about composable cursor abstraction. this part has been made as clean as possible.
-
-**However,** the driver code is complex, the capabilities are unbounded, and the preamble for a cursor on the existing
-NIO driver is a little bit unsightly. it is hoped that macro simplifications can converge with similar libraries in the
-long run. the driver code is intended to be orthogonal and not a cleanest possible implementation of one format, and the
-overly-abstract class heirarchy was not collapsed after writing the first IO driver for this reason.
-
-Experiments show IO arrangement is the biggest factor enabling algorithmic code to compete and sometimes outperform
-embarassingly parrallel
-approaches ![image](https://user-images.githubusercontent.com/73514/75646078-eff81580-5c7a-11ea-83b1-44b0dd747619.png)
-
-[Scalability! But at what COST? slides](https://www.usenix.org/sites/default/files/conference/protected-files/hotos15_slides_mcsherry.pdf)
-
-The tradeoff here is that a simplistic format-only serializer interface is going to induce users to write for loops to
-fix up near misses, instead of having composability first. This is my experience with Pandas as it applies to my early
-experiences. For whatever reason Pandas has a C++ optimized non-~~ISAM~~ FlatFile CSV reader but the FWF implementation
-lacks the
-capabilities of the fixed-width guarantees, benchmarking much better in CSV than FWF when the hardware support is quite
-the opposite.
-
-the end-product of a blackboard driver construction layer is hopefully a format construction dsl to accommodate a
-variety of common and slightly tweaked combinations of IO and encodings. progress in here should have no impact or
-influence on the Columnar cursor user API, datasources should be abstract even if there are potentially multiple driver
-implementations to enable better IO for specific cases.
+This is not a general-purpose replacement for Pandas or Spark but appears to be a highly specialized "boutique" library designed for extreme performance on specific, large-scale data processing tasks on the JVM, where control over memory layout and I/O is critical.
