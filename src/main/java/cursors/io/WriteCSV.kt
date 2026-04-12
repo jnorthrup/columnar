@@ -1,8 +1,7 @@
 package cursors.io
 
 import cursors.Cursor
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
+import vec.macros.Vect02_
 import vec.macros.size
 import vec.macros.toList
 import vec.util.FibonacciReporter
@@ -19,9 +18,9 @@ fun Cursor.writeCSV(filename: String, sep: Char = ',', eol: Char = '\n') {
     Files.newOutputStream(filename.path).bufferedWriter().use { fileWriter ->
         val reporter by lazy { FibonacciReporter(size, "Csv Rows") }
         val xsize = colIdx.size
-        fileWriter.appendLine(colIdx.right.toList().joinToString(","))
+        fileWriter.appendLine(Vect02_(colIdx).right.toList().joinToString(","))
         for (iy in 0 until size) {
-            val (_, row) = second(iy).left
+            val (_, row) = Vect02_(second(iy)).left
             repeat(xsize) { ix ->
                 if (0 < ix) fileWriter.append(sep)
                 row(ix)?.also { cell1 ->

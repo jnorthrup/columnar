@@ -3,21 +3,22 @@ package cursors.effects
 import cursors.Cursor
 import cursors.at
 import cursors.io.colIdx
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
+import vec.macros.Vect02
 import vec.macros.combine
+import vec.macros.left
+import vec.macros.right
 import vec.macros.size
 import vec.macros.toList
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.random.Random
+import kotlin.random.*
 
 //import kotlin.random.Random breaks graalvm
 val random: java.util.Random = java.util.Random()
 
 /*simple printout macro*/
 fun Cursor.show(range: IntProgression = 0 until size) {
-    println("rows:$size" to colIdx.right.toList())
+    println("rows:$size" to (colIdx as Vect02<Nothing, String?>).right.toList())
     showValues(range)
 }
 

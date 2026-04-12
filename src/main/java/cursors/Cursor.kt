@@ -1,4 +1,5 @@
 @file:Suppress("UNCHECKED_CAST", "NOTHING_TO_")
+
 package cursors
 
 import cursors.context.NormalizedRange
@@ -6,15 +7,12 @@ import cursors.context.Scalar
 import cursors.context.Scalar.Companion.Scalar
 import cursors.io.*
 import cursors.macros.join
-import kotlinx.coroutines.flow.combine
 import vec.macros.*
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
 import vec.ml.featureRange
 import vec.ml.normalize
 import java.util.*
 import kotlin.coroutines.CoroutineContext
-import kotlin.reflect.KClass
+import kotlin.let
 
 /**
  * cursor is approximately the pandas Dataframe with some shortcuts
@@ -77,21 +75,24 @@ import kotlin.reflect.KClass
 typealias Cursor = Vect0r<RowVec>
 
 /** gets the RowVec at y or if y is negative then -y from last */
-infix fun Cursor.at(y: Int):RowVec =second(if (y<0) size-y else y)
+infix fun Cursor.at(y: Int): RowVec = second(if (y < 0) size - y else y)
 
 /** gets the RowVec at y or if y is negative then -y from last */
-infix fun Cursor.at(r: IntRange):Cursor=r.last -r.first t2 { y->second(y+r.first) }
+infix fun Cursor.at(r: IntRange): Cursor = r.last - r.first t2 { y -> second(y + r.first) }
 
 @JvmName("vlike_RSequence_11")
-operator fun Cursor.get(vararg index: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = get(index)
+operator fun Cursor.get(vararg index: Int): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> =
+    get(index)
 
 @JvmName("vlike_RSequence_Iterable21")
-operator fun Cursor.get(indexes: Iterable<Int>): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = this[indexes.toList().toIntArray()]
+operator fun Cursor.get(indexes: Iterable<Int>): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> =
+    this[indexes.toList().toIntArray()]
 
 @JvmName("cursorViewByIndices")
-operator fun Cursor.get(index: IntArray): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> = let { (a, fetcher) ->
-    a t2 { iy: Int -> fetcher(iy)[index] }
-}
+operator fun Cursor.get(index: IntArray): Pai2<Int, (Int) -> Pai2<Int, (Int) -> Pai2<Any?, () -> CoroutineContext>>> =
+    let { (a, fetcher) ->
+        a t2 { iy: Int -> fetcher(iy)[index] }
+    }
 
 /** synthesize pivot columns by key(axis) columns present. */
 fun Cursor.pivot(
@@ -109,7 +110,12 @@ fun Cursor.pivot(
     fanOut: IntArray,
 ): Cursor = let { cursr ->
     val keys: LinkedHashMap<List<Any?>, Int> =
-        (this[axis] α { pai2: Vect02<Any?, () -> CoroutineContext> -> pai2.left.toList() })
+        (this[axis] α {
+
+                pai2: Vect02<Any?, () -> CoroutineContext> ->
+            val vect02_ = Vect02_(pai2)
+            (vect02_.left).toList()
+        })
             .toList()
             .distinct().mapIndexed { xIndex: Int, any -> any to xIndex }.toMap(linkedMapOf())
 
@@ -139,7 +145,8 @@ fun Cursor.pivot(
             when {
                 ix < lhs.size -> theRow.second(lhs[ix])
                 else /*fanout*/ -> {
-                    val theKey = theRow[axis].left.toList() //expressly for toString and equality tests
+                    val theKey = Vect02_(theRow[axis]).left.toList() //expressly for toString and equality tests
+
                     val keyGate = whichKey(ix)
                     val cellVal = if (keyGate == keys[theKey]) {
                         fanOut[whichFanoutIndex(ix)].let {
@@ -156,80 +163,98 @@ fun Cursor.pivot(
     }
 }
 
-
 /**
  * this is a helper for comparing keys.
  */
-fun cmpAny(o1: List<Any?>, o2: List<Any?>): Int =
-    o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
+fun cmpAny(
+    o1: List<Any?>,
+    o2: List<Any?>,
+): Int = o1.joinToString(0.toChar().toString()).compareTo(o2.joinToString(0.toChar().toString()))
 
 fun Cursor.ordered(
     axis: IntArray,
     comparator: Comparator<List<Any?>> = Comparator(::cmpAny),
-): Cursor = combine(
-    (keyClusters(
-        axis,
-        comparator.run { TreeMap(comparator) }) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
-            (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray))
-).let {
-    Cursor(it.size) { iy: Int ->
-        val ix2 = it[iy]
-        this at ix2
+): Cursor =
+    combine(
+        (
+                keyClusters(
+                    axis,
+                    comparator.run { TreeMap(comparator) },
+                ) `→` MutableMap<List<Any?>, MutableList<Int>>::values α
+                        (IntArray::toVect0r `⚬` MutableList<Int>::toIntArray)
+                ),
+    ).let {
+        Cursor(it.size) { iy: Int ->
+            val ix2 = it[iy]
+            this at ix2
+        }
     }
-}
 
 @JvmName("NormalizeF1")
-fun <T : Float> Cursor.normalizeFloatColumn(colName: String): Cursor = run {
-    val ptype = IOMemento.IoFloat
-    val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
-    inner_normalize(colName, maxMinTwin, ptype)
-}
-
-@JvmName("NormalizeD1")
-fun <T : Double> Cursor.normalizeDoubleColumn(colName: String): Cursor = run {
-    val ptype = IOMemento.IoDouble
-    val maxMinTwin: Tw1n<Double> = Double.POSITIVE_INFINITY t2 Double.NEGATIVE_INFINITY
-    inner_normalize(colName, maxMinTwin, ptype)
-}
-
-@JvmName("NormalizeF2")
-fun <T : Float> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor = run {
-    val colIdx = colIdx[colName][0]
-    val colCurs = this[colIdx]
-    val seq = this.let { curs ->
-        sequence {
-            for (iy in 0 until curs.size) {
-                yield((colCurs at iy).left[0] as T)
-            }
-        }
+fun <T : Float> Cursor.normalizeFloatColumn(colName: String): Cursor =
+    run {
+        val ptype = IOMemento.IoFloat
+        val maxMinTwin: Tw1n<Float> = Float.POSITIVE_INFINITY t2 Float.NEGATIVE_INFINITY
+        inner_normalize(colName, maxMinTwin, ptype)
     }
 
-    val normalizedRange = featureRange<Float>(seq.asIterable(), maxMinTwin as Tw1n<Float>)
+@JvmName("NormalizeD1")
+fun <T : Double> Cursor.normalizeDoubleColumn(colName: String): Cursor =
+    run {
+        val ptype = IOMemento.IoDouble
+        val maxMinTwin: Tw1n<Double> = Double.POSITIVE_INFINITY t2 Double.NEGATIVE_INFINITY
+        inner_normalize(colName, maxMinTwin, ptype)
+    }
 
-    val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
-
-    join(this[-colName], this[colName].let { c ->
-        c.size t2 { iy: Int ->
-            val row = (c at iy)
-            RowVec(row.size) { ix: Int ->
-                val (v) = row[ix]
-                normalizedRange.normalize(v as T) t2 ctx
+@JvmName("NormalizeF2")
+fun <T : Float> Cursor.inner_normalize(
+    colName: String,
+    maxMinTwin: Tw1n<T>,
+    ptype: IOMemento,
+): Cursor =
+    run {
+        val colIdx = colIdx[colName][0]
+        val colCurs = this[colIdx]
+        val seq =
+            this.let { curs ->
+                sequence {
+                    for (iy in 0 until curs.size) {
+                        yield((colCurs at iy)[0].first as T)
+                    }
+                }
             }
-        }
-    })
 
-}
+        val normalizedRange = featureRange<Float>(seq.asIterable(), maxMinTwin as Tw1n<Float>)
+
+        val ctx = (Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange)).`⟲`
+
+        join(
+            this[-colName],
+            this[colName].let { c ->
+                c.size t2 { iy: Int ->
+                    val row = (c at iy)
+                    RowVec(row.size) { ix: Int ->
+                        val (v) = row[ix]
+                        normalizedRange.normalize(v as T) t2 ctx
+                    }
+                }
+            },
+        )
+    }
 
 
 @JvmName("NormalizeD2")
-
-fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, ptype: IOMemento): Cursor {
+fun <T : Double> Cursor.inner_normalize(
+    colName: String,
+    maxMinTwin: Tw1n<T>,
+    ptype: IOMemento,
+): Cursor {
     val colIdx = colIdx[colName][0]
     val colCurs = this[colIdx]
     val seq = this.let { curs ->
         sequence {
             for (iy in 0 until curs.size) {
-                yield((colCurs at iy).left[0] as T)
+                yield((colCurs at iy)[0].first as T)
             }
         }
     }
@@ -238,15 +263,19 @@ fun <T : Double> Cursor.inner_normalize(colName: String, maxMinTwin: Tw1n<T>, pt
 
     val ctx = { Scalar(ptype, "normalized:$colName") + NormalizedRange(normalizedRange) }
 
-    val nprices = join(this[-colName], this[colName].let { c ->
-        c.size t2 { iy: Int ->
-            val row = (c at iy)
-            RowVec(row.size) { ix: Int ->
-                val (v) = row[ix]
-                normalizedRange.normalize(v as T) t2 ctx
-            }
-        }
-    })
+    val nprices =
+        join(
+            this[-colName],
+            this[colName].let { c ->
+                c.size t2 { iy: Int ->
+                    val row = (c at iy)
+                    RowVec(row.size) { ix: Int ->
+                        val (v) = row[ix]
+                        normalizedRange.normalize(v as T) t2 ctx
+                    }
+                }
+            },
+        )
     return nprices
 }
 
@@ -262,21 +291,18 @@ fun Cursor.mirror(): Cursor = Cursor(first) { y: Int ->
 /**
  * UnaryMinus Operator - this operator strips the meta from a Cursor and returns the cell values Any?
  */
-operator fun Cursor.unaryMinus(): Vect0r<Vect0r<*>> = size t2 { x: Int -> second(x).left }
+operator fun Vect0r<RowVec>.unaryMinus(): Vect0r<Vect0r<*>> = this α { it α { it::first } }
 
 /** Div operator - uses unaryMinus to strip the Cursor meta and typecast the inner Vector Contents as nullable T.
  */
-inline infix operator fun <reified T> Cursor.div(t: Class<T>): Vect0r<Vect0r<T?>> =
-    this.unaryMinus() α { outer -> outer α { inner -> inner as? T } }
+infix operator fun <T> Cursor.div(t: Class<T>): Vect0r<Vect0r<T?>> =
+    (-this) α { outer -> outer α { inner -> inner as? T } }
 
 /**  flattens cursor (x, y) to Vect0r (x*y) of T? preserving order/position */
-inline infix operator fun <reified T> Cursor.rem(t: Class<T>): Vect0r<T?> = combine(this / t)
+infix operator fun <T> Cursor.rem(t: Class<T>): Vect0r<T?> = combine(this / t)
 
 /**
  * "left/right" is blocked by precedence magic in Vect02_ so we have to treat cursors with a perturbed set of keywords like f1rst and whatnot.
  *
  */
-inline val Cursor.meta: Pai2<Int, (Int) -> Pai2<Int, (Int) -> () -> CoroutineContext>>
-    get() = size t2 {
-    x: Int -> at (x).right
-}
+val Cursor.meta get() = at(0)

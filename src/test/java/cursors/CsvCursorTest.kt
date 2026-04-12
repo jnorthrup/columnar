@@ -4,16 +4,17 @@ import cursors.context.TokenizedRow.Companion.CsvArraysCursor
 import cursors.io.IOMemento
 import cursors.io.IOMemento.*
 import cursors.io.RowVec
-import kotlin.test.*
-import vec.macros.Vect02_.left
 import vec.macros.Vect0r
 import vec.macros.get
+import vec.macros.left
 import vec.util._v
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDate
 import kotlin.streams.asSequence
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 
 class CsvCursorTest {

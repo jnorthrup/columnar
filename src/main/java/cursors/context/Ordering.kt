@@ -1,10 +1,11 @@
 package cursors.context
 
 import cursors.io.TableRoot
+import vec.macros.Pai2
 import vec.macros.Vect02
-import vec.macros.Vect02_.right
 import vec.macros.`→`
 import vec.macros.get
+import vec.macros.right
 import vec.macros.t2
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
@@ -62,7 +63,7 @@ class RowMajor : Ordering() {
         //todo: move to rowMajor
         fun TableRoot.name(xy: IntArray): String? = this.let { (_, rootContext) ->
             (rootContext[Arity.arityKey]!! as Columnar).let { cnar ->
-                cnar.right[(rootContext[orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
+                (cnar as Vect02<Nothing , String?>).right[(rootContext[orderingKey]!! as? ColumnMajor)?.let { xy[1] } ?: xy[0]]
             }
         }
     }

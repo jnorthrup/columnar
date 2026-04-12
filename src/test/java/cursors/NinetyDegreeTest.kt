@@ -8,15 +8,13 @@ import cursors.io.*
 import cursors.io.IOMemento.*
 import cursors.macros.join
 import cursors.macros.α
-import kotlin.test.*
 import vec.macros.*
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
 import vec.util.toArray
 import java.io.File
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import kotlin.test.Test
 
 class NinetyDegreeTest {
 

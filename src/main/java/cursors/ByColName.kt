@@ -2,7 +2,7 @@ package cursors
 
 import cursors.io.colIdx
 import vec.macros.Vect02
-import vec.macros.Vect02_.right
+import vec.macros.right
 import vec.macros.size
 import vec.macros.toList
 import javax.management.openmbean.InvalidKeyException

@@ -7,8 +7,6 @@ import cursors.io.colIdx
 import cursors.io.scalars
 import cursors.macros.join
 import vec.macros.*
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
 import vec.ml.DummySpec
 import vec.util._a
 import vec.util._v

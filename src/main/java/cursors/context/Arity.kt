@@ -37,8 +37,7 @@ interface Scalar : Arity, Pai2<TypeMemento, String?> {
 }
 
 
-class Columnar(cols: Vect02<TypeMemento, String?>) :
-    Vect02<TypeMemento, String?> by cols, Arity {
+class Columnar(cols: Vect02<TypeMemento, String?>) :  Vect02<TypeMemento, String?> by cols, Arity {
     companion object {
         fun of(vararg type: TypeMemento): Columnar = Columnar(type α { t: TypeMemento -> t t2 null as String? })
 

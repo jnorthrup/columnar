@@ -3,7 +3,6 @@ package cursors.io
 import cursors.TypeMemento
 import cursors.context.CellDriver
 import vec.macros.*
-import vec.macros.Vect02_.left
 import java.nio.ByteBuffer
 import kotlin.coroutines.CoroutineContext
 
@@ -19,7 +18,7 @@ typealias writefn<M, R> = Function2<M, R, Unit>
 typealias readfn<M, R> = Function1<M, R>
 
 
-fun stringOf(it: RowVec): String = it.left.toList().map { any ->
+fun stringOf(it: RowVec): String = ((it as  Vect02<Any?, CellMeta>).left).toList().map { any ->
     val isVec = any as? Vect0r<*>
     val any1 = isVec?.toList() ?: any
     any1

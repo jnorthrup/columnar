@@ -12,10 +12,7 @@ import cursors.context.Scalar.Companion.Scalar
 import cursors.get
 import cursors.io.*
 import cursors.macros.join
-import kotlin.test.*
 import vec.macros.*
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -24,6 +21,7 @@ import java.time.chrono.HijrahDate
 import java.time.temporal.ChronoField.DAY_OF_MONTH
 import java.time.temporal.ChronoField.MONTH_OF_YEAR
 import java.time.temporal.TemporalAdjusters
+import kotlin.test.Test
 
 
 /**

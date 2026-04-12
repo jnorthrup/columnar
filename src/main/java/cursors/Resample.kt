@@ -4,7 +4,6 @@ import cursors.calendar.daySeq
 import cursors.calendar.featureRange
 import cursors.io.scalars
 import vec.macros.*
-import vec.macros.Vect02_.left
 import java.time.LocalDate
 
 

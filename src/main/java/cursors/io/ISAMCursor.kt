@@ -9,8 +9,6 @@ import cursors.context.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import vec.macros.*
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
 import vec.util.FibonacciReporter
 import vec.util.debug
 import vec.util.logDebug
@@ -98,7 +96,7 @@ fun Cursor.writeISAM(
     val sizes = varcharSizes ?: let { curs ->
 
         linkedMapOf<Int, Int>().apply {
-            (curs at 0).right.`➤`.withIndex().onEach { (index, it) ->
+            (Vect02_(curs at 0)).right.`➤`.withIndex().onEach { (index, it) ->
 
                 //our blackboard CoroutineCOntext  metadata function.
                 val cc = it.invoke()

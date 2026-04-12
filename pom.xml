@@ -100,24 +100,30 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.10.0</version>
+            <version>6.0.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.10.0</version>
+            <version>6.0.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>6.0.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.80</version>
+            <version>1.83</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-datetime-jvm</artifactId>
-            <version>0.6.2</version>
+            <version>0.7.1-0.6.x-compat</version>
         </dependency>
     </dependencies>
 
@@ -138,7 +144,7 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>2.2.0-Beta2</version>
+                <version>2.3.20</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -284,22 +290,22 @@
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>
                 <artifactId>kotlinx-datetime</artifactId>
-                <version>0.6.2</version>
+                <version>0.7.1-0.6.x-compat</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
-                <version>1.80</version>
+                <version>1.83</version>
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-jdk8</artifactId>
-                <version>2.2.0-Beta2</version>
+                <version>2.3.20</version>
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-test-junit5</artifactId>
-                <version>2.2.0-Beta2</version>
+                <version>2.3.20</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

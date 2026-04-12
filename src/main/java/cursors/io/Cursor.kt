@@ -6,7 +6,6 @@ import cursors.at
 import cursors.context.Arity.Companion.arityKey
 import cursors.context.Scalar
 import vec.macros.*
-import vec.macros.Vect02_.right
 
 val Cursor.scalars: Vect0r<Scalar>
     get() = (this at 0).right α { it()[arityKey] as Scalar }

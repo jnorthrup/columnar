@@ -1,7 +1,5 @@
 package vec.macros
 
-import vec.macros.Vect02_.left
-import vec.macros.Vect02_.right
 import java.util.*
 
 
@@ -18,7 +16,7 @@ inline fun <reified V> Map<Int, V>.sparseVect0r(): SparseVect0r<V> = run {
 inline fun <reified V> bindSparse(
     driver: Vect02<Int, V>,
 ): Vect0r<V?> = driver.let { entres ->
-    val k = driver.left.toIntArray()
+    val k = Vect02_(driver).left.toIntArray()
     k.size t2 if (driver.size <= 16) //64 byte cacheline
         { x: Int ->
             var r: V? = null
@@ -26,7 +24,7 @@ inline fun <reified V> bindSparse(
                 var i = 0
                 do {
                     if (k[i] == x)
-                        r = entres.right[i]
+                        r = Vect02_(entres).right[i]
                     ++i
                 } while (i < entres.size && r == null)
             }
@@ -34,7 +32,7 @@ inline fun <reified V> bindSparse(
         } else { x: Int ->
         k.binarySearch(x).takeUnless {
             0 > it
-        }?.let { i -> entres.right[i] }
+        }?.let { i -> Vect02_(entres).right[i] }
     }
 }
 
